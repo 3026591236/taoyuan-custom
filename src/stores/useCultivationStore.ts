@@ -17,7 +17,7 @@ const ALCHEMY_RECIPES = {
 export type PillId = keyof typeof ALCHEMY_RECIPES
 export const getAlchemyRecipes = () => ALCHEMY_RECIPES
 
-const REALMS = [
+export const REALMS = [
   { name: '凡人', maxCultivation: 100, maxMana: 30, breakthroughCost: 80 },
   { name: '炼气一层', maxCultivation: 220, maxMana: 45, breakthroughCost: 160 },
   { name: '炼气二层', maxCultivation: 420, maxMana: 65, breakthroughCost: 320 },
@@ -32,7 +32,7 @@ const REALMS = [
 ]
 
 const FIELD_TIERS = ['普通田', '黄阶灵田', '玄阶灵田', '地阶灵田', '天阶洞天']
-const SPIRIT_ROOT_NAMES: Record<SpiritRoot, string> = {
+export const SPIRIT_ROOT_NAMES: Record<SpiritRoot, string> = {
   mixed: '杂灵根', wood: '木灵根', water: '水灵根', earth: '土灵根', fire: '火灵根', metal: '金灵根'
 }
 

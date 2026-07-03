@@ -9,42 +9,106 @@
       <span class="text-xs text-muted">第{{ gameStore.year }}年 {{ SEASON_NAMES[gameStore.season] }}</span>
     </div>
 
-    <!-- 角色身份 + 属性 -->
+    <!-- 角色身份 + 属性 + 轮廓 -->
     <div class="border border-accent/20 rounded-xs p-2 mb-3">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-sm text-accent">{{ playerStore.playerName }}</span>
-        <span class="text-xs text-muted">{{ genderLabel }}</span>
+      <div class="flex gap-3">
+        <!-- 角色轮廓 -->
+        <div class="shrink-0 flex items-center justify-center">
+          <svg class="char-silhouette" viewBox="0 0 80 140" width="64" height="112">
+            <!-- 头 -->
+            <ellipse cx="40" cy="22" rx="14" ry="16" class="silhouette-body" />
+            <!-- 发髻 -->
+            <ellipse cx="40" cy="10" rx="10" ry="7" class="silhouette-hair" />
+            <rect x="37" y="5" width="6" height="8" rx="3" class="silhouette-hair" />
+            <!-- 身体 -->
+            <path d="M24 38 Q22 50 20 75 L30 75 L33 50 L40 48 L47 50 L50 75 L60 75 Q58 50 56 38 Q48 32 40 32 Q32 32 24 38Z" class="silhouette-body" />
+            <!-- 腰带 -->
+            <rect x="26" y="55" width="28" height="4" rx="2" class="silhouette-belt" />
+            <!-- 左袖 -->
+            <path d="M24 38 Q14 42 10 55 Q12 58 18 56 Q22 52 24 48Z" class="silhouette-body" />
+            <!-- 右袖 -->
+            <path d="M56 38 Q66 42 70 55 Q68 58 62 56 Q58 52 56 48Z" class="silhouette-body" />
+            <!-- 裙/裤 -->
+            <path d="M28 75 L24 120 L34 120 L40 90 L46 120 L56 120 L52 75Z" class="silhouette-body" />
+            <!-- 鞋 -->
+            <ellipse cx="29" cy="124" rx="8" ry="4" class="silhouette-shoe" />
+            <ellipse cx="51" cy="124" rx="8" ry="4" class="silhouette-shoe" />
+            <!-- 境界光环 -->
+            <circle v-if="cultivationStore.unlocked" cx="40" cy="70" r="50" fill="none" class="silhouette-aura" :class="'aura-tier-' + Math.min(cultivationStore.realmIndex, 4)" />
+          </svg>
+        </div>
+        <!-- 属性 -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm text-accent">{{ playerStore.playerName }}</span>
+            <span class="text-xs text-muted">{{ genderLabel }}</span>
+          </div>
+          <div v-if="cultivationStore.unlocked" class="flex items-center justify-between mb-1">
+            <span class="text-xs text-accent">{{ cultivationStore.realmName }}</span>
+            <span class="text-xs text-muted">{{ cultivationStore.spiritRootName }}</span>
+          </div>
+
+          <div class="flex flex-col space-y-1.5">
+            <!-- 体力 -->
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-muted shrink-0">体力</span>
+              <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
+                <div class="h-full rounded-xs transition-all" :class="playerStore.staminaPercent > 35 ? 'bg-success' : 'bg-danger'" :style="{ width: playerStore.staminaPercent + '%' }" />
+              </div>
+              <span class="text-xs whitespace-nowrap">{{ playerStore.stamina }}/{{ playerStore.maxStamina }}</span>
+            </div>
+            <!-- 生命 -->
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-muted shrink-0">生命</span>
+              <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
+                <div class="h-full rounded-xs transition-all" :class="playerStore.getHpPercent() > 25 ? 'bg-success' : 'bg-danger'" :style="{ width: playerStore.getHpPercent() + '%' }" />
+              </div>
+              <span class="text-xs whitespace-nowrap">{{ playerStore.hp }}/{{ playerStore.getMaxHp() }}</span>
+            </div>
+            <!-- 铜钱 -->
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-muted">铜钱</span>
+              <span class="text-xs text-accent">{{ playerStore.money }}文</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="flex flex-col space-y-1.5">
-        <!-- 体力 -->
-        <div class="flex items-center space-x-2">
-          <span class="text-xs text-muted shrink-0">体力</span>
-          <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
-            <div
-              class="h-full rounded-xs transition-all"
-              :class="playerStore.staminaPercent > 35 ? 'bg-success' : 'bg-danger'"
-              :style="{ width: playerStore.staminaPercent + '%' }"
-            />
+      <!-- 修仙属性（启蒙后显示） -->
+      <div v-if="cultivationStore.unlocked" class="mt-2 pt-2 border-t border-accent/10">
+        <div class="grid grid-cols-2 gap-x-3 gap-y-0.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted">修为</span>
+            <span class="text-xs text-accent">{{ cultivationStore.cultivation }}/{{ cultivationStore.maxCultivation }}</span>
           </div>
-          <span class="text-xs whitespace-nowrap">{{ playerStore.stamina }}/{{ playerStore.maxStamina }}</span>
-        </div>
-        <!-- 生命 -->
-        <div class="flex items-center space-x-2">
-          <span class="text-xs text-muted shrink-0">生命</span>
-          <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
-            <div
-              class="h-full rounded-xs transition-all"
-              :class="playerStore.getHpPercent() > 25 ? 'bg-success' : 'bg-danger'"
-              :style="{ width: playerStore.getHpPercent() + '%' }"
-            />
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted">灵力</span>
+            <span class="text-xs text-accent">{{ cultivationStore.mana }}/{{ cultivationStore.maxMana }}</span>
           </div>
-          <span class="text-xs whitespace-nowrap">{{ playerStore.hp }}/{{ playerStore.getMaxHp() }}</span>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted">灵气</span>
+            <span class="text-xs text-accent">{{ cultivationStore.aura }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted">灵田</span>
+            <span class="text-xs text-accent">{{ cultivationStore.fieldTierName }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted">炼丹炉</span>
+            <span class="text-xs" :class="cultivationStore.alchemyUnlocked ? 'text-accent' : 'text-muted/40'">{{ cultivationStore.alchemyUnlocked ? '已安置' : '未安置' }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted">法宝</span>
+            <span class="text-xs text-accent">{{ equippedArtifactCount }}/3</span>
+          </div>
         </div>
-        <!-- 铜钱 -->
-        <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">铜钱</span>
-          <span class="text-xs text-accent">{{ playerStore.money }}文</span>
+        <!-- 突破进度 -->
+        <div class="mt-1.5 flex items-center space-x-2">
+          <span class="text-xs text-muted shrink-0">突破</span>
+          <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
+            <div class="h-full rounded-xs transition-all bg-accent" :style="{ width: breakthroughPercent + '%' }" />
+          </div>
+          <span class="text-xs whitespace-nowrap" :class="cultivationStore.canBreakthrough ? 'text-accent' : 'text-muted'">{{ cultivationStore.canBreakthrough ? '可突破' : Math.round(breakthroughPercent) + '%' }}</span>
         </div>
       </div>
     </div>
@@ -304,6 +368,7 @@
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useSkillStore } from '@/stores/useSkillStore'
   import { useWalletStore } from '@/stores/useWalletStore'
+  import { useCultivationStore } from '@/stores/useCultivationStore'
   import { TOOL_NAMES, TIER_NAMES, getNpcById } from '@/data'
   import { getWeaponById, getEnchantmentById, getWeaponDisplayName } from '@/data/weapons'
   import { getRingById } from '@/data/rings'
@@ -319,11 +384,24 @@
   const inventoryStore = useInventoryStore()
   const skillStore = useSkillStore()
   const walletStore = useWalletStore()
+  const cultivationStore = useCultivationStore()
   const npcStore = useNpcStore()
   const gameStore = useGameStore()
 
   // === 身份 ===
   const genderLabel = computed(() => (playerStore.gender === 'male' ? '男' : '女'))
+
+  // === 修仙 ===
+  const equippedArtifactCount = computed(() => {
+    const a = cultivationStore.artifacts
+    return (a.glimmerHoe ? 1 : 0) + (a.spiritKettle ? 1 : 0) + (a.spiritRain ? 1 : 0)
+  })
+  const breakthroughPercent = computed(() => {
+    if (!cultivationStore.unlocked) return 0
+    const needed = cultivationStore.maxCultivation
+    if (needed <= 0) return 0
+    return Math.min(100, (cultivationStore.cultivation / needed) * 100)
+  })
 
   // === 装备槽位 ===
 
