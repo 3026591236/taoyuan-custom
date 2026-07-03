@@ -137,6 +137,11 @@ export const useCultivationStore = defineStore('cultivation', () => {
 
   const meditate = () => {
     if (!unlocked.value) return unlock()
+    const player = usePlayerStore()
+    if (!player.consumeStamina(10)) {
+      showFloat('体力不足，打坐需要10点体力。', 'danger')
+      return false
+    }
     const game = useGameStore()
     let gain = 12 + fieldTier.value * 6 + (spiritRoot.value === 'mixed' ? 0 : 4)
     let manaGain = 12 + fieldTier.value * 4
@@ -153,7 +158,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     mana.value = Math.min(mana.value + manaGain, maxMana.value)
     aura.value += auraGain
     const tr = game.advanceTime(1)
-    addLog(`静坐调息一刻，修为+${gain}，灵力+${manaGain}，灵气+${auraGain}。`)
+    addLog(`静坐调息一刻，消耗体力10，修为+${gain}，灵力+${manaGain}，灵气+${auraGain}。`)
     showFloat(`修为+${gain}`, 'accent')
     if (tr.message) addLog(tr.message)
     return true
@@ -161,6 +166,11 @@ export const useCultivationStore = defineStore('cultivation', () => {
 
   const refineAura = () => {
     if (!unlocked.value) return unlock()
+    const player = usePlayerStore()
+    if (!player.consumeStamina(5)) {
+      showFloat('体力不足，炼化需要5点体力。', 'danger')
+      return false
+    }
     if (aura.value <= 0) {
       showFloat('没有可炼化的灵气。', 'danger')
       return false
@@ -169,7 +179,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const gain = Math.floor(spend * (1.15 + fieldTier.value * 0.12 + (artifacts.value.spiritKettle ? 0.18 : 0)))
     aura.value -= spend
     cultivation.value = Math.min(cultivation.value + gain, maxCultivation.value)
-    addLog(`炼化灵气${spend}点，修为增长${gain}。`)
+    addLog(`消耗体力5，炼化灵气${spend}点，修为增长${gain}。`)
     showFloat(`修为+${gain}`, 'success')
     return true
   }
