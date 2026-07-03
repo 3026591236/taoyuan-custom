@@ -28,12 +28,12 @@ import {
   ScrollText,
   User,
   FlaskConical,
-  Landmark,
-  Swords,
   Tent,
   Waves,
   Sparkles,
-  Trophy
+  Trophy,
+  Landmark,
+  Swords
 } from 'lucide-vue-next'
 import { useNpcStore } from '@/stores/useNpcStore'
 
@@ -63,6 +63,9 @@ export type PanelKey =
   | 'cottage'
   | 'cultivation'
   | 'leaderboard'
+  | 'combat'
+  | 'forge'
+  | 'sect'
 
 export const TABS: { key: PanelKey; label: string; icon: Component; getIcon?: () => Component }[] = [
   { key: 'farm', label: '农场', icon: Wheat },
@@ -82,6 +85,9 @@ export const TABS: { key: PanelKey; label: string; icon: Component; getIcon?: ()
   { key: 'charinfo', label: '角色', icon: User },
   { key: 'cultivation', label: '修行', icon: Sparkles },
   { key: 'leaderboard', label: '排行', icon: Trophy },
+  { key: 'combat', label: '秘境', icon: Flame },
+  { key: 'forge', label: '炼器', icon: Cog },
+  { key: 'sect', label: '门派', icon: Users },
   { key: 'inventory', label: '背包', icon: Package },
   { key: 'skills', label: '技能', icon: Star },
   { key: 'achievement', label: '图鉴', icon: BookOpen },

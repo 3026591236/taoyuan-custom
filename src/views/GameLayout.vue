@@ -76,7 +76,7 @@
     <SaveManager v-if="showSaveManager" @close="showSaveManager = false" />
 
     <!-- 移动端地图菜单 -->
-    <MobileMapMenu :open="showMobileMap" :current="currentPanel" :checkin-checked="checkinChecked" :checkin-busy="checkinBusy" :unclaimed-mail-count="unclaimedMailCount" @checkin="dailyCheckin" @open-mail="openMailModal" @open-leaderboard="openLeaderboard" @close="showMobileMap = false" />
+    <MobileMapMenu :open="showMobileMap" :current="currentPanel" :checkin-checked="checkinChecked" :checkin-busy="checkinBusy" :unclaimed-mail-count="unclaimedMailCount" @checkin="dailyCheckin" @open-mail="openMailModal" @open-leaderboard="openLeaderboard" @open-combat="openCombat" @open-forge="openForge" @open-sect="openSect" @close="showMobileMap = false" />
 
     <!-- 季节事件弹窗 -->
     <Transition name="panel-fade">
@@ -575,6 +575,18 @@
   const openLeaderboard = () => {
     showMobileMap.value = false
     router.push('/game/leaderboard')
+  }
+  const openCombat = () => {
+    showMobileMap.value = false
+    router.push('/game/combat')
+  }
+  const openForge = () => {
+    showMobileMap.value = false
+    router.push('/game/forge')
+  }
+  const openSect = () => {
+    showMobileMap.value = false
+    router.push('/game/sect')
   }
   const openMailModal = async () => {
     showMailModal.value = true

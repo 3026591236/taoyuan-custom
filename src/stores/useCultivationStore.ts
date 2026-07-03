@@ -50,7 +50,12 @@ export const REALMS = [
   { name: '炼气七层', maxCultivation: 3700, maxMana: 240, breakthroughCost: 1100 },
   { name: '炼气八层', maxCultivation: 5200, maxMana: 290, breakthroughCost: 1600 },
   { name: '炼气九层', maxCultivation: 7200, maxMana: 350, breakthroughCost: 2400 },
-  { name: '筑基初期', maxCultivation: 11000, maxMana: 460, breakthroughCost: 3500 }
+  { name: '筑基初期', maxCultivation: 11000, maxMana: 460, breakthroughCost: 3500 },
+  { name: '筑基中期', maxCultivation: 16000, maxMana: 580, breakthroughCost: 5000 },
+  { name: '筑基后期', maxCultivation: 24000, maxMana: 720, breakthroughCost: 7500 },
+  { name: '金丹初期', maxCultivation: 40000, maxMana: 1000, breakthroughCost: 12000 },
+  { name: '金丹中期', maxCultivation: 65000, maxMana: 1400, breakthroughCost: 18000 },
+  { name: '金丹后期', maxCultivation: 100000, maxMana: 2000, breakthroughCost: 28000 }
 ]
 
 const FIELD_TIERS = ['普通田', '黄阶灵田', '玄阶灵田', '地阶灵田', '天阶洞天']
@@ -99,6 +104,9 @@ export const useCultivationStore = defineStore('cultivation', () => {
   // V0.3 灵兽
   const beast = ref<BeastId | null>(null)
   const beastBond = ref(0)
+    const sect = ref<'sword' | 'alchemy' | 'talisman' | null>(null)
+  const sectSkills = ref([0, 0, 0])
+  const sectContribution = ref(0)
 
   const realm = computed(() => REALMS[realmIndex.value] ?? REALMS[0]!)
   const realmName = computed(() => realm.value.name)
@@ -412,7 +420,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
-    const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, beast: beast.value, beastBond: beastBond.value })
+    const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, beast: beast.value, beastBond: beastBond.value, sect: sect.value, sectSkills: sectSkills.value, sectContribution: sectContribution.value })
   const deserialize = (data?: Partial<ReturnType<typeof serialize>>) => {
     if (!data) return
     unlocked.value = data.unlocked ?? false
@@ -430,7 +438,10 @@ export const useCultivationStore = defineStore('cultivation', () => {
     caveSlots.value = (data as any).caveSlots ?? []
     beast.value = (data as any).beast ?? null
     beastBond.value = (data as any).beastBond ?? 0
+    sect.value = (data as any).sect ?? null
+    sectSkills.value = (data as any).sectSkills ?? [0, 0, 0]
+    sectContribution.value = (data as any).sectContribution ?? 0
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, totalAuraHarvested, alchemyUnlocked, artifacts, foundationPillBlessing, caveTier, caveSlots, beast, beastBond, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, totalAuraHarvested, alchemyUnlocked, artifacts, foundationPillBlessing, caveTier, caveSlots, beast, beastBond, sect, sectSkills, sectContribution, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, serialize, deserialize }
 })

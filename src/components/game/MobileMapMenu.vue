@@ -107,6 +107,18 @@
               <Trophy :size="18" />
               <span>排行榜</span>
             </button>
+            <button class="map-loc" @click="emit('openCombat' as any)">
+              <Swords :size="18" />
+              <span>秘境</span>
+            </button>
+            <button class="map-loc" @click="emit('openForge' as any)">
+              <Hammer :size="18" />
+              <span>炼器</span>
+            </button>
+            <button class="map-loc" @click="emit('openSect' as any)">
+              <Landmark :size="18" />
+              <span>门派</span>
+            </button>
           </div>
         </div>
       </div>
@@ -116,7 +128,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { X, Gift, Mail, Trophy } from 'lucide-vue-next'
+  import { X, Gift, Mail, Trophy, Swords, Hammer, Landmark } from 'lucide-vue-next'
   import { TABS, navigateToPanel } from '@/composables/useNavigation'
   import type { PanelKey } from '@/composables/useNavigation'
 
