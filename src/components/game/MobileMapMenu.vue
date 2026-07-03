@@ -103,6 +103,10 @@
               </div>
               <span>系统邮件</span>
             </button>
+            <button class="map-loc" @click="emit('openLeaderboard' as any)">
+              <Trophy :size="18" />
+              <span>排行榜</span>
+            </button>
           </div>
         </div>
       </div>
@@ -112,7 +116,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { X, Gift, Mail } from 'lucide-vue-next'
+  import { X, Gift, Mail, Trophy } from 'lucide-vue-next'
   import { TABS, navigateToPanel } from '@/composables/useNavigation'
   import type { PanelKey } from '@/composables/useNavigation'
 

@@ -76,7 +76,7 @@
     <SaveManager v-if="showSaveManager" @close="showSaveManager = false" />
 
     <!-- 移动端地图菜单 -->
-    <MobileMapMenu :open="showMobileMap" :current="currentPanel" :checkin-checked="checkinChecked" :checkin-busy="checkinBusy" :unclaimed-mail-count="unclaimedMailCount" @checkin="dailyCheckin" @open-mail="openMailModal" @close="showMobileMap = false" />
+    <MobileMapMenu :open="showMobileMap" :current="currentPanel" :checkin-checked="checkinChecked" :checkin-busy="checkinBusy" :unclaimed-mail-count="unclaimedMailCount" @checkin="dailyCheckin" @open-mail="openMailModal" @open-leaderboard="openLeaderboard" @close="showMobileMap = false" />
 
     <!-- 季节事件弹窗 -->
     <Transition name="panel-fade">
@@ -571,6 +571,10 @@
     } finally {
       mailLoading.value = false
     }
+  }
+  const openLeaderboard = () => {
+    showMobileMap.value = false
+    router.push('/game/leaderboard')
   }
   const openMailModal = async () => {
     showMailModal.value = true
