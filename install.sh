@@ -51,7 +51,7 @@ read -p "MySQL 数据库名 [taoyuan]: " DB_NAME
 DB_NAME=${DB_NAME:-taoyuan}
 
 read -p "MySQL 用户名 [taoyuan]: " DB_USER
-DB_USER=${DB_NAME:-taoyuan}
+DB_USER=${DB_USER:-taoyuan}
 
 read -p "MySQL 密码 [taoyuan2026]: " DB_PASS
 DB_PASS=${DB_PASS:-taoyuan2026}
