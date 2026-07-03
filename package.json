@@ -1,10 +1,10 @@
 {
   "name": "taoyuan",
-  "title": "桃源乡",
+  "title": "\u6843\u6e90\u4e61",
   "qq": "920930589",
   "tapid": "816558",
   "private": true,
-  "version": "2.4.0",
+  "version": "2.5.0",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "build:android": "pnpm run build && npx cap sync android",
     "build:apk": "pnpm run build:android && cd android && ./gradlew assembleRelease"
   },
-  "description": "一款文字版田园模拟经营游戏，灵感来自星露谷物语",
+  "description": "\u4e00\u6b3e\u6587\u5b57\u7248\u7530\u56ed\u6a21\u62df\u7ecf\u8425\u6e38\u620f\uff0c\u7075\u611f\u6765\u81ea\u661f\u9732\u8c37\u7269\u8bed",
   "author": "setube",
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -64,7 +64,7 @@
   },
   "build": {
     "appId": "games.wenzi.taoyuan",
-    "productName": "桃源乡",
+    "productName": "\u6843\u6e90\u4e61",
     "asar": false,
     "files": [
       "dist-electron/**/*",
