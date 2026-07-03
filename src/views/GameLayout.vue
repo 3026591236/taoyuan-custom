@@ -64,6 +64,14 @@
       </div>
     </Transition>
 
+    <!-- 世界公告飘字 -->
+    <Transition name="panel-fade">
+      <div v-if="worldAnnouncement" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none" style="animation: float-up 4s ease-out forwards">
+        <div class="bg-accent/90 text-bg px-4 py-2 rounded-xs text-sm font-bold whitespace-nowrap shadow-lg">
+          {{ worldAnnouncement }}
+        </div>
+      </div>
+    </Transition>
     <SettingsDialog :open="showSettings" @close="showSettings = false" />
     <SaveManager v-if="showSaveManager" @close="showSaveManager = false" />
 
@@ -530,6 +538,22 @@
     if (!res.ok) throw new Error(data.error || '请求失败')
     return data
   }
+
+  // 世界公告
+  const worldAnnouncement = ref('')
+  const checkWorldAnnouncements = async () => {
+    try {
+      const data = await accountApi('/api/world-announcements')
+      if (data.announcements && data.announcements.length > 0) {
+        const latest = data.announcements[0]
+        if (latest && latest.message) {
+          worldAnnouncement.value = latest.message
+          setTimeout(() => { worldAnnouncement.value = '' }, 4000)
+        }
+      }
+    } catch {}
+  }
+  onMounted(() => { checkWorldAnnouncements(); setInterval(checkWorldAnnouncements, 60000) })
 
   const showMailModal = ref(false)
   const mailLoading = ref(false)
@@ -1103,4 +1127,11 @@
   }
 
 
+
+  @keyframes float-up {
+    0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+  }
 </style>

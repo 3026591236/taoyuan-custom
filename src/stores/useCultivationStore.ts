@@ -198,6 +198,18 @@ export const useCultivationStore = defineStore('cultivation', () => {
     mana.value = maxMana.value
     addLog(`灵田上空清气回旋，你从「${old}」突破至「${realmName.value}」！`)
     showFloat(`突破：${realmName.value}`, 'success')
+    // 突破世界公告
+    const player = usePlayerStore()
+    try {
+      const token = localStorage.getItem('account_token')
+      if (token) {
+        fetch('/api/breakthrough-announce', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ playerName: player.playerName, from: old, to: realmName.value })
+        }).catch(() => {})
+      }
+    } catch {}
     return true
   }
 

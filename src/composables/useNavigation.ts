@@ -32,7 +32,8 @@ import {
   Swords,
   Tent,
   Waves,
-  Sparkles
+  Sparkles,
+  Trophy
 } from 'lucide-vue-next'
 import { useNpcStore } from '@/stores/useNpcStore'
 
@@ -61,6 +62,7 @@ export type PanelKey =
   | 'fishpond'
   | 'cottage'
   | 'cultivation'
+  | 'leaderboard'
 
 export const TABS: { key: PanelKey; label: string; icon: Component; getIcon?: () => Component }[] = [
   { key: 'farm', label: '农场', icon: Wheat },
@@ -79,6 +81,7 @@ export const TABS: { key: PanelKey; label: string; icon: Component; getIcon?: ()
   { key: 'upgrade', label: '工坊', icon: Wrench },
   { key: 'charinfo', label: '角色', icon: User },
   { key: 'cultivation', label: '修行', icon: Sparkles },
+  { key: 'leaderboard', label: '排行', icon: Trophy },
   { key: 'inventory', label: '背包', icon: Package },
   { key: 'skills', label: '技能', icon: Star },
   { key: 'achievement', label: '图鉴', icon: BookOpen },

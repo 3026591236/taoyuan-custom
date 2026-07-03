@@ -135,6 +135,41 @@ const server = http.createServer(async (req, res) => {
     db.mails ||= []
     db.mails ||= []
     if (req.method === 'GET' && url.pathname === '/api/config') return send(res, 200, mergedConfig(db))
+    if (req.method === 'GET' && url.pathname === '/api/leaderboard') {
+      const entries = []
+      for (const user of db.users || []) {
+        if (user.disabled) continue
+        for (const save of Object.values(db.saves[user.id] || {})) {
+          if (!save || !save.meta) continue
+          const d = save.data || {}
+          const p = d.player || {}
+          const c = d.cultivation || {}
+          const REALMS = ['凡人','炼气一层','炼气二层','炼气三层','炼气四层','炼气五层','炼气六层','炼气七层','炼气八层','炼气九层','筑基初期']
+          entries.push({ playerName: p.playerName || save.meta.playerName || '无名', username: user.username, money: p.money || 0, cultivation: c.cultivation || 0, aura: c.aura || 0, realmName: REALMS[c.realmIndex] || '凡人', year: (d.game || {}).year || 1, season: (d.game || {}).season || '春', day: (d.game || {}).day || 1, updatedAt: save.updatedAt })
+        }
+      }
+      const by = url.searchParams.get('by') || 'cultivation'
+      if (by === 'money') entries.sort((a, b) => b.money - a.money)
+      else if (by === 'aura') entries.sort((a, b) => b.aura - a.aura)
+      else entries.sort((a, b) => b.cultivation - a.cultivation)
+      return send(res, 200, { leaderboard: entries.slice(0, 50) })
+    }
+    if (req.method === 'POST' && url.pathname === '/api/breakthrough-announce') {
+      const user2 = auth(req, db)
+      if (!user2) return send(res, 401, { error: '请先登录' })
+      const body = JSON.parse(rawBody || '{}')
+      const { playerName, from, to } = body
+      if (!playerName || !to) return send(res, 400, { error: '参数不完整' })
+      db.config = db.config || {}
+      db.config.worldAnnouncements = db.config.worldAnnouncements || []
+      db.config.worldAnnouncements.unshift({ message: '✨ ' + playerName + ' 从「' + (from || '凡人') + '」突破至「' + to + '」！', time: new Date().toISOString(), type: 'breakthrough' })
+      if (db.config.worldAnnouncements.length > 20) db.config.worldAnnouncements = db.config.worldAnnouncements.slice(0, 20)
+      writeDb(db)
+      return send(res, 200, { ok: true })
+    }
+    if (req.method === 'GET' && url.pathname === '/api/world-announcements') {
+      return send(res, 200, { announcements: (db.config?.worldAnnouncements || []).slice(0, 10) })
+    }
     if (req.method === 'GET' && url.pathname === '/api/me') return send(res, 200, { user: publicUser(auth(req, db)) })
     if (req.method === 'POST' && url.pathname === '/api/auth/register') {
       const body = await readBody(req)
