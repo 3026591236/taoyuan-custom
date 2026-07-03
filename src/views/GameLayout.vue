@@ -27,10 +27,7 @@
     <button class="mobile-setting-btn" @click="showSettings = true">
       <SettingsIcon :size="20" />
     </button>
-    <button class="mobile-save-btn" title="存档" @click="showSaveManager = true">
-      <SaveIcon :size="20" />
-      <span class="save-label">存档</span>
-    </button>
+
     <!-- 虚空箱远程访问按钮 -->
     <button v-if="warehouseStore.hasVoidChest" class="mobile-void-btn" @click="showVoidModal = true">
       <Archive :size="20" />
@@ -492,7 +489,7 @@
   import { useGameClock } from '@/composables/useGameClock'
   import { useAudio } from '@/composables/useAudio'
   import type { Quality } from '@/types'
-  import { Moon, X, Map, Settings as SettingsIcon, Archive, ArrowDown, ArrowDownToLine, History, Trash2, Save as SaveIcon } from 'lucide-vue-next'
+  import { Moon, X, Map, Settings as SettingsIcon, Archive, ArrowDown, ArrowDownToLine, History, Trash2 } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import MobileMapMenu from '@/components/game/MobileMapMenu.vue'
@@ -1105,24 +1102,5 @@
     color: rgb(var(--color-bg));
   }
 
-.mobile-save-btn {
-  position: fixed;
-  right: 1rem;
-  bottom: 9.5rem;
-  z-index: 40;
-  min-width: 3.5rem;
-  height: 2.5rem;
-  border: 1px solid rgb(var(--color-accent) / 0.55);
-  background: rgb(var(--color-bg) / 0.92);
-  color: rgb(var(--color-accent));
-  border-radius: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  box-shadow: 0 0 12px rgb(0 0 0 / 0.35);
-}
-.mobile-save-btn .save-label { font-size: 12px; }
-.mobile-save-btn:hover { background: rgb(var(--color-accent) / 0.16); }
 
 </style>
