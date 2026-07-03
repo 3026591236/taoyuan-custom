@@ -149,14 +149,20 @@ app.put('/api/saves/:slot', async (req, res) => {
     const slot = Number(req.params.slot), { raw, meta } = req.body
     const metaJson = meta ? JSON.stringify(meta) : null
     await pool.execute('INSERT INTO saves (user_id, slot, raw, meta_json) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE raw=VALUES(raw), meta_json=VALUES(meta_json)', [user.id, slot, raw || '', metaJson])
-    // 更新排行榜
+    // 更新排行榜：从raw解析修仙数据
     try {
-      if (meta) {
-        const playerName = meta.playerName || meta.name || '无名'
-        const money = meta.money || 0
-        await pool.execute('INSERT INTO leaderboard (user_id, username, player_name, money) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name=VALUES(player_name), money=VALUES(money)', [user.id, user.username, playerName, money])
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        const p = parsed.player || parsed.playerStore || (parsed.stores && parsed.stores.player) || {}
+        const cu = parsed.cultivation || parsed.cultivationStore || (parsed.stores && parsed.stores.cultivation) || {}
+        const g = parsed.game || parsed.gameStore || (parsed.stores && parsed.stores.game) || {}
+        const REALMS = ['凡人','炼气一层','炼气二层','炼气三层','炼气四层','炼气五层','炼气六层','炼气七层','炼气八层','炼气九层','筑基初期','筑基中期','筑基后期','金丹初期','金丹中期','金丹后期']
+        const playerName = (meta && meta.playerName) || p.playerName || p.name || '无名'
+        const realmIdx = cu.realmIndex != null ? cu.realmIndex : (cu.realm || 0)
+        await pool.execute('INSERT INTO leaderboard (user_id, username, player_name, realm_name, cultivation, aura, money, game_year, game_season, game_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name=VALUES(player_name), realm_name=VALUES(realm_name), cultivation=VALUES(cultivation), aura=VALUES(aura), money=VALUES(money), game_year=VALUES(game_year), game_season=VALUES(game_season), game_day=VALUES(game_day)',
+          [user.id, user.username, playerName, REALMS[realmIdx] || '凡人', cu.cultivation || 0, cu.aura || 0, p.money || (meta && meta.money) || 0, g.year || (meta && meta.year) || 1, g.season || (meta && meta.season) || '春', g.day || (meta && meta.day) || 1])
       }
-    } catch {}
+    } catch (e2) { console.error('lb err', e2.message) }
     send(res, 200, { ok: true })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
@@ -282,6 +288,16 @@ app.put('/api/admin/config', async (req, res) => {
     }
     await setConfigMulti(updates)
     send(res, 200, await getConfig())
+  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+})
+app.get('/api/admin/overview', async (req, res) => {
+  try {
+    const admin = await requireAdmin(req, res); if (!admin) return
+    const [[{uc}]] = await pool.execute('SELECT COUNT(*) as uc FROM users')
+    const [[{sc}]] = await pool.execute('SELECT COUNT(*) as sc FROM saves')
+    const [[{pc}]] = await pool.execute('SELECT COUNT(*) as pc FROM sessions')
+    const [users] = await pool.execute('SELECT * FROM users ORDER BY created_at DESC')
+    send(res, 200, { stats: { userCount: uc, saveCount: sc, sessionCount: pc }, users: users.map(publicUser) })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
 app.post('/api/admin/mails', async (req, res) => {
