@@ -4,175 +4,248 @@
 
 ## 🎮 在线地址
 
-**http://38.12.5.26:8083/**
+**http://38.12.5.26:8084/**
+
+## 🏗️ 架构
+
+前后端分离部署：
+
+- **前端**：Vue 3 + Vite 构建静态文件，nginx 托管（端口 8084）
+- **后端**：Express 5 + MySQL，pm2 管理（端口 3001）
+- **nginx 反向代理**：`/api/` 请求转发到后端
+
+```
+浏览器 → nginx:8084 → 静态文件
+                    → /api/* → Express:3001 → MySQL
+```
+
+## 📦 项目结构
+
+```
+├── src/                    # 前端 Vue 源码
+│   ├── views/             # 页面组件
+│   ├── stores/            # Pinia 状态管理
+│   ├── composables/       # 组合式函数
+│   ├── components/        # 通用组件
+│   └── data/              # 游戏数据配置
+├── backend/               # 后端 Express 源码
+│   ├── index.mjs          # 后端主文件（所有 API 路由）
+│   ├── package.json       # 后端依赖
+│   └── schema.sql         # MySQL 完整建表语句
+├── docs/                  # 前端构建产物（部署到 nginx 目录）
+└── server.js              # 旧版 Docker 内嵌服务端（已弃用）
+```
+
+## 🚀 部署教程
+
+### 环境要求
+
+- Node.js 18+
+- MySQL 5.7+ / MariaDB 10.3+
+- nginx
+- pm2（进程管理）
+
+### 1. 安装依赖
+
+```bash
+# 前端
+cd /opt/taoyuan-src
+npm install
+
+# 后端
+cd /opt/taoyuan-src/backend
+npm install
+```
+
+### 2. 初始化数据库
+
+```bash
+mysql -u root -p < /opt/taoyuan-src/backend/schema.sql
+
+# 创建数据库用户
+mysql -u root -p -e "
+CREATE USER 'taoyuan'@'localhost' IDENTIFIED BY 'taoyuan2026';
+GRANT ALL PRIVILEGES ON taoyuan.* TO 'taoyuan'@'localhost';
+FLUSH PRIVILEGES;
+"
+```
+
+### 3. 构建前端
+
+```bash
+cd /opt/taoyuan-src
+npx vite build
+# 构建产物在 docs/ 目录
+```
+
+### 4. 部署前端静态文件
+
+```bash
+mkdir -p /opt/taoyuan-frontend
+cp -r /opt/taoyuan-src/docs/* /opt/taoyuan-frontend/
+```
+
+### 5. 配置 nginx
+
+```bash
+cat > /etc/nginx/sites-available/taoyuan << 'EOF'
+server {
+    listen 8084;
+    server_name _;
+    root /opt/taoyuan-frontend;
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Authorization $http_authorization;
+        proxy_read_timeout 60s;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control no-cache;
+    }
+
+    location ~* .(js|css|png|jpg|jpeg|svg|woff2|ico)$ {
+        expires 30d;
+        add_header Cache-Control public;
+    }
+}
+EOF
+
+ln -sf /etc/nginx/sites-available/taoyuan /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+```
+
+### 6. 启动后端
+
+```bash
+cd /opt/taoyuan-src/backend
+pm2 start index.mjs --name taoyuan-api
+pm2 save
+```
+
+### 7. 设置开机自启
+
+```bash
+pm2 startup
+pm2 save
+systemctl enable nginx
+systemctl enable mysql
+```
+
+### 8. 第一个管理员
+
+第一个注册的用户自动成为管理员。或者直接在数据库设置：
+
+```bash
+mysql -u taoyuan -ptaoyuan2026 taoyuan -e "UPDATE users SET role='admin' WHERE username='你的用户名';"
+```
+
+## 🔄 更新流程
+
+```bash
+# 1. 拉取最新代码
+cd /opt/taoyuan-src
+git pull origin main
+
+# 2. 重新构建前端
+npm install
+npx vite build
+cp -r docs/* /opt/taoyuan-frontend/
+
+# 3. 重启后端
+cp backend/index.mjs /opt/taoyuan-backend/
+cd /opt/taoyuan-backend && npm install && pm2 restart taoyuan-api
+```
 
 ## ✨ 新增功能（相比原版）
 
+### 💾 账号系统 & 云存档
+- 注册/登录账号，5 秒自动云存档
+- 多存档槽位，跨设备同步
+
 ### 📬 GM 邮件系统
-- 后台可给**全体玩家**或**指定玩家**发送系统邮件
-- 邮件可附带奖励：**铜钱、体力、物品**（支持品质选择）
-- 玩家在游戏内地图菜单 → 随身 → **系统邮件** 中查看并领取
-- 领取后自动写入当前存档，5 秒自动云存档同步
+- 后台可给全体/指定玩家发送系统邮件
+- 邮件附带奖励：铜钱、体力、物品
+- 游戏内地图菜单 → 随身 → 系统邮件 领取
 
 ### ✅ 每日签到
-- 地图菜单 → 随身 → **每日签到**
-- 每天可领取 500 铜钱
-- 后台可查看签到记录
+- 每天领取 500 铜钱
 
 ### 📢 公告与更新记录
-- 后台可编辑公告内容，设置自动弹出间隔
+- 后台编辑公告，设置自动弹出间隔
 - 更新记录后台维护，前端弹窗展示
-- 公告不会遮挡存档加载操作
 
-### 💾 5 秒自动账号云存档
-- 进入游戏后每 5 秒自动保存本地 + 云端
-- 已登录账号时同步上传，避免下线忘记保存
+### 🧘 修仙体系 V0.1-V0.2
+- 灵田修行：灵田启蒙 → 打坐调息 → 炼化灵气 → 尝试突破
+- 灵植与炼丹：蕴灵稻/凝露草/朱果 → 回灵丹/聚气丹/筑基丹
+- 法宝化：流光锄/引灵壶/灵雨诀
 
 ### 🏠 V0.3 洞府与灵兽
-
-**洞府系统**
-- 花费 8000 文 + 200 灵气开辟洞府
-- 4 级扩建：石洞 → 灵穴 → 洞府 → 仙府
-- 3 种设施安置：
-  - **丹房**：洞府内炼丹，灵气消耗 -20%
-  - **灵圃**：洞府内种灵植，灵气产出 +50%
-  - **静室**：洞府内打坐，修为和灵力翻倍
-- 洞府等级越高，可用槽位越多，每次打坐额外恢复灵气
-
-**灵兽系统**
-- 消耗 30 灵力引灵寻兽，随机遇到灵兽伙伴
-  - 🦊 **灵狐**：灵气获取 +30%
-  - 🦢 **仙鹤**：打坐修为 +40%
-  - 🦚 **青鸾**：炼丹品质提升
-- 喂食灵植增加羁绊，显示等级和羁绊进度条
-- 灵兽被动加成自动生效，陪伴修行
-
-### 🧘 修仙系统优化
-- 打坐现在也产出灵气（5 + 灵田等级×3 + 灵根加成）
-- 突破灵气消耗大幅降低，更容易突破
-- 角色界面显示修仙数据（境界/灵根/修为/灵力/灵气/突破进度）
-- 角色轮廓 SVG 显示，境界光环随等级变色
-- 修为满时角色界面可直接点击突破
-
-### ⚙️ 后台管理
-- Tab 栏布局：基础配置 / 关于赞助 / 更新记录 / 玩家管理 / GM邮件
-- 关于游戏、赞助作者信息后台可配置（QQ群、GitHub、TapTap、二维码、爱发电）
-- 玩家管理：封号/解封、重置密码、云存档查看
-
-### 🧘 修仙体系 V0.1 - 灵田修行
-- 地图菜单 → 随身 → **修行**
-- 灵田启蒙 → 打坐调息 → 炼化灵气 → 尝试突破
-- 收获高阶灵性作物获得灵气
-- 境界、灵根、灵田等级、修为、灵力体系
+- 洞府开辟/扩建，安置丹房/灵圃/静室
+- 引灵寻兽：灵狐/仙鹤/青鸾，被动加成
 
 ### 🏆 V0.4 排行榜与突破世界公告
+- 修为/铜钱/灵气排行
+- 突破境界全服飘字通知
 
-**排行榜系统**
-- 修为 / 铜钱 / 灵气 三种排行
-- 读取所有玩家云存档数据自动排名
-- 地图菜单 → 随身 → **排行榜** 入口
-- 底部 Tab 栏也有排行入口（双入口）
-- 前3名显示 🥇🥈🥉
+### ⚔️ V0.5 秘境探索+炼器+门派+法宝
+- 3 大秘境（灵兽森林/幽冥洞窟/天劫雷域）
+- 炼器系统：8 种配方打造法宝
+- 法宝系统：6 槽位，5 种品质
+- 门派系统：剑宗/丹宗/符宗
+- 境界扩展至金丹后期
 
-**突破世界公告**
-- 玩家突破境界时全服飘字通知
-- 例："✨ 时光从「凡人」突破至「炼气一层」！"
-- 自动轮询，所有在线玩家可见
+### ⚙️ 后台管理
+- Tab 栏：基础配置 / 关于赞助 / 更新记录 / 玩家管理 / GM邮件
+- 玩家管理：封号/解封、重置密码、云存档查看
+- 关于游戏、赞助信息后台可配置
 
-### ⚔️ V0.5 秘境探索·炼器·门派·法宝
+## 📊 数据库表结构
 
-**秘境探索**
-- 3大秘境：灵兽森林(炼气) / 幽冥洞窟(筑基) / 天劫雷域(金丹)
-- 战斗动画：攻击闪光、伤害飘字、血条动画、胜利金光
-- 怪物掉落：灵石、矿石、丹药材料、装备碎片
-- 自动战斗，消耗灵力+体力
+| 表名 | 用途 |
+|------|------|
+| users | 用户账号 |
+| sessions | 登录会话 |
+| saves | 云存档（加密） |
+| checkins | 签到记录 |
+| mails | 系统邮件 |
+| mail_claims | 邮件领取记录 |
+| config | 后台配置（key-value） |
+| world_announcements | 世界公告 |
+| leaderboard | 排行榜快照 |
+| breakthrough_log | 突破记录 |
 
-**炼器系统**
-- 8种炼器配方，打造6类法宝
-- 炼器动画：火焰燃烧+锤击震动+品质提升金光
-- 品质随机：凡品(白)/灵品(绿)/仙品(蓝)/神品(紫)/圣品(金)
-- 灵根影响品质概率
+## 📡 API 接口
 
-**法宝系统**
-- 6个装备槽位：飞剑🗡️ / 护甲🛡️ / 灵符📜 / 法印🔮 / 灵珠💠 / 阵盘⭕
-- 法宝提供攻击/防御/灵气/修为加成
-- 高品质法宝属性更强
-
-**门派系统**
-- 剑宗⚔️：攻击+30%，御剑术/剑意/万剑归宗
-- 丹宗⚗️：炼丹品质+1级，丹火/药理/造化丹术
-- 符宗📜：灵力消耗-25%，灵符术/封印术/天罡符阵
-- 筑基后可选，门派技能3级
-
-**境界扩展**
-- 新增筑基中期/后期、金丹初期/中期/后期
-- 最高可达金丹后期
-
-### 🔥 修仙体系 V0.2 - 灵植与炼丹
-- 新增灵植：蕴灵稻、凝露草、朱果
-- 炼丹炉：花费 5000 文安置
-- 丹药：回灵丹、聚气丹、筑基丹
-- 法宝化：流光锄、引灵壶、灵雨诀
-
-## 🛠 技术栈
-
-- 前端：Vue 3 + TypeScript + Pinia + Tailwind CSS
-- 后端：Node.js (server.js)
-- 数据存储：JSON 文件 (db.json)
-- 部署：Docker 容器
-
-## 🚀 部署方式
-
-### Docker 导入镜像
-```bash
-docker load < builds/taoyuan-custom-gm-mail.tar.gz
-docker run -d --name taoyuan --restart unless-stopped -p 8083:80 -v /opt/taoyuan-data:/data local/taoyuan-custom:gm-mail
-```
-
-### 从源码构建
-```bash
-docker build -t local/taoyuan-custom:gm-mail .
-docker run -d --name taoyuan --restart unless-stopped -p 8083:80 -v /opt/taoyuan-data:/data local/taoyuan-custom:gm-mail
-```
-
-## 📁 项目结构
-
-```
-├── server.js                          # 后端服务（新增邮件/签到/后台API）
-├── Dockerfile                         # Docker 构建配置
-├── src/
-│   ├── views/
-│   │   ├── AdminView.vue              # 后台管理页（新增）
-│   │   ├── GameLayout.vue             # 游戏主布局（修改：邮件弹窗/自动存档）
-│   │   ├── MainMenu.vue               # 首页（修改：后台配置读取）
-│   │   └── game/
-│   │       └── CultivationView.vue    # 修行页面（新增）
-│   ├── components/game/
-│   │   └── MobileMapMenu.vue          # 地图菜单（修改：签到/邮件入口）
-│   ├── stores/
-│   │   └── useCultivationStore.ts     # 修仙 Store（新增）
-│   ├── data/
-│   │   ├── crops.ts                   # 作物定义（修改：灵植）
-│   │   └── items.ts                   # 物品定义（修改：炼丹产物）
-│   └── ...
-├── builds/                            # 构建产物
-│   └── taoyuan-custom-gm-mail.tar.gz  # Docker 镜像
-└── README.md
-```
-
-## 📝 更新日志
-
-| 日期 | 版本 | 内容 |
+| 方法 | 路径 | 说明 |
 |------|------|------|
-| 2026-07-03 | gm-mail | 新增 GM 邮件系统、邮件入口移到地图菜单 |
-| 2026-07-03 | cultivation-v02 | 修仙 V0.2：灵植与炼丹 |
-| 2026-07-03 | admintabs | 后台管理改为 Tab 栏 |
-| 2026-07-03 | autosave5s-about | 5秒自动存档 + 关于赞助后台配置 |
-| 2026-07-03 | cultivation-v01 | 修仙 V0.1：灵田修行 |
-| 2026-07-03 | noticechangelog3 | 公告/更新记录热修 |
-| 2026-07-03 | checkinmap | 每日签到放入地图菜单 |
+| POST | /api/auth/register | 注册 |
+| POST | /api/auth/login | 登录 |
+| GET | /api/me | 当前用户信息 |
+| GET/PUT | /api/saves/:slot | 云存档读写 |
+| GET/POST | /api/checkin | 签到 |
+| GET | /api/mails | 邮件列表 |
+| POST | /api/mails/:id/claim | 领取邮件 |
+| GET | /api/leaderboard | 排行榜 |
+| GET | /api/config | 前台配置 |
+| GET | /api/admin/overview | 后台总览 |
+| GET | /api/admin/users | 用户列表 |
+| POST | /api/admin/users/:id/ban | 封号 |
+| POST | /api/admin/users/:id/unban | 解封 |
+| POST | /api/admin/users/:id/reset-password | 重置密码 |
+| GET/POST | /api/admin/config | 后台配置 |
+| POST | /api/admin/mails | 发送GM邮件 |
+| POST | /api/breakthrough-announce | 突破公告 |
+| GET | /api/world-announcements | 世界公告 |
 
-## 📄 致谢
+## 📝 开发注意
 
-- 原版项目：[setube/taoyuan](https://github.com/setube/taoyuan)
-- 灵感来源：星露谷物语
+- 所有数据存 MySQL，不再用 db.json
+- 前端构建产物在 `docs/` 目录
+- 后端主文件是 `backend/index.mjs`
+- 每次更新后需：① 构建前端 ② 复制到 nginx 目录 ③ 重启后端 ④ 推送 GitHub
+- 旧版 Docker 部署（端口 8083）仍可运行，新架构在端口 8084

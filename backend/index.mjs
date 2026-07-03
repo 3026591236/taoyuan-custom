@@ -301,7 +301,23 @@ app.get('/api/admin/overview', async (req, res) => {
     const [[{sc}]] = await pool.execute('SELECT COUNT(*) as sc FROM saves')
     const [[{pc}]] = await pool.execute('SELECT COUNT(*) as pc FROM sessions')
     const [users] = await pool.execute('SELECT * FROM users ORDER BY created_at DESC')
-    send(res, 200, { stats: { userCount: uc, saveCount: sc, sessionCount: pc }, users: users.map(publicUser) })
+    const enrichedUsers = []
+    for (const u of users) {
+      const pu = publicUser(u)
+      const [saves] = await pool.execute('SELECT slot, meta_json, updated_at, LENGTH(raw) as rawSize FROM saves WHERE user_id = ? ORDER BY slot', [u.id])
+      let saveCount = 0, lastSaveAt = null, saveDetails = []
+      for (const s of saves) {
+        saveCount++
+        const mj = s.meta_json ? (typeof s.meta_json === 'string' ? JSON.parse(s.meta_json) : s.meta_json) : {}
+        saveDetails.push({ slot: s.slot, playerName: mj.playerName || '未知', year: mj.year, season: mj.season, day: mj.day, money: mj.money, updatedAt: s.updated_at, rawSize: s.rawSize })
+        if (!lastSaveAt || s.updated_at > lastSaveAt) lastSaveAt = s.updated_at
+      }
+      pu.saveCount = saveCount
+      pu.lastSaveAt = lastSaveAt
+      pu.saves = saveDetails
+      enrichedUsers.push(pu)
+    }
+    send(res, 200, { stats: { userCount: uc, saveCount: sc, sessionCount: pc }, users: enrichedUsers })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
 app.post('/api/admin/mails', async (req, res) => {
