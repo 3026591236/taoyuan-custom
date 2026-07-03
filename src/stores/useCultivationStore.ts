@@ -7,8 +7,30 @@ import { useInventoryStore } from './useInventoryStore'
 
 export type SpiritRoot = 'mixed' | 'wood' | 'water' | 'earth' | 'fire' | 'metal'
 export type ArtifactKey = 'glimmerHoe' | 'spiritKettle' | 'spiritRain'
+export type BeastId = 'fox' | 'crane' | 'phoenix'
+export type CaveSlotType = 'alchemy' | 'farm' | 'meditation'
 
 const ARTIFACT_NAMES: Record<ArtifactKey, string> = { glimmerHoe: '流光锄', spiritKettle: '引灵壶', spiritRain: '灵雨诀' }
+
+export const BEAST_DATA: Record<BeastId, { name: string; emoji: string; desc: string; bonusType: string; bonusDesc: string; feedCrop: string; feedQty: number }> = {
+  fox: { name: '灵狐', emoji: '🦊', desc: '机敏灵慧，善于感应灵脉走向', bonusType: 'aura', bonusDesc: '灵气获取+30%', feedCrop: 'dew_grass', feedQty: 5 },
+  crane: { name: '仙鹤', emoji: '🦢', desc: '清雅高洁，修行时心境通透', bonusType: 'meditation', bonusDesc: '打坐修为+40%', feedCrop: 'spirit_rice', feedQty: 5 },
+  phoenix: { name: '青鸾', emoji: '🦚', desc: '浴火而生，丹火纯青', bonusType: 'alchemy', bonusDesc: '炼丹品质提升', feedCrop: 'vermilion_fruit', feedQty: 3 }
+}
+
+export const CAVE_SLOT_DATA: Record<CaveSlotType, { name: string; desc: string }> = {
+  alchemy: { name: '丹房', desc: '洞府内炼丹，灵气消耗-20%' },
+  farm: { name: '灵圃', desc: '洞府内种灵植，灵气产出+50%' },
+  meditation: { name: '静室', desc: '洞府内打坐，修为和灵力翻倍' }
+}
+
+const CAVE_TIERS = [
+  { name: '无', cost: 0, slots: 0, auraRegen: 0 },
+  { name: '石洞', cost: 800, slots: 1, auraRegen: 3 },
+  { name: '灵穴', cost: 2500, slots: 2, auraRegen: 6 },
+  { name: '洞府', cost: 6000, slots: 3, auraRegen: 12 },
+  { name: '仙府', cost: 15000, slots: 3, auraRegen: 20 }
+]
 const ALCHEMY_RECIPES = {
   mana_recovery_pill: { name: '回灵丹', materials: [{ itemId: 'dew_grass', quantity: 2 }], aura: 20, mana: 0, output: 1 },
   qi_gathering_pill: { name: '聚气丹', materials: [{ itemId: 'spirit_rice', quantity: 3 }, { itemId: 'dew_grass', quantity: 1 }], aura: 60, mana: 10, output: 1 },
@@ -71,6 +93,13 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const artifacts = ref<Record<ArtifactKey, boolean>>({ glimmerHoe: false, spiritKettle: false, spiritRain: false })
   const foundationPillBlessing = ref(0)
 
+  // V0.3 洞府
+  const caveTier = ref(0)
+  const caveSlots = ref<CaveSlotType[]>([])
+  // V0.3 灵兽
+  const beast = ref<BeastId | null>(null)
+  const beastBond = ref(0)
+
   const realm = computed(() => REALMS[realmIndex.value] ?? REALMS[0]!)
   const realmName = computed(() => realm.value.name)
   const maxCultivation = computed(() => realm.value.maxCultivation)
@@ -79,6 +108,16 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const spiritRootName = computed(() => SPIRIT_ROOT_NAMES[spiritRoot.value])
   const canBreakthrough = computed(() => cultivation.value >= maxCultivation.value && aura.value >= Math.max(0, realm.value.breakthroughCost - foundationPillBlessing.value))
   const artifactName = (key: ArtifactKey) => ARTIFACT_NAMES[key]
+  const caveTierData = computed(() => CAVE_TIERS[caveTier.value] ?? CAVE_TIERS[0]!)
+  const caveTierName = computed(() => caveTierData.value.name)
+  const caveMaxSlots = computed(() => caveTierData.value.slots)
+  const caveAuraRegen = computed(() => caveTierData.value.auraRegen)
+  const caveSlotNames = computed(() => caveSlots.value.map(t => CAVE_SLOT_DATA[t].name))
+  const hasCaveSlot = (type: CaveSlotType) => caveSlots.value.includes(type)
+  const beastData = computed(() => beast.value ? BEAST_DATA[beast.value] : null)
+  const beastName = computed(() => beastData.value?.name ?? '无')
+  const beastEmoji = computed(() => beastData.value?.emoji ?? '')
+  const beastLevel = computed(() => Math.floor(beastBond.value / 100) + 1)
 
   const unlock = () => {
     if (unlocked.value) return false
@@ -99,14 +138,22 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const meditate = () => {
     if (!unlocked.value) return unlock()
     const game = useGameStore()
-    const gain = 12 + fieldTier.value * 6 + (spiritRoot.value === 'mixed' ? 0 : 4)
-    const manaGain = 12 + fieldTier.value * 4
-    const auraGain = 5 + fieldTier.value * 3 + (spiritRoot.value === 'mixed' ? 0 : 2)
+    let gain = 12 + fieldTier.value * 6 + (spiritRoot.value === 'mixed' ? 0 : 4)
+    let manaGain = 12 + fieldTier.value * 4
+    let auraGain = 5 + fieldTier.value * 3 + (spiritRoot.value === 'mixed' ? 0 : 2)
+    // Cave meditation room bonus
+    if (hasCaveSlot('meditation')) { gain = Math.floor(gain * 2); manaGain = Math.floor(manaGain * 2) }
+    // Crane bonus
+    if (beast.value === 'crane') { gain = Math.floor(gain * 1.4) }
+    // Fox bonus
+    if (beast.value === 'fox') { auraGain = Math.floor(auraGain * 1.3) }
+    // Cave aura regen
+    auraGain += caveAuraRegen.value
     cultivation.value = Math.min(cultivation.value + gain, maxCultivation.value)
     mana.value = Math.min(mana.value + manaGain, maxMana.value)
     aura.value += auraGain
     const tr = game.advanceTime(1)
-    addLog(`静坐调息一刻，吸纳田间灵气，修为+${gain}，灵力+${manaGain}，灵气+${auraGain}。`)
+    addLog(`静坐调息一刻，修为+${gain}，灵力+${manaGain}，灵气+${auraGain}。`)
     showFloat(`修为+${gain}`, 'accent')
     if (tr.message) addLog(tr.message)
     return true
@@ -168,9 +215,11 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const base = getSpiritCropAura(cropId)
     if (base <= 0) return 0
     const directRatio = cropId === 'spirit_rice' || cropId === 'dew_grass' || cropId === 'vermilion_fruit' ? 0.6 : 1
+    const caveFarmBonus = hasCaveSlot('farm') ? 0.5 : 0
+    const foxBonus = beast.value === 'fox' ? 0.3 : 0
     const artifactBonus = artifacts.value.glimmerHoe ? 0.25 : 0
     const rainBonus = artifacts.value.spiritRain ? 0.2 : 0
-    const gain = Math.max(1, Math.floor(base * qty * directRatio * (1 + fieldTier.value * 0.25 + artifactBonus + rainBonus)))
+    const gain = Math.max(1, Math.floor(base * qty * directRatio * (1 + fieldTier.value * 0.25 + artifactBonus + rainBonus + caveFarmBonus + foxBonus)))
     aura.value += gain
     totalAuraHarvested.value += gain
     addLog(`灵田收获蕴含灵机，获得灵气${gain}点。`)
@@ -203,12 +252,13 @@ export const useCultivationStore = defineStore('cultivation', () => {
         return false
       }
     }
-    if (aura.value < recipe.aura || mana.value < recipe.mana) {
-      showFloat(`炼丹需要灵气${recipe.aura}、灵力${recipe.mana}。`, 'danger')
+    const auraCost = hasCaveSlot('alchemy') ? Math.floor(recipe.aura * 0.8) : recipe.aura
+    if (aura.value < auraCost || mana.value < recipe.mana) {
+      showFloat(`炼丹需要灵气${auraCost}、灵力${recipe.mana}。`, 'danger')
       return false
     }
     for (const mat of recipe.materials) inventory.removeItem(mat.itemId, mat.quantity)
-    aura.value -= recipe.aura
+    aura.value -= auraCost
     mana.value -= recipe.mana
     inventory.addItem(pillId, recipe.output)
     addLog(`炼成${recipe.name}×${recipe.output}。`)
@@ -265,7 +315,82 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
-  const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value })
+  // === V0.3 洞府 ===
+  const openCave = () => {
+    if (!unlocked.value) return unlock()
+    if (caveTier.value > 0) { showFloat('已有洞府。', 'danger'); return false }
+    const player = usePlayerStore()
+    if (!player.spendMoney(8000)) { showFloat('铜钱不足，需要8000文开辟洞府。', 'danger'); return false }
+    if (aura.value < 200) { showFloat('灵气不足，需要200点。', 'danger'); return false }
+    aura.value -= 200
+    caveTier.value = 1
+    caveSlots.value = []
+    addLog('你于山壁凿开石门，一处天然石洞现于眼前——洞府开辟！')
+    showFloat('洞府开辟！', 'success')
+    return true
+  }
+
+  const upgradeCave = () => {
+    if (caveTier.value <= 0) return openCave()
+    if (caveTier.value >= CAVE_TIERS.length - 1) { showFloat('洞府已达最高等阶。', 'danger'); return false }
+    const next = CAVE_TIERS[caveTier.value + 1]!
+    if (aura.value < next.cost) { showFloat(`灵气不足，需要${next.cost}点。`, 'danger'); return false }
+    aura.value -= next.cost
+    caveTier.value++
+    addLog(`洞府扩建为「${caveTierName.value}」，可用槽位${caveMaxSlots.value}个，每日灵气恢复+${caveAuraRegen.value}。`)
+    showFloat(caveTierName.value, 'success')
+    return true
+  }
+
+  const placeCaveSlot = (type: CaveSlotType) => {
+    if (caveTier.value <= 0) { showFloat('请先开辟洞府。', 'danger'); return false }
+    if (caveSlots.value.includes(type)) { showFloat('已安置此设施。', 'danger'); return false }
+    if (caveSlots.value.length >= caveMaxSlots.value) { showFloat('洞府槽位已满，请先扩建。', 'danger'); return false }
+    const player = usePlayerStore()
+    const cost = { alchemy: 3000, farm: 2000, meditation: 4000 }[type] ?? 0
+    if (!player.spendMoney(cost)) { showFloat(`铜钱不足，需要${cost}文。`, 'danger'); return false }
+    caveSlots.value = [...caveSlots.value, type]
+    addLog(`洞府内安置了「${CAVE_SLOT_DATA[type].name}」——${CAVE_SLOT_DATA[type].desc}`)
+    showFloat(`${CAVE_SLOT_DATA[type].name}已安置`, 'success')
+    return true
+  }
+
+  // === V0.3 灵兽 ===
+  const encounterBeast = () => {
+    if (!unlocked.value) return unlock()
+    if (beast.value) { showFloat('你已有灵兽伙伴。', 'danger'); return false }
+    const cost = 30
+    if (mana.value < cost) { showFloat('灵力不足，需要30点引灵。', 'danger'); return false }
+    mana.value -= cost
+    const game = useGameStore()
+    const tr = game.advanceTime(1)
+    // Random encounter
+    const roll = Math.random()
+    const chosen: BeastId = roll < 0.4 ? 'fox' : roll < 0.75 ? 'crane' : 'phoenix'
+    beast.value = chosen
+    beastBond.value = 10
+    addLog(`你循灵气而行，在一处灵泉边遇到了${BEAST_DATA[chosen].emoji}${BEAST_DATA[chosen].name}！它似乎愿意跟随你修行。`)
+    showFloat(`遇到${BEAST_DATA[chosen].name}！`, 'success')
+    if (tr.message) addLog(tr.message)
+    return true
+  }
+
+  const feedBeast = () => {
+    if (!beast.value) { showFloat('你还没有灵兽伙伴。', 'danger'); return false }
+    const data = BEAST_DATA[beast.value]
+    const inventory = useInventoryStore()
+    if (inventory.getItemCount(data.feedCrop) < data.feedQty) {
+      showFloat(`${data.name}需要${data.feedCrop === 'dew_grass' ? '凝露草' : data.feedCrop === 'spirit_rice' ? '蕴灵稻' : '朱果'}×${data.feedQty}。`, 'danger')
+      return false
+    }
+    inventory.removeItem(data.feedCrop, data.feedQty)
+    beastBond.value += 25
+    addLog(`你喂食${data.emoji}${data.name}，羁绊加深。当前羁绊：${beastBond.value}`)
+    showFloat(`羁绊+25`, 'success')
+    return true
+  }
+
+    const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, beast: beast.value, beastBond: beastBond.value })
   const deserialize = (data?: Partial<ReturnType<typeof serialize>>) => {
     if (!data) return
     unlocked.value = data.unlocked ?? false
@@ -279,7 +404,11 @@ export const useCultivationStore = defineStore('cultivation', () => {
     alchemyUnlocked.value = (data as any).alchemyUnlocked ?? false
     artifacts.value = { glimmerHoe: false, spiritKettle: false, spiritRain: false, ...((data as any).artifacts ?? {}) }
     foundationPillBlessing.value = (data as any).foundationPillBlessing ?? 0
+    caveTier.value = (data as any).caveTier ?? 0
+    caveSlots.value = (data as any).caveSlots ?? []
+    beast.value = (data as any).beast ?? null
+    beastBond.value = (data as any).beastBond ?? 0
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, totalAuraHarvested, alchemyUnlocked, artifacts, foundationPillBlessing, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, unlockAlchemy, craftPill, usePill, unlockArtifact, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, totalAuraHarvested, alchemyUnlocked, artifacts, foundationPillBlessing, caveTier, caveSlots, beast, beastBond, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, serialize, deserialize }
 })

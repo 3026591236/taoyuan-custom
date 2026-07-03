@@ -65,6 +65,61 @@
       <p v-if="cultivation.foundationPillBlessing > 0" class="text-xs text-success">筑基丹药力：下次突破灵气需求 -{{ cultivation.foundationPillBlessing }}</p>
     </div>
 
+    <Divider title label="洞府" />
+    <div v-if="cultivation.caveTier === 0" class="game-panel p-3 text-center space-y-2">
+      <p class="text-xs text-muted leading-relaxed">花费 8000 文 + 200 灵气，在山壁开凿一处洞府。洞府内可安置丹房、灵圃、静室，大幅提升修行效率。</p>
+      <Button class="w-full justify-center" :disabled="!cultivation.unlocked" @click="cultivation.openCave">开辟洞府（8000文 + 200灵气）</Button>
+    </div>
+    <div v-else class="space-y-2">
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="stat-card"><span>洞府</span><b>{{ cultivation.caveTierName }}</b></div>
+        <div class="stat-card"><span>槽位</span><b>{{ cultivation.caveSlots.length }}/{{ cultivation.caveMaxSlots }}</b></div>
+        <div class="stat-card"><span>灵气恢复</span><b>+{{ cultivation.caveAuraRegen }}/次</b></div>
+        <div class="stat-card"><span>设施</span><b>{{ cultivation.caveSlotNames.join('、') || '空' }}</b></div>
+      </div>
+      <Button class="w-full justify-between" @click="cultivation.upgradeCave"><span>扩建洞府</span><span class="text-muted text-xs">消耗灵气</span></Button>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div v-for="slot in caveSlotOptions" :key="slot.type" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs">
+          <p class="text-accent text-sm mb-1">{{ slot.name }}</p>
+          <p class="text-muted leading-relaxed min-h-[2rem]">{{ slot.desc }}</p>
+          <p class="text-[10px] text-muted my-2">安置费：{{ slot.cost }}文</p>
+          <Button class="w-full justify-center" :disabled="cultivation.hasCaveSlot(slot.type) || cultivation.caveSlots.length >= cultivation.caveMaxSlots" @click="cultivation.placeCaveSlot(slot.type)">
+            {{ cultivation.hasCaveSlot(slot.type) ? '已安置' : '安置' }}
+          </Button>
+        </div>
+      </div>
+    </div>
+
+    <Divider title label="灵兽" />
+    <div v-if="!cultivation.beast" class="game-panel p-3 text-center space-y-2">
+      <p class="text-xs text-muted leading-relaxed">消耗 30 灵力引灵，在灵脉附近寻找灵兽伙伴。灵兽会提供被动加成，陪伴你修行。</p>
+      <Button class="w-full justify-center" :disabled="!cultivation.unlocked || cultivation.mana < 30" @click="cultivation.encounterBeast">引灵寻兽（30灵力）</Button>
+    </div>
+    <div v-else class="space-y-2">
+      <div class="border border-accent/20 rounded-xs p-3 bg-panel/40 flex items-center gap-3">
+        <span class="text-3xl">{{ cultivation.beastEmoji }}</span>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-sm text-accent">{{ cultivation.beastName }}</span>
+            <span class="text-[10px] text-muted">Lv.{{ cultivation.beastLevel }}</span>
+          </div>
+          <p class="text-xs text-muted">{{ cultivation.beastData?.desc }}</p>
+          <p class="text-xs text-success mt-0.5">{{ cultivation.beastData?.bonusDesc }}</p>
+          <div class="mt-1 flex items-center space-x-2">
+            <span class="text-[10px] text-muted shrink-0">羁绊</span>
+            <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
+              <div class="h-full rounded-xs bg-accent transition-all" :style="{ width: (cultivation.beastBond % 100) + '%' }" />
+            </div>
+            <span class="text-[10px] text-muted">{{ cultivation.beastBond }}</span>
+          </div>
+        </div>
+      </div>
+      <Button class="w-full justify-between" :disabled="beastFeedCount < (cultivation.beastData?.feedQty ?? 99)" @click="cultivation.feedBeast">
+        <span>喂食{{ cultivation.beastName }}</span>
+        <span class="text-muted text-xs">{{ beastFeedItemName }} {{ beastFeedCount }}/{{ cultivation.beastData?.feedQty }}</span>
+      </Button>
+    </div>
+
     <Divider title label="农具法宝化" />
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
       <div v-for="artifact in artifacts" :key="artifact.key" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs">
@@ -90,6 +145,24 @@
   const cultivation = useCultivationStore()
   const inventory = useInventoryStore()
   const itemCount = (id: string) => inventory.getItemCount(id)
+
+  const caveSlotOptions: Array<{ type: import('@/stores/useCultivationStore').CaveSlotType; name: string; desc: string; cost: number }> = [
+    { type: 'alchemy', name: '丹房', desc: '洞府内炼丹，灵气消耗减少20%', cost: 3000 },
+    { type: 'farm', name: '灵圃', desc: '洞府内种灵植，灵气产出增加50%', cost: 2000 },
+    { type: 'meditation', name: '静室', desc: '洞府内打坐，修为和灵力翻倍', cost: 4000 }
+  ]
+
+  const beastFeedCount = computed(() => {
+    const crop = cultivation.beastData?.feedCrop
+    return crop ? inventory.getItemCount(crop) : 0
+  })
+  const beastFeedItemName = computed(() => {
+    const crop = cultivation.beastData?.feedCrop
+    if (crop === 'dew_grass') return '凝露草'
+    if (crop === 'spirit_rice') return '蕴灵稻'
+    if (crop === 'vermilion_fruit') return '朱果'
+    return crop ?? ''
+  })
 
   const pillRecipes: Array<{ id: PillId; name: string; desc: string; materialText: string; aura: number; mana: number }> = [
     { id: 'mana_recovery_pill', name: '回灵丹', desc: '回复灵力，适合连续炼丹/调息。', materialText: '凝露草×2', aura: 20, mana: 0 },
