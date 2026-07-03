@@ -228,7 +228,11 @@ app.get('/api/leaderboard', async (req, res) => {
     const by = req.query.by || 'cultivation'
     const orderBy = by === 'money' ? 'money DESC' : by === 'aura' ? 'aura DESC' : 'cultivation DESC'
     const [rows] = await pool.execute(`SELECT * FROM leaderboard ORDER BY ${orderBy} LIMIT 50`)
-    send(res, 200, { leaderboard: rows })
+    send(res, 200, { leaderboard: rows.map(r => ({
+      playerName: r.player_name, username: r.username, realmName: r.realm_name,
+      cultivation: r.cultivation, aura: r.aura, money: r.money,
+      year: r.game_year, season: r.game_season, day: r.game_day, updatedAt: r.updated_at
+    })) })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
 
