@@ -18,17 +18,17 @@ export type PillId = keyof typeof ALCHEMY_RECIPES
 export const getAlchemyRecipes = () => ALCHEMY_RECIPES
 
 export const REALMS = [
-  { name: '凡人', maxCultivation: 100, maxMana: 30, breakthroughCost: 80 },
-  { name: '炼气一层', maxCultivation: 220, maxMana: 45, breakthroughCost: 160 },
-  { name: '炼气二层', maxCultivation: 420, maxMana: 65, breakthroughCost: 320 },
-  { name: '炼气三层', maxCultivation: 760, maxMana: 90, breakthroughCost: 560 },
-  { name: '炼气四层', maxCultivation: 1200, maxMana: 120, breakthroughCost: 900 },
-  { name: '炼气五层', maxCultivation: 1800, maxMana: 155, breakthroughCost: 1400 },
-  { name: '炼气六层', maxCultivation: 2600, maxMana: 195, breakthroughCost: 2100 },
-  { name: '炼气七层', maxCultivation: 3700, maxMana: 240, breakthroughCost: 3100 },
-  { name: '炼气八层', maxCultivation: 5200, maxMana: 290, breakthroughCost: 4600 },
-  { name: '炼气九层', maxCultivation: 7200, maxMana: 350, breakthroughCost: 6800 },
-  { name: '筑基初期', maxCultivation: 11000, maxMana: 460, breakthroughCost: 10000 }
+  { name: '凡人', maxCultivation: 100, maxMana: 30, breakthroughCost: 30 },
+  { name: '炼气一层', maxCultivation: 220, maxMana: 45, breakthroughCost: 60 },
+  { name: '炼气二层', maxCultivation: 420, maxMana: 65, breakthroughCost: 120 },
+  { name: '炼气三层', maxCultivation: 760, maxMana: 90, breakthroughCost: 200 },
+  { name: '炼气四层', maxCultivation: 1200, maxMana: 120, breakthroughCost: 350 },
+  { name: '炼气五层', maxCultivation: 1800, maxMana: 155, breakthroughCost: 500 },
+  { name: '炼气六层', maxCultivation: 2600, maxMana: 195, breakthroughCost: 750 },
+  { name: '炼气七层', maxCultivation: 3700, maxMana: 240, breakthroughCost: 1100 },
+  { name: '炼气八层', maxCultivation: 5200, maxMana: 290, breakthroughCost: 1600 },
+  { name: '炼气九层', maxCultivation: 7200, maxMana: 350, breakthroughCost: 2400 },
+  { name: '筑基初期', maxCultivation: 11000, maxMana: 460, breakthroughCost: 3500 }
 ]
 
 const FIELD_TIERS = ['普通田', '黄阶灵田', '玄阶灵田', '地阶灵田', '天阶洞天']
@@ -101,10 +101,12 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const game = useGameStore()
     const gain = 12 + fieldTier.value * 6 + (spiritRoot.value === 'mixed' ? 0 : 4)
     const manaGain = 12 + fieldTier.value * 4
+    const auraGain = 5 + fieldTier.value * 3 + (spiritRoot.value === 'mixed' ? 0 : 2)
     cultivation.value = Math.min(cultivation.value + gain, maxCultivation.value)
     mana.value = Math.min(mana.value + manaGain, maxMana.value)
+    aura.value += auraGain
     const tr = game.advanceTime(1)
-    addLog(`静坐调息一刻，吸纳田间灵气，修为+${gain}，灵力+${manaGain}。`)
+    addLog(`静坐调息一刻，吸纳田间灵气，修为+${gain}，灵力+${manaGain}，灵气+${auraGain}。`)
     showFloat(`修为+${gain}`, 'accent')
     if (tr.message) addLog(tr.message)
     return true
@@ -165,7 +167,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     if (!unlocked.value) return 0
     const base = getSpiritCropAura(cropId)
     if (base <= 0) return 0
-    const directRatio = cropId === 'spirit_rice' || cropId === 'dew_grass' || cropId === 'vermilion_fruit' ? 0.35 : 1
+    const directRatio = cropId === 'spirit_rice' || cropId === 'dew_grass' || cropId === 'vermilion_fruit' ? 0.6 : 1
     const artifactBonus = artifacts.value.glimmerHoe ? 0.25 : 0
     const rainBonus = artifacts.value.spiritRain ? 0.2 : 0
     const gain = Math.max(1, Math.floor(base * qty * directRatio * (1 + fieldTier.value * 0.25 + artifactBonus + rainBonus)))

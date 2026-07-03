@@ -109,8 +109,8 @@
             <div class="h-full rounded-xs transition-all bg-accent" :style="{ width: breakthroughPercent + '%' }" />
           </div>
           <span class="text-xs whitespace-nowrap" :class="cultivationStore.canBreakthrough ? 'text-accent' : 'text-muted'">{{ cultivationStore.canBreakthrough ? '可突破' : Math.round(breakthroughPercent) + '%' }}</span>
-        <button v-if="cultivationStore.canBreakthrough" class="btn w-full justify-center mt-1" @click="handleBreakthrough">突破境界</button>
         </div>
+        <button v-if="cultivationStore.canBreakthrough" class="btn w-full justify-center mt-1.5" @click="handleBreakthrough">⚡ 突破境界</button>
       </div>
     </div>
 
