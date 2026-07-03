@@ -164,17 +164,11 @@
                 <label class="block text-sm">物品奖励</label>
                 <span class="text-xs text-muted">物品 ID 可填 seed_spirit_rice、mana_recovery_pill 等</span>
               </div>
-              <input v-model="itemSearch" class="input" placeholder="🔍 搜索物品名称..." />
               <div v-for="(item, idx) in gmMail.rewards.items" :key="idx" class="grid grid-cols-1 md:grid-cols-12 gap-2">
-                <div class="md:col-span-5 relative">
-                  <input v-model="item.itemId" class="input" placeholder="物品ID，如 mana_recovery_pill" @focus="showItemDropdown = true" @blur="hideDropdown" />
-                  <div v-if="showItemDropdown && filteredItems.length > 0" class="absolute z-50 w-full bg-dark border border-accent/20 rounded-xs max-h-40 overflow-y-auto mt-1">
-                    <div v-for="mi in filteredItems" :key="mi.id" class="px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/10 flex justify-between" @click="selectItem(mi)">
-                      <span>{{ mi.name }}</span>
-                      <span class="text-muted">{{ mi.id }}</span>
-                    </div>
-                  </div>
-                </div>
+                <select v-model="item.itemId" class="input md:col-span-5">
+                  <option value="">请选择物品</option>
+                  <option v-for="mi in ALL_ITEMS" :key="mi.id" :value="mi.id">{{ mi.name }}（{{ mi.id }}）</option>
+                </select>
                 <input v-model.number="item.quantity" class="input md:col-span-2" type="number" min="1" placeholder="数量" />
                 <select v-model="item.quality" class="input md:col-span-3">
                   <option value="normal">普通</option>
@@ -216,8 +210,6 @@ const message = ref('')
 const messageType = ref<'ok' | 'error'>('ok')
 const config = reactive<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], aboutQqText: '', aboutQqUrl: '', aboutGithubUrl: '', aboutTapTapUrl: '', sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: '', registrationEnabled: true, maintenanceMode: false })
 const overview = reactive<any>({ stats: { userCount: 0, saveCount: 0, sessionCount: 0 }, users: [] })
-const itemSearch = ref('')
-const showItemDropdown = ref(false)
 const ALL_ITEMS = [
   { id: 'mana_recovery_pill', name: '回灵丹' },
   { id: 'qi_gathering_pill', name: '聚气丹' },
@@ -398,20 +390,6 @@ const ALL_ITEMS = [
   { id: 'herb_epic', name: '史诗草药' },
   { id: 'herb_legendary', name: '传说草药' }
 ]
-const filteredItems = computed(() => {
-  const q = itemSearch.value.toLowerCase().trim()
-  if (!q) return ALL_ITEMS
-  return ALL_ITEMS.filter(i => i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q))
-})
-const hideDropdown = () => { showItemDropdown.value = false }
-const selectItem = (item: any) => {
-  const rewardItem = gmMail.rewards.items[gmMail.rewards.items.length - 1]
-  if (rewardItem) {
-    rewardItem.itemId = item.id
-  }
-  showItemDropdown.value = false
-  itemSearch.value = ''
-}
 const gmMail = reactive<any>({
   to: 'all',
   title: '系统奖励',
