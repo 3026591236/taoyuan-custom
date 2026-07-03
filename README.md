@@ -2,29 +2,27 @@
 
 > 基于 [桃源乡](https://github.com/setube/taoyuan) 进行的自主功能扩展版本
 
-## 🎮 在线地址
-
-**http://38.12.5.26:8084/**
-
 ## 🚀 一键安装
 
 在全新服务器上只需一条命令，自动安装所有环境、配置数据库、构建前端、启动后端：
 
-[0;36m
-╔══════════════════════════════════════╗
-║     桃源乡 一键安装脚本              ║
-║     前后端分离版                     ║
-╚══════════════════════════════════════╝
-[0m
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/3026591236/taoyuan-custom/main/install.sh)
+```
 
-脚本会交互式引导你配置：
-- 安装目录、游戏端口、后端端口
-- MySQL 数据库名/用户名/密码
-- **管理员账号**（用户名+密码）
+或者手动下载运行：
 
-安装完成后即可访问游戏并登录管理员账号进入后台。
+```bash
+git clone https://github.com/3026591236/taoyuan-custom.git
+cd taoyuan-custom
+bash install.sh
+```
 
----
+脚本会交互式引导你配置：安装目录、端口、MySQL、管理员账号。安装完成即可访问游戏。
+
+## 🎮 在线地址
+
+**http://38.12.5.26:8084/**
 
 ## 🏗️ 架构
 
@@ -53,10 +51,14 @@
 │   ├── package.json       # 后端依赖
 │   └── schema.sql         # MySQL 完整建表语句
 ├── docs/                  # 前端构建产物（部署到 nginx 目录）
+├── install.sh             # 一键安装脚本
 └── server.js              # 旧版 Docker 内嵌服务端（已弃用）
 ```
 
-## 🚀 部署教程
+## 🛠️ 手动部署
+
+<details>
+<summary>点击展开手动部署步骤</summary>
 
 ### 环境要求
 
@@ -69,20 +71,17 @@
 
 ```bash
 # 前端
-cd /opt/taoyuan-src
-npm install
+cd /opt/taoyuan-src && npm install
 
 # 后端
-cd /opt/taoyuan-src/backend
-npm install
+cd /opt/taoyuan-src/backend && npm install
 ```
 
 ### 2. 初始化数据库
 
 ```bash
-mysql -u root -p < /opt/taoyuan-src/backend/schema.sql
+mysql -u root -p < backend/schema.sql
 
-# 创建数据库用户
 mysql -u root -p -e "
 CREATE USER 'taoyuan'@'localhost' IDENTIFIED BY 'taoyuan2026';
 GRANT ALL PRIVILEGES ON taoyuan.* TO 'taoyuan'@'localhost';
@@ -93,22 +92,14 @@ FLUSH PRIVILEGES;
 ### 3. 构建前端
 
 ```bash
-cd /opt/taoyuan-src
 npx vite build
-# 构建产物在 docs/ 目录
-```
-
-### 4. 部署前端静态文件
-
-```bash
 mkdir -p /opt/taoyuan-frontend
-cp -r /opt/taoyuan-src/docs/* /opt/taoyuan-frontend/
+cp -r docs/* /opt/taoyuan-frontend/
 ```
 
-### 5. 配置 nginx
+### 4. 配置 nginx
 
-```bash
-cat > /etc/nginx/sites-available/taoyuan << 'EOF'
+```nginx
 server {
     listen 8084;
     server_name _;
@@ -128,103 +119,57 @@ server {
         add_header Cache-Control no-cache;
     }
 
-    location ~* .(js|css|png|jpg|jpeg|svg|woff2|ico)$ {
+    location ~* \.(js|css|png|jpg|jpeg|svg|woff2|ico)$ {
         expires 30d;
         add_header Cache-Control public;
     }
 }
-EOF
-
-ln -sf /etc/nginx/sites-available/taoyuan /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
 ```
 
-### 6. 启动后端
+### 5. 启动后端
 
 ```bash
 cd /opt/taoyuan-src/backend
 pm2 start index.mjs --name taoyuan-api
 pm2 save
-```
-
-### 7. 设置开机自启
-
-```bash
 pm2 startup
-pm2 save
-systemctl enable nginx
-systemctl enable mysql
 ```
 
-### 8. 第一个管理员
+### 6. 创建管理员
 
-第一个注册的用户自动成为管理员。或者直接在数据库设置：
+第一个注册的用户自动成为管理员，或在数据库设置：
 
 ```bash
 mysql -u taoyuan -ptaoyuan2026 taoyuan -e "UPDATE users SET role='admin' WHERE username='你的用户名';"
 ```
 
+</details>
+
 ## 🔄 更新流程
 
 ```bash
-# 1. 拉取最新代码
 cd /opt/taoyuan-src
 git pull origin main
-
-# 2. 重新构建前端
 npm install
 npx vite build
 cp -r docs/* /opt/taoyuan-frontend/
-
-# 3. 重启后端
 cp backend/index.mjs /opt/taoyuan-backend/
 cd /opt/taoyuan-backend && npm install && pm2 restart taoyuan-api
 ```
 
 ## ✨ 新增功能（相比原版）
 
-### 💾 账号系统 & 云存档
-- 注册/登录账号，5 秒自动云存档
-- 多存档槽位，跨设备同步
+- 💾 **账号系统 & 云存档** — 注册/登录，多存档槽位，跨设备同步
+- 📬 **GM 邮件系统** — 后台发送系统邮件+奖励，游戏内领取
+- ✅ **每日签到** — 每天领取 500 铜钱
+- 📢 **公告与更新记录** — 后台编辑，前端弹窗展示
+- 🧘 **修仙 V0.1-V0.2** — 灵田修行、灵植炼丹、法宝化
+- 🏠 **V0.3 洞府与灵兽** — 洞府扩建、灵兽收服加成
+- 🏆 **V0.4 排行榜 & 突破公告** — 修为/铜钱/灵气排行，突破全服通知
+- ⚔️ **V0.5 秘境+炼器+门派+法宝** — 3大秘境、炼器8配方、3门派、6法宝槽
+- ⚙️ **后台管理** — 基础配置/玩家管理/GM邮件/封号解封
 
-### 📬 GM 邮件系统
-- 后台可给全体/指定玩家发送系统邮件
-- 邮件附带奖励：铜钱、体力、物品
-- 游戏内地图菜单 → 随身 → 系统邮件 领取
-
-### ✅ 每日签到
-- 每天领取 500 铜钱
-
-### 📢 公告与更新记录
-- 后台编辑公告，设置自动弹出间隔
-- 更新记录后台维护，前端弹窗展示
-
-### 🧘 修仙体系 V0.1-V0.2
-- 灵田修行：灵田启蒙 → 打坐调息 → 炼化灵气 → 尝试突破
-- 灵植与炼丹：蕴灵稻/凝露草/朱果 → 回灵丹/聚气丹/筑基丹
-- 法宝化：流光锄/引灵壶/灵雨诀
-
-### 🏠 V0.3 洞府与灵兽
-- 洞府开辟/扩建，安置丹房/灵圃/静室
-- 引灵寻兽：灵狐/仙鹤/青鸾，被动加成
-
-### 🏆 V0.4 排行榜与突破世界公告
-- 修为/铜钱/灵气排行
-- 突破境界全服飘字通知
-
-### ⚔️ V0.5 秘境探索+炼器+门派+法宝
-- 3 大秘境（灵兽森林/幽冥洞窟/天劫雷域）
-- 炼器系统：8 种配方打造法宝
-- 法宝系统：6 槽位，5 种品质
-- 门派系统：剑宗/丹宗/符宗
-- 境界扩展至金丹后期
-
-### ⚙️ 后台管理
-- Tab 栏：基础配置 / 关于赞助 / 更新记录 / 玩家管理 / GM邮件
-- 玩家管理：封号/解封、重置密码、云存档查看
-- 关于游戏、赞助信息后台可配置
-
-## 📊 数据库表结构
+## 📊 数据库表
 
 | 表名 | 用途 |
 |------|------|
