@@ -744,8 +744,16 @@
       const data = await res.json().catch(() => ({}))
       if (!res.ok) { addLog(data.error || '签到失败。'); return }
       playerStore.earnMoney(Number(data.reward || 0))
+      const itemRewards = Array.isArray(data.items) ? data.items : []
+      for (const item of itemRewards) {
+        inventoryStore.addItem(String(item.itemId), Number(item.quantity) || 1, item.quality || 'normal')
+      }
       checkinChecked.value = true
-      addLog(`每日签到成功，获得 ${data.reward} 铜钱。`)
+      const itemText = itemRewards.length
+        ? '，并获得 ' + itemRewards.map((item: any) => `${getItemName(String(item.itemId))}×${Number(item.quantity) || 1}`).join('、')
+        : ''
+      const streakText = data.streak ? `（连续${data.streak}天）` : ''
+      addLog(`每日签到成功${streakText}，获得 ${data.reward} 铜钱${itemText}。`)
       const slot = saveStore.activeSlot >= 0 ? saveStore.activeSlot : saveStore.assignNewSlot()
       if (slot >= 0) saveStore.saveToSlot(slot)
     } catch {

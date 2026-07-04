@@ -114,19 +114,19 @@
               <span style="font-size:18px">🐾</span>
               <span>灵兽</span>
             </button>
-            <button class="map-loc" @click="emit('openCombat' as any)">
+            <button class="map-loc" @click="handleSpecial('openCombat')">
               <Flame :size="18" />
               <span>秘境</span>
             </button>
-            <button class="map-loc" @click="emit('openSect' as any)">
+            <button class="map-loc" @click="handleSpecial('openSect')">
               <Swords :size="18" />
               <span>门派</span>
             </button>
-            <button class="map-loc" @click="emit('openForge' as any)">
+            <button class="map-loc" @click="handleSpecial('openForge')">
               <Cog :size="18" />
               <span>炼器</span>
             </button>
-            <button class="map-loc" @click="emit('openLeaderboard' as any)">
+            <button class="map-loc" @click="handleSpecial('openLeaderboard')">
               <Trophy :size="18" />
               <span>排行</span>
             </button>
@@ -174,7 +174,7 @@
   import type { PanelKey } from '@/composables/useNavigation'
 
   defineProps<{ open: boolean; current: string; checkinChecked?: boolean; checkinBusy?: boolean; unclaimedMailCount?: number }>()
-  const emit = defineEmits<{ close: []; checkin: []; openMail: [] }>()
+  const emit = defineEmits<{ close: []; checkin: []; openMail: []; openLeaderboard: []; openCombat: []; openForge: []; openSect: [] }>()
 
   const tabMap = computed(() => {
     const m = new Map<string, (typeof TABS)[number]>()
@@ -199,6 +199,13 @@
   }
   const handleOpenMail = () => {
     emit('openMail')
+  }
+  const handleSpecial = (event: 'openLeaderboard' | 'openCombat' | 'openForge' | 'openSect') => {
+    if (event === 'openLeaderboard') emit('openLeaderboard')
+    else if (event === 'openCombat') emit('openCombat')
+    else if (event === 'openForge') emit('openForge')
+    else emit('openSect')
+    emit('close')
   }
 </script>
 

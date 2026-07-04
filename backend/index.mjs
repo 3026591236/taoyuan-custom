@@ -292,25 +292,68 @@ app.delete('/api/saves/:slot', async (req, res) => {
 })
 
 // --- 签到 ---
+function localDateKey(offsetHours = 8, date = new Date()) {
+  return new Date(date.getTime() + offsetHours * 3600000).toISOString().slice(0, 10)
+}
+function addDaysKey(key, days) {
+  const d = new Date(`${key}T00:00:00.000Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+async function getCheckinStreak(userId, today) {
+  const [rows] = await pool.execute('SELECT check_date FROM checkins WHERE user_id = ? ORDER BY check_date DESC LIMIT 60', [userId])
+  const set = new Set(rows.map(r => localDateKey(0, new Date(r.check_date))))
+  let cursor = today
+  let streak = 0
+  while (set.has(cursor)) {
+    streak++
+    cursor = addDaysKey(cursor, -1)
+  }
+  return streak
+}
+function checkinItemsForStreak(streak) {
+  const day = ((Math.max(1, streak) - 1) % 7) + 1
+  const items = []
+  if (day === 1) items.push({ itemId: 'seed_cabbage', quantity: 5 })
+  if (day === 2) items.push({ itemId: 'basic_fertilizer', quantity: 3 })
+  if (day === 3) items.push({ itemId: 'seed_potato', quantity: 4 })
+  if (day === 4) items.push({ itemId: 'quality_fertilizer', quantity: 2 })
+  if (day === 5) items.push({ itemId: 'seed_strawberry', quantity: 3 })
+  if (day === 6) items.push({ itemId: 'ancient_seed', quantity: 1 })
+  if (day === 7) items.push({ itemId: 'quality_fertilizer', quantity: 5 }, { itemId: 'seed_watermelon', quantity: 3 })
+  return items
+}
+function checkinRewardForStreak(streak) {
+  const day = ((Math.max(1, streak) - 1) % 7) + 1
+  return 300 + day * 100 + Math.floor((Math.max(1, streak) - 1) / 7) * 50
+}
+
 app.get('/api/checkin', async (req, res) => {
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localDateKey(8)
     const [rows] = await pool.execute('SELECT id FROM checkins WHERE user_id = ? AND check_date = ?', [user.id, today])
     const [total] = await pool.execute('SELECT COUNT(*) as c FROM checkins WHERE user_id = ?', [user.id])
-    send(res, 200, { checked: rows.length > 0, today, total: total[0].c, reward: 500 })
-  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+    const currentStreak = await getCheckinStreak(user.id, today)
+    const nextStreak = rows.length ? currentStreak : currentStreak + 1
+    send(res, 200, { checked: rows.length > 0, today, timezone: 'Asia/Shanghai', total: total[0].c, streak: currentStreak, nextStreak, reward: checkinRewardForStreak(nextStreak), items: checkinItemsForStreak(nextStreak) })
+  } catch (e) { console.error('checkin status err', e); send(res, 500, { error: '服务器错误' }) }
 })
 
 app.post('/api/checkin', async (req, res) => {
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localDateKey(8)
     const [exist] = await pool.execute('SELECT id FROM checkins WHERE user_id = ? AND check_date = ?', [user.id, today])
     if (exist.length) return send(res, 409, { error: '今天已经签到过了' })
-    await pool.execute('INSERT INTO checkins (user_id, check_date, reward) VALUES (?, ?, 500)', [user.id, today])
-    send(res, 200, { ok: true, reward: 500 })
-  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+    const yesterday = addDaysKey(today, -1)
+    const yesterdayStreak = await getCheckinStreak(user.id, yesterday)
+    const streak = yesterdayStreak + 1
+    const reward = checkinRewardForStreak(streak)
+    const items = checkinItemsForStreak(streak)
+    await pool.execute('INSERT INTO checkins (user_id, check_date, reward) VALUES (?, ?, ?)', [user.id, today, reward])
+    send(res, 200, { ok: true, today, timezone: 'Asia/Shanghai', reward, items, streak })
+  } catch (e) { console.error('checkin post err', e); send(res, 500, { error: '服务器错误' }) }
 })
 
 // --- 邮件 ---
