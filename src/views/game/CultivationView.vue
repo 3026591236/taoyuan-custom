@@ -1,11 +1,12 @@
 <template>
   <div class="space-y-3">
+    <!-- ===== 灵田修行 ===== -->
     <Divider title label="灵田修行" />
 
     <div class="border border-accent/20 rounded-xs p-3 bg-panel/40">
       <p class="text-sm text-accent mb-1">{{ cultivation.unlocked ? '灵田已启蒙' : '田间似有灵机' }}</p>
       <p class="text-xs text-muted leading-relaxed">
-        修行并非凭空而来。桃源田庄地下藏有一缕灵脉，灵田、灵植、打坐与突破会逐步接入原本的种田生活。
+        修行并非凭空而来。先在田里翻土、播种、收获，地脉感应会一点点积累；感应圆满后，再整理灵脉启蒙灵田。
       </p>
     </div>
 
@@ -14,6 +15,10 @@
       <div class="stat-card"><span>灵根</span><b>{{ cultivation.spiritRootName }}</b></div>
       <div class="stat-card"><span>灵田</span><b>{{ cultivation.fieldTierName }}</b></div>
       <div class="stat-card"><span>灵气</span><b>{{ cultivation.aura }}</b></div>
+      <div class="stat-card col-span-2" v-if="!cultivation.unlocked">
+        <div class="flex justify-between mb-1"><span>地脉感应</span><b>{{ cultivation.earthPulse }}/100</b></div>
+        <div class="bar"><div class="bar-fill pulse" :style="{ width: cultivation.earthPulse + '%' }" /></div>
+      </div>
       <div class="stat-card col-span-2">
         <div class="flex justify-between mb-1"><span>修为</span><b>{{ cultivation.cultivation }}/{{ cultivation.maxCultivation }}</b></div>
         <div class="bar"><div class="bar-fill" :style="{ width: cultivationPercent + '%' }" /></div>
@@ -25,8 +30,8 @@
     </div>
 
     <div v-if="!cultivation.unlocked" class="game-panel p-3 text-center space-y-2">
-      <p class="text-xs text-muted leading-relaxed">花费 3000 文整理田庄地脉，开启黄阶灵田。开启后，部分高阶作物收获时会产生灵气。</p>
-      <Button class="w-full justify-center" @click="cultivation.unlock">灵田启蒙（3000文）</Button>
+      <p class="text-xs text-muted leading-relaxed">先通过收获作物把地脉感应积累到100，再花费1800文整理田庄地脉，开启黄阶灵田。开启后，普通作物也会产出少量灵气，灵植产出更多。</p>
+      <Button class="w-full justify-center" :disabled="cultivation.earthPulse < 100" @click="cultivation.unlock">地脉启蒙（1800文）</Button>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -38,89 +43,76 @@
 
     <div class="border border-accent/10 rounded-xs p-3 text-xs text-muted leading-relaxed">
       <p class="text-accent mb-1">灵植联动</p>
-      <p>新增蕴灵稻、凝露草、朱果三种灵植。它们收获时只给少量灵气，主要用途改为炼丹材料。</p>
-      <p class="mt-1">种子会随季节在万物铺出售：蕴灵稻春/夏，凝露草春/秋，朱果夏/秋。</p>
+      <p>现在普通作物会先积累地脉感应，启蒙后也能转化少量灵气；蕴灵稻、凝露草、朱果则是更高效的灵植和炼丹材料。</p>
+      <p class="mt-1">建议路线：种田收获 → 地脉感应100 → 启蒙灵田 → 种灵植 → 炼丹突破。</p>
     </div>
 
-    <Divider title label="炼丹炉" />
-    <div v-if="!cultivation.alchemyUnlocked" class="game-panel p-3 text-center space-y-2">
-      <p class="text-xs text-muted leading-relaxed">花费 5000 文在灵田旁安置炼丹炉。炼丹会消耗灵植、灵气和灵力。</p>
-      <Button class="w-full justify-center" :disabled="!cultivation.unlocked" @click="cultivation.unlockAlchemy">安置炼丹炉（5000文）</Button>
+    <!-- ===== 轮回殿 ===== -->
+    <Divider title label="🔄 轮回殿" />
+    <div class="border border-red-600/40 rounded-xs p-3 bg-red-950/20">
+      <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div class="stat-card"><span>转数</span><b class="text-red-400">{{ cultivation.rebirthCount }}转</b></div>
+        <div class="stat-card"><span>灵蕴</span><b class="text-purple-400">{{ cultivation.lingYun }}点</b></div>
+        <div class="stat-card"><span>转生增益</span><b class="text-emerald-400">灵气+{{ cultivation.rebirthBonus }}%</b></div>
+        <div class="stat-card"><span>丹药加成</span><b class="text-emerald-400">+{{ Math.floor(cultivation.rebirthCount * 5) }}%</b></div>
+      </div>
+      <div class="text-xs text-muted leading-relaxed mb-3 space-y-1">
+        <p class="text-accent">🔮 每转增益：灵气产量+10% · 丹药效果+5% · 灵蕴+1 · 灵根晋升</p>
+        <p class="text-[10px]">当前灵根：<span class="text-accent">{{ cultivation.spiritRootName }}</span>（下一转：{{ cultivation.spiritRoot === 'celestial' ? '[已达天灵根]' : nextSpiritRootName }}）</p>
+        <p class="text-[10px]">下一转效果：洞府/法宝/元神/丹药效果保留，境界与灵田重置</p>
+      </div>
+      <div v-if="cultivation.canRebirth" class="space-y-2 mb-3">
+        <div class="text-xs text-success">✅ 你已达到大乘初期，修为圆满，可进行转生！</div>
+        <div class="text-[10px] text-muted space-y-1">
+          <p>· 需要轮回丹 ×1</p>
+          <p>· 消耗灵气 {{ cultivation.rebirthCost.aura.toLocaleString() }}</p>
+          <p>· 消耗铜钱 {{ cultivation.rebirthCost.money.toLocaleString() }}</p>
+          <p class="text-caution">⚠️ 转生后将重置境界至凡人、灵田至黄阶、灵兽羁绊归零</p>
+        </div>
+        <Button class="w-full justify-center !bg-red-700 hover:!bg-red-600 !text-white" @click="confirmRebirth">踏入轮回（第{{ cultivation.rebirthCount + 1 }}转）</Button>
+      </div>
+      <div v-else class="text-xs text-muted">
+        <span v-if="!cultivation.unlocked">启蒙灵田后可查看转生条件。</span>
+        <span v-else>需达到「大乘初期」且修为满后方可转生。当前境界：{{ cultivation.realmName }}</span>
+      </div>
+
+      <!-- 已解锁功能 -->
+      <div v-if="cultivation.rebirthCount > 0" class="mt-3 pt-3 border-t border-accent/15">
+        <p class="text-xs text-accent mb-2">✨ 转生解锁</p>
+        <div class="grid grid-cols-2 gap-1 text-[10px]">
+          <span :class="cultivation.rebirthCount >= 1 ? 'text-success' : 'text-muted/50'">✅ 1转·洞府</span>
+          <span :class="cultivation.rebirthCount >= 3 ? 'text-success' : 'text-muted/50'">✅ 3转·本命法宝</span>
+          <span :class="cultivation.rebirthCount >= 5 ? 'text-success' : 'text-muted/50'">✅ 5转·灵兽</span>
+          <span :class="cultivation.rebirthCount >= 8 ? 'text-success' : 'text-muted/50'">🔒 8转·元神秘境</span>
+          <span :class="cultivation.rebirthCount >= 10 ? 'text-success' : 'text-muted/50'">🔒 10转·秘境二层</span>
+          <span :class="cultivation.rebirthCount >= 15 ? 'text-success' : 'text-muted/50'">🔒 15转·装备升星</span>
+          <span :class="cultivation.rebirthCount >= 20 ? 'text-success' : 'text-muted/50'">🏆 20转·转生称号</span>
+        </div>
+      </div>
     </div>
-    <div v-else class="grid grid-cols-1 gap-2">
-      <div v-for="recipe in pillRecipes" :key="recipe.id" class="border border-accent/15 rounded-xs p-3 bg-panel/30">
-        <div class="flex items-center justify-between gap-2 mb-1">
-          <div>
-            <p class="text-sm text-accent">{{ recipe.name }}</p>
-            <p class="text-[10px] text-muted">{{ recipe.desc }}</p>
+
+    <!-- 轮回转生确认弹窗 -->
+    <Teleport to="body">
+      <div v-if="showRebirthConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+        <div class="bg-zinc-900 border-2 border-red-600 rounded-xs p-6 max-w-sm w-full mx-4">
+          <p class="text-lg text-red-400 mb-2">⚠️ 确认转生</p>
+          <div class="text-xs text-muted leading-relaxed space-y-1 mb-4">
+            <p>· 境界：<span class="text-caution">{{ cultivation.realmName }}</span> → <span class="text-success">凡人</span></p>
+            <p>· 灵田：<span class="text-caution">{{ cultivation.fieldTierName }}</span> → <span class="text-success">黄阶灵田</span></p>
+            <p>· 灵兽羁绊：归零（灵兽保留）</p>
+            <p class="text-success">· 保留：洞府/法宝/元神/丹药效果/30%灵气</p>
+            <p class="text-caution mt-2">此操作不可逆！确认要踏入{{ cultivation.rebirthCount + 1 }}转吗？</p>
           </div>
-          <span class="text-[10px] text-muted">背包 {{ itemCount(recipe.id) }}</span>
-        </div>
-        <p class="text-[10px] text-muted mb-2">材料：{{ recipe.materialText }}；灵气 {{ recipe.aura }}；灵力 {{ recipe.mana }}</p>
-        <div class="grid grid-cols-2 gap-2">
-          <Button class="justify-center" @click="cultivation.craftPill(recipe.id)">炼制</Button>
-          <Button class="justify-center" :disabled="itemCount(recipe.id) <= 0" @click="cultivation.usePill(recipe.id)">服用</Button>
-        </div>
-      </div>
-      <p v-if="cultivation.foundationPillBlessing > 0" class="text-xs text-success">筑基丹药力：下次突破灵气需求 -{{ cultivation.foundationPillBlessing }}</p>
-    </div>
-
-    <Divider title label="洞府" />
-    <div v-if="cultivation.caveTier === 0" class="game-panel p-3 text-center space-y-2">
-      <p class="text-xs text-muted leading-relaxed">花费 8000 文 + 200 灵气，在山壁开凿一处洞府。洞府内可安置丹房、灵圃、静室，大幅提升修行效率。</p>
-      <Button class="w-full justify-center" :disabled="!cultivation.unlocked" @click="cultivation.openCave">开辟洞府（8000文 + 200灵气）</Button>
-    </div>
-    <div v-else class="space-y-2">
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <div class="stat-card"><span>洞府</span><b>{{ cultivation.caveTierName }}</b></div>
-        <div class="stat-card"><span>槽位</span><b>{{ cultivation.caveSlots.length }}/{{ cultivation.caveMaxSlots }}</b></div>
-        <div class="stat-card"><span>灵气恢复</span><b>+{{ cultivation.caveAuraRegen }}/次</b></div>
-        <div class="stat-card"><span>设施</span><b>{{ cultivation.caveSlotNames.join('、') || '空' }}</b></div>
-      </div>
-      <Button class="w-full justify-between" @click="cultivation.upgradeCave"><span>扩建洞府</span><span class="text-muted text-xs">消耗灵气</span></Button>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-        <div v-for="slot in caveSlotOptions" :key="slot.type" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs">
-          <p class="text-accent text-sm mb-1">{{ slot.name }}</p>
-          <p class="text-muted leading-relaxed min-h-[2rem]">{{ slot.desc }}</p>
-          <p class="text-[10px] text-muted my-2">安置费：{{ slot.cost }}文</p>
-          <Button class="w-full justify-center" :disabled="cultivation.hasCaveSlot(slot.type) || cultivation.caveSlots.length >= cultivation.caveMaxSlots" @click="cultivation.placeCaveSlot(slot.type)">
-            {{ cultivation.hasCaveSlot(slot.type) ? '已安置' : '安置' }}
-          </Button>
-        </div>
-      </div>
-    </div>
-
-    <Divider title label="灵兽" />
-    <div v-if="!cultivation.beast" class="game-panel p-3 text-center space-y-2">
-      <p class="text-xs text-muted leading-relaxed">消耗 30 灵力引灵，在灵脉附近寻找灵兽伙伴。灵兽会提供被动加成，陪伴你修行。</p>
-      <Button class="w-full justify-center" :disabled="!cultivation.unlocked || cultivation.mana < 30" @click="cultivation.encounterBeast">引灵寻兽（30灵力）</Button>
-    </div>
-    <div v-else class="space-y-2">
-      <div class="border border-accent/20 rounded-xs p-3 bg-panel/40 flex items-center gap-3">
-        <span class="text-3xl">{{ cultivation.beastEmoji }}</span>
-        <div class="flex-1">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="text-sm text-accent">{{ cultivation.beastName }}</span>
-            <span class="text-[10px] text-muted">Lv.{{ cultivation.beastLevel }}</span>
-          </div>
-          <p class="text-xs text-muted">{{ cultivation.beastData?.desc }}</p>
-          <p class="text-xs text-success mt-0.5">{{ cultivation.beastData?.bonusDesc }}</p>
-          <div class="mt-1 flex items-center space-x-2">
-            <span class="text-[10px] text-muted shrink-0">羁绊</span>
-            <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
-              <div class="h-full rounded-xs bg-accent transition-all" :style="{ width: (cultivation.beastBond % 100) + '%' }" />
-            </div>
-            <span class="text-[10px] text-muted">{{ cultivation.beastBond }}</span>
+          <div class="grid grid-cols-2 gap-3">
+            <Button class="justify-center" @click="showRebirthConfirm = false">取消</Button>
+            <Button class="justify-center !bg-red-700 hover:!bg-red-600 !text-white" @click="doRebirth">确认转生</Button>
           </div>
         </div>
       </div>
-      <Button class="w-full justify-between" :disabled="beastFeedCount < (cultivation.beastData?.feedQty ?? 99)" @click="cultivation.feedBeast">
-        <span>喂食{{ cultivation.beastName }}</span>
-        <span class="text-muted text-xs">{{ beastFeedItemName }} {{ beastFeedCount }}/{{ cultivation.beastData?.feedQty }}</span>
-      </Button>
-    </div>
+    </Teleport>
 
-    <Divider title label="农具法宝化" />
+    <!-- ===== 农具法宝化 ===== -->
+    <Divider title label="✨ 农具法宝化" />
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
       <div v-for="artifact in artifacts" :key="artifact.key" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs">
         <p class="text-accent text-sm mb-1">{{ artifact.name }}</p>
@@ -135,55 +127,48 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
-  import Divider from '@/components/game/Divider.vue'
-  import Button from '@/components/game/Button.vue'
-  import { useCultivationStore } from '@/stores/useCultivationStore'
-  import { useInventoryStore } from '@/stores/useInventoryStore'
-  import type { ArtifactKey, PillId } from '@/stores/useCultivationStore'
+import { computed, ref } from 'vue'
+import Divider from '@/components/game/Divider.vue'
+import Button from '@/components/game/Button.vue'
+import { useCultivationStore } from '@/stores/useCultivationStore'
+import type { ArtifactKey } from '@/stores/useCultivationStore'
 
-  const cultivation = useCultivationStore()
-  const inventory = useInventoryStore()
-  const itemCount = (id: string) => inventory.getItemCount(id)
+const cultivation = useCultivationStore()
 
-  const caveSlotOptions: Array<{ type: import('@/stores/useCultivationStore').CaveSlotType; name: string; desc: string; cost: number }> = [
-    { type: 'alchemy', name: '丹房', desc: '洞府内炼丹，灵气消耗减少20%', cost: 3000 },
-    { type: 'farm', name: '灵圃', desc: '洞府内种灵植，灵气产出增加50%', cost: 2000 },
-    { type: 'meditation', name: '静室', desc: '洞府内打坐，修为和灵力翻倍', cost: 4000 }
-  ]
+const artifacts: Array<{ key: ArtifactKey; name: string; desc: string; aura: number; money: number }> = [
+  { key: 'glimmerHoe', name: '流光锄', desc: '锄刃引动地脉，灵植收获时额外产出灵气。', aura: 220, money: 2000 },
+  { key: 'spiritKettle', name: '引灵壶', desc: '炼化灵气时收益提高，修为增长更稳定。', aura: 320, money: 2600 },
+  { key: 'spiritRain', name: '灵雨诀', desc: '以法诀唤灵雨，灵植收获额外引灵。', aura: 520, money: 3600 }
+]
 
-  const beastFeedCount = computed(() => {
-    const crop = cultivation.beastData?.feedCrop
-    return crop ? inventory.getItemCount(crop) : 0
-  })
-  const beastFeedItemName = computed(() => {
-    const crop = cultivation.beastData?.feedCrop
-    if (crop === 'dew_grass') return '凝露草'
-    if (crop === 'spirit_rice') return '蕴灵稻'
-    if (crop === 'vermilion_fruit') return '朱果'
-    return crop ?? ''
-  })
+// 转生系统
+const showRebirthConfirm = ref(false)
+const spiritRootOrder = ['mixed', 'wood', 'water', 'earth', 'fire', 'metal', 'celestial']
+const spiritRootNameMap: Record<string, string> = { mixed: '杂灵根', wood: '木灵根', water: '水灵根', earth: '土灵根', fire: '火灵根', metal: '金灵根', celestial: '天灵根' }
+const nextSpiritRootName = computed(() => {
+  const idx = spiritRootOrder.indexOf(cultivation.spiritRoot)
+  if (idx < 0 || idx >= spiritRootOrder.length - 1) return '[已达天灵根]'
+  const nextRoot = spiritRootOrder[idx + 1]
+  return nextRoot ? spiritRootNameMap[nextRoot] : '[已达天灵根]'
+})
+const confirmRebirth = () => {
+  if (!cultivation.canRebirth) return
+  showRebirthConfirm.value = true
+}
+const doRebirth = () => {
+  showRebirthConfirm.value = false
+  cultivation.rebirth()
+}
 
-  const pillRecipes: Array<{ id: PillId; name: string; desc: string; materialText: string; aura: number; mana: number }> = [
-    { id: 'mana_recovery_pill', name: '回灵丹', desc: '回复灵力，适合连续炼丹/调息。', materialText: '凝露草×2', aura: 20, mana: 0 },
-    { id: 'qi_gathering_pill', name: '聚气丹', desc: '增加修为，是炼气期日常修炼丹。', materialText: '蕴灵稻×3、凝露草×1', aura: 60, mana: 10 },
-    { id: 'foundation_pill', name: '筑基丹', desc: '辅助突破，降低下次突破灵气需求。', materialText: '朱果×2、凝露草×3、蕴灵稻×5', aura: 360, mana: 40 }
-  ]
-
-  const artifacts: Array<{ key: ArtifactKey; name: string; desc: string; aura: number; money: number }> = [
-    { key: 'glimmerHoe', name: '流光锄', desc: '锄刃引动地脉，灵植收获时额外产出灵气。', aura: 220, money: 2000 },
-    { key: 'spiritKettle', name: '引灵壶', desc: '炼化灵气时收益提高，修为增长更稳定。', aura: 320, money: 2600 },
-    { key: 'spiritRain', name: '灵雨诀', desc: '以法诀唤灵雨，灵植收获额外引灵。', aura: 520, money: 3600 }
-  ]
-
-  const cultivationPercent = computed(() => Math.min(100, Math.round((cultivation.cultivation / cultivation.maxCultivation) * 100)))
-  const manaPercent = computed(() => Math.min(100, Math.round((cultivation.mana / cultivation.maxMana) * 100)))
+const cultivationPercent = computed(() => Math.min(100, Math.round((cultivation.cultivation / cultivation.maxCultivation) * 100)))
+const manaPercent = computed(() => Math.min(100, Math.round((cultivation.mana / cultivation.maxMana) * 100)))
 </script>
 
 <style scoped>
-  .stat-card { border: 1px solid rgba(200,164,92,.18); border-radius: 2px; padding: 8px; background: rgba(0,0,0,.12); display: flex; justify-content: space-between; gap: 8px; }
-  .stat-card b { color: var(--color-accent); font-weight: 400; }
-  .bar { height: 6px; border: 1px solid rgba(200,164,92,.22); background: rgba(0,0,0,.2); }
-  .bar-fill { height: 100%; background: var(--color-accent); transition: width .2s; }
-  .bar-fill.mana { background: rgb(96,165,250); }
+.stat-card { border: 1px solid rgba(200,164,92,.18); border-radius: 2px; padding: 8px; background: rgba(0,0,0,.12); display: flex; justify-content: space-between; gap: 8px; }
+.stat-card b { color: var(--color-accent); font-weight: 400; }
+.bar { height: 6px; border: 1px solid rgba(200,164,92,.22); background: rgba(0,0,0,.2); }
+.bar-fill { height: 100%; background: var(--color-accent); transition: width .2s; }
+.bar-fill.mana { background: rgb(96,165,250); }
+.bar-fill.pulse { background: rgb(74, 222, 128); }
 </style>

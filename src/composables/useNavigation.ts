@@ -62,6 +62,12 @@ export type PanelKey =
   | 'fishpond'
   | 'cottage'
   | 'cultivation'
+  | 'alchemy'
+  | 'cave'
+  | 'destined-artifact'
+  | 'talisman'
+  | 'yuan-shen'
+  | 'divine-beast'
   | 'leaderboard'
   | 'combat'
   | 'forge'
@@ -84,6 +90,12 @@ export const TABS: { key: PanelKey; label: string; icon: Component; getIcon?: ()
   { key: 'upgrade', label: '工坊', icon: Wrench },
   { key: 'charinfo', label: '角色', icon: User },
   { key: 'cultivation', label: '修行', icon: Sparkles },
+  { key: 'alchemy', label: '炼丹', icon: Sparkles },
+  { key: 'cave', label: '洞府', icon: Building },
+  { key: 'destined-artifact', label: '法宝', icon: Star },
+  { key: 'talisman', label: '制符', icon: ScrollText },
+  { key: 'yuan-shen', label: '元神', icon: Sparkles },
+  { key: 'divine-beast', label: '灵兽', icon: Heart },
   { key: 'leaderboard', label: '排行', icon: Trophy },
   { key: 'combat', label: '秘境', icon: Flame },
   { key: 'forge', label: '炼器', icon: Cog },

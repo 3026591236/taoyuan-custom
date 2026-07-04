@@ -479,7 +479,7 @@
   import { useNpcStore } from '@/stores/useNpcStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useWarehouseStore } from '@/stores/useWarehouseStore'
-  import { useSaveStore } from '@/stores/useSaveStore'
+  import { parseSaveData, useSaveStore } from '@/stores/useSaveStore'
   import { useFarmStore } from '@/stores/useFarmStore'
   import { useDialogs } from '@/composables/useDialogs'
   import type { MorningChoiceEvent } from '@/data/farmEvents'
@@ -541,6 +541,7 @@
 
   // 世界公告
   const worldAnnouncement = ref('')
+  let worldAnnouncementTimer: number | null = null
   const checkWorldAnnouncements = async () => {
     try {
       const data = await accountApi('/api/world-announcements')
@@ -553,7 +554,25 @@
       }
     } catch {}
   }
-  onMounted(() => { checkWorldAnnouncements(); setInterval(checkWorldAnnouncements, 60000) })
+  const preloadCommonPanels = () => {
+    const run = () => {
+      void import('@/views/game/InventoryView.vue')
+      void import('@/views/game/QuestView.vue')
+      void import('@/views/game/CharInfoView.vue')
+      void import('@/views/game/CultivationView.vue')
+      void import('@/views/game/CombatView.vue')
+      void import('@/views/game/LeaderboardView.vue')
+    }
+    const idle = (window as any).requestIdleCallback as undefined | ((cb: () => void) => void)
+    const defer = globalThis.setTimeout
+    if (idle) idle(run)
+    else defer(run, 800)
+  }
+  onMounted(() => {
+    checkWorldAnnouncements()
+    worldAnnouncementTimer = window.setInterval(checkWorldAnnouncements, 60000)
+    preloadCommonPanels()
+  })
 
   const showMailModal = ref(false)
   const mailLoading = ref(false)
@@ -626,7 +645,8 @@
     if (!raw) return
     const info = saveStore.getSlots().find(s => s.slot === slot)
     try {
-      await accountApi(`/api/saves/${slot}`, { method: 'PUT', headers: accountHeaders(), body: JSON.stringify({ raw, meta: { ...(info || {}), autoSaved: true } }) })
+      const data = parseSaveData(raw)
+      await accountApi(`/api/saves/${slot}`, { method: 'PUT', headers: accountHeaders(), body: JSON.stringify({ raw, data, meta: { ...(info || {}), autoSaved: true } }) })
     } catch (e) {
       // 自动保存失败不打断游戏，也不刷屏；玩家仍可手动保存。
       console.warn('account autosave failed', e)
@@ -755,7 +775,12 @@
 
   // 实时时钟生命周期
   onMounted(() => { startClock(); startAccountAutoSave(); void loadCheckinStatus(); void loadMails(); void autoSaveCurrent() })
-  onUnmounted(() => { stopClock(); stopAccountAutoSave(); void autoSaveCurrent() })
+  onUnmounted(() => {
+    stopClock()
+    stopAccountAutoSave()
+    if (worldAnnouncementTimer != null) window.clearInterval(worldAnnouncementTimer)
+    void autoSaveCurrent()
+  })
 
   // 弹窗打开时自动暂停时钟，全部关闭后恢复
   watch(

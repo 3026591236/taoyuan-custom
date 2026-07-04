@@ -1,6 +1,6 @@
 {
   "name": "taoyuan",
-  "title": "\u6843\u6e90\u4e61",
+  "title": "我从种田开始修仙",
   "qq": "920930589",
   "tapid": "816558",
   "private": true,
@@ -18,7 +18,7 @@
     "build:android": "pnpm run build && npx cap sync android",
     "build:apk": "pnpm run build:android && cd android && ./gradlew assembleRelease"
   },
-  "description": "\u4e00\u6b3e\u6587\u5b57\u7248\u7530\u56ed\u6a21\u62df\u7ecf\u8425\u6e38\u620f\uff0c\u7075\u611f\u6765\u81ea\u661f\u9732\u8c37\u7269\u8bed",
+  "description": "一款文字版田园模拟经营游戏，灵感来自星露谷物语",
   "author": "setube",
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -32,6 +32,7 @@
     "lucide-vue-next": "^0.563.0",
     "pinia": "^3.0.4",
     "qmsg": "^1.6.2",
+    "terser": "^5.48.0",
     "tone": "^15.1.22",
     "vue": "^3.5.24",
     "vue-router": "^5.0.2"
@@ -64,7 +65,7 @@
   },
   "build": {
     "appId": "games.wenzi.taoyuan",
-    "productName": "\u6843\u6e90\u4e61",
+    "productName": "我从种田开始修仙",
     "asar": false,
     "files": [
       "dist-electron/**/*",

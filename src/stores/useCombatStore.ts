@@ -1,4 +1,4 @@
-// 桃源乡 V0.5 - 战斗Store
+// 桃源乡 V0.5 - 红尘历练 / 挑战凶兽 / 秘境探索
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { addLog } from '@/composables/useGameLog'
@@ -6,48 +6,108 @@ import { useCultivationStore } from './useCultivationStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
 
+export type ZoneKind = 'trial' | 'beast' | 'realm'
+
 export interface Monster {
-  id: string; name: string; emoji: string; hp: number; atk: number; def: number
+  id: string
+  name: string
+  emoji: string
+  hp: number
+  atk: number
+  def: number
   drops: { itemId: string; name: string; qty: number; chance: number }[]
-  exp: number; aura: number
+  exp: number
+  aura: number
 }
 
 export interface RealmZone {
-  id: string; name: string; emoji: string; desc: string; minRealm: number; cost: number
+  id: string
+  name: string
+  emoji: string
+  desc: string
+  kind: ZoneKind
+  minRealm: number
+  minRebirth?: number
+  cost: number
+  staminaCost: number
+  dailyLimit?: number
+  rewardHint: string
   monsters: Monster[]
 }
 
 export const REALM_ZONES: RealmZone[] = [
   {
-    id: 'spirit_forest', name: '灵兽森林', emoji: '🌲', desc: '灵气充沛的古老森林，低阶灵兽出没', minRealm: 0, cost: 15,
+    id: 'taoyuan_path', kind: 'trial', name: '桃源山径', emoji: '🌿', desc: '桃源乡外的灵雾山径，适合初入修行者磨炼。', minRealm: 0, cost: 10, staminaCost: 4,
+    rewardHint: '修为、灵气、低阶材料',
     monsters: [
-      { id: 'spirit_wolf', name: '灵狼', emoji: '🐺', hp: 80, atk: 12, def: 3, exp: 20, aura: 5, drops: [{ itemId: 'iron_ore', name: '铁矿石', qty: 1, chance: 0.5 }, { itemId: 'spirit_stone', name: '灵石', qty: 2, chance: 0.8 }] },
-      { id: 'venom_snake', name: '毒蛇', emoji: '🐍', hp: 60, atk: 18, def: 2, exp: 25, aura: 8, drops: [{ itemId: 'iron_ore', name: '铁矿石', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 3, chance: 0.7 }] },
-      { id: 'tree_spirit', name: '树精', emoji: '🌳', hp: 120, atk: 8, def: 8, exp: 30, aura: 10, drops: [{ itemId: 'wood_spirit', name: '木灵珠', qty: 1, chance: 0.3 }, { itemId: 'spirit_stone', name: '灵石', qty: 5, chance: 0.6 }] },
-      { id: 'spirit_fox2', name: '赤狐', emoji: '🦊', hp: 100, atk: 15, def: 5, exp: 35, aura: 12, drops: [{ itemId: 'fox_fur', name: '狐皮', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 4, chance: 0.7 }] },
-      { id: 'forest_king', name: '林中王者·灵熊', emoji: '🐻', hp: 200, atk: 22, def: 10, exp: 60, aura: 20, drops: [{ itemId: 'bear_gall', name: '熊胆', qty: 1, chance: 0.5 }, { itemId: 'spirit_stone', name: '灵石', qty: 8, chance: 0.9 }] },
+      { id: 'spirit_wolf', name: '灵狼', emoji: '🐺', hp: 80, atk: 12, def: 3, exp: 24, aura: 8, drops: [{ itemId: 'spirit_stone', name: '灵石', qty: 2, chance: 0.75 }, { itemId: 'fox_fur', name: '狐皮', qty: 1, chance: 0.25 }] },
+      { id: 'tree_spirit', name: '树精', emoji: '🌳', hp: 120, atk: 8, def: 8, exp: 32, aura: 12, drops: [{ itemId: 'wood_spirit', name: '木灵珠', qty: 1, chance: 0.35 }, { itemId: 'spirit_stone', name: '灵石', qty: 3, chance: 0.65 }] }
     ]
   },
   {
-    id: 'dark_cave', name: '幽冥洞窟', emoji: '🕳️', desc: '阴气森森的地下洞窟，鬼魅横行', minRealm: 10, cost: 30,
+    id: 'qingqiu_forest', kind: 'trial', name: '青丘旧林', emoji: '🦊', desc: '狐火长明的古林，偶有妖狐遗宝现世。', minRealm: 10, minRebirth: 1, cost: 24, staminaCost: 6,
+    rewardHint: '狐皮、真灵秘录、法宝碎片',
+    monsters: [
+      { id: 'spirit_fox', name: '青丘灵狐', emoji: '🦊', hp: 210, atk: 28, def: 10, exp: 70, aura: 24, drops: [{ itemId: 'fox_fur', name: '狐皮', qty: 2, chance: 0.55 }, { itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.18 }] },
+      { id: 'forest_king', name: '林中王者·灵熊', emoji: '🐻', hp: 280, atk: 30, def: 16, exp: 88, aura: 30, drops: [{ itemId: 'bear_gall', name: '熊胆', qty: 1, chance: 0.45 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 1, chance: 0.16 }] }
+    ]
+  },
+  {
+    id: 'yunmeng_marsh', kind: 'trial', name: '云梦泽', emoji: '🌫️', desc: '水泽迷雾缠绕，水行灵物与幽魂并存。', minRealm: 14, minRebirth: 3, cost: 38, staminaCost: 8,
+    rewardHint: '魂晶、水泽材料、轮回材料',
+    monsters: [
+      { id: 'marsh_spirit', name: '泽中水魄', emoji: '💧', hp: 380, atk: 44, def: 16, exp: 120, aura: 42, drops: [{ itemId: 'soul_crystal', name: '魂晶', qty: 1, chance: 0.45 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 1, chance: 0.16 }] },
+      { id: 'nether_spider', name: '冥蛛', emoji: '🕷️', hp: 420, atk: 48, def: 18, exp: 135, aura: 48, drops: [{ itemId: 'spider_silk', name: '蛛丝', qty: 2, chance: 0.5 }, { itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.22 }] }
+    ]
+  },
+  {
+    id: 'kunlun_border', kind: 'trial', name: '昆仑外境', emoji: '🏔️', desc: '昆仑外山，雷火交汇，非多次轮回者难以久留。', minRealm: 18, minRebirth: 8, cost: 55, staminaCost: 10,
+    rewardHint: '雷精、风羽、装备升星材料',
+    monsters: [
+      { id: 'thunder_wolf', name: '雷狼', emoji: '⚡', hp: 520, atk: 62, def: 22, exp: 180, aura: 65, drops: [{ itemId: 'thunder_essence', name: '雷精', qty: 1, chance: 0.42 }, { itemId: 'star_iron', name: '星陨铁', qty: 1, chance: 0.18 }] },
+      { id: 'storm_eagle', name: '风暴鹰', emoji: '🦅', hp: 470, atk: 72, def: 18, exp: 190, aura: 72, drops: [{ itemId: 'storm_feather', name: '风羽', qty: 1, chance: 0.4 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 2, chance: 0.18 }] }
+    ]
+  },
+  {
+    id: 'spirit_forest', kind: 'realm', name: '灵兽森林', emoji: '🌲', desc: '灵气充沛的古老森林，低阶灵兽出没。', minRealm: 0, cost: 15, staminaCost: 5,
+    rewardHint: '灵石、木灵珠、基础炼器材料',
+    monsters: [
+      { id: 'venom_snake', name: '毒蛇', emoji: '🐍', hp: 90, atk: 18, def: 2, exp: 25, aura: 8, drops: [{ itemId: 'iron_ore', name: '铁矿石', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 3, chance: 0.7 }] },
+      { id: 'forest_king2', name: '林中王者·灵熊', emoji: '🐻', hp: 220, atk: 24, def: 10, exp: 60, aura: 20, drops: [{ itemId: 'bear_gall', name: '熊胆', qty: 1, chance: 0.5 }, { itemId: 'spirit_stone', name: '灵石', qty: 8, chance: 0.9 }] }
+    ]
+  },
+  {
+    id: 'dark_cave', kind: 'realm', name: '幽冥洞窟', emoji: '🕳️', desc: '阴气森森的地下洞窟，鬼魅横行。', minRealm: 10, cost: 30, staminaCost: 7,
+    rewardHint: '魂晶、冥核、炼器图纸',
     monsters: [
       { id: 'ghost', name: '游魂', emoji: '👻', hp: 150, atk: 25, def: 5, exp: 50, aura: 15, drops: [{ itemId: 'soul_crystal', name: '魂晶', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 6, chance: 0.7 }] },
-      { id: 'skeleton', name: '白骨将', emoji: '💀', hp: 200, atk: 30, def: 12, exp: 60, aura: 20, drops: [{ itemId: 'bone_fragment', name: '骨碎片', qty: 1, chance: 0.5 }, { itemId: 'iron_ore', name: '铁矿石', qty: 2, chance: 0.6 }] },
-      { id: 'shadow_bat', name: '暗影蝠', emoji: '🦇', hp: 130, atk: 35, def: 4, exp: 55, aura: 18, drops: [{ itemId: 'bat_wing', name: '蝠翼', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 8, chance: 0.6 }] },
-      { id: 'nether_spider', name: '冥蛛', emoji: '🕷️', hp: 180, atk: 28, def: 8, exp: 65, aura: 22, drops: [{ itemId: 'spider_silk', name: '蛛丝', qty: 2, chance: 0.5 }, { itemId: 'spirit_stone', name: '灵石', qty: 10, chance: 0.7 }] },
-      { id: 'cave_lord', name: '洞窟之主·冥将', emoji: '👹', hp: 400, atk: 40, def: 18, exp: 120, aura: 40, drops: [{ itemId: 'nether_core', name: '冥核', qty: 1, chance: 0.3 }, { itemId: 'spirit_stone', name: '灵石', qty: 15, chance: 0.9 }, { itemId: 'forge_blueprint', name: '炼器图纸', qty: 1, chance: 0.2 }] },
+      { id: 'cave_lord', name: '洞窟之主·冥将', emoji: '👹', hp: 400, atk: 40, def: 18, exp: 120, aura: 40, drops: [{ itemId: 'nether_core', name: '冥核', qty: 1, chance: 0.3 }, { itemId: 'forge_blueprint', name: '炼器图纸', qty: 1, chance: 0.2 }] }
     ]
   },
   {
-    id: 'thunder_realm', name: '天劫雷域', emoji: '⚡', desc: '雷劫汇聚之地，只有金丹以上修士方可踏足', minRealm: 14, cost: 50,
+    id: 'taotie', kind: 'beast', name: '凶兽·饕餮', emoji: '🐲', desc: '吞噬灵气的上古凶兽，每日可挑战一次。', minRealm: 16, minRebirth: 1, cost: 60, staminaCost: 12, dailyLimit: 1,
+    rewardHint: '真灵秘录、轮回尘、灵蕴',
     monsters: [
-      { id: 'thunder_wolf', name: '雷狼', emoji: '⚡', hp: 350, atk: 50, def: 15, exp: 100, aura: 30, drops: [{ itemId: 'thunder_essence', name: '雷精', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 12, chance: 0.7 }] },
-      { id: 'storm_eagle', name: '风暴鹰', emoji: '🦅', hp: 300, atk: 60, def: 10, exp: 110, aura: 35, drops: [{ itemId: 'storm_feather', name: '风羽', qty: 1, chance: 0.3 }, { itemId: 'spirit_stone', name: '灵石', qty: 15, chance: 0.6 }] },
-      { id: 'lightning_snake', name: '电蟒', emoji: '🐍', hp: 450, atk: 45, def: 20, exp: 120, aura: 38, drops: [{ itemId: 'lightning_scale', name: '电鳞', qty: 1, chance: 0.35 }, { itemId: 'spirit_stone', name: '灵石', qty: 18, chance: 0.7 }] },
-      { id: 'thunder_god', name: '雷神将', emoji: '🌩️', hp: 800, atk: 70, def: 25, exp: 200, aura: 60, drops: [{ itemId: 'thunder_heart', name: '雷心', qty: 1, chance: 0.25 }, { itemId: 'spirit_stone', name: '灵石', qty: 25, chance: 0.9 }, { itemId: 'forge_blueprint', name: '炼器图纸', qty: 1, chance: 0.3 }] },
+      { id: 'taotie_boss', name: '饕餮', emoji: '🐲', hp: 900, atk: 78, def: 32, exp: 260, aura: 120, drops: [{ itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.75 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 1, chance: 0.45 }, { itemId: 'lingyun_jade', name: '灵蕴玉', qty: 1, chance: 0.18 }] }
+    ]
+  },
+  {
+    id: 'qiongqi', kind: 'beast', name: '凶兽·穷奇', emoji: '🦁', desc: '喜斗好杀的凶兽，适合中期转生者挑战。', minRealm: 20, minRebirth: 5, cost: 90, staminaCost: 15, dailyLimit: 1,
+    rewardHint: '高级轮回材料、法宝碎片、星陨铁',
+    monsters: [
+      { id: 'qiongqi_boss', name: '穷奇', emoji: '🦁', hp: 1500, atk: 110, def: 45, exp: 420, aura: 180, drops: [{ itemId: 'true_spirit_record', name: '真灵秘录', qty: 2, chance: 0.75 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 2, chance: 0.45 }, { itemId: 'star_iron', name: '星陨铁', qty: 1, chance: 0.35 }] }
+    ]
+  },
+  {
+    id: 'hundun', kind: 'beast', name: '凶兽·混沌', emoji: '🌑', desc: '混沌雾海中沉睡的凶兽，挑战失败也会损耗大量体力。', minRealm: 24, minRebirth: 10, cost: 140, staminaCost: 18, dailyLimit: 1,
+    rewardHint: '灵蕴玉、轮回尘、装备升星核心',
+    monsters: [
+      { id: 'hundun_boss', name: '混沌', emoji: '🌑', hp: 2400, atk: 150, def: 70, exp: 680, aura: 260, drops: [{ itemId: 'lingyun_jade', name: '灵蕴玉', qty: 1, chance: 0.55 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 2, chance: 0.55 }, { itemId: 'star_iron', name: '星陨铁', qty: 2, chance: 0.35 }] }
     ]
   }
 ]
+
+const todayKey = () => new Date().toISOString().slice(0, 10)
 
 export const useCombatStore = defineStore('combat', () => {
   const currentZone = ref<string | null>(null)
@@ -60,39 +120,69 @@ export const useCombatStore = defineStore('combat', () => {
   const drops = ref<{ itemId: string; name: string; qty: number }[]>([])
   const showFlash = ref(false)
   const damageNumbers = ref<{ id: number; value: number; type: 'player' | 'monster'; x: number; y: number }[]>([])
+  const dailyRuns = ref<Record<string, { date: string; count: number }>>({})
   let dmgId = 0
+
+  const activeZone = computed(() => REALM_ZONES.find(z => z.id === currentZone.value) || null)
+  const trialZones = computed(() => REALM_ZONES.filter(z => z.kind === 'trial'))
+  const beastZones = computed(() => REALM_ZONES.filter(z => z.kind === 'beast'))
+  const realmZones = computed(() => REALM_ZONES.filter(z => z.kind === 'realm'))
 
   const playerAtk = computed(() => {
     const c = useCultivationStore()
-    const base = 10 + (c.realmIndex || 0) * 8 + Math.floor((c.cultivation || 0) / 50)
+    const base = 12 + (c.realmIndex || 0) * 9 + Math.floor((c.cultivation || 0) / 45) + (c.rebirthCount || 0) * 18
     const beastBonus = c.beast === 'crane' ? Math.floor(base * 0.2) : 0
-    return base + beastBonus
+    const artifactBonus = (c.destinedArtifactLevel || 0) * 8
+    return base + beastBonus + artifactBonus
   })
 
   const playerDef = computed(() => {
     const c = useCultivationStore()
-    return 5 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 20)
+    return 6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3
   })
 
   const playerMaxHp = computed(() => {
     const c = useCultivationStore()
-    return 100 + (c.realmIndex || 0) * 30 + (c.cultivation || 0)
+    return 120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30
   })
+
+  const getDailyCount = (zoneId: string) => {
+    const item = dailyRuns.value[zoneId]
+    return item?.date === todayKey() ? item.count : 0
+  }
+
+  const isZoneUnlocked = (zone: RealmZone) => {
+    const c = useCultivationStore()
+    return (c.realmIndex || 0) >= zone.minRealm && (c.rebirthCount || 0) >= (zone.minRebirth || 0)
+  }
+
+  const lockReason = (zone: RealmZone) => {
+    const c = useCultivationStore()
+    if ((c.realmIndex || 0) < zone.minRealm) return `境界不足，需要第${zone.minRealm + 1}阶以上`
+    if ((c.rebirthCount || 0) < (zone.minRebirth || 0)) return `转生不足，需要${zone.minRebirth}转`
+    if (zone.dailyLimit && getDailyCount(zone.id) >= zone.dailyLimit) return `今日挑战次数已用完（${zone.dailyLimit}/${zone.dailyLimit}）`
+    return ''
+  }
 
   const enterZone = (zoneId: string) => {
     const c = useCultivationStore()
     const p = usePlayerStore()
     const zone = REALM_ZONES.find(z => z.id === zoneId)
     if (!zone) return
-    if ((c.realmIndex || 0) < zone.minRealm) { addLog(`境界不足，需要${zone.name === '灵兽森林' ? '炼气' : zone.name === '幽冥洞窟' ? '筑基' : '金丹'}以上`); return }
+    const reason = lockReason(zone)
+    if (reason) { addLog(reason); return }
     if ((c.mana || 0) < zone.cost) { addLog('灵力不足'); return }
-    if (!p.consumeStamina(5)) { addLog('体力不足'); return }
+    if (!p.consumeStamina(zone.staminaCost)) { addLog('体力不足'); return }
     c.mana = (c.mana || 0) - zone.cost
     currentZone.value = zoneId
     combatLog.value = []
     combatResult.value = null
     drops.value = []
-    // Random monster
+    if (zone.dailyLimit) {
+      const key = todayKey()
+      const old = dailyRuns.value[zone.id]
+      dailyRuns.value[zone.id] = { date: key, count: old?.date === key ? old.count + 1 : 1 }
+    }
     const m = zone.monsters[Math.floor(Math.random() * zone.monsters.length)]!
     startFight(m)
   }
@@ -104,35 +194,29 @@ export const useCombatStore = defineStore('combat', () => {
     isFighting.value = true
     combatResult.value = null
     drops.value = []
-    combatLog.value = [`遭遇 ${monster.emoji}${monster.name}！`]
-    // Auto fight with delays
-    doAutoFight()
+    combatLog.value = [`进入${activeZone.value?.emoji || ''}${activeZone.value?.name || '战场'}，遭遇 ${monster.emoji}${monster.name}！`]
+    void doAutoFight()
   }
 
   const doAutoFight = async () => {
     while (isFighting.value && monsterHp.value > 0 && playerHp.value > 0) {
-      // Player attacks
-      const pDmg = Math.max(1, playerAtk.value - (currentMonster.value?.def || 0))
+      const crit = Math.random() < 0.08
+      const pDmg = Math.max(1, Math.floor((playerAtk.value - (currentMonster.value?.def || 0)) * (crit ? 1.8 : 1)))
       monsterHp.value -= pDmg
       showFlash.value = true
       damageNumbers.value.push({ id: ++dmgId, value: pDmg, type: 'player', x: 60 + Math.random() * 20, y: 30 })
-      combatLog.value.push(`你攻击造成 ${pDmg} 伤害`)
+      combatLog.value.push(`你${crit ? '暴击' : '攻击'}造成 ${pDmg} 伤害`)
       setTimeout(() => { showFlash.value = false }, 200)
-      setTimeout(() => { damageNumbers.value = damageNumbers.value.filter(d => d.id !== dmgId - 10) }, 1000)
-
+      setTimeout(() => { damageNumbers.value = damageNumbers.value.slice(-12) }, 1000)
       if (monsterHp.value <= 0) { monsterHp.value = 0; onWin(); return }
+      await new Promise(r => setTimeout(r, 420))
 
-      await new Promise(r => setTimeout(r, 500))
-
-      // Monster attacks
       const mDmg = Math.max(1, (currentMonster.value?.atk || 0) - playerDef.value)
       playerHp.value -= mDmg
       damageNumbers.value.push({ id: ++dmgId, value: mDmg, type: 'monster', x: 40 + Math.random() * 20, y: 60 })
       combatLog.value.push(`${currentMonster.value?.emoji}${currentMonster.value?.name} 攻击造成 ${mDmg} 伤害`)
-
       if (playerHp.value <= 0) { playerHp.value = 0; onLose(); return }
-
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 420))
     }
   }
 
@@ -141,10 +225,17 @@ export const useCombatStore = defineStore('combat', () => {
     combatResult.value = 'win'
     const c = useCultivationStore()
     const m = currentMonster.value!
-    c.cultivation = (c.cultivation || 0) + m.exp
-    c.aura = (c.aura || 0) + m.aura
-    addLog(`击败 ${m.emoji}${m.name}！获得 ${m.exp} 修为，${m.aura} 灵气`)
-    // Process drops
+    const zone = activeZone.value
+    const rebirthBoost = 1 + (c.rebirthCount || 0) * 0.03
+    const exp = Math.floor(m.exp * rebirthBoost)
+    const aura = Math.floor(m.aura * rebirthBoost)
+    c.cultivation = (c.cultivation || 0) + exp
+    c.aura = (c.aura || 0) + aura
+    addLog(`击败 ${m.emoji}${m.name}！获得 ${exp} 修为，${aura} 灵气`)
+    if (zone?.kind === 'beast') {
+      c.lingYun = (c.lingYun || 0) + 1
+      addLog('镇压凶兽，灵蕴+1')
+    }
     for (const d of m.drops) {
       if (Math.random() < d.chance) {
         drops.value.push({ itemId: d.itemId, name: d.name, qty: d.qty })
@@ -170,17 +261,25 @@ export const useCombatStore = defineStore('combat', () => {
 
   const collectDrops = () => {
     const inv = useInventoryStore()
+    let okCount = 0
     for (const d of drops.value) {
-      inv.addItem(d.itemId, d.qty)
+      if (inv.addItem(d.itemId, d.qty)) okCount++
     }
     drops.value = []
-    addLog('拾取了所有掉落物')
+    addLog(okCount ? '拾取了所有掉落物' : '背包已满或物品未登记，部分掉落未能拾取')
+  }
+
+  const serialize = () => ({ dailyRuns: dailyRuns.value })
+  const deserialize = (data: unknown) => {
+    if (!data || typeof data !== 'object') return
+    dailyRuns.value = (data as any).dailyRuns || {}
   }
 
   return {
-    currentZone, currentMonster, monsterHp, playerHp, playerMaxHp, playerAtk, playerDef,
-    combatLog, isFighting, combatResult, drops, showFlash, damageNumbers,
-    enterZone, startFight, leaveCombat, collectDrops,
+    currentZone, activeZone, currentMonster, monsterHp, playerHp, playerMaxHp, playerAtk, playerDef,
+    combatLog, isFighting, combatResult, drops, showFlash, damageNumbers, dailyRuns,
+    trialZones, beastZones, realmZones, getDailyCount, isZoneUnlocked, lockReason,
+    enterZone, startFight, leaveCombat, collectDrops, serialize, deserialize,
     REALM_ZONES
   }
 })

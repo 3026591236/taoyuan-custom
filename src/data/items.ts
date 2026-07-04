@@ -90,6 +90,23 @@ const MISC_ITEMS: ItemDef[] = [
     staminaRestore: 45,
     healthRestore: 20
   },
+
+  // 修仙 V0.5：红尘历练 / 凶兽 / 转生材料
+  { id: 'spirit_stone', name: '灵石', category: 'material', description: '蕴含灵气的石头，可用于修炼、炼器与阵法。', sellPrice: 80, edible: false },
+  { id: 'wood_spirit', name: '木灵珠', category: 'material', description: '木行灵气凝成的珠子，常见于树精体内。', sellPrice: 120, edible: false },
+  { id: 'fox_fur', name: '狐皮', category: 'material', description: '青丘灵狐掉落的柔韧狐皮，可用于制符与炼器。', sellPrice: 140, edible: false },
+  { id: 'bear_gall', name: '熊胆', category: 'material', description: '灵熊胆囊，炼丹时可作猛药。', sellPrice: 180, edible: false },
+  { id: 'soul_crystal', name: '魂晶', category: 'material', description: '阴魂凝结的晶核，元神修炼常用材料。', sellPrice: 220, edible: false },
+  { id: 'spider_silk', name: '蛛丝', category: 'material', description: '冥蛛吐出的坚韧蛛丝，可织符箓底材。', sellPrice: 160, edible: false },
+  { id: 'nether_core', name: '冥核', category: 'material', description: '幽冥洞窟深处的阴冥核心，炼器价值很高。', sellPrice: 420, edible: false },
+  { id: 'forge_blueprint', name: '炼器图纸', category: 'material', description: '记载古法炼器的残图，可作为后续炼器升级材料。', sellPrice: 500, edible: false },
+  { id: 'thunder_essence', name: '雷精', category: 'material', description: '雷域凝成的精粹，蕴含狂暴雷力。', sellPrice: 360, edible: false },
+  { id: 'storm_feather', name: '风羽', category: 'material', description: '风暴鹰羽，适合炼制轻灵法器。', sellPrice: 340, edible: false },
+  { id: 'true_spirit_record', name: '真灵秘录', category: 'material', description: '记载上古真灵气息的秘录，是高阶转生的重要凭证。', sellPrice: 880, edible: false },
+  { id: 'reincarnation_dust', name: '轮回尘', category: 'material', description: '轮回缝隙中飘落的尘砂，可辅助炼制轮回丹。', sellPrice: 960, edible: false },
+  { id: 'lingyun_jade', name: '灵蕴玉', category: 'material', description: '镇压凶兽后凝出的灵玉，可提升转生后的灵蕴底蕴。', sellPrice: 1200, edible: false },
+  { id: 'artifact_shard', name: '法宝碎片', category: 'material', description: '破碎法宝残片，可用于本命法宝蕴养。', sellPrice: 520, edible: false },
+  { id: 'star_iron', name: '星陨铁', category: 'ore', description: '自天外坠落的奇铁，是装备升星的雏形材料。', sellPrice: 760, edible: false },
   { id: 'wood', name: '木材', category: 'material', description: '建造和制作的基础材料。', sellPrice: 5, edible: false },
   { id: 'bamboo', name: '竹子', category: 'material', description: '竹林中采集的翠竹。', sellPrice: 10, edible: false },
   { id: 'herb', name: '草药', category: 'material', description: '山间野生的草药。', sellPrice: 15, edible: false },

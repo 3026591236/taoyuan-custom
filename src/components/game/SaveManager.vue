@@ -166,7 +166,7 @@
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import { SEASON_NAMES } from '@/stores/useGameStore'
-  import { useSaveStore } from '@/stores/useSaveStore'
+  import { parseSaveData, useSaveStore } from '@/stores/useSaveStore'
   import { showFloat } from '@/composables/useGameLog'
   import { useWebdav } from '@/composables/useWebdav'
   import { Capacitor } from '@capacitor/core'
@@ -295,7 +295,8 @@
       if (!raw) throw new Error('本地没有这个存档')
       refreshSlots()
       const info = saveStore.getSlots().find(s => s.slot === slot)
-      await accountApi(`/api/saves/${slot}`, { method: 'PUT', headers: accountHeaders(), body: JSON.stringify({ raw, meta: info || {} }) })
+      const data = parseSaveData(raw)
+      await accountApi(`/api/saves/${slot}`, { method: 'PUT', headers: accountHeaders(), body: JSON.stringify({ raw, data, meta: info || {} }) })
       showFloat(`存档 ${slot + 1} 已保存到账号数据库。`, 'success')
     } catch (e: any) {
       showFloat(e.message || '保存到账号失败。', 'danger')

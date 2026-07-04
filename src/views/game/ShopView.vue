@@ -197,8 +197,8 @@
               @click="
                 openBuyModal(
                   '农场扩建',
-                  `${farmStore.farmSize}×${farmStore.farmSize} → ${farmExpandInfo.newSize}×${farmExpandInfo.newSize}`,
-                  discounted(farmExpandInfo.price),
+                  `${farmStore.farmSize}×${farmStore.farmSize} → ${farmExpandInfo!.newSize}×${farmExpandInfo!.newSize}`,
+                  discounted(farmExpandInfo!.price),
                   handleBuyFarmExpand,
                   () => playerStore.money >= discounted(farmExpandInfo!.price)
                 )

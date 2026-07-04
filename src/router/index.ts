@@ -5,6 +5,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'menu', component: () => import('@/views/MainMenu.vue') },
     { path: '/admin', name: 'admin', component: () => import('@/views/AdminView.vue') },
+    { path: '/tutorial', name: 'tutorial', component: () => import('@/views/TutorialView.vue') },
     {
       path: '/game',
       component: () => import('@/views/GameLayout.vue'),
@@ -29,6 +30,12 @@ const router = createRouter({
         { path: 'quest', name: 'quest', component: () => import('@/views/game/QuestView.vue') },
         { path: 'charinfo', name: 'charinfo', component: () => import('@/views/game/CharInfoView.vue') },
         { path: 'cultivation', name: 'cultivation', component: () => import('@/views/game/CultivationView.vue') },
+        { path: 'alchemy', name: 'alchemy', component: () => import('@/views/game/AlchemyView.vue') },
+        { path: 'cave', name: 'cave', component: () => import('@/views/game/CaveView.vue') },
+        { path: 'destined-artifact', name: 'destined-artifact', component: () => import('@/views/game/DestinedArtifactView.vue') },
+        { path: 'talisman', name: 'talisman', component: () => import('@/views/game/TalismanView.vue') },
+        { path: 'yuan-shen', name: 'yuan-shen', component: () => import('@/views/game/YuanShenView.vue') },
+        { path: 'divine-beast', name: 'divine-beast', component: () => import('@/views/game/DivineBeastView.vue') },
         { path: 'leaderboard', name: 'leaderboard', component: () => import('@/views/game/LeaderboardView.vue') },
         { path: 'combat', name: 'combat', component: () => import('@/views/game/CombatView.vue') },
         { path: 'forge', name: 'forge', component: () => import('@/views/game/ForgeView.vue') },

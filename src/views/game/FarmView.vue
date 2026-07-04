@@ -1079,6 +1079,7 @@
   import Divider from '@/components/game/Divider.vue'
   import { useBreedingStore } from '@/stores/useBreedingStore'
   import { useCookingStore } from '@/stores/useCookingStore'
+  import { useCultivationStore } from '@/stores/useCultivationStore'
   import { useFarmStore } from '@/stores/useFarmStore'
   import { useGameStore, SEASON_NAMES } from '@/stores/useGameStore'
   import { useHomeStore } from '@/stores/useHomeStore'
@@ -1961,6 +1962,7 @@
       const yieldDouble = genetics && Math.random() < (genetics.yield / 100) * 0.3
       const harvestQty = yieldDouble ? 2 : 1
       inventoryStore.addItem(cropId, harvestQty, quality)
+      useCultivationStore().addAuraFromHarvest(cropId, harvestQty)
       const qualityLabel = quality !== 'normal' ? `(${QUALITY_NAMES[quality]})` : ''
       const qtyLabel = yieldDouble ? '×2' : ''
       sfxHarvest()
@@ -2008,6 +2010,7 @@
       const yieldDouble = genetics && Math.random() < (genetics.yield / 100) * 0.3
       const harvestQty = yieldDouble ? 2 : 1
       inventoryStore.addItem(cropId, harvestQty, quality)
+      useCultivationStore().addAuraFromHarvest(cropId, harvestQty)
       // 育种甜度加成
       if (genetics && genetics.sweetness > 0) {
         const cropDef = getCropById(cropId)

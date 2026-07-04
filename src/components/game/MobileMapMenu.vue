@@ -8,7 +8,7 @@
         >
           <X :size="14" />
         </button>
-        <p class="text-accent text-sm text-center mb-3 tracking-widest">桃源乡地图</p>
+        <p class="text-accent text-sm text-center mb-3 tracking-widest">修仙地图</p>
 
         <!-- 田庄 -->
         <div class="map-area">
@@ -76,6 +76,63 @@
           </div>
         </div>
 
+        <div class="map-path" style="color:#c084fc;">· · ✦ 修仙之途 ✦ · ·</div>
+
+        <!-- 修仙 -->
+        <div class="map-area map-area-cultivation">
+          <p class="map-area-title map-cultivation-title">修仙</p>
+          <div class="map-area-grid">
+            <button
+              class="map-loc"
+              :class="{ 'map-loc-active': current === 'cultivation' }"
+              @click="go('cultivation')"
+            >
+              <Sparkles :size="18" />
+              <span>修行</span>
+            </button>
+            <button class="map-loc" :class="{ 'map-loc-active': current === 'alchemy' }" @click="go('alchemy')">
+              <span style="font-size:18px">🏺</span>
+              <span>炼丹</span>
+            </button>
+            <button class="map-loc" :class="{ 'map-loc-active': current === 'cave' }" @click="go('cave')">
+              <span style="font-size:18px">🏔️</span>
+              <span>洞府</span>
+            </button>
+            <button class="map-loc" :class="{ 'map-loc-active': current === 'destined-artifact' }" @click="go('destined-artifact')">
+              <span style="font-size:18px">⚔️</span>
+              <span>法宝</span>
+            </button>
+            <button class="map-loc" :class="{ 'map-loc-active': current === 'talisman' }" @click="go('talisman')">
+              <span style="font-size:18px">📜</span>
+              <span>制符</span>
+            </button>
+            <button class="map-loc" :class="{ 'map-loc-active': current === 'yuan-shen' }" @click="go('yuan-shen')">
+              <span style="font-size:18px">🧘</span>
+              <span>元神</span>
+            </button>
+            <button class="map-loc" :class="{ 'map-loc-active': current === 'divine-beast' }" @click="go('divine-beast')">
+              <span style="font-size:18px">🐾</span>
+              <span>灵兽</span>
+            </button>
+            <button class="map-loc" @click="emit('openCombat' as any)">
+              <Flame :size="18" />
+              <span>秘境</span>
+            </button>
+            <button class="map-loc" @click="emit('openSect' as any)">
+              <Swords :size="18" />
+              <span>门派</span>
+            </button>
+            <button class="map-loc" @click="emit('openForge' as any)">
+              <Cog :size="18" />
+              <span>炼器</span>
+            </button>
+            <button class="map-loc" @click="emit('openLeaderboard' as any)">
+              <Trophy :size="18" />
+              <span>排行</span>
+            </button>
+          </div>
+        </div>
+
         <div class="map-path">···</div>
 
         <!-- 随身 -->
@@ -103,22 +160,6 @@
               </div>
               <span>系统邮件</span>
             </button>
-            <button class="map-loc" @click="emit('openLeaderboard' as any)">
-              <Trophy :size="18" />
-              <span>排行榜</span>
-            </button>
-            <button class="map-loc" @click="emit('openCombat' as any)">
-              <Swords :size="18" />
-              <span>秘境</span>
-            </button>
-            <button class="map-loc" @click="emit('openForge' as any)">
-              <Hammer :size="18" />
-              <span>炼器</span>
-            </button>
-            <button class="map-loc" @click="emit('openSect' as any)">
-              <Landmark :size="18" />
-              <span>门派</span>
-            </button>
           </div>
         </div>
       </div>
@@ -128,7 +169,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
-  import { X, Gift, Mail, Trophy, Swords, Hammer, Landmark } from 'lucide-vue-next'
+  import { X, Gift, Mail, Trophy, Swords, Sparkles, Flame, Cog } from 'lucide-vue-next'
   import { TABS, navigateToPanel } from '@/composables/useNavigation'
   import type { PanelKey } from '@/composables/useNavigation'
 
@@ -147,7 +188,7 @@
   const villageGroup = computed(() => pick(['village', 'shop', 'museum', 'guild']))
   const wildGroup = computed(() => pick(['forage', 'fishing', 'mining', 'hanhai']))
   const craftGroup = computed(() => pick(['cooking', 'workshop', 'upgrade']))
-  const personalGroup = computed(() => pick(['charinfo', 'cultivation', 'inventory', 'skills', 'achievement', 'wallet', 'quest']))
+  const personalGroup = computed(() => pick(['charinfo', 'inventory', 'skills', 'achievement', 'wallet', 'quest']))
 
   const go = (key: PanelKey) => {
     navigateToPanel(key)
@@ -244,5 +285,14 @@
     line-height: 16px;
     text-align: center;
     padding: 0 3px;
+  }
+
+  /* 修仙区域 */
+  .map-area-cultivation {
+    border-color: rgba(192, 132, 252, 0.4);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(192, 132, 252, 0.08));
+  }
+  .map-cultivation-title {
+    color: #c084fc;
   }
 </style>

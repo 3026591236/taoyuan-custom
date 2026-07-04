@@ -12,6 +12,16 @@
     </div>
 
 
+    <!-- 首页像素田园修仙图 -->
+    <div class="home-pixel-scene w-full md:w-6/12" aria-label="桃源乡像素田园修仙图">
+      <img :src="homePixelTaoyuan" alt="桃源乡像素田园修仙图" class="home-pixel-scene__image" draggable="false" />
+      <div class="home-pixel-scene__caption">
+        <span>灵田初醒</span>
+        <span>炊烟入云</span>
+        <span>踏入仙途</span>
+      </div>
+    </div>
+
     <!-- 自主服账号/公告 -->
     <div class="game-panel w-full md:w-6/12 space-y-3 text-sm">
       <div class="flex items-center justify-between gap-3">
@@ -32,17 +42,17 @@
           <button class="btn text-xs" @click.stop="logoutAccount">退出</button>
         </div>
         <div class="border border-accent/20 rounded-xs p-2 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-accent text-xs">账号云存档</span>
-            <button class="btn text-xs" @click.stop="loadAccountSaves">刷新</button>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-accent">账号角色</span>
+            <span class="text-muted">{{ accountCharacters.length }}/3</span>
           </div>
-          <div v-if="accountSaves.length === 0" class="text-muted text-xs">当前账号还没有云存档。开始游戏后，在游戏内“存档管理”点击“账号上传”。</div>
-          <div v-for="save in accountSaves" :key="save.slot" class="flex items-center justify-between gap-2 text-xs">
-            <span>
-              槽位 {{ save.slot + 1 }}
-              <span class="text-muted">· {{ save.meta?.playerName || '未命名' }} · {{ formatTime(save.updatedAt) }}</span>
-            </span>
-            <button class="btn text-xs" @click.stop="downloadCloudSaveToLocal(save.slot)">下载并继续</button>
+          <div v-if="accountCharacters.length === 0" class="text-xs text-muted">当前账号还没有角色。点击「踏入旅途」创建第一个角色。</div>
+          <div v-for="character in accountCharacters" :key="character.id" class="flex items-center justify-between gap-2 text-xs border border-accent/15 rounded-xs px-2 py-1.5">
+            <div class="min-w-0">
+              <p class="text-accent truncate">{{ character.name }}</p>
+              <p class="text-muted truncate">槽位 {{ character.slot + 1 }} · {{ character.meta?.playerName || '桃源旅人' }}</p>
+            </div>
+            <button class="btn text-xs shrink-0" @click.stop="continueCharacter(character)">继续游戏</button>
           </div>
         </div>
       </div>
@@ -56,64 +66,10 @@
 
     <!-- 主菜单 -->
     <div class="flex flex-col space-y-3 w-full md:w-6/12">
-      <Button class="text-center justify-center py-3" :icon="Play" @click="showPrivacy = true">新的旅程</Button>
+      <Button class="text-center justify-center py-3" :icon="Play" :disabled="accountUser && accountCharacters.length >= 3" @click="handleNewJourneyClick">踏入旅途</Button>
+      <div v-if="accountUser && accountCharacters.length >= 3" class="text-xs text-muted text-center border border-accent/10 rounded-xs px-3 py-2">当前账号已拥有 3 个角色，已达到上限。</div>
+      <Button class="text-center justify-center py-2" :icon="BookOpen" @click.stop="router.push('/tutorial')">新手教程</Button>
 
-      <!-- 本地存档列表 -->
-      <div class="text-xs text-muted text-center">本地存档</div>
-      <div v-if="!hasLocalSaves" class="text-xs text-muted text-center border border-accent/10 rounded-xs px-3 py-2">
-        本机暂无存档。可以点击“新的旅程”开始，或登录账号后从云存档下载。
-      </div>
-      <div v-for="info in slots" :key="info.slot" class="w-full">
-        <div v-if="info.exists" class="flex space-x-1 w-full">
-          <button class="btn flex-1 !justify-between" @click="handleLoadGame(info.slot)">
-            <span class="inline-flex items-center space-x-1">
-              <FolderOpen :size="14" />
-              <span>存档 {{ info.slot + 1 }}</span>
-            </span>
-            <span class="text-muted text-xs">
-              {{ info.playerName ?? '未命名' }} · 第{{ info.year }}年 {{ SEASON_NAMES[info.season as keyof typeof SEASON_NAMES] }} 第{{
-                info.day
-              }}天
-            </span>
-          </button>
-          <div class="relative">
-            <Button
-              class="px-2 h-full"
-              :icon="Settings"
-              :icon-size="12"
-              @click.stop="slotMenuOpen = slotMenuOpen === info.slot ? null : info.slot"
-            />
-            <div
-              v-if="slotMenuOpen === info.slot"
-              class="absolute right-0 top-full mt-1 z-10 flex flex-col border border-accent/30 rounded-xs overflow-hidden w-30"
-            >
-              <Button
-                v-if="!Capacitor.isNativePlatform()"
-                class="text-center !rounded-none justify-center !text-sm"
-                :icon="Download"
-                :icon-size="12"
-                @click="handleExportSlot(info.slot)"
-              >
-                导出
-              </Button>
-              <Button
-                class="btn-danger !rounded-none text-center justify-center !text-sm"
-                :icon="Trash2"
-                :icon-size="12"
-                @click="handleDeleteSlot(info.slot)"
-              >
-                删除
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 导入存档 -->
-      <template v-if="!Capacitor.isNativePlatform()">
-        <Button class="text-center justify-center" :icon="Upload" @click="triggerImport">导入存档</Button>
-        <input ref="fileInputRef" type="file" accept=".tyx" class="hidden" @change="handleImportFile" />
-      </template>
       <!-- 关于 -->
       <Button class="text-center justify-center text-muted" :icon="Info" @click="showAbout = true">关于游戏</Button>
     </div>
@@ -385,24 +341,6 @@
       </div>
     </Transition>
 
-    <!-- 删除存档确认弹窗 -->
-    <Transition name="panel-fade">
-      <div
-        v-if="deleteTargetSlot !== null"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-bg/80"
-        @click.self="deleteTargetSlot = null"
-      >
-        <div class="game-panel w-full max-w-xs mx-4 text-center">
-          <p class="text-danger text-sm mb-3">确定删除存档 {{ deleteTargetSlot + 1 }}？</p>
-          <p class="text-xs text-muted mb-4">此操作不可恢复。</p>
-          <div class="flex space-x-3 justify-center">
-            <Button @click="deleteTargetSlot = null">取消</Button>
-            <Button class="btn-danger" @click="confirmDeleteSlot">确认删除</Button>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
     <!-- 隐私协议弹窗 -->
     <Transition name="panel-fade">
       <div v-if="showPrivacy" class="fixed inset-0 z-50 flex items-center justify-center bg-bg/80" @click.self="handlePrivacyDecline">
@@ -414,13 +352,13 @@
           <div class="flex-1 overflow-y-auto text-xs text-muted space-y-2 mb-4 pr-1">
             <p>欢迎来到桃源乡！在开始游戏之前，请阅读以下隐私协议：</p>
             <p class="text-text">1. 数据存储</p>
-            <p>本游戏的存档、设置等数据保存在您的浏览器本地存储（localStorage）中。存档数据不会上传至服务器。</p>
+            <p>登录账号后，角色信息和存档数据会保存到服务器数据库；本地也会保留一份浏览器存档用于快速读取。</p>
             <p class="text-text">2. 流量统计</p>
             <p>
               本游戏使用第三方统计服务收集匿名访问数据（如页面浏览量、访问时间、设备类型、浏览器信息等），用于分析游戏使用情况和改进体验。这些数据不包含您的个人身份信息。
             </p>
             <p class="text-text">3. 网络通信</p>
-            <p>除流量统计外，游戏核心功能均在本地运行，不会将您的游戏存档或操作数据发送至任何服务器。</p>
+            <p>账号登录、角色创建、云存档、排行榜、签到、邮件等功能会与服务器通信，以保证退出后数据可恢复、角色名唯一和跨设备继续游戏。</p>
             <p class="text-text">4. 数据安全</p>
             <p>清除浏览器数据或更换设备可能导致存档丢失，建议定期使用导出功能备份存档。</p>
             <p class="text-text">5. 第三方服务</p>
@@ -441,13 +379,13 @@
 </template>
 
 <script setup lang="ts">
-  import { Play, FolderOpen, ArrowLeft, Trash2, Download, Upload, Info, Settings, ShieldCheck, X, UserRound } from 'lucide-vue-next'
+  import { Play, ArrowLeft, Info, ShieldCheck, X, UserRound, BookOpen } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import { ref, computed, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
-  import { useGameStore, SEASON_NAMES } from '@/stores/useGameStore'
-  import { useSaveStore } from '@/stores/useSaveStore'
+  import { useGameStore } from '@/stores/useGameStore'
+  import { parseSaveData, useSaveStore } from '@/stores/useSaveStore'
   import { useFarmStore } from '@/stores/useFarmStore'
   import { useAnimalStore } from '@/stores/useAnimalStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
@@ -457,6 +395,7 @@
   import _pkg from '../../package.json'
   import alipayImg from '@/assets/alipay.png'
   import wechatImg from '@/assets/wechat.png'
+  import homePixelTaoyuan from '@/assets/home-pixel-taoyuan.svg'
   import { useAudio } from '@/composables/useAudio'
   import { showFloat, addLog } from '@/composables/useGameLog'
   import { resetAllStoresForNewGame } from '@/composables/useResetGame'
@@ -501,6 +440,7 @@
   const sponsorWechatImageUrl = computed(() => serverConfig.value?.sponsorWechatImageUrl || wechatImg)
   const sponsorAfdianUrl = computed(() => serverConfig.value?.sponsorAfdianUrl || `https://afdian.com/a/${pkg.author}`)
   const accountSaves = ref<any[]>([])
+  const accountCharacters = ref<any[]>([])
   const showAnnouncement = ref(false)
   const showUpdateLogs = ref(false)
   const accountToken = () => localStorage.getItem('taoyuan_account_token') || ''
@@ -532,18 +472,44 @@
   const loadAccountMe = async () => {
     try {
       accountUser.value = (await accountApi('/api/me', { headers: accountHeaders() })).user
-      if (accountUser.value) await loadAccountSaves()
-    } catch { accountUser.value = null; accountSaves.value = [] }
+      if (accountUser.value) { await loadAccountCharacters(); await loadAccountSaves() }
+    } catch { accountUser.value = null; accountSaves.value = []; accountCharacters.value = [] }
+  }
+  const loadAccountCharacters = async () => {
+    try {
+      if (!accountToken()) return
+      accountCharacters.value = (await accountApi('/api/characters', { headers: accountHeaders() })).characters || []
+    } catch { accountCharacters.value = [] }
   }
   const loadAccountSaves = async () => {
     try {
       if (!accountToken()) return
-      accountSaves.value = (await accountApi('/api/saves', { headers: accountHeaders() })).saves || []
+      const data = await accountApi('/api/saves', { headers: accountHeaders() })
+      accountSaves.value = Array.isArray(data.saves) ? data.saves : Object.values(data.saves || {})
     } catch { accountSaves.value = [] }
   }
-  const formatTime = (value: string) => {
-    if (!value) return ''
-    try { return new Date(value).toLocaleString() } catch { return value }
+  const nextAccountSlot = computed(() => {
+    const used = new Set(accountCharacters.value.map(c => Number(c.slot)))
+    for (let i = 0; i < 3; i++) if (!used.has(i)) return i
+    return -1
+  })
+  const handleNewJourneyClick = () => {
+    if (!accountUser.value) {
+      showFloat('请先登录或注册账号，再创建角色。', 'danger')
+      return
+    }
+    if (accountCharacters.value.length >= 3) {
+      showFloat('当前账号最多创建3个角色。', 'danger')
+      return
+    }
+    showPrivacy.value = true
+  }
+  const continueCharacter = async (character: any) => {
+    if (!character) return
+    await loadAccountSaves()
+    const save = accountSaves.value.find(s => s.characterId === character.id || Number(s.slot) === Number(character.slot))
+    if (save) await downloadCloudSaveToLocal(save.slot)
+    else showFloat('角色存在，但还没有存档数据。请联系管理员。', 'danger')
   }
   const downloadCloudSaveToLocal = async (slot: number) => {
     showAnnouncement.value = false
@@ -552,15 +518,16 @@
       const data = await accountApi(`/api/saves/${slot}`, { headers: accountHeaders() })
       if (!saveStore.importSave(slot, data.raw)) throw new Error('云端存档无效或已损坏')
       refreshSlots()
-      showFloat(`云存档 ${slot + 1} 已下载。`, 'success')
+      showFloat('继续游戏。', 'success')
       handleLoadGame(slot)
-    } catch (e: any) { showFloat(e.message || '下载云存档失败。', 'danger') }
+    } catch (e: any) { showFloat(e.message || '继续游戏失败。', 'danger') }
   }
   const loginAccount = async () => {
     try {
       const data = await accountApi('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: accountUsername.value, password: accountPassword.value }) })
       localStorage.setItem('taoyuan_account_token', data.token)
       accountUser.value = data.user
+      await loadAccountCharacters()
       await loadAccountSaves()
       showFloat('登录成功。', 'success')
     } catch (e: any) { showFloat(e.message || '登录失败。', 'danger') }
@@ -570,6 +537,7 @@
       const data = await accountApi('/api/auth/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: accountUsername.value, password: accountPassword.value }) })
       localStorage.setItem('taoyuan_account_token', data.token)
       accountUser.value = data.user
+      await loadAccountCharacters()
       await loadAccountSaves()
       showFloat(data.message || '注册成功。', 'success')
     } catch (e: any) { showFloat(e.message || '注册失败。', 'danger') }
@@ -579,13 +547,11 @@
     localStorage.removeItem('taoyuan_account_token')
     accountUser.value = null
     accountSaves.value = []
+    accountCharacters.value = []
     showFloat('已退出账号。')
   }
   onMounted(() => { void loadServerConfig(); void loadAccountMe() })
 
-  const deleteTargetSlot = ref<number | null>(null)
-
-  const hasLocalSaves = computed(() => slots.value.some(s => s.exists))
   const selectedFarmDef = computed(() => FARM_MAP_DEFS.find(f => f.type === selectedMap.value))
 
   const handleSelectFarm = (type: FarmMapType) => {
@@ -615,8 +581,14 @@
     charGender.value = 'male'
   }
 
-  const handleCharCreateNext = () => {
-    showFarmSelect.value = true
+  const handleCharCreateNext = async () => {
+    const name = charName.value.trim().slice(0, 4)
+    if (!name) return
+    if (!accountUser.value) { showFloat('请先登录账号。', 'danger'); return }
+    try {
+      await accountApi(`/api/check-char-name?name=${encodeURIComponent(name)}`, { headers: accountHeaders() })
+      showFarmSelect.value = true
+    } catch (e: any) { showFloat(e.message || '角色名已被使用。', 'danger') }
   }
 
   const handleBackToCharCreate = () => {
@@ -624,11 +596,11 @@
     showFarmConfirm.value = false
   }
 
-  const handleNewGame = () => {
-    // 分配空闲存档槽位
-    const slot = saveStore.assignNewSlot()
+  const handleNewGame = async () => {
+    // 账号角色固定使用 0-2 槽位；本地仅作为运行缓存。
+    const slot = nextAccountSlot.value
     if (slot < 0) {
-      showFloat('存档槽位已满，请先删除一个旧存档。')
+      showFloat('当前账号最多创建3个角色。', 'danger')
       return
     }
     // 重置所有游戏 store 到初始状态，防止上一个存档数据残留
@@ -680,6 +652,22 @@
       )
     }
     questStore.initMainQuest()
+    if (!saveStore.saveToSlot(slot)) {
+      showFloat('初始存档失败，请重试。', 'danger')
+      return
+    }
+    const raw = localStorage.getItem(`taoyuanxiang_save_${slot}`)
+    const info = saveStore.getSlots().find(s => s.slot === slot)
+    try {
+      const data = raw ? parseSaveData(raw) : null
+      await accountApi('/api/characters', { method: 'POST', headers: accountHeaders(), body: JSON.stringify({ name: (charName.value.trim() || '未命名').slice(0, 4), gender: charGender.value, slot, raw, data, meta: info || {} }) })
+      await loadAccountCharacters()
+      await loadAccountSaves()
+    } catch (e: any) {
+      saveStore.deleteSlot(slot)
+      showFloat(e.message || '创建角色失败。', 'danger')
+      return
+    }
     // 新手引导：游戏开始时立即显示欢迎提示
     const tutorialStore = useTutorialStore()
     if (tutorialStore.enabled) {
@@ -709,52 +697,6 @@
     void router.push('/game')
   }
 
-  const handleDeleteSlot = (slot: number) => {
-    deleteTargetSlot.value = slot
-  }
-
-  const confirmDeleteSlot = () => {
-    if (deleteTargetSlot.value !== null) {
-      saveStore.deleteSlot(deleteTargetSlot.value)
-      refreshSlots()
-      deleteTargetSlot.value = null
-      slotMenuOpen.value = null
-    }
-  }
-
-  const handleExportSlot = (slot: number) => {
-    if (!saveStore.exportSave(slot)) {
-      showFloat('导出失败。', 'danger')
-    }
-  }
-
-  const fileInputRef = ref<HTMLInputElement | null>(null)
-
-  const triggerImport = () => {
-    fileInputRef.value?.click()
-  }
-
-  const handleImportFile = (e: Event) => {
-    const input = e.target as HTMLInputElement
-    const file = input.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const content = reader.result as string
-      // 找到第一个空槽位导入，没有则提示
-      const emptySlot = slots.value.find(s => !s.exists)
-      if (!emptySlot) {
-        showFloat('存档槽位已满，请先删除一个旧存档。')
-      } else if (saveStore.importSave(emptySlot.slot, content)) {
-        refreshSlots()
-        showFloat(`已导入到存档 ${emptySlot.slot + 1}。`, 'success')
-      } else {
-        showFloat('存档文件无效或已损坏。', 'danger')
-      }
-      input.value = ''
-    }
-    reader.readAsText(file)
-  }
 </script>
 
 <style scoped>

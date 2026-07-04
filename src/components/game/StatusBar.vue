@@ -3,7 +3,7 @@
     <!-- 第一行：日期时间天气 + 铜钱 -->
     <div class="flex items-center justify-between text-xs md:text-sm">
       <div class="flex items-center space-x-2 md:space-x-3">
-        <span class="text-accent font-bold">桃源乡</span>
+        <span class="text-accent font-bold">我从种田开始修仙</span>
         <span class="text-muted text-xs max-w-16 truncate">{{ playerStore.playerName }}</span>
         <span class="hidden md:inline">第{{ gameStore.year }}年</span>
         <span>{{ SEASON_NAMES[gameStore.season] }} 第{{ gameStore.day }}天</span>
