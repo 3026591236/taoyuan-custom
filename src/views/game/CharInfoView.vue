@@ -14,28 +14,24 @@
       <div class="flex gap-3">
         <!-- 角色轮廓 -->
         <div class="shrink-0 flex items-center justify-center">
-          <svg class="char-silhouette" viewBox="0 0 80 140" width="64" height="112">
-            <!-- 头 -->
-            <ellipse cx="40" cy="22" rx="14" ry="16" class="silhouette-body" />
-            <!-- 发髻 -->
-            <ellipse cx="40" cy="10" rx="10" ry="7" class="silhouette-hair" />
-            <rect x="37" y="5" width="6" height="8" rx="3" class="silhouette-hair" />
-            <!-- 身体 -->
-            <path d="M24 38 Q22 50 20 75 L30 75 L33 50 L40 48 L47 50 L50 75 L60 75 Q58 50 56 38 Q48 32 40 32 Q32 32 24 38Z" class="silhouette-body" />
-            <!-- 腰带 -->
-            <rect x="26" y="55" width="28" height="4" rx="2" class="silhouette-belt" />
-            <!-- 左袖 -->
-            <path d="M24 38 Q14 42 10 55 Q12 58 18 56 Q22 52 24 48Z" class="silhouette-body" />
-            <!-- 右袖 -->
-            <path d="M56 38 Q66 42 70 55 Q68 58 62 56 Q58 52 56 48Z" class="silhouette-body" />
-            <!-- 裙/裤 -->
-            <path d="M28 75 L24 120 L34 120 L40 90 L46 120 L56 120 L52 75Z" class="silhouette-body" />
-            <!-- 鞋 -->
-            <ellipse cx="29" cy="124" rx="8" ry="4" class="silhouette-shoe" />
-            <ellipse cx="51" cy="124" rx="8" ry="4" class="silhouette-shoe" />
-            <!-- 境界光环 -->
-            <circle v-if="cultivationStore.unlocked" cx="40" cy="70" r="50" fill="none" class="silhouette-aura" :class="'aura-tier-' + Math.min(cultivationStore.realmIndex, 4)" />
-          </svg>
+          <div class="pixel-avatar-card" :class="[`avatar-${playerStore.gender}`, cultivationStore.unlocked ? `avatar-realm-${Math.min(cultivationStore.realmIndex, 4)}` : 'avatar-mortal']">
+            <div v-if="cultivationStore.unlocked" class="pixel-avatar-aura"></div>
+            <div class="pixel-avatar">
+              <span class="px-hair px"></span>
+              <span class="px-bun px"></span>
+              <span class="px-face px"></span>
+              <span class="px-eye px eye-l"></span>
+              <span class="px-eye px eye-r"></span>
+              <span class="px-robe px"></span>
+              <span class="px-belt px"></span>
+              <span class="px-sleeve px sleeve-l"></span>
+              <span class="px-sleeve px sleeve-r"></span>
+              <span class="px-leg px leg-l"></span>
+              <span class="px-leg px leg-r"></span>
+              <span class="px-tool px"></span>
+            </div>
+            <div class="pixel-avatar-shadow"></div>
+          </div>
         </div>
         <!-- 属性 -->
         <div class="flex-1 min-w-0">
@@ -729,3 +725,82 @@
     navigateToPanel('skills')
   }
 </script>
+
+<style scoped>
+  .pixel-avatar-card {
+    position: relative;
+    width: 72px;
+    height: 116px;
+    border: 1px solid rgba(224, 178, 94, 0.35);
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(255,255,255,.04) 1px, transparent 1px),
+      radial-gradient(circle at 50% 80%, rgba(92, 68, 38, .9), rgba(25, 22, 18, .95));
+    background-size: 8px 8px, 8px 8px, auto;
+    image-rendering: pixelated;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.25);
+  }
+
+  .pixel-avatar-card::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 12px;
+    height: 6px;
+    background: repeating-linear-gradient(90deg, rgba(87, 58, 32, .9) 0 6px, rgba(47, 35, 24, .9) 6px 12px);
+  }
+
+  .pixel-avatar-aura {
+    position: absolute;
+    inset: 10px 6px 18px;
+    border: 2px solid rgba(120, 245, 220, .38);
+    box-shadow: 0 0 10px rgba(120, 245, 220, .22), inset 0 0 12px rgba(120, 245, 220, .12);
+  }
+
+  .avatar-realm-1 .pixel-avatar-aura { border-color: rgba(95, 207, 122, .45); box-shadow: 0 0 10px rgba(95, 207, 122, .22); }
+  .avatar-realm-2 .pixel-avatar-aura { border-color: rgba(83, 178, 245, .48); box-shadow: 0 0 12px rgba(83, 178, 245, .28); }
+  .avatar-realm-3 .pixel-avatar-aura { border-color: rgba(191, 119, 255, .52); box-shadow: 0 0 14px rgba(191, 119, 255, .32); }
+  .avatar-realm-4 .pixel-avatar-aura { border-color: rgba(245, 198, 92, .58); box-shadow: 0 0 16px rgba(245, 198, 92, .35); }
+
+  .pixel-avatar {
+    position: absolute;
+    left: 16px;
+    top: 8px;
+    width: 40px;
+    height: 92px;
+    transform: scale(1.2);
+    transform-origin: top center;
+  }
+
+  .px { position: absolute; display: block; box-shadow: inset -2px -2px 0 rgba(0,0,0,.18); }
+  .px-bun { left: 14px; top: 0; width: 12px; height: 8px; background: #2a1c18; }
+  .px-hair { left: 9px; top: 8px; width: 22px; height: 18px; background: #2a1c18; }
+  .px-face { left: 11px; top: 14px; width: 18px; height: 18px; background: #e7b98a; }
+  .px-eye { top: 23px; width: 3px; height: 3px; background: #211712; box-shadow: none; }
+  .eye-l { left: 16px; }
+  .eye-r { left: 24px; }
+  .px-robe { left: 8px; top: 34px; width: 24px; height: 34px; background: #5b8a5d; }
+  .px-belt { left: 7px; top: 49px; width: 26px; height: 4px; background: #d7b25e; box-shadow: none; }
+  .px-sleeve { top: 36px; width: 8px; height: 28px; background: #487349; }
+  .sleeve-l { left: 1px; }
+  .sleeve-r { right: 1px; }
+  .px-leg { top: 68px; width: 9px; height: 18px; background: #3f4f3d; }
+  .leg-l { left: 10px; }
+  .leg-r { right: 10px; }
+  .px-tool { right: -2px; top: 42px; width: 4px; height: 35px; background: #8a5a32; transform: rotate(-12deg); box-shadow: 0 -5px 0 #caa85d; }
+  .avatar-female .px-robe { background: #7f5b96; }
+  .avatar-female .px-sleeve { background: #674a7f; }
+  .avatar-female .px-belt { background: #efca75; }
+  .avatar-mortal .px-tool { box-shadow: 0 -5px 0 #b0a081; }
+
+  .pixel-avatar-shadow {
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: 13px;
+    height: 5px;
+    background: rgba(0,0,0,.35);
+  }
+</style>

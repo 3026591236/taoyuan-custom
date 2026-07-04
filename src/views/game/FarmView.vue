@@ -174,8 +174,14 @@
             @click="activePlotId = plot.id"
           >
             <div class="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center">
-              <component :is="getPlotDisplay(plot).icon" :size="14" />
-              <span v-if="plot.cropId" class="text-[10px] opacity-60 truncate max-w-full px-0.5 mt-1">{{ getCropName(plot.cropId) }}</span>
+              <div class="pixel-plot-scene" :class="getPixelPlotClass(plot)">
+                <div class="pixel-soil-lines"></div>
+                <div v-if="plot.cropId" class="pixel-crop" :class="getCropPixelClass(plot.cropId, plot.state)">
+                  <span class="pixel-crop-sprout">{{ getCropPixelGlyph(plot.cropId, plot.state) }}</span>
+                  <span class="pixel-crop-name">{{ getCropName(plot.cropId) }}</span>
+                </div>
+                <component v-else :is="getPlotDisplay(plot).icon" :size="14" class="pixel-empty-icon" />
+              </div>
               <!-- 角标 -->
               <Droplets
                 v-if="(plot.state === 'planted' || plot.state === 'growing') && !plot.watered"
@@ -307,8 +313,9 @@
                   class="btn text-xs justify-between mr-1 shrink-0"
                   @click="doPlant(seed.cropId, seed.quality)"
                 >
-                  <span :class="seed.colorClass">
-                    {{ seed.name }}
+                  <span class="seed-pixel-row" :class="seed.colorClass">
+                    <span class="seed-pixel-bag" :class="getSeedPixelClass(seed.cropId)">{{ getSeedPixelGlyph(seed.cropId) }}</span>
+                    <span>{{ seed.name }}</span>
                     <span
                       v-if="seed.quality !== 'normal'"
                       :class="{
@@ -399,8 +406,9 @@
                 class="btn text-xs justify-between mr-1 shrink-0"
                 @click="doBatchPlant(seed.cropId)"
               >
-                <span :class="seed.colorClass">
-                  {{ seed.name }}
+                <span class="seed-pixel-row" :class="seed.colorClass">
+                  <span class="seed-pixel-bag" :class="getSeedPixelClass(seed.cropId)">{{ getSeedPixelGlyph(seed.cropId) }}</span>
+                  <span>{{ seed.name }}</span>
                   <span v-if="seed.regrowth" class="text-success ml-1">[多茬]</span>
                 </span>
                 <span class="text-muted">×{{ seed.count }}</span>
@@ -860,8 +868,14 @@
               :title="getPlotTooltip(plot)"
               @click="activeGhPlotId = plot.id"
             >
-              <component :is="getPlotDisplay(plot).icon" :size="14" />
-              <span v-if="plot.cropId" class="text-[10px] opacity-70 truncate max-w-full px-0.5">{{ getCropName(plot.cropId) }}</span>
+              <div class="pixel-plot-scene greenhouse-scene" :class="getPixelPlotClass(plot)">
+                <div class="pixel-soil-lines"></div>
+                <div v-if="plot.cropId" class="pixel-crop" :class="getCropPixelClass(plot.cropId, plot.state)">
+                  <span class="pixel-crop-sprout">{{ getCropPixelGlyph(plot.cropId, plot.state) }}</span>
+                  <span class="pixel-crop-name">{{ getCropName(plot.cropId) }}</span>
+                </div>
+                <component v-else :is="getPlotDisplay(plot).icon" :size="14" class="pixel-empty-icon" />
+              </div>
             </button>
           </div>
         </div>
@@ -923,8 +937,9 @@
               class="btn text-xs justify-between mr-1 shrink-0"
               @click="doGhBatchPlant(seed.cropId)"
             >
-              <span>
-                {{ seed.name }}
+              <span class="seed-pixel-row">
+                <span class="seed-pixel-bag" :class="getSeedPixelClass(seed.cropId)">{{ getSeedPixelGlyph(seed.cropId) }}</span>
+                <span>{{ seed.name }}</span>
                 <span v-if="seed.regrowth" class="text-success ml-1">[多茬]</span>
               </span>
               <span class="text-muted">×{{ seed.count }}</span>
@@ -1001,9 +1016,12 @@
               <p class="text-xs text-muted mb-1">种植</p>
               <div class="flex flex-wrap space-x-1">
                 <Button v-for="seed in allSeeds" :key="seed.cropId" @click="doGhPlant(seed.cropId)">
-                  {{ seed.name }}
-                  <span v-if="seed.regrowth" class="text-success ml-1">[多茬]</span>
-                  (×{{ seed.count }})
+                  <span class="seed-pixel-row">
+                    <span class="seed-pixel-bag" :class="getSeedPixelClass(seed.cropId)">{{ getSeedPixelGlyph(seed.cropId) }}</span>
+                    <span>{{ seed.name }}</span>
+                    <span v-if="seed.regrowth" class="text-success ml-1">[多茬]</span>
+                    <span>(×{{ seed.count }})</span>
+                  </span>
                 </Button>
               </div>
             </div>
@@ -1132,6 +1150,7 @@
   const playerStore = usePlayerStore()
   const shopStore = useShopStore()
   const breedingStore = useBreedingStore()
+  const cultivationStore = useCultivationStore()
 
   // === 田庄特殊功能 ===
 
@@ -1422,6 +1441,53 @@
     const crop = getCropById(cropId)
     return crop?.name ?? cropId
   }
+  const cropPixelPalettes = ['leafy', 'root', 'grain', 'fruit', 'flower', 'spirit', 'vine', 'snow']
+  const cropGlyphs = ['◆', '●', '▲', '✦', '✿', '✧', '◈', '◇']
+
+  const hashCropId = (cropId: string): number => {
+    let hash = 0
+    for (const ch of cropId) hash = (hash * 31 + ch.charCodeAt(0)) % 9973
+    return hash
+  }
+
+  const cropPixelKind = (cropId: string): string => {
+    const crop = getCropById(cropId)
+    const text = `${cropId} ${crop?.name ?? ''}`
+    if (/spirit|jade|gold|moon|frost|fairy|crystal|phoenix|ruby|灵|玉|金|月|霜|仙|朱|蕴/.test(text)) return 'spirit'
+    if (/flower|tea|chrysanthemum|osmanthus|blossom|花|茶|菊|桂/.test(text)) return 'flower'
+    if (/melon|peach|fruit|pumpkin|watermelon|瓜|桃|果|南瓜/.test(text)) return 'fruit'
+    if (/rice|corn|wheat|sesame|grain|稻|米|麦|玉米|芝麻/.test(text)) return 'grain'
+    if (/radish|potato|yam|garlic|ginger|root|萝卜|土豆|薯|藕|蒜|姜/.test(text)) return 'root'
+    if (/bean|loofah|vine|豆|丝瓜/.test(text)) return 'vine'
+    if (/snow|frost|雪|霜/.test(text)) return 'snow'
+    return cropPixelPalettes[hashCropId(cropId) % cropPixelPalettes.length] ?? 'leafy'
+  }
+
+  const getCropPixelClass = (cropId: string, state?: string): string => {
+    const growth = state === 'harvestable' ? 'mature' : state === 'growing' ? 'growing' : 'seedling'
+    return `crop-${cropPixelKind(cropId)} crop-${growth} crop-variant-${hashCropId(cropId) % 5}`
+  }
+
+  const getCropPixelGlyph = (cropId: string, state?: string): string => {
+    if (state === 'planted') return '·'
+    if (state === 'growing') return cropPixelKind(cropId) === 'grain' ? '▥' : '♣'
+    return cropGlyphs[hashCropId(cropId) % cropGlyphs.length] ?? '◆'
+  }
+
+  const getSeedPixelClass = (cropId: string): string => `seed-${cropPixelKind(cropId)} seed-variant-${hashCropId(cropId) % 6}`
+  const getSeedPixelGlyph = (cropId: string): string => ['•', '◆', '◇', '✦', '▲', '●'][hashCropId(cropId) % 6] ?? '•'
+
+  const getPixelPlotClass = (plot: (typeof farmStore.plots)[number]): string => {
+    const tier = cultivationStore.unlocked ? cultivationStore.fieldTier : 0
+    const parts = [`plot-state-${plot.state}`, `spirit-tier-${tier}`]
+    if (plot.watered) parts.push('plot-watered')
+    if (plot.fertilizer) parts.push('plot-fertilized')
+    if (plot.giantCropGroup !== null) parts.push('plot-giant')
+    if (plot.infested) parts.push('plot-infested')
+    if (plot.weedy) parts.push('plot-weedy')
+    return parts.join(' ')
+  }
+
 
   const hasSprinkler = (plotId: number): boolean => {
     return farmStore.sprinklers.some(s => s.plotId === plotId)
@@ -2112,5 +2178,74 @@
   .farm-plot {
     height: 0;
     padding-bottom: 100%;
+    image-rendering: pixelated;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   }
+
+  .pixel-plot-scene {
+    position: absolute;
+    inset: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.13) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      #5b3d26;
+    background-size: 8px 8px, 8px 8px, auto;
+  }
+
+  .plot-state-wasteland { background-color: #3b3129; filter: saturate(0.75); }
+  .plot-state-tilled { background-color: #664021; }
+  .plot-state-planted { background-color: #6a4727; }
+  .plot-state-growing { background-color: #5b4f24; }
+  .plot-state-harvestable { background-color: #6b5420; }
+  .plot-watered { box-shadow: inset 0 -8px 0 rgba(72, 172, 210, 0.20); }
+  .plot-fertilized::before { content: ''; position: absolute; inset: 2px; border: 1px dashed rgba(245, 198, 92, 0.45); }
+  .plot-infested { filter: hue-rotate(-18deg) saturate(1.2); }
+  .plot-weedy::after { content: '♣'; position: absolute; left: 2px; top: 1px; font-size: 9px; color: #5fcf7a; }
+
+  .spirit-tier-1 { background-image: linear-gradient(90deg, rgba(95, 207, 122, 0.14) 1px, transparent 1px), linear-gradient(0deg, rgba(95, 207, 122, 0.11) 1px, transparent 1px); box-shadow: inset 0 0 0 1px rgba(95, 207, 122, 0.35); }
+  .spirit-tier-2 { background-image: linear-gradient(90deg, rgba(83, 178, 245, 0.16) 1px, transparent 1px), linear-gradient(0deg, rgba(95, 207, 122, 0.12) 1px, transparent 1px); box-shadow: inset 0 0 0 1px rgba(83, 178, 245, 0.45), inset 0 0 12px rgba(83, 178, 245, 0.14); }
+  .spirit-tier-3 { background-image: linear-gradient(90deg, rgba(191, 119, 255, 0.18) 1px, transparent 1px), linear-gradient(0deg, rgba(83, 178, 245, 0.14) 1px, transparent 1px); box-shadow: inset 0 0 0 1px rgba(191, 119, 255, 0.48), inset 0 0 14px rgba(191, 119, 255, 0.18); }
+  .spirit-tier-4 { background-image: linear-gradient(90deg, rgba(245, 198, 92, 0.20) 1px, transparent 1px), linear-gradient(0deg, rgba(191, 119, 255, 0.16) 1px, transparent 1px); box-shadow: inset 0 0 0 1px rgba(245, 198, 92, 0.55), inset 0 0 16px rgba(245, 198, 92, 0.22); }
+
+  .pixel-soil-lines { position: absolute; inset: auto 2px 2px 2px; height: 8px; background: repeating-linear-gradient(90deg, rgba(0,0,0,.22) 0 4px, transparent 4px 8px); opacity: .55; }
+  .pixel-empty-icon { opacity: .65; z-index: 1; }
+  .pixel-crop { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 1px; transform: translateY(1px); text-shadow: 1px 1px 0 rgba(0,0,0,.45); }
+  .pixel-crop-sprout { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 13px; line-height: 1; }
+  .crop-seedling .pixel-crop-sprout { font-size: 12px; transform: translateY(3px); }
+  .crop-growing .pixel-crop-sprout { font-size: 14px; }
+  .crop-mature .pixel-crop-sprout { font-size: 17px; filter: drop-shadow(0 0 2px rgba(255,255,255,.25)); }
+  .pixel-crop-name { max-width: 95%; padding: 0 2px; font-size: 9px; line-height: 1; opacity: .82; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: rgba(0,0,0,.24); border: 1px solid rgba(255,255,255,.06); }
+  .crop-leafy { color: #68d36c; }
+  .crop-root { color: #f0d48a; }
+  .crop-grain { color: #f6c85f; }
+  .crop-fruit { color: #ff8069; }
+  .crop-flower { color: #f19bff; }
+  .crop-spirit { color: #73f5df; }
+  .crop-vine { color: #81d86f; }
+  .crop-snow { color: #d9f3ff; }
+  .crop-variant-1 { transform: translateY(0) rotate(-2deg); }
+  .crop-variant-2 { transform: translateY(1px) rotate(2deg); }
+  .crop-variant-3 .pixel-crop-sprout { width: 19px; }
+  .crop-variant-4 .pixel-crop-sprout { filter: drop-shadow(0 0 2px currentColor); }
+
+  .seed-pixel-row { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+  .seed-pixel-bag { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid rgba(255,255,255,.18); background: #4b3426; box-shadow: inset -2px -2px 0 rgba(0,0,0,.25), inset 2px 2px 0 rgba(255,255,255,.08); font-size: 10px; image-rendering: pixelated; }
+  .seed-leafy { color: #72d66f; background: #2f4f2a; }
+  .seed-root { color: #f1d48a; background: #5b3b28; }
+  .seed-grain { color: #f7c85c; background: #5c4a22; }
+  .seed-fruit { color: #ff8773; background: #5a2e2c; }
+  .seed-flower { color: #f0a0ff; background: #4a3155; }
+  .seed-spirit { color: #7df4e7; background: #244f52; box-shadow: inset -2px -2px 0 rgba(0,0,0,.25), 0 0 6px rgba(125,244,231,.25); }
+  .seed-vine { color: #8edb70; background: #304d24; }
+  .seed-snow { color: #dff7ff; background: #314d5b; }
+  .seed-variant-1 { border-radius: 2px 0 2px 0; }
+  .seed-variant-2 { border-style: dashed; }
+  .seed-variant-3 { transform: rotate(-2deg); }
+  .seed-variant-4 { transform: rotate(2deg); }
+  .seed-variant-5 { box-shadow: inset -2px -2px 0 rgba(0,0,0,.25), inset 2px 2px 0 rgba(255,255,255,.08), 0 0 0 1px currentColor; }
 </style>
