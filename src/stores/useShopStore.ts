@@ -172,11 +172,14 @@ export const useShopStore = defineStore('shop', () => {
   const _basePrice = (itemId: string, quantity: number, quality: Quality): number => {
     const itemDef = getItemById(itemId)
     if (!itemDef) return 0
-    const qualityMultiplier: Record<Quality, number> = {
+    const qualityMultiplier: Record<string, number> = {
       normal: 1.0,
       fine: 1.25,
       excellent: 1.5,
-      supreme: 2.0
+      supreme: 2.0,
+      rare: 1.25,
+      magic: 1.5,
+      legendary: 2.0
     }
     let bonus = 1.0
     if (itemDef.category === 'processed' && skillStore.getSkill('farming').perk10 === 'artisan') bonus *= 1.25
@@ -191,7 +194,8 @@ export const useShopStore = defineStore('shop', () => {
     const hiddenNpcStore = useHiddenNpcStore()
     const sellBonusData = hiddenNpcStore.getBondBonusByType('sell_bonus')
     const spiritSellBonus = sellBonusData?.type === 'sell_bonus' ? sellBonusData.percent / 100 : 0
-    return Math.floor(itemDef.sellPrice * quantity * qualityMultiplier[quality] * bonus * (1 + ringSelBonus) * (1 + spiritSellBonus))
+    const multiplier = qualityMultiplier[String(quality)] ?? 1.0
+    return Math.floor(itemDef.sellPrice * quantity * multiplier * bonus * (1 + ringSelBonus) * (1 + spiritSellBonus))
   }
 
   /** 计算物品售价（不执行出售，用于估价） */
@@ -210,8 +214,10 @@ export const useShopStore = defineStore('shop', () => {
 
   /** 出售物品，返回实际售价（0表示失败） */
   const sellItem = (itemId: string, quantity: number = 1, quality: Quality = 'normal'): number => {
-    if (!inventoryStore.removeItem(itemId, quantity, quality)) return 0
     const totalPrice = calculateSellPrice(itemId, quantity, quality)
+    // 先算价再扣物品：避免售价异常/未定义时先扣物品导致玩家感知“吞钱”。
+    if (!Number.isFinite(totalPrice) || totalPrice <= 0) return 0
+    if (!inventoryStore.removeItem(itemId, quantity, quality)) return 0
     playerStore.earnMoney(totalPrice)
     return totalPrice
   }

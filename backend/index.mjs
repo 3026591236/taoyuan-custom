@@ -257,6 +257,17 @@ app.put('/api/saves/:slot', async (req, res) => {
       if (chars.length) saveCharacterId = chars[0].id
     }
     const metaJson = meta ? JSON.stringify(meta) : null
+    const clientLoadedAt = meta && meta.lastLoadedAt ? new Date(meta.lastLoadedAt) : null
+    if (clientLoadedAt && Number.isFinite(clientLoadedAt.getTime())) {
+      const [currentRows] = await pool.execute('SELECT updated_at FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+      if (currentRows.length) {
+        const serverUpdatedAt = new Date(currentRows[0].updated_at)
+        // 同账号多端同时在线时，拒绝旧页面覆盖服务器上更新的存档。
+        if (serverUpdatedAt.getTime() - clientLoadedAt.getTime() > 1500) {
+          return send(res, 409, { error: '云端存档已由其他设备更新，请刷新或重新进入后再继续。', conflict: true, serverUpdatedAt: currentRows[0].updated_at })
+        }
+      }
+    }
     // data 为明文 JSON（新前端直接传），优先存入 data_json；raw 保留兼容旧版加密 blob
     const plainData = data || (raw ? safeJsonParse(raw, null) : null)
     const dataJson = plainData ? JSON.stringify(plainData) : null
@@ -279,7 +290,8 @@ app.put('/api/saves/:slot', async (req, res) => {
         )
       }
     } catch (e2) { console.error('lb err', e2.message) }
-    send(res, 200, { ok: true })
+    const [savedRows] = await pool.execute('SELECT updated_at FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+    send(res, 200, { ok: true, updatedAt: savedRows[0]?.updated_at || null })
   } catch (e) { console.error('save err', e); send(res, 500, { error: '服务器错误' }) }
 })
 

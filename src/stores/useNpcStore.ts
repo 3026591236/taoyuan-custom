@@ -443,11 +443,11 @@ export const useNpcStore = defineStore('npc', () => {
     }
 
     // 品质加成
-    const qualityMultiplier: Record<Quality, number> = { normal: 1.0, fine: 1.25, excellent: 1.5, supreme: 2.0 }
+    const qualityMultiplier: Record<string, number> = { normal: 1.0, fine: 1.25, excellent: 1.5, supreme: 2.0, rare: 1.25, magic: 1.5, legendary: 2.0 }
     // 生日加成 (4倍)
     const birthdayMultiplier = isBirthday(npcId) ? 4 : 1
 
-    gain = Math.floor(gain * qualityMultiplier[quality] * birthdayMultiplier * giftBonusMultiplier)
+    gain = Math.floor(gain * (qualityMultiplier[String(quality)] ?? 1.0) * birthdayMultiplier * giftBonusMultiplier)
     state.friendship = Math.max(0, state.friendship + gain)
 
     return { gain, reaction }

@@ -535,7 +535,12 @@
   const accountApi = async (path: string, options: RequestInit = {}) => {
     const res = await fetch(path, options)
     const data = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(data.error || '请求失败')
+    if (!res.ok) {
+      const err = new Error(data.error || '请求失败') as Error & { status?: number; data?: any }
+      err.status = res.status
+      err.data = data
+      throw err
+    }
     return data
   }
 
@@ -644,10 +649,17 @@
     const raw = localStorage.getItem(saveKey(slot))
     if (!raw) return
     const info = saveStore.getSlots().find(s => s.slot === slot)
+    const loadedAt = localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || ''
     try {
       const data = parseSaveData(raw)
-      await accountApi(`/api/saves/${slot}`, { method: 'PUT', headers: accountHeaders(), body: JSON.stringify({ raw, data, meta: { ...(info || {}), autoSaved: true } }) })
-    } catch (e) {
+      const result = await accountApi(`/api/saves/${slot}`, { method: 'PUT', headers: accountHeaders(), body: JSON.stringify({ raw, data, meta: { ...(info || {}), autoSaved: true, lastLoadedAt: loadedAt } }) })
+      if (result?.updatedAt) localStorage.setItem(`taoyuan_cloud_loaded_at_${slot}`, String(result.updatedAt))
+    } catch (e: any) {
+      if (e?.status === 409) {
+        stopAccountAutoSave()
+        addLog('检测到同账号其他设备已有更新，已暂停本页自动保存。请刷新或从角色列表重新进入，避免覆盖进度。')
+        return
+      }
       // 自动保存失败不打断游戏，也不刷屏；玩家仍可手动保存。
       console.warn('account autosave failed', e)
     }
