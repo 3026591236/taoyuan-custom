@@ -6,6 +6,54 @@
       <span>任务</span>
     </div>
 
+
+
+    <!-- 修行志 -->
+    <div class="border border-accent/30 rounded-xs p-3 mb-3 bg-accent/5">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs text-accent font-medium">
+          <Sparkles :size="12" class="inline" />
+          修行志
+        </p>
+        <span class="text-[10px] text-muted">已完成 {{ questStore.journeySummary.done }}/{{ questStore.journeySummary.total }} · 可领 {{ questStore.journeySummary.claimable }}</span>
+      </div>
+      <p class="text-xs text-muted leading-relaxed mb-2">按“种田 → 地脉感应 → 灵田启蒙 → 修仙突破 → 外出磨砺”的路线推进，每完成一个目标都能领取小奖励。</p>
+      <div class="flex flex-col space-y-1.5">
+        <div
+          v-for="task in visibleJourneyTasks"
+          :key="task.id"
+          class="border rounded-xs px-3 py-2"
+          :class="task.done && !task.claimed ? 'border-success/50 bg-success/5' : task.claimed ? 'border-accent/10 opacity-70' : 'border-accent/20'"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] px-1 border border-accent/20 rounded-xs text-muted">{{ journeyTypeName(task.type, task.day) }}</span>
+                <p class="text-xs text-accent truncate">{{ task.title }}</p>
+              </div>
+              <p class="text-[11px] text-muted leading-relaxed mt-1">{{ task.desc }}</p>
+              <div class="mt-1 flex items-center gap-2">
+                <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10 overflow-hidden">
+                  <div class="h-full bg-accent transition-all" :style="{ width: Math.min(100, Math.floor((task.progress / task.target) * 100)) + '%' }" />
+                </div>
+                <span class="text-[10px] text-muted whitespace-nowrap">{{ Math.min(task.progress, task.target) }}/{{ task.target }}</span>
+              </div>
+            </div>
+            <Button
+              class="!px-2 !py-1 text-[10px] whitespace-nowrap"
+              :class="{ '!bg-accent !text-bg': task.done && !task.claimed }"
+              :icon="task.claimed ? CircleCheck : CheckCircle"
+              :icon-size="10"
+              :disabled="!task.done || task.claimed"
+              @click="handleClaimJourney(task.id)"
+            >
+              {{ task.claimed ? '已领' : task.done ? '领取' : '未成' }}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 主线任务 -->
     <div class="border border-accent/20 rounded-xs p-3 mb-3">
       <p class="text-xs text-muted mb-2">
@@ -302,7 +350,7 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { ClipboardList, Calendar, Clock, Plus, CheckCircle, CircleCheck, Circle, Star, BookOpen, X } from 'lucide-vue-next'
+  import { ClipboardList, Calendar, Clock, Plus, CheckCircle, CircleCheck, Circle, Star, BookOpen, X, Sparkles } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import type { QuestInstance } from '@/types'
   import { useInventoryStore } from '@/stores/useInventoryStore'
@@ -315,6 +363,24 @@
 
   const getItemName = (id: string): string => {
     return getItemById(id)?.name ?? id
+  }
+
+
+  // === 修行志 ===
+
+  const visibleJourneyTasks = computed(() => {
+    return questStore.journeyTasks.filter(task => task.type === 'guide' || task.done || !task.claimed).slice(0, 10)
+  })
+
+  const journeyTypeName = (type: string, day?: number) => {
+    if (type === 'guide') return '主线'
+    if (type === 'daily') return '每日'
+    return day ? `七日·第${day}日` : '七日'
+  }
+
+  const handleClaimJourney = (taskId: string) => {
+    const result = questStore.claimJourneyTask(taskId)
+    addLog(result.message)
   }
 
   // === 弹窗状态 ===

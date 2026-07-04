@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { QuestInstance, Season, MainQuestState, MainQuestObjective } from '@/types'
 import { generateQuest, generateSpecialOrder as _generateSpecialOrder } from '@/data/quests'
@@ -11,6 +11,8 @@ import { useAchievementStore } from './useAchievementStore'
 import { useSkillStore } from './useSkillStore'
 import { useShopStore } from './useShopStore'
 import { useAnimalStore } from './useAnimalStore'
+import { useCultivationStore } from './useCultivationStore'
+import { useGameStore } from './useGameStore'
 
 export const useQuestStore = defineStore('quest', () => {
   const inventoryStore = useInventoryStore()
@@ -32,6 +34,147 @@ export const useQuestStore = defineStore('quest', () => {
 
   /** 最大同时接取任务数 */
   const MAX_ACTIVE_QUESTS = 3
+
+
+  // ============================================================
+  // 修行志：把种田、地脉、灵田、修仙与战斗串成可领取目标
+  // ============================================================
+
+  type JourneyTaskType = 'guide' | 'daily' | 'sevenDay'
+  type JourneyMetric =
+    | 'cropHarvest'
+    | 'earthPulse'
+    | 'fieldTier'
+    | 'cultivationUnlocked'
+    | 'realmIndex'
+    | 'moneyEarned'
+    | 'monsterKills'
+    | 'mineFloor'
+    | 'completedCommissions'
+    | 'craftedPills'
+    | 'attributePower'
+
+  interface JourneyReward {
+    money?: number
+    aura?: number
+    attributeExp?: Partial<Record<'constitution' | 'strength' | 'agility' | 'perception', number>>
+  }
+
+  interface JourneyTaskDef {
+    id: string
+    type: JourneyTaskType
+    day?: number
+    title: string
+    desc: string
+    metric: JourneyMetric
+    target: number
+    reward: JourneyReward
+  }
+
+  const journeyClaimed = ref<string[]>([])
+  const journeyDailyKey = ref('')
+  const journeyDailyBaselines = ref<Partial<Record<JourneyMetric, number>>>({})
+
+  const JOURNEY_TASKS: JourneyTaskDef[] = [
+    { id: 'guide_first_harvest', type: 'guide', title: '春种第一获', desc: '收获任意作物，感受田庄第一份回报。', metric: 'cropHarvest', target: 1, reward: { money: 120, attributeExp: { constitution: 6 } } },
+    { id: 'guide_pulse_20', type: 'guide', title: '地脉初闻', desc: '通过收获作物累计20点地脉感应。', metric: 'earthPulse', target: 20, reward: { money: 180, attributeExp: { perception: 8 } } },
+    { id: 'guide_pulse_100', type: 'guide', title: '田间灵机', desc: '累计100点地脉感应，为启蒙灵田做准备。', metric: 'earthPulse', target: 100, reward: { money: 300, attributeExp: { constitution: 8, perception: 8 } } },
+    { id: 'guide_unlock_cultivation', type: 'guide', title: '启蒙灵田', desc: '完成灵田启蒙，让种田正式连向修仙。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 60, attributeExp: { perception: 10 } } },
+    { id: 'guide_field_tier_1', type: 'guide', title: '黄阶灵田', desc: '把灵田提升到黄阶，开启更稳定的灵气产出。', metric: 'fieldTier', target: 1, reward: { aura: 90, attributeExp: { constitution: 10 } } },
+    { id: 'guide_realm_lianqi', type: 'guide', title: '炼气入门', desc: '突破到炼气一层，迈出修仙第一步。', metric: 'realmIndex', target: 1, reward: { aura: 120, attributeExp: { perception: 12 } } },
+    { id: 'guide_first_battle', type: 'guide', title: '初战凶兽', desc: '累计击败1只怪物，检验修行成果。', metric: 'monsterKills', target: 1, reward: { money: 260, attributeExp: { strength: 8, agility: 8 } } },
+    { id: 'daily_harvest_5', type: 'daily', title: '今日勤耕', desc: '累计收获5次作物，稳定积累地脉与资质。', metric: 'cropHarvest', target: 5, reward: { money: 160, attributeExp: { constitution: 5 } } },
+    { id: 'daily_commission_1', type: 'daily', title: '乡里委托', desc: '完成1个委托，让田庄和村落流动起来。', metric: 'completedCommissions', target: 1, reward: { money: 220, attributeExp: { perception: 5 } } },
+    { id: 'daily_battle_3', type: 'daily', title: '磨砺身手', desc: '累计击败3只怪物，提升战斗资质。', metric: 'monsterKills', target: 3, reward: { money: 180, attributeExp: { strength: 6, agility: 6 } } },
+    { id: 'seven_day_1', type: 'sevenDay', day: 1, title: '第一日：安身立田', desc: '收获3次作物，建立最初的田庄节奏。', metric: 'cropHarvest', target: 3, reward: { money: 240, attributeExp: { constitution: 8 } } },
+    { id: 'seven_day_2', type: 'sevenDay', day: 2, title: '第二日：感应地脉', desc: '累计40点地脉感应，理解种田与修仙的关系。', metric: 'earthPulse', target: 40, reward: { money: 260, attributeExp: { perception: 10 } } },
+    { id: 'seven_day_3', type: 'sevenDay', day: 3, title: '第三日：灵田启蒙', desc: '完成灵田启蒙，普通农事开始转化灵气。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 100, attributeExp: { perception: 12 } } },
+    { id: 'seven_day_4', type: 'sevenDay', day: 4, title: '第四日：炼气修行', desc: '突破到炼气一层，形成第一段修仙目标。', metric: 'realmIndex', target: 1, reward: { aura: 120, attributeExp: { constitution: 10 } } },
+    { id: 'seven_day_5', type: 'sevenDay', day: 5, title: '第五日：外出磨砺', desc: '击败5只怪物，补上战斗成长线。', metric: 'monsterKills', target: 5, reward: { money: 360, attributeExp: { strength: 12, agility: 12 } } },
+    { id: 'seven_day_6', type: 'sevenDay', day: 6, title: '第六日：经营有成', desc: '累计赚取3000文，为灵田、法宝和洞府准备资源。', metric: 'moneyEarned', target: 3000, reward: { money: 500, attributeExp: { perception: 10 } } },
+    { id: 'seven_day_7', type: 'sevenDay', day: 7, title: '第七日：小有所成', desc: '角色资质总评达到24，感受日常行为带来的角色成长。', metric: 'attributePower', target: 24, reward: { aura: 160, money: 600, attributeExp: { constitution: 10, strength: 10, agility: 10, perception: 10 } } }
+  ]
+
+  const getJourneyDayKey = (): string => {
+    const gameStore = useGameStore()
+    return `${gameStore.year}-${gameStore.season}-${gameStore.day}`
+  }
+
+  const getJourneyRawProgress = (metric: JourneyMetric): number => {
+    const cultivationStore = useCultivationStore()
+    switch (metric) {
+      case 'cropHarvest': return achievementStore.stats.totalCropsHarvested
+      case 'earthPulse': return cultivationStore.earthPulse
+      case 'fieldTier': return cultivationStore.fieldTier
+      case 'cultivationUnlocked': return cultivationStore.unlocked ? 1 : 0
+      case 'realmIndex': return cultivationStore.realmIndex
+      case 'moneyEarned': return achievementStore.stats.totalMoneyEarned
+      case 'monsterKills': return achievementStore.stats.totalMonstersKilled
+      case 'mineFloor': return achievementStore.stats.highestMineFloor
+      case 'completedCommissions': return completedQuestCount.value
+      case 'craftedPills': return achievementStore.stats.totalRecipesCooked
+      case 'attributePower': return playerStore.attributePower
+      default: return 0
+    }
+  }
+
+  const ensureJourneyDailyState = () => {
+    const key = getJourneyDayKey()
+    if (journeyDailyKey.value !== key) {
+      journeyDailyKey.value = key
+      journeyDailyBaselines.value = {}
+      JOURNEY_TASKS.filter(task => task.type === 'daily').forEach(task => {
+        journeyDailyBaselines.value[task.metric] = getJourneyRawProgress(task.metric)
+      })
+    }
+  }
+
+  const getJourneyProgress = (task: JourneyTaskDef): number => {
+    if (task.type !== 'daily') return getJourneyRawProgress(task.metric)
+    ensureJourneyDailyState()
+    const baseline = journeyDailyBaselines.value[task.metric] ?? getJourneyRawProgress(task.metric)
+    return Math.max(0, getJourneyRawProgress(task.metric) - baseline)
+  }
+
+  const getJourneyClaimKey = (task: JourneyTaskDef): string => {
+    return task.type === 'daily' ? `${getJourneyDayKey()}:${task.id}` : task.id
+  }
+
+  const journeyTasks = computed(() => JOURNEY_TASKS.map(task => {
+    const progress = getJourneyProgress(task)
+    const claimed = journeyClaimed.value.includes(getJourneyClaimKey(task))
+    return { ...task, progress, done: progress >= task.target, claimed }
+  }))
+
+  const journeySummary = computed(() => {
+    const tasks = journeyTasks.value
+    const done = tasks.filter(t => t.done).length
+    const claimed = tasks.filter(t => t.claimed).length
+    const claimable = tasks.filter(t => t.done && !t.claimed).length
+    return { total: tasks.length, done, claimed, claimable }
+  })
+
+  const claimJourneyTask = (taskId: string): { success: boolean; message: string } => {
+    const task = journeyTasks.value.find(t => t.id === taskId)
+    if (!task) return { success: false, message: '修行志目标不存在。' }
+    if (!task.done) return { success: false, message: '目标尚未完成。' }
+    if (task.claimed) return { success: false, message: '奖励已经领取过了。' }
+
+    if (task.reward.money) playerStore.earnMoney(task.reward.money)
+    if (task.reward.attributeExp) playerStore.addAttributeExpBatch(task.reward.attributeExp)
+    if (task.reward.aura) {
+      const cultivationStore = useCultivationStore()
+      cultivationStore.aura += task.reward.aura
+    }
+    journeyClaimed.value.push(getJourneyClaimKey(task))
+
+    const rewardText = [
+      task.reward.money ? `${task.reward.money}文` : '',
+      task.reward.aura ? `灵气${task.reward.aura}` : '',
+      task.reward.attributeExp ? '资质经验' : ''
+    ].filter(Boolean).join('、')
+    return { success: true, message: `【修行志】完成「${task.title}」，获得${rewardText || '奖励'}。` }
+  }
 
   /** 每日生成新任务到告示栏 */
   const generateDailyQuests = (season: Season, day: number) => {
@@ -411,7 +554,10 @@ export const useQuestStore = defineStore('quest', () => {
       completedQuestCount: completedQuestCount.value,
       specialOrder: specialOrder.value,
       mainQuest: mainQuest.value,
-      completedMainQuests: completedMainQuests.value
+      completedMainQuests: completedMainQuests.value,
+      journeyClaimed: journeyClaimed.value,
+      journeyDailyKey: journeyDailyKey.value,
+      journeyDailyBaselines: journeyDailyBaselines.value
     }
   }
 
@@ -422,6 +568,9 @@ export const useQuestStore = defineStore('quest', () => {
     specialOrder.value = ((data as Record<string, unknown>).specialOrder as QuestInstance | null) ?? null
     mainQuest.value = ((data as Record<string, unknown>).mainQuest as MainQuestState | null) ?? null
     completedMainQuests.value = ((data as Record<string, unknown>).completedMainQuests as string[] | undefined) ?? []
+    journeyClaimed.value = ((data as Record<string, unknown>).journeyClaimed as string[] | undefined) ?? []
+    journeyDailyKey.value = ((data as Record<string, unknown>).journeyDailyKey as string | undefined) ?? ''
+    journeyDailyBaselines.value = ((data as Record<string, unknown>).journeyDailyBaselines as Partial<Record<JourneyMetric, number>> | undefined) ?? {}
     // 加载后初始化主线任务（兼容旧存档）
     initMainQuest()
   }
@@ -433,6 +582,11 @@ export const useQuestStore = defineStore('quest', () => {
     specialOrder,
     mainQuest,
     completedMainQuests,
+    journeyClaimed,
+    journeyDailyKey,
+    journeyDailyBaselines,
+    journeyTasks,
+    journeySummary,
     MAX_ACTIVE_QUESTS,
     generateDailyQuests,
     generateSpecialOrder,
@@ -447,6 +601,7 @@ export const useQuestStore = defineStore('quest', () => {
     updateMainQuestProgress,
     canSubmitMainQuest,
     submitMainQuest,
+    claimJourneyTask,
     serialize,
     deserialize
   }
