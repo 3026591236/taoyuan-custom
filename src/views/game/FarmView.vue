@@ -2248,4 +2248,178 @@
   .seed-variant-3 { transform: rotate(-2deg); }
   .seed-variant-4 { transform: rotate(2deg); }
   .seed-variant-5 { box-shadow: inset -2px -2px 0 rgba(0,0,0,.25), inset 2px 2px 0 rgba(255,255,255,.08), 0 0 0 1px currentColor; }
+
+
+  /* V0.5.10：更接近图片素材的像素绘制层。用多层色块替代字符/emoji。 */
+  .pixel-plot-scene {
+    border: 2px solid rgba(24, 18, 12, 0.65);
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.10) 0 12%, transparent 12% 100%),
+      repeating-linear-gradient(0deg, rgba(55, 32, 18, .32) 0 3px, transparent 3px 8px),
+      repeating-linear-gradient(90deg, rgba(86, 52, 27, .30) 0 4px, transparent 4px 10px),
+      #6b4728;
+    box-shadow:
+      inset 2px 2px 0 rgba(255, 222, 154, .12),
+      inset -3px -3px 0 rgba(0,0,0,.22),
+      0 2px 0 rgba(0,0,0,.30);
+  }
+
+  .plot-state-wasteland {
+    background:
+      radial-gradient(circle at 28% 36%, #3d342b 0 7%, transparent 8%),
+      radial-gradient(circle at 70% 64%, #2d261f 0 8%, transparent 9%),
+      repeating-linear-gradient(135deg, #3a3129 0 7px, #312920 7px 14px);
+  }
+  .plot-state-tilled {
+    background:
+      repeating-linear-gradient(0deg, #7a4d28 0 5px, #5f371d 5px 9px),
+      #6b4424;
+  }
+  .plot-state-planted,
+  .plot-state-growing {
+    background:
+      repeating-linear-gradient(0deg, #6f4624 0 5px, #543017 5px 9px),
+      radial-gradient(circle at center, rgba(104,211,108,.13), transparent 50%);
+  }
+  .plot-state-harvestable {
+    background:
+      repeating-linear-gradient(0deg, #7a5225 0 5px, #573719 5px 9px),
+      radial-gradient(circle at center, rgba(246,200,95,.16), transparent 55%);
+  }
+
+  .spirit-tier-1 { border-color: rgba(87, 210, 117, .62); }
+  .spirit-tier-2 { border-color: rgba(84, 183, 255, .70); }
+  .spirit-tier-3 { border-color: rgba(190, 121, 255, .78); }
+  .spirit-tier-4 { border-color: rgba(248, 210, 103, .86); }
+  .spirit-tier-1::before,
+  .spirit-tier-2::before,
+  .spirit-tier-3::before,
+  .spirit-tier-4::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid currentColor;
+    opacity: .45;
+    pointer-events: none;
+  }
+  .spirit-tier-1 { color: #61d77f; }
+  .spirit-tier-2 { color: #55bbff; }
+  .spirit-tier-3 { color: #bd7cff; }
+  .spirit-tier-4 { color: #f6d36d; }
+  .spirit-tier-4::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    left: 6px;
+    top: 6px;
+    background: #fff3a8;
+    box-shadow: 18px 2px #fff3a8, 9px 17px #f0a8ff, 26px 22px #9ef8ff;
+    opacity: .75;
+  }
+
+  .pixel-crop-sprout {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 24px;
+    font-size: 0;
+    image-rendering: pixelated;
+    filter: drop-shadow(1px 2px 0 rgba(0,0,0,.45));
+  }
+  .pixel-crop-sprout::before,
+  .pixel-crop-sprout::after {
+    content: '';
+    position: absolute;
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  .crop-seedling .pixel-crop-sprout::before {
+    left: 10px; top: 13px; width: 4px; height: 9px; background: #3f9d49;
+    box-shadow: -4px -3px 0 #62c95f, 4px -4px 0 #7bdd74;
+  }
+  .crop-growing .pixel-crop-sprout::before {
+    left: 10px; top: 7px; width: 5px; height: 15px; background: #3e9343;
+    box-shadow: -6px 2px 0 #69c768, 6px 0 0 #78d875, -4px -4px 0 #5ebf5d, 4px -5px 0 #8be37d;
+  }
+  .crop-growing .pixel-crop-sprout::after {
+    left: 7px; top: 17px; width: 11px; height: 4px; background: rgba(30, 86, 37, .8);
+  }
+
+  .crop-mature.crop-leafy .pixel-crop-sprout::before,
+  .crop-leafy .pixel-crop-sprout::before {
+    left: 7px; top: 6px; width: 11px; height: 14px; background: #5ec95f;
+    box-shadow: -5px 3px 0 #449e43, 5px 2px 0 #84df72, 0 -3px 0 #97e782;
+  }
+  .crop-root.crop-mature .pixel-crop-sprout::before,
+  .crop-root .pixel-crop-sprout::before {
+    left: 8px; top: 9px; width: 11px; height: 11px; background: #f0d188;
+    box-shadow: 0 4px 0 #d89255, -3px -5px 0 #6bc463, 4px -6px 0 #7ed36f;
+  }
+  .crop-grain.crop-mature .pixel-crop-sprout::before,
+  .crop-grain .pixel-crop-sprout::before {
+    left: 11px; top: 4px; width: 3px; height: 18px; background: #6fa04c;
+    box-shadow: -5px 2px 0 #f2c85f, 5px 4px 0 #e8b94c, -3px 8px 0 #f8dd7c, 4px 11px 0 #d99d3f;
+  }
+  .crop-fruit.crop-mature .pixel-crop-sprout::before,
+  .crop-fruit .pixel-crop-sprout::before {
+    left: 6px; top: 8px; width: 14px; height: 12px; background: #ff7768;
+    box-shadow: inset -4px -4px 0 #c94b43, 4px 3px 0 #ffb24d, 5px -5px 0 #4ebd5b;
+  }
+  .crop-flower.crop-mature .pixel-crop-sprout::before,
+  .crop-flower .pixel-crop-sprout::before {
+    left: 10px; top: 7px; width: 5px; height: 14px; background: #4faa55;
+    box-shadow: -5px -2px 0 #f2a1ff, 0 -5px 0 #ffd2ff, 5px -2px 0 #d875ff, -3px 3px 0 #ff83c6, 3px 3px 0 #ff83c6;
+  }
+  .crop-spirit.crop-mature .pixel-crop-sprout::before,
+  .crop-spirit .pixel-crop-sprout::before {
+    left: 8px; top: 5px; width: 12px; height: 15px; background: #76f7e5;
+    box-shadow: inset -3px -3px 0 #35b7c2, 0 -4px 0 #d9fff8, -5px 4px 0 #8df0ff, 5px 5px 0 #a979ff;
+  }
+  .crop-vine.crop-mature .pixel-crop-sprout::before,
+  .crop-vine .pixel-crop-sprout::before {
+    left: 5px; top: 8px; width: 15px; height: 7px; background: #73d46a;
+    box-shadow: 4px 5px 0 #55b857, 9px -3px 0 #8ee677, -3px 4px 0 #45984a;
+  }
+  .crop-snow.crop-mature .pixel-crop-sprout::before,
+  .crop-snow .pixel-crop-sprout::before {
+    left: 7px; top: 7px; width: 13px; height: 13px; background: #def7ff;
+    box-shadow: inset -3px -3px 0 #8ac6e8, 0 -4px 0 #ffffff, -4px 2px 0 #b9e9ff, 4px 3px 0 #d6f6ff;
+  }
+
+  .crop-mature .pixel-crop-sprout { width: 28px; height: 28px; }
+  .crop-variant-1 .pixel-crop-sprout { transform: translateX(-1px); }
+  .crop-variant-2 .pixel-crop-sprout { transform: translateX(1px); }
+  .crop-variant-3 .pixel-crop-sprout { transform: translateY(-1px) scale(1.05); }
+  .crop-variant-4 .pixel-crop-sprout { filter: drop-shadow(1px 2px 0 rgba(0,0,0,.45)) drop-shadow(0 0 3px currentColor); }
+
+  .seed-pixel-bag {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    font-size: 0;
+    border: 2px solid rgba(24, 18, 12, .85);
+    border-radius: 0;
+    box-shadow: inset 2px 2px 0 rgba(255,255,255,.16), inset -3px -3px 0 rgba(0,0,0,.30), 0 2px 0 rgba(0,0,0,.25);
+  }
+  .seed-pixel-bag::before {
+    content: '';
+    position: absolute;
+    left: 5px; top: 3px; width: 8px; height: 5px;
+    background: rgba(255,255,255,.22);
+    box-shadow: 4px 7px 0 currentColor, -1px 11px 0 currentColor, 8px 11px 0 currentColor;
+  }
+  .seed-pixel-bag::after {
+    content: '';
+    position: absolute;
+    left: 3px; right: 3px; top: 8px; height: 2px;
+    background: rgba(0,0,0,.25);
+  }
+  .seed-variant-1::before { box-shadow: 2px 7px 0 currentColor, 8px 9px 0 currentColor, 5px 13px 0 currentColor; }
+  .seed-variant-2::before { box-shadow: 0 8px 0 currentColor, 6px 6px 0 currentColor, 10px 12px 0 currentColor; }
+  .seed-variant-3::before { box-shadow: 6px 6px 0 currentColor, 2px 12px 0 currentColor, 10px 12px 0 currentColor; }
+  .seed-variant-4::before { box-shadow: -1px 8px 0 currentColor, 4px 11px 0 currentColor, 10px 8px 0 currentColor; }
+  .seed-variant-5::before { box-shadow: 1px 7px 0 currentColor, 7px 7px 0 currentColor, 4px 13px 0 currentColor, 11px 13px 0 currentColor; }
+
 </style>

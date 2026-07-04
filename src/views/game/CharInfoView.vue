@@ -803,4 +803,51 @@
     height: 5px;
     background: rgba(0,0,0,.35);
   }
+
+
+  /* V0.5.10：把角色从几何轮廓加强为像素立绘感。 */
+  .pixel-avatar-card {
+    border-width: 2px;
+    background:
+      linear-gradient(180deg, rgba(44, 36, 30, .95), rgba(22, 18, 16, .98)),
+      repeating-linear-gradient(90deg, transparent 0 7px, rgba(255,255,255,.04) 7px 8px);
+  }
+  .pixel-avatar-card::after {
+    content: '';
+    position: absolute;
+    left: 6px; right: 6px; top: 6px; bottom: 6px;
+    border: 1px solid rgba(224, 178, 94, .22);
+    pointer-events: none;
+  }
+  .pixel-avatar {
+    top: 5px;
+    filter: drop-shadow(2px 3px 0 rgba(0,0,0,.45));
+  }
+  .px-hair { border-top: 3px solid #513024; box-shadow: inset -3px -3px 0 rgba(0,0,0,.24), 0 8px 0 #1d1412; }
+  .px-bun { border-top: 2px solid #6b4230; }
+  .px-face { box-shadow: inset -3px -3px 0 #c58d65, inset 2px 2px 0 #ffd2a5; }
+  .px-face::after {
+    content: '';
+    position: absolute;
+    left: 7px; top: 12px; width: 4px; height: 2px;
+    background: #a86055;
+  }
+  .px-robe {
+    height: 38px;
+    background: linear-gradient(90deg, #4d7e52 0 35%, #6da86b 35% 65%, #3f6845 65%);
+    box-shadow: inset -3px -3px 0 rgba(0,0,0,.25), inset 3px 0 0 rgba(255,255,255,.08);
+  }
+  .avatar-female .px-robe { background: linear-gradient(90deg, #694987 0 35%, #9365ad 35% 65%, #563a72 65%); }
+  .px-belt { height: 5px; border-top: 1px solid rgba(255,255,255,.24); }
+  .px-sleeve { box-shadow: inset -2px -2px 0 rgba(0,0,0,.22); }
+  .px-leg { top: 71px; box-shadow: inset -2px -2px 0 rgba(0,0,0,.25), 0 13px 0 #221b18; }
+  .px-tool { width: 5px; height: 42px; right: -4px; top: 35px; background: #8f6033; box-shadow: 0 -6px 0 #d1b063, 0 -10px 0 #ede09a, inset -2px 0 0 rgba(0,0,0,.25); }
+  .avatar-realm-2 .px-tool { box-shadow: 0 -6px 0 #72c9ff, 0 -10px 0 #d8f5ff, inset -2px 0 0 rgba(0,0,0,.25); }
+  .avatar-realm-3 .px-tool { box-shadow: 0 -6px 0 #c58bff, 0 -10px 0 #f0d9ff, inset -2px 0 0 rgba(0,0,0,.25); }
+  .avatar-realm-4 .px-tool { box-shadow: 0 -6px 0 #ffd86d, 0 -10px 0 #fff2ad, inset -2px 0 0 rgba(0,0,0,.25), 0 0 7px #ffd86d; }
+  .pixel-avatar-aura {
+    border-style: double;
+    background: radial-gradient(circle at center, rgba(255,255,255,.06), transparent 58%);
+  }
+
 </style>
