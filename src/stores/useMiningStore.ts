@@ -806,6 +806,7 @@ export const useMiningStore = defineStore('mining', () => {
       inventoryStore.getWeaponAttack() +
       (skillStore.combatLevel + allSkillsBuff) * 2 +
       ringAttackBonus +
+      playerStore.attributeAttackBonus +
       guildBadgeBonusAttack.value +
       guildStore.getGuildAttackBonus()
     const bruteBonus = skillStore.getSkill('combat').perk10 === 'brute' ? 1.25 : 1.0
@@ -878,6 +879,7 @@ export const useMiningStore = defineStore('mining', () => {
           (1 - defenseReduction) *
           sturdyReduction *
           (1 - ringDefenseBonus) *
+          (1 - playerStore.attributeDefenseBonus) *
           (1 - guildBonusDefense.value)
       )
     )
@@ -905,6 +907,10 @@ export const useMiningStore = defineStore('mining', () => {
     const wildernessXpBonus = useGameStore().farmMapType === 'wilderness' ? 1.5 : 1.0
     const infestedXpBonus = floor?.specialType === 'infested' ? 1.5 : 1.0
     skillStore.addExp('combat', Math.floor(monster.expReward * wildernessXpBonus * infestedXpBonus))
+    const attributeUps = playerStore.addAttributeExpBatch({
+      strength: Math.max(3, Math.floor(monster.expReward / 8)),
+      agility: combatIsBoss.value ? 6 : 2
+    })
 
     // 幸运附魔 + 戒指增加掉落率
     const owned = inventoryStore.getEquippedWeapon()
@@ -1086,6 +1092,7 @@ export const useMiningStore = defineStore('mining', () => {
 
     msg += ` ${monster.name}被击败了！(+${monster.expReward}经验)`
     if (drops.length > 0) msg += ` 掉落了物品。`
+    if (attributeUps.length > 0) msg += ` ${attributeUps.join('，')}！`
     combatLog.value.push(msg)
 
     // === 更新格子状态 ===

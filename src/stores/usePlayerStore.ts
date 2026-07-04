@@ -25,6 +25,33 @@ const HP_PER_COMBAT_LEVEL = 5
 const FIGHTER_HP_BONUS = 25
 const WARRIOR_HP_BONUS = 40
 
+export type AttributeKey = 'physique' | 'strength' | 'agility' | 'perception'
+
+export interface AttributeState {
+  level: number
+  exp: number
+}
+
+export const ATTRIBUTE_NAMES: Record<AttributeKey, string> = {
+  physique: '根骨',
+  strength: '力道',
+  agility: '身法',
+  perception: '悟性'
+}
+
+const ATTRIBUTE_KEYS: AttributeKey[] = ['physique', 'strength', 'agility', 'perception']
+const ATTRIBUTE_BASE_LEVEL = 1
+const ATTRIBUTE_MAX_LEVEL = 60
+const ATTRIBUTE_EXP_BASE = 36
+const ATTRIBUTE_EXP_STEP = 12
+
+const createAttributes = (): Record<AttributeKey, AttributeState> => ({
+  physique: { level: ATTRIBUTE_BASE_LEVEL, exp: 0 },
+  strength: { level: ATTRIBUTE_BASE_LEVEL, exp: 0 },
+  agility: { level: ATTRIBUTE_BASE_LEVEL, exp: 0 },
+  perception: { level: ATTRIBUTE_BASE_LEVEL, exp: 0 }
+})
+
 export const usePlayerStore = defineStore('player', () => {
   const playerName = ref('未命名')
   const gender = ref<Gender>('male')
@@ -41,15 +68,68 @@ export const usePlayerStore = defineStore('player', () => {
   const hp = ref(BASE_MAX_HP)
   const baseMaxHp = ref(BASE_MAX_HP)
 
+  // 角色资质：让种田、修行和战斗都能稳定沉淀到可见属性上。
+  const attributes = ref<Record<AttributeKey, AttributeState>>(createAttributes())
+
   const isExhausted = computed(() => stamina.value <= 5)
   const staminaPercent = computed(() => Math.round((stamina.value / maxStamina.value) * 100))
   /** NPC 用来称呼玩家的称谓 */
   const honorific = computed(() => (gender.value === 'male' ? '小哥' : '姑娘'))
 
-  /** 计算当前最大 HP（基础 + 战斗等级 + 专精加成 + 仙缘加成 + 公会加成） */
+  const getAttributeExpRequired = (key: AttributeKey): number => {
+    const level = attributes.value[key]?.level ?? ATTRIBUTE_BASE_LEVEL
+    return ATTRIBUTE_EXP_BASE + (level - ATTRIBUTE_BASE_LEVEL) * ATTRIBUTE_EXP_STEP
+  }
+
+  const addAttributeExp = (key: AttributeKey, amount: number): { leveledUp: boolean; newLevel: number } => {
+    const attr = attributes.value[key]
+    if (!attr || amount <= 0) return { leveledUp: false, newLevel: ATTRIBUTE_BASE_LEVEL }
+    if (attr.level >= ATTRIBUTE_MAX_LEVEL) return { leveledUp: false, newLevel: attr.level }
+
+    attr.exp += amount
+    let leveledUp = false
+    while (attr.level < ATTRIBUTE_MAX_LEVEL) {
+      const required = getAttributeExpRequired(key)
+      if (attr.exp < required) break
+      attr.exp -= required
+      attr.level++
+      leveledUp = true
+    }
+    if (attr.level >= ATTRIBUTE_MAX_LEVEL) attr.exp = 0
+    return { leveledUp, newLevel: attr.level }
+  }
+
+  const addAttributeExpBatch = (gains: Partial<Record<AttributeKey, number>>): string[] => {
+    const messages: string[] = []
+    for (const key of ATTRIBUTE_KEYS) {
+      const amount = gains[key] ?? 0
+      if (amount <= 0) continue
+      const result = addAttributeExp(key, amount)
+      if (result.leveledUp) messages.push(`${ATTRIBUTE_NAMES[key]}提升到${result.newLevel}`)
+    }
+    return messages
+  }
+
+  const attributePower = computed(() =>
+    ATTRIBUTE_KEYS.reduce((sum, key) => sum + (attributes.value[key]?.level ?? ATTRIBUTE_BASE_LEVEL), 0)
+  )
+
+  const attributeAttackBonus = computed(() =>
+    Math.floor((attributes.value.strength.level - 1) * 1.5 + (attributes.value.perception.level - 1) * 0.6)
+  )
+
+  const attributeDefenseBonus = computed(() =>
+    Math.floor((attributes.value.physique.level - 1) * 0.006 + (attributes.value.agility.level - 1) * 0.003)
+  )
+
+  const attributeMaxHpBonus = computed(() => (attributes.value.physique.level - 1) * 6)
+
+  const attributeSpeedBonus = computed(() => Math.floor((attributes.value.agility.level - 1) * 0.4))
+
+  /** 计算当前最大 HP（基础 + 战斗等级 + 专精加成 + 仙缘加成 + 公会加成 + 角色资质） */
   const getMaxHp = (): number => {
     const skillStore = useSkillStore()
-    let bonus = skillStore.combatLevel * HP_PER_COMBAT_LEVEL
+    let bonus = skillStore.combatLevel * HP_PER_COMBAT_LEVEL + attributeMaxHpBonus.value
     const perk5 = skillStore.getSkill('combat').perk5
     const perk10 = skillStore.getSkill('combat').perk10
     if (perk5 === 'fighter') bonus += FIGHTER_HP_BONUS
@@ -181,7 +261,8 @@ export const usePlayerStore = defineStore('player', () => {
       staminaCapLevel: staminaCapLevel.value,
       bonusMaxStamina: bonusMaxStamina.value,
       hp: hp.value,
-      baseMaxHp: baseMaxHp.value
+      baseMaxHp: baseMaxHp.value,
+      attributes: attributes.value
     }
   }
 
@@ -208,6 +289,16 @@ export const usePlayerStore = defineStore('player', () => {
     }
     hp.value = (data as any).hp ?? BASE_MAX_HP
     baseMaxHp.value = (data as any).baseMaxHp ?? BASE_MAX_HP
+    const savedAttributes = (data as any).attributes ?? {}
+    const nextAttributes = createAttributes()
+    for (const key of ATTRIBUTE_KEYS) {
+      const saved = savedAttributes[key]
+      nextAttributes[key] = {
+        level: Math.min(Math.max(saved?.level ?? ATTRIBUTE_BASE_LEVEL, ATTRIBUTE_BASE_LEVEL), ATTRIBUTE_MAX_LEVEL),
+        exp: Math.max(saved?.exp ?? 0, 0)
+      }
+    }
+    attributes.value = nextAttributes
   }
 
   return {
@@ -222,8 +313,17 @@ export const usePlayerStore = defineStore('player', () => {
     bonusMaxStamina,
     hp,
     baseMaxHp,
+    attributes,
+    attributePower,
+    attributeAttackBonus,
+    attributeDefenseBonus,
+    attributeMaxHpBonus,
+    attributeSpeedBonus,
     isExhausted,
     staminaPercent,
+    getAttributeExpRequired,
+    addAttributeExp,
+    addAttributeExpBatch,
     getMaxHp,
     getHpPercent,
     getIsLowHp,

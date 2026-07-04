@@ -130,20 +130,23 @@ export const useCombatStore = defineStore('combat', () => {
 
   const playerAtk = computed(() => {
     const c = useCultivationStore()
+    const p = usePlayerStore()
     const base = 12 + (c.realmIndex || 0) * 9 + Math.floor((c.cultivation || 0) / 45) + (c.rebirthCount || 0) * 18
     const beastBonus = c.beast === 'crane' ? Math.floor(base * 0.2) : 0
     const artifactBonus = (c.destinedArtifactLevel || 0) * 8
-    return base + beastBonus + artifactBonus
+    return base + beastBonus + artifactBonus + p.attributeAttackBonus
   })
 
   const playerDef = computed(() => {
     const c = useCultivationStore()
-    return 6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3
+    const p = usePlayerStore()
+    return 6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus
   })
 
   const playerMaxHp = computed(() => {
     const c = useCultivationStore()
-    return 120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30
+    const p = usePlayerStore()
+    return 120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus
   })
 
   const getDailyCount = (zoneId: string) => {
@@ -231,7 +234,13 @@ export const useCombatStore = defineStore('combat', () => {
     const aura = Math.floor(m.aura * rebirthBoost)
     c.cultivation = (c.cultivation || 0) + exp
     c.aura = (c.aura || 0) + aura
-    addLog(`击败 ${m.emoji}${m.name}！获得 ${exp} 修为，${aura} 灵气`)
+    const p = usePlayerStore()
+    const attributeUps = p.addAttributeExpBatch({
+      strength: Math.max(4, Math.floor(m.exp / 10)),
+      agility: Math.max(2, Math.floor(m.aura / 12)),
+      perception: zone?.kind === 'trial' ? 2 : 0
+    })
+    addLog(`击败 ${m.emoji}${m.name}！获得 ${exp} 修为，${aura} 灵气${attributeUps.length ? `，${attributeUps.join('，')}` : ''}`)
     if (zone?.kind === 'beast') {
       c.lingYun = (c.lingYun || 0) + 1
       addLog('镇压凶兽，灵蕴+1')

@@ -74,6 +74,31 @@
         </div>
       </div>
 
+      <!-- 角色资质 -->
+      <div class="mt-2 pt-2 border-t border-accent/10">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs text-muted">角色资质</span>
+          <span class="text-[10px] text-accent">总评 {{ playerStore.attributePower }}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5">
+          <div v-for="item in attributeList" :key="item.key" class="border border-accent/10 rounded-xs px-2 py-1">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs text-muted">{{ item.name }}</span>
+              <span class="text-xs text-accent">{{ item.level }}</span>
+            </div>
+            <div class="h-1 bg-bg rounded-xs overflow-hidden border border-accent/10">
+              <div class="h-full bg-accent/70" :style="{ width: item.percent + '%' }" />
+            </div>
+            <p class="text-[10px] text-muted mt-0.5">{{ item.hint }}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-1 mt-1.5 text-[10px] text-muted">
+          <span>攻击 +{{ playerStore.attributeAttackBonus }}</span>
+          <span>生命 +{{ playerStore.attributeMaxHpBonus }}</span>
+          <span>减伤 {{ Math.round(playerStore.attributeDefenseBonus * 100) }}%</span>
+        </div>
+      </div>
+
       <!-- 修仙属性（启蒙后显示） -->
       <div v-if="cultivationStore.unlocked" class="mt-2 pt-2 border-t border-accent/10">
         <div class="grid grid-cols-2 gap-x-3 gap-y-0.5">
@@ -366,7 +391,7 @@
   import { useGameStore, SEASON_NAMES } from '@/stores/useGameStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { useNpcStore } from '@/stores/useNpcStore'
-  import { usePlayerStore } from '@/stores/usePlayerStore'
+  import { ATTRIBUTE_NAMES, usePlayerStore, type AttributeKey } from '@/stores/usePlayerStore'
   import { useSkillStore } from '@/stores/useSkillStore'
   import { useWalletStore } from '@/stores/useWalletStore'
   import { useCultivationStore } from '@/stores/useCultivationStore'
@@ -391,6 +416,27 @@
 
   // === 身份 ===
   const genderLabel = computed(() => (playerStore.gender === 'male' ? '男' : '女'))
+
+  // === 角色资质 ===
+  const ATTRIBUTE_HINTS: Record<AttributeKey, string> = {
+    physique: '收获作物成长，提升生命',
+    strength: '战斗历练成长，提升攻击',
+    agility: '挑战强敌成长，提升减伤',
+    perception: '优质收获与红尘历练成长'
+  }
+  const attributeList = computed(() =>
+    (Object.keys(ATTRIBUTE_NAMES) as AttributeKey[]).map(key => {
+      const attr = playerStore.attributes[key]
+      const required = playerStore.getAttributeExpRequired(key)
+      return {
+        key,
+        name: ATTRIBUTE_NAMES[key],
+        level: attr.level,
+        percent: required > 0 ? Math.min(100, Math.round((attr.exp / required) * 100)) : 100,
+        hint: ATTRIBUTE_HINTS[key]
+      }
+    })
+  )
 
   // === 修仙 ===
   const equippedArtifactCount = computed(() => {

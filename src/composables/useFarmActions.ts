@@ -213,6 +213,10 @@ export const handlePlotClick = (plotId: number) => {
       achievementStore.recordCropHarvest()
       useQuestStore().onItemObtained(cropId, harvestQty)
       useCultivationStore().addAuraFromHarvest(cropId, harvestQty)
+      const attributeUps = playerStore.addAttributeExpBatch({
+        physique: harvestQty * 3,
+        perception: quality === 'normal' ? harvestQty : harvestQty * 2
+      })
       const { leveledUp, newLevel } = skillStore.addExp('farming', 10)
       const qualityLabel = quality !== 'normal' ? `(${QUALITY_NAMES[quality]})` : ''
       sfxHarvest()
@@ -222,6 +226,7 @@ export const handlePlotClick = (plotId: number) => {
       if (intensiveDouble) msg += ' 精耕细作，双倍丰收！'
       if (yieldDouble) msg += ' 育种产量加成，双倍丰收！'
       if (standardDouble) msg += ' 桃源沃土，额外丰收！'
+      if (attributeUps.length > 0) msg += ` ${attributeUps.join('，')}！`
       // 育种甜度加成：额外铜钱
       if (genetics && genetics.sweetness > 0 && cropDef) {
         const bonusMoney = Math.floor((cropDef.sellPrice * harvestQty * genetics.sweetness) / 200)
@@ -452,6 +457,7 @@ export const handleBatchTill = () => {
 /** 一键收获（收获所有成熟作物，不消耗体力） */
 export const handleBatchHarvest = () => {
   const gameStore = useGameStore()
+  const playerStore = usePlayerStore()
   const farmStore = useFarmStore()
   const inventoryStore = useInventoryStore()
   const skillStore = useSkillStore()
@@ -489,8 +495,11 @@ export const handleBatchHarvest = () => {
       achievementStore.discoverItem(result.cropId)
       achievementStore.recordCropHarvest()
       useQuestStore().onItemObtained(result.cropId, result.quantity)
+      useCultivationStore().addAuraFromHarvest(result.cropId, result.quantity)
+      const attributeUps = playerStore.addAttributeExpBatch({ physique: result.quantity * 4, perception: result.quantity * 2 })
       skillStore.addExp('farming', 10)
       harvested++
+      if (attributeUps.length > 0) harvestedCrops.push(attributeUps.join('，'))
       harvestedCrops.push(`巨型${cropDef?.name ?? result.cropId}x${result.quantity}`)
     }
   }
@@ -520,8 +529,13 @@ export const handleBatchHarvest = () => {
       achievementStore.recordCropHarvest()
       useQuestStore().onItemObtained(cropId, harvestQty)
       useCultivationStore().addAuraFromHarvest(cropId, harvestQty)
+      const attributeUps = playerStore.addAttributeExpBatch({
+        physique: harvestQty * 3,
+        perception: quality === 'normal' ? harvestQty : harvestQty * 2
+      })
       skillStore.addExp('farming', 10)
       harvested++
+      if (attributeUps.length > 0) harvestedCrops.push(attributeUps.join('，'))
       harvestedCrops.push(cropDef?.name ?? cropId)
       // 育种甜度加成
       if (genetics && genetics.sweetness > 0 && cropDef) {
