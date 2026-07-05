@@ -7,12 +7,12 @@
       </p>
       <div class="grid grid-cols-2 gap-2 text-xs mb-2">
         <div class="stat-card"><span>元神等级</span><b>Lv.{{ cultivation.yuanShenLevel }}</b></div>
-        <div class="stat-card"><span>经验</span><b>{{ cultivation.yuanShenExp }}/{{ 100 + cultivation.yuanShenLevel * 50 }}</b></div>
+        <div class="stat-card"><span>经验</span><b>{{ cultivation.yuanShenExp }}/{{ (cultivation.yuanShenLevel + 1) * 500 }}</b></div>
       </div>
       <p class="text-[10px] text-success mb-2">当前加成：体力/精力/防御 +{{ Math.round(cultivation.yuanShenLevel * 5) }}%，灵力上限 +{{ cultivation.yuanShenLevel * 2 }}</p>
-      <Button class="w-full justify-between" :disabled="!cultivation.unlocked || cultivation.mana < (20 + cultivation.yuanShenLevel * 2)" @click="cultivation.trainYuanShen">
+      <Button class="w-full justify-between" :disabled="!cultivation.unlocked || cultivation.aura < (100 + cultivation.yuanShenLevel * 50)" @click="cultivation.trainYuanShen">
         <span>修炼元神</span>
-        <span class="text-muted text-xs">灵力 {{ 20 + cultivation.yuanShenLevel * 2 }}</span>
+        <span class="text-muted text-xs">灵气 {{ 100 + cultivation.yuanShenLevel * 50 }}</span>
       </Button>
     </div>
   </div>

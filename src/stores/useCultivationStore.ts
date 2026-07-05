@@ -261,7 +261,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return Math.max(0, Math.floor(realmPower + cultivationPower + bodyPower + weaponPower + ringPower + artifactPower + oldArtifactPower + systemPower))
   })
   const maxCultivation = computed(() => realm.value.maxCultivation)
-  const maxMana = computed(() => realm.value.maxMana + fieldTier.value * 10)
+  const maxMana = computed(() => realm.value.maxMana + fieldTier.value * 10 + yuanShenLevel.value * 2)
   const fieldTierName = computed(() => FIELD_TIERS[fieldTier.value] ?? FIELD_TIERS[0]!)
   const spiritRootName = computed(() => SPIRIT_ROOT_NAMES[spiritRoot.value])
   const canBreakthrough = computed(() => cultivation.value >= maxCultivation.value && aura.value >= Math.max(0, realm.value.breakthroughCost - foundationPillBlessing.value))
@@ -508,6 +508,17 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
+  const addYuanShenExp = (amount: number) => {
+    yuanShenExp.value += amount
+    let leveled = 0
+    while (yuanShenExp.value >= (yuanShenLevel.value + 1) * 500) {
+      yuanShenExp.value -= (yuanShenLevel.value + 1) * 500
+      yuanShenLevel.value++
+      leveled++
+    }
+    return leveled
+  }
+
   const usePill = (pillId: PillId) => {
     const inventory = useInventoryStore()
     if (!inventory.hasItem(pillId)) {
@@ -515,6 +526,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
       return false
     }
     inventory.removeItem(pillId, 1)
+    const player = usePlayerStore()
     if (pillId === 'mana_recovery_pill') {
       const gain = 45 + fieldTier.value * 10
       mana.value = Math.min(maxMana.value, mana.value + gain)
@@ -525,11 +537,68 @@ export const useCultivationStore = defineStore('cultivation', () => {
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + gain)
       addLog(`服下一枚聚气丹，修为增长${gain}。`)
       showFloat(`修为+${gain}`, 'success')
-    } else {
+    } else if (pillId === 'foundation_pill') {
       foundationPillBlessing.value += 900
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + 300)
       addLog('服下一枚筑基丹，突破所需灵气降低900，并获得修为300。')
       showFloat('筑基丹生效', 'success')
+    } else if (pillId === 'lianjing_pill') {
+      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 500)
+      addLog('服下一枚炼精丹，修为增长500。')
+      showFloat('修为+500', 'success')
+    } else if (pillId === 'huaqi_pill') {
+      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 800)
+      mana.value = Math.min(maxMana.value, mana.value + 30)
+      addLog('服下一枚化气丹，修为+800，灵力+30。')
+      showFloat('化气丹生效', 'success')
+    } else if (pillId === 'lianqi_pill') {
+      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 1200)
+      aura.value += 60
+      addLog('服下一枚炼气丹，修为+1200，灵气+60。')
+      showFloat('炼气丹生效', 'success')
+    } else if (pillId === 'huashen_pill') {
+      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 2500)
+      addLog('服下一枚化神丹，修为增长2500。')
+      showFloat('修为+2500', 'success')
+    } else if (pillId === 'lianshen_pill') {
+      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 4000)
+      addLog('服下一枚炼神丹，修为增长4000。')
+      showFloat('修为+4000', 'success')
+    } else if (pillId === 'life_extension_pill') {
+      player.restoreStamina(player.maxStamina)
+      addLog('服下一枚延寿丹，体力完全恢复。')
+      showFloat('体力已恢复', 'success')
+    } else if (pillId === 'marrow_wash_pill') {
+      const roots: SpiritRoot[] = ['mixed', 'wood', 'water', 'earth', 'fire', 'metal', 'celestial']
+      spiritRoot.value = roots[Math.floor(Math.random() * roots.length)] ?? 'mixed'
+      addLog(`服下一枚洗髓丹，灵根洗炼为「${spiritRootName.value}」。`)
+      showFloat(spiritRootName.value, 'success')
+    } else if (pillId === 'good_fortune_pill') {
+      const leveled = addYuanShenExp(900)
+      addLog(`服下一枚造化丹，元神经验+900${leveled ? `，元神提升${leveled}级` : ''}。`)
+      showFloat('元神经验+900', 'success')
+    } else if (pillId === 'returning_void_pill') {
+      foundationPillBlessing.value += 1500
+      addLog('服下一枚还虚丹，下次突破灵气需求降低1500。')
+      showFloat('突破灵气-1500', 'success')
+    } else if (pillId === 'refining_void_pill') {
+      foundationPillBlessing.value += 3000
+      addLog('服下一枚炼虚丹，下次突破灵气需求降低3000。')
+      showFloat('突破灵气-3000', 'success')
+    } else if (pillId === 'merge_way_pill') {
+      foundationPillBlessing.value += 5000
+      addLog('服下一枚合道丹，下次突破灵气需求降低5000。')
+      showFloat('突破灵气-5000', 'success')
+    } else if (pillId === 'dragon_face_pill') {
+      player.addBonusMaxStamina(20)
+      player.restoreStamina(20)
+      addLog('服下一枚龙颜丹，体力上限+20。')
+      showFloat('体力上限+20', 'success')
+    } else if (pillId === 'spirit_mending_pill') {
+      yuanShenLevel.value++
+      mana.value = maxMana.value
+      addLog('服下一枚补灵丹，元神稳固，灵力上限提升。')
+      showFloat('元神等级+1', 'success')
     }
     return true
   }
@@ -754,9 +823,8 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const cost = 100 + yuanShenLevel.value * 50
     if (aura.value < cost) { showFloat(`灵气不足，需要${cost}点。`, 'danger'); return false }
     aura.value -= cost
-    yuanShenExp.value += cost
-    if (yuanShenExp.value >= (yuanShenLevel.value + 1) * 500) { yuanShenExp.value = 0; yuanShenLevel.value++ }
-    showFloat('元神修炼完成', 'success')
+    const leveled = addYuanShenExp(cost)
+    showFloat(leveled ? `元神提升${leveled}级` : '元神修炼完成', 'success')
     return true
   }
 
