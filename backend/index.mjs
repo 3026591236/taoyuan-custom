@@ -243,6 +243,13 @@ const defaultConfig = {
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
       {
+        version: 'V1.0 天劫渡劫与挂机修仙',
+        date: '2026-07-05',
+        title: 'V1.0 天劫渡劫与挂机修仙',
+        content: '增强离线奖励，修仙后离线和在线挂机都会获得灵气、修为与元神经验；跨大境界突破加入天劫渡劫、成功率展示、雷劈像素角色特效与雷鸣音效；渡劫失败会扣修为灵力、伤元神并可能掉级；新增养魂丹、涅魂丹用于恢复伤势和元神。',
+        highlights: ['挂机修仙收益', '跨境界天劫', '雷劫特效音效', '元神伤势丹药']
+      },
+      {
         version: 'V0.9.2 玩家强度提升',
         date: '2026-07-05',
         title: 'V0.9.2 玩家强度提升',

@@ -91,6 +91,27 @@ const MISC_ITEMS: ItemDef[] = [
     healthRestore: 20
   },
 
+  {
+    id: 'soul_mending_pill',
+    name: '养魂丹',
+    category: 'food',
+    description: '温养元神、恢复渡劫失败造成的元神伤势。',
+    sellPrice: 1800,
+    edible: true,
+    staminaRestore: 20,
+    healthRestore: 80
+  },
+  {
+    id: 'nirvana_soul_pill',
+    name: '涅魂丹',
+    category: 'food',
+    description: '雷精入药，可清除元神伤势并重凝元神。',
+    sellPrice: 3600,
+    edible: true,
+    staminaRestore: 60,
+    healthRestore: 999
+  },
+
   // 修仙 V0.5：红尘历练 / 凶兽 / 转生材料
   { id: 'spirit_stone', name: '灵石', category: 'material', description: '蕴含灵气的石头，可用于修炼、炼器与阵法。', sellPrice: 80, edible: false },
   { id: 'chuanxiong', name: '川芎', category: 'material', description: '百草园药材，活血行气，是炼精丹与高阶丹方的基础药。', sellPrice: 35, edible: false },

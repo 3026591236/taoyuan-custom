@@ -109,6 +109,25 @@ export const sfxLevelUp = () => {
   setTimeout(() => playSfx(1047, 0.15, 'triangle', 0.12), 500)
 }
 
+/** 天劫雷鸣（用户点击突破后触发，兼容浏览器手势解锁） */
+export const sfxThunder = async () => {
+  if (!sfxEnabled.value || document.hidden) return
+  let Tone: ToneModule
+  try { Tone = await loadTone() } catch { return }
+  try {
+    const crack = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.08 }, volume: toDb(0.36) }).toDestination()
+    crack.triggerAttackRelease(90, 0.12)
+    setTimeout(() => crack.triggerAttackRelease(55, 0.18), 90)
+    const rumbleFilter = new Tone.Filter({ frequency: 180, type: 'lowpass' }).toDestination()
+    const rumble = new Tone.Noise({ type: 'brown', volume: toDb(0.22), fadeIn: 0.01, fadeOut: 0.45 }).connect(rumbleFilter)
+    setTimeout(() => rumble.start(), 40)
+    setTimeout(() => { try { rumble.stop() } catch {}; safeDispose(rumble); safeDispose(rumbleFilter); safeDispose(crack) }, 760)
+  } catch {
+    playSfx(90, 0.14, 'sawtooth', 0.34)
+    setTimeout(() => playSfx(55, 0.25, 'sawtooth', 0.22), 90)
+  }
+}
+
 /** 战斗攻击（高频下扫 + 冲击，8-bit 打击感） */
 export const sfxAttack = () => {
   playSfx(800, 0.04, 'sawtooth', 0.3)

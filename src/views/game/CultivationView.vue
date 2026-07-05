@@ -37,8 +37,20 @@
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">
       <Button class="justify-between" @click="cultivation.meditate"><span>打坐调息</span><span class="text-muted text-xs">修为/灵力</span></Button>
       <Button class="justify-between" @click="cultivation.refineAura"><span>炼化灵气</span><span class="text-muted text-xs">灵气→修为</span></Button>
-      <Button class="justify-between" :disabled="!cultivation.canBreakthrough" @click="cultivation.breakthrough"><span>尝试突破</span><span class="text-muted text-xs">消耗灵气</span></Button>
+      <Button class="justify-between" :disabled="!cultivation.canBreakthrough" @click="handleBreakthrough"><span>{{ cultivation.isMajorBreakthrough ? '渡劫突破' : '尝试突破' }}</span><span class="text-muted text-xs">{{ cultivation.isMajorBreakthrough ? `成功率${cultivation.tribulationSuccessPercent}%` : '消耗灵气' }}</span></Button>
       <Button class="justify-between" @click="cultivation.upgradeField"><span>温养灵田</span><span class="text-muted text-xs">提升等阶</span></Button>
+    </div>
+
+    <div v-if="cultivation.unlocked" class="border rounded-xs p-3 text-xs leading-relaxed" :class="cultivation.isMajorBreakthrough ? 'border-caution/40 bg-caution/5' : 'border-accent/10'">
+      <p class="text-accent mb-1">{{ cultivation.isMajorBreakthrough ? '⚡ 天劫预兆' : '突破提示' }}</p>
+      <template v-if="cultivation.isMajorBreakthrough">
+        <p>下一境界：<span class="text-accent">{{ cultivation.nextRealm.name }}</span>，跨大境界会引动雷劫。</p>
+        <p>当前渡劫通过率：<span class="text-caution">{{ cultivation.tribulationSuccessPercent }}%</span>；元神伤势：<span class="text-danger">{{ cultivation.yuanShenInjury }}</span>层。</p>
+        <p class="text-muted">失败惩罚：扣除突破灵气、损失部分修为和灵力，元神受伤，严重时元神掉级。可炼养魂丹/涅魂丹恢复。</p>
+      </template>
+      <template v-else>
+        <p class="text-muted">小层突破不会触发雷劫；跨入筑基、金丹、元婴等大境界时才会渡劫。</p>
+      </template>
     </div>
 
     <div class="border border-accent/10 rounded-xs p-3 text-xs text-muted leading-relaxed">
@@ -110,6 +122,21 @@
       </div>
     </div>
 
+    <!-- 天劫动画 -->
+    <Teleport to="body">
+      <div v-if="tribulationFx" class="tribulation-overlay" :class="tribulationFx">
+        <div class="tribulation-cloud cloud-a"></div>
+        <div class="tribulation-cloud cloud-b"></div>
+        <div class="lightning bolt-a"></div>
+        <div class="lightning bolt-b"></div>
+        <div class="tribulation-ground"></div>
+        <div class="pixel-hero" :class="tribulationFx">
+          <span class="px bun"></span><span class="px hair"></span><span class="px face"></span><span class="px eye eye-l"></span><span class="px eye eye-r"></span><span class="px robe"></span><span class="px belt"></span><span class="px sleeve sleeve-l"></span><span class="px sleeve sleeve-r"></span><span class="px leg leg-l"></span><span class="px leg leg-r"></span>
+        </div>
+        <div class="tribulation-text">{{ tribulationFx === 'success' ? '渡劫成功' : '天劫失败' }}</div>
+      </div>
+    </Teleport>
+
     <!-- 轮回转生确认弹窗 -->
     <Teleport to="body">
       <div v-if="showRebirthConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
@@ -147,6 +174,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { sfxThunder, sfxLevelUp, sfxHurt } from '@/composables/useAudio'
 import Divider from '@/components/game/Divider.vue'
 import Button from '@/components/game/Button.vue'
 import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS } from '@/stores/useCultivationStore'
@@ -172,6 +200,19 @@ const nextSpiritRootName = computed(() => {
   const nextRoot = spiritRootOrder[idx + 1]
   return nextRoot ? spiritRootNameMap[nextRoot] : '[已达天灵根]'
 })
+const tribulationFx = ref<'success' | 'fail' | null>(null)
+const playTribulationFx = (result: 'success' | 'fail') => {
+  tribulationFx.value = result
+  void sfxThunder()
+  setTimeout(() => { result === 'success' ? sfxLevelUp() : sfxHurt() }, 520)
+  setTimeout(() => { tribulationFx.value = null }, 1900)
+}
+const handleBreakthrough = () => {
+  const major = cultivation.isMajorBreakthrough
+  const ok = cultivation.breakthrough()
+  if (major && cultivation.lastTribulationResult !== 'none') playTribulationFx(cultivation.lastTribulationResult)
+  else if (ok) sfxLevelUp()
+}
 const confirmRebirth = () => {
   if (!cultivation.canRebirth) return
   showRebirthConfirm.value = true
@@ -192,4 +233,33 @@ const manaPercent = computed(() => Math.min(100, Math.round((cultivation.mana / 
 .bar-fill { height: 100%; background: var(--color-accent); transition: width .2s; }
 .bar-fill.mana { background: rgb(96,165,250); }
 .bar-fill.pulse { background: rgb(74, 222, 128); }
+.tribulation-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 65%, rgba(255,255,255,.12), transparent 20%), rgba(3, 7, 18, .86); overflow: hidden; pointer-events: none; }
+.tribulation-cloud { position: absolute; top: 8%; width: 260px; height: 76px; background: #111827; border: 3px solid rgba(148,163,184,.55); box-shadow: 0 0 35px rgba(96,165,250,.28); image-rendering: pixelated; }
+.cloud-a { left: 12%; animation: cloudShake .2s steps(2) infinite; }
+.cloud-b { right: 10%; top: 14%; animation: cloudShake .25s steps(2) infinite reverse; }
+.lightning { position: absolute; top: 8%; left: 50%; width: 18px; height: 60%; background: linear-gradient(#fff, #fde68a 30%, #60a5fa); clip-path: polygon(45% 0, 72% 0, 55% 32%, 82% 32%, 35% 100%, 48% 48%, 22% 48%); filter: drop-shadow(0 0 18px #fef08a); animation: thunderStrike .42s steps(2) 3; }
+.bolt-b { left: 56%; transform: scale(.72) rotate(8deg); animation-delay: .18s; }
+.tribulation-ground { position: absolute; bottom: 18%; width: 180px; height: 12px; background: rgba(15,23,42,.9); border: 2px solid rgba(224,178,94,.4); }
+.pixel-hero { position: relative; width: 64px; height: 118px; image-rendering: pixelated; transform: scale(1.25); animation: heroShock .12s steps(2) infinite; }
+.pixel-hero.success { filter: drop-shadow(0 0 16px #facc15); animation: heroAscend .9s ease-out infinite alternate; }
+.pixel-hero.fail { filter: grayscale(.35) drop-shadow(0 0 12px #60a5fa); }
+.px { position: absolute; display: block; box-shadow: inset -2px -2px rgba(0,0,0,.25); }
+.bun { left: 25px; top: 4px; width: 16px; height: 9px; background: #2a1c18; }
+.hair { left: 18px; top: 12px; width: 30px; height: 22px; background: #2a1c18; }
+.face { left: 20px; top: 24px; width: 26px; height: 24px; background: #e7b98a; }
+.eye { top: 34px; width: 4px; height: 4px; background: #111; box-shadow: none; }
+.eye-l { left: 27px; } .eye-r { left: 39px; }
+.robe { left: 16px; top: 51px; width: 34px; height: 44px; background: linear-gradient(90deg,#694987 0,#9365ad 50%,#563a72 100%); }
+.belt { left: 14px; top: 70px; width: 38px; height: 5px; background: #efca75; box-shadow: none; }
+.sleeve { top: 54px; width: 11px; height: 34px; background: #674a7f; }
+.sleeve-l { left: 4px; } .sleeve-r { right: 4px; }
+.leg { top: 95px; width: 12px; height: 18px; background: #3f4f3d; }
+.leg-l { left: 20px; } .leg-r { right: 18px; }
+.tribulation-text { position: absolute; bottom: 13%; color: #fef3c7; font-size: 22px; letter-spacing: 4px; text-shadow: 0 0 12px #facc15; animation: textPulse .35s steps(2) infinite; }
+.tribulation-overlay.fail .tribulation-text { color: #93c5fd; text-shadow: 0 0 12px #60a5fa; }
+@keyframes thunderStrike { 0%, 100% { opacity: 0; } 20%, 70% { opacity: 1; } }
+@keyframes cloudShake { 0% { transform: translateX(0); } 100% { transform: translateX(6px); } }
+@keyframes heroShock { 0% { transform: scale(1.25) translateX(-2px); } 100% { transform: scale(1.25) translateX(2px); } }
+@keyframes heroAscend { from { transform: scale(1.25) translateY(0); } to { transform: scale(1.25) translateY(-10px); } }
+@keyframes textPulse { from { opacity: .72; } to { opacity: 1; } }
 </style>

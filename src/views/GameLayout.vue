@@ -602,19 +602,17 @@
     if (minutes < 20) return
     const cappedMinutes = Math.min(minutes, 12 * 60)
     const hours = Math.max(1, Math.floor(cappedMinutes / 60))
-    const money = 80 + hours * 45 + Math.floor(gameStore.day * 6)
-    const stamina = Math.min(25, 6 + hours * 2)
-    const stones = Math.max(1, Math.floor(hours / 2))
+    const money = 140 + hours * 80 + Math.floor(gameStore.day * 10)
+    const stamina = Math.min(60, 12 + hours * 5)
+    const stones = Math.max(2, Math.floor(hours * 1.2))
     const lines = [`离线${hours}小时`, `铜钱 +${money}`, `体力 +${stamina}`, `灵石 +${stones}`]
     playerStore.earnMoney(money)
     playerStore.restoreStamina(stamina)
     inventoryStore.addItem('spirit_stone', stones)
     if (cultivationStore.unlocked) {
-      const cultivationGain = 16 + hours * 12
-      const auraGain = 8 + hours * 5
-      cultivationStore.cultivation = Math.min(cultivationStore.cultivation + cultivationGain, cultivationStore.maxCultivation)
-      cultivationStore.aura += auraGain
-      lines.push(`修为 +${cultivationGain}`, `灵气 +${auraGain}`)
+      const idle = cultivationStore.gainIdleCultivation(cappedMinutes)
+      lines.push(`修为 +${idle.cultivation}`, `灵气 +${idle.aura}`)
+      if (idle.yuanShen > 0) lines.push(`元神经验 +${idle.yuanShen}`)
     }
     addRewardLog('离线归来，洞府与田庄已有积累', lines.slice(1))
     showRewardBurst({
@@ -631,14 +629,22 @@
     if (staminaRegenTimer != null) return
     staminaRegenTimer = window.setInterval(() => {
       if (!gameStore.isGameStarted) return
-      if (playerStore.stamina >= playerStore.maxStamina) return
-      const before = playerStore.stamina
-      playerStore.restoreStamina(1)
-      if (playerStore.stamina > before) {
-        addLog(`体力自然恢复 +${playerStore.stamina - before}。`)
-        showFloat(`体力 +${playerStore.stamina - before}`, 'success')
-        void autoSaveCurrent()
+      let changed = false
+      if (playerStore.stamina < playerStore.maxStamina) {
+        const before = playerStore.stamina
+        playerStore.restoreStamina(1)
+        if (playerStore.stamina > before) {
+          addLog(`体力自然恢复 +${playerStore.stamina - before}。`)
+          showFloat(`体力 +${playerStore.stamina - before}`, 'success')
+          changed = true
+        }
       }
+      if (cultivationStore.unlocked) {
+        const idle = cultivationStore.gainIdleCultivation(1)
+        addLog(`挂机吐纳：灵气+${idle.aura}，修为+${idle.cultivation}${idle.yuanShen ? `，元神经验+${idle.yuanShen}` : ''}。`)
+        changed = true
+      }
+      if (changed) void autoSaveCurrent()
     }, 60000)
   }
   const stopOnlineStaminaRegen = () => {

@@ -62,6 +62,8 @@ const pillRecipes: Array<{ id: PillId; name: string; desc: string; materialText:
   { id: 'returning_void_pill', name: '还虚丹', desc: '突破灵气-1500', materialText: '川芎×20、玉竹×20、重楼×20、沉香×20', aura: 450, mana: 45, category: '突破', realmRequired: 12 },
   { id: 'refining_void_pill', name: '炼虚丹', desc: '突破灵气-3000', materialText: '白芷×30、赤芍×30、紫菀×30、佩兰×30、神曲×30', aura: 650, mana: 65, category: '突破', realmRequired: 18 },
   { id: 'merge_way_pill', name: '合道丹', desc: '突破灵气-5000', materialText: '龙葵×3、紫菀×15、佩兰×15、神曲×15', aura: 1000, mana: 100, category: '突破', realmRequired: 22 },
+  { id: 'soul_mending_pill', name: '养魂丹', desc: '恢复元神伤势2层并治疗肉身', materialText: '魂晶×2、玉竹×20、紫菀×12', aura: 720, mana: 90, category: '元神', realmRequired: 10 },
+  { id: 'nirvana_soul_pill', name: '涅魂丹', desc: '清除元神伤势，元神等级+1', materialText: '雷精×2、龙葵×2、神曲×12、魂晶×3', aura: 1200, mana: 140, category: '元神', realmRequired: 16 },
   { id: 'dragon_face_pill', name: '龙颜丹', desc: '体/精+20%', materialText: '龙葵×3、锁阳×20、沉香×20', aura: 700, mana: 90, category: '属性', realmRequired: 15 },
   { id: 'spirit_mending_pill', name: '补灵丹', desc: '灵力上限+20', materialText: '白芷×25、玉竹×25、紫菀×25', aura: 550, mana: 55, category: '属性', realmRequired: 11 },
   { id: 'rebirth_pill', name: '轮回丹', desc: '转生所需，服用可踏入轮回重塑修行', materialText: '龙葵×10、神曲×15、紫菀×15、锁阳×10', aura: 3000, mana: 200, category: '特殊', realmRequired: 20 },
