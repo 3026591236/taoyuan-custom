@@ -235,6 +235,11 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: '2026-07-05', title: 'V0.9 玩家爽感与回访优化', content: `• 新增回访离线收益：离线20分钟以上再次进入游戏，可获得铜钱、体力、灵石；修仙已解锁时额外获得修为和灵气，最多累计12小时。
+• 新增全局奖励弹窗，签到、邮件、今日目标、离线收益都会用更明显的奖励反馈展示。
+• 每日签到反馈强化：连续天数和获得物品会集中展示，让玩家每天回来更有仪式感。
+• 今日目标领取反馈强化，完成目标后会弹出奖励卡，提升成长正反馈。
+• 邮件奖励领取改为弹窗展示，补偿、活动奖励更清楚。` },
     { date: '2026-07-05', title: 'V0.8 留存与上瘾循环优化', content: `• 主界面新增「今日目标/下一步」卡片，直接展示修行志当前目标、进度、奖励和一键领奖/前往。
 • 新增每日随机「今日机缘」，每天给种田、战斗、登塔、移动、修行或铜钱收益不同加成。
 • 修行志奖励反馈强化，完成后更容易看到可领取状态；财运机缘会提高今日目标铜钱奖励。

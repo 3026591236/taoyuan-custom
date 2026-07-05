@@ -99,6 +99,24 @@
         </div>
       </div>
     </Transition>
+
+    <!-- V0.9 回访奖励 / 爽感弹窗 -->
+    <Transition name="panel-fade">
+      <div v-if="rewardBurst" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[120] p-4" @click.self="rewardBurst = null">
+        <div class="reward-burst-panel game-panel max-w-sm w-full text-center space-y-3">
+          <div class="text-3xl">{{ rewardBurst.emoji }}</div>
+          <div>
+            <p class="text-accent text-base font-bold">{{ rewardBurst.title }}</p>
+            <p class="text-xs text-muted mt-1 leading-relaxed whitespace-pre-line">{{ rewardBurst.desc }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div v-for="(line, i) in rewardBurst.lines" :key="i" class="reward-line">{{ line }}</div>
+          </div>
+          <Button class="w-full justify-center !bg-accent !text-bg" @click="rewardBurst = null">收下奖励</Button>
+        </div>
+      </div>
+    </Transition>
+
     <SettingsDialog :open="showSettings" @close="showSettings = false" />
     <SaveManager v-if="showSaveManager" @close="showSaveManager = false" />
 
@@ -503,6 +521,7 @@
   import { useGameStore, SEASON_NAMES } from '@/stores/useGameStore'
   import { useHomeStore } from '@/stores/useHomeStore'
   import { useQuestStore } from '@/stores/useQuestStore'
+  import { useCultivationStore } from '@/stores/useCultivationStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { useNpcStore } from '@/stores/useNpcStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
@@ -554,8 +573,58 @@
   const saveStore = useSaveStore()
   const farmStore = useFarmStore()
   const questStore = useQuestStore()
+  const cultivationStore = useCultivationStore()
   const { switchToSeasonalBgm } = useAudio()
 
+
+
+  type RewardBurst = { title: string; desc: string; emoji: string; lines: string[] }
+  const rewardBurst = ref<RewardBurst | null>(null)
+  const showRewardBurst = (payload: RewardBurst) => {
+    rewardBurst.value = payload
+    showFloat(payload.title, 'success')
+  }
+  const addRewardLog = (title: string, lines: string[]) => addLog(`${title}：${lines.join('，')}。`)
+
+  const offlineRewardKey = () => {
+    const characterId = localStorage.getItem('taoyuan_active_character_id') || ''
+    const slot = saveStore.activeSlot >= 0 ? String(saveStore.activeSlot) : (localStorage.getItem('taoyuan_active_slot') || 'local')
+    return `taoyuan_last_seen_${characterId || slot}`
+  }
+  const grantOfflineRewards = async () => {
+    if (!gameStore.isGameStarted) return
+    const key = offlineRewardKey()
+    const now = Date.now()
+    const last = Number(localStorage.getItem(key) || 0)
+    localStorage.setItem(key, String(now))
+    if (!last) return
+    const minutes = Math.floor((now - last) / 60000)
+    if (minutes < 20) return
+    const cappedMinutes = Math.min(minutes, 12 * 60)
+    const hours = Math.max(1, Math.floor(cappedMinutes / 60))
+    const money = 80 + hours * 45 + Math.floor(gameStore.day * 6)
+    const stamina = Math.min(25, 6 + hours * 2)
+    const stones = Math.max(1, Math.floor(hours / 2))
+    const lines = [`离线${hours}小时`, `铜钱 +${money}`, `体力 +${stamina}`, `灵石 +${stones}`]
+    playerStore.earnMoney(money)
+    playerStore.restoreStamina(stamina)
+    inventoryStore.addItem('spirit_stone', stones)
+    if (cultivationStore.unlocked) {
+      const cultivationGain = 16 + hours * 12
+      const auraGain = 8 + hours * 5
+      cultivationStore.cultivation = Math.min(cultivationStore.cultivation + cultivationGain, cultivationStore.maxCultivation)
+      cultivationStore.aura += auraGain
+      lines.push(`修为 +${cultivationGain}`, `灵气 +${auraGain}`)
+    }
+    addRewardLog('离线归来，洞府与田庄已有积累', lines.slice(1))
+    showRewardBurst({
+      title: '离线收益已到账',
+      desc: '你不在的时候，桃源乡仍在缓慢运转。最多累计12小时回访收益。',
+      emoji: '🌙',
+      lines
+    })
+    await autoSaveCurrent()
+  }
 
   let accountAutoSaveTimer: number | null = null
   const saveKey = (slot: number) => `taoyuanxiang_save_${slot}`
@@ -663,7 +732,9 @@
         inventoryStore.addItem(String(item.itemId), Number(item.quantity) || 1, item.quality || 'normal')
       }
       mail.claimed = true
-      addLog(`领取邮件奖励：${mailRewardText(rewards)}`)
+      const text = mailRewardText(rewards)
+      addLog(`领取邮件奖励：${text}`)
+      showRewardBurst({ title: '邮件奖励已领取', desc: mail.title || '系统奖励已放入背包。', emoji: '📮', lines: text.split('，').filter(Boolean) })
       await autoSaveCurrent()
     } catch (e: any) {
       addLog(`领取邮件失败：${e?.message || '请求失败'}`)
@@ -795,7 +866,9 @@
         ? '，并获得 ' + itemRewards.map((item: any) => `${getItemName(String(item.itemId))}×${Number(item.quantity) || 1}`).join('、')
         : ''
       const streakText = data.streak ? `（连续${data.streak}天）` : ''
+      const rewardLines = [`铜钱 +${data.reward}`, ...itemRewards.map((item: any) => `${getItemName(String(item.itemId))} ×${Number(item.quantity) || 1}`)]
       addLog(`每日签到成功${streakText}，获得 ${data.reward} 铜钱${itemText}。`)
+      showRewardBurst({ title: `每日签到成功${streakText}`, desc: '连续回来就会越来越稳，今天也把桃源乡照看起来了。', emoji: '🎁', lines: rewardLines })
       const slot = saveStore.activeSlot >= 0 ? saveStore.activeSlot : saveStore.assignNewSlot()
       if (slot >= 0) saveStore.saveToSlot(slot)
     } catch {
@@ -824,7 +897,7 @@
   })
 
   // 实时时钟生命周期
-  onMounted(() => { startClock(); startAccountAutoSave(); void loadCheckinStatus(); void loadMails(); void autoSaveCurrent() })
+  onMounted(() => { startClock(); startAccountAutoSave(); void loadCheckinStatus(); void loadMails(); void grantOfflineRewards(); void autoSaveCurrent() })
   onUnmounted(() => {
     stopClock()
     stopAccountAutoSave()
@@ -883,6 +956,7 @@
     const res = questStore.claimJourneyTask(task.id)
     showFloat(res.message, res.success ? 'success' : 'danger')
     addLog(res.message)
+    if (res.success) showRewardBurst({ title: '今日目标奖励', desc: task.title, emoji: '🎯', lines: res.message.split('，').filter(Boolean).slice(0, 4) })
   }
 
   const sleepLabel = computed(() => {
@@ -1252,6 +1326,19 @@
     10% { opacity: 1; transform: translateX(-50%) translateY(0); }
     80% { opacity: 1; }
     100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+  }
+
+  .reward-burst-panel {
+    border-color: rgba(var(--color-accent-rgb, 255,180,0), 0.55);
+    box-shadow: 0 0 32px rgba(var(--color-accent-rgb, 255,180,0), 0.22);
+  }
+
+  .reward-line {
+    border: 1px solid rgba(var(--color-accent-rgb, 255,180,0), 0.22);
+    background: rgba(var(--color-accent-rgb, 255,180,0), 0.08);
+    border-radius: 4px;
+    padding: 0.35rem 0.25rem;
+    color: var(--color-accent);
   }
 
   .daily-hook-card {
