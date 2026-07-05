@@ -100,6 +100,49 @@
             <button class="btn w-full justify-center" @click="saveConfig">保存更新记录</button>
           </div>
 
+          <div v-if="activeTab === 'saveAudit'" class="border border-accent/20 rounded-xs p-3 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h2 class="text-accent">存档审计 / 安全日志</h2>
+              <button class="btn text-xs" @click="loadSaveAuditEvents">刷新审计</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-2">
+              <input v-model="saveAuditKeyword" class="input" placeholder="用户名/角色名/userId" />
+              <select v-model="saveAuditType" class="input">
+                <option value="">全部类型</option>
+                <option value="save_load">读取云档</option>
+                <option value="save_write">写入云档</option>
+                <option value="save_conflict">冲突拒绝</option>
+                <option value="save_delete">删除存档</option>
+                <option value="character_create_save">创建初始档</option>
+              </select>
+              <select v-model="saveAuditStatus" class="input">
+                <option value="">全部状态</option>
+                <option value="ok">正常</option>
+                <option value="conflict">冲突</option>
+              </select>
+              <input v-model.number="saveAuditLimit" type="number" min="1" max="500" class="input" placeholder="条数" />
+              <button class="btn justify-center" @click="loadSaveAuditEvents">查询</button>
+            </div>
+            <div v-if="saveAuditEvents.length === 0" class="text-xs text-muted">暂无存档审计记录。</div>
+            <div v-for="ev in saveAuditEvents" :key="ev.id" class="border border-accent/10 rounded-xs p-2 text-xs space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div><span class="text-accent">{{ ev.username }}</span><span class="text-muted ml-1">/ {{ ev.player_name || '无角色' }} / 槽位{{ ev.slot }}</span></div>
+                <div class="text-muted">{{ formatTime(ev.created_at) }}</div>
+              </div>
+              <div class="flex flex-wrap gap-x-3 gap-y-1">
+                <span>类型：{{ saveAuditTypeLabel(ev.event_type) }}</span>
+                <span>状态：<b :class="ev.status === 'conflict' ? 'text-danger' : 'text-accent'">{{ saveAuditStatusLabel(ev.status) }}</b></span>
+                <span>raw：{{ ev.raw_size }} B</span>
+                <span>data：{{ ev.data_size }} B</span>
+                <span v-if="ev.server_updated_at">服务器档：{{ formatTime(ev.server_updated_at) }}</span>
+                <span v-if="ev.client_loaded_at">客户端载入：{{ formatTime(ev.client_loaded_at) }}</span>
+                <span class="text-muted">IP：{{ ev.ip || '-' }}</span>
+              </div>
+              <div v-if="ev.data_hash" class="text-[10px] text-muted break-all">SHA256：{{ ev.data_hash }}</div>
+              <pre v-if="ev.detail" class="text-[10px] text-muted whitespace-pre-wrap break-all bg-black/20 p-2 rounded-xs">{{ JSON.stringify(ev.detail, null, 2) }}</pre>
+            </div>
+          </div>
+
           <div v-if="activeTab === 'ledger'" class="border border-accent/20 rounded-xs p-3 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h2 class="text-accent">经济流水 / 操作日志</h2>
@@ -235,12 +278,13 @@ const username = ref('')
 const password = ref('')
 const user = ref<any>(null)
 const keyword = ref('')
-const activeTab = ref<'basic' | 'about' | 'updates' | 'players' | 'ledger' | 'gm'>('basic')
+const activeTab = ref<'basic' | 'about' | 'updates' | 'players' | 'saveAudit' | 'ledger' | 'gm'>('basic')
 const adminTabs = [
   { key: 'basic', label: '基础配置' },
   { key: 'about', label: '关于/赞助' },
   { key: 'updates', label: '更新记录' },
   { key: 'players', label: '玩家管理' },
+  { key: 'saveAudit', label: '存档审计' },
   { key: 'ledger', label: '经济流水' },
   { key: 'gm', label: 'GM邮件' }
 ] as const
@@ -252,6 +296,11 @@ const economyEvents = ref<any[]>([])
 const ledgerKeyword = ref('')
 const ledgerType = ref('')
 const ledgerLimit = ref(100)
+const saveAuditEvents = ref<any[]>([])
+const saveAuditKeyword = ref('')
+const saveAuditType = ref('')
+const saveAuditStatus = ref('')
+const saveAuditLimit = ref(100)
 const ALL_ITEMS = [
   { id: 'mana_recovery_pill', name: '回灵丹', category: '丹药' },
   { id: 'qi_gathering_pill', name: '聚气丹', category: '丹药' },
@@ -434,7 +483,17 @@ async function loadEconomyEvents() {
   const data = await api(`/api/admin/economy-events?${q.toString()}`, { headers: headers() })
   economyEvents.value = data.events || []
 }
-async function refreshAll() { try { await loadMe(); await loadConfig(); await loadOverview(); await loadEconomyEvents(); setMsg('后台数据已刷新') } catch (e: any) { setMsg(e.message, 'error') } }
+async function loadSaveAuditEvents() {
+  if (user.value?.role !== 'admin') return
+  const q = new URLSearchParams()
+  if (saveAuditKeyword.value.trim()) q.set('keyword', saveAuditKeyword.value.trim())
+  if (saveAuditType.value) q.set('type', saveAuditType.value)
+  if (saveAuditStatus.value) q.set('status', saveAuditStatus.value)
+  q.set('limit', String(saveAuditLimit.value || 100))
+  const data = await api(`/api/admin/save-audit-events?${q.toString()}`, { headers: headers() })
+  saveAuditEvents.value = data.events || []
+}
+async function refreshAll() { try { await loadMe(); await loadConfig(); await loadOverview(); await loadEconomyEvents(); await loadSaveAuditEvents(); setMsg('后台数据已刷新') } catch (e: any) { setMsg(e.message, 'error') } }
 async function login() {
   try { const data = await api('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); localStorage.setItem('taoyuan_account_token', data.token); user.value = data.user; await loadConfig(); await loadOverview(); setMsg('登录成功') } catch (e: any) { setMsg(e.message, 'error') }
 }
@@ -493,5 +552,13 @@ function eventTypeLabel(t: string) {
   const labels: Record<string, string> = { sell_item: '单个出售', sell_item_all: '批量出售', sell_all: '一键出售', mail_claim: '邮件领取', checkin: '每日签到' }
   return labels[t] || t
 }
-onMounted(async () => { try { await loadMe(); await loadConfig(); await loadOverview(); await loadEconomyEvents() } catch {} })
+function saveAuditTypeLabel(t: string) {
+  const labels: Record<string, string> = { save_load: '读取云档', save_write: '写入云档', save_conflict: '冲突拒绝', save_delete: '删除存档', character_create_save: '创建初始档' }
+  return labels[t] || t
+}
+function saveAuditStatusLabel(t: string) {
+  const labels: Record<string, string> = { ok: '正常', conflict: '冲突' }
+  return labels[t] || t
+}
+onMounted(async () => { try { await loadMe(); await loadConfig(); await loadOverview(); await loadEconomyEvents(); await loadSaveAuditEvents() } catch {} })
 </script>

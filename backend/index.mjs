@@ -75,9 +75,80 @@ async function ensureSchema() {
     INDEX idx_economy_type_time (event_type, created_at),
     INDEX idx_economy_player_name (player_name)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
+  await pool.execute(`CREATE TABLE IF NOT EXISTS save_audit_events (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    username VARCHAR(16) NOT NULL,
+    character_id VARCHAR(36) NULL,
+    player_name VARCHAR(20) NULL,
+    slot TINYINT NOT NULL DEFAULT 0,
+    event_type VARCHAR(40) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ok',
+    raw_size INT NOT NULL DEFAULT 0,
+    data_size INT NOT NULL DEFAULT 0,
+    data_hash VARCHAR(64) NULL,
+    client_loaded_at DATETIME NULL,
+    server_updated_at DATETIME NULL,
+    detail_json LONGTEXT NULL,
+    ip VARCHAR(80) NULL,
+    user_agent VARCHAR(255) NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_save_audit_user_time (user_id, created_at),
+    INDEX idx_save_audit_type_time (event_type, created_at),
+    INDEX idx_save_audit_player_name (player_name),
+    INDEX idx_save_audit_status_time (status, created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
 }
 
 function send(res, status, data) { res.status(status).json(data) }
+function saveSummary(raw, data, meta = {}) {
+  const dataText = data ? JSON.stringify(data) : ''
+  const rawText = raw ? String(raw) : ''
+  const source = dataText || rawText
+  const p = data?.player || data?.playerStore || data?.stores?.player || {}
+  const cu = data?.cultivation || data?.cultivationStore || data?.stores?.cultivation || {}
+  const g = data?.game || data?.gameStore || data?.stores?.game || {}
+  const inv = data?.inventory || data?.inventoryStore || data?.stores?.inventory || {}
+  const items = inv.items || inv.inventory || inv.bag || []
+  return {
+    rawSize: rawText.length,
+    dataSize: dataText.length,
+    dataHash: source ? crypto.createHash('sha256').update(source).digest('hex') : null,
+    money: p.money ?? meta.money ?? null,
+    playerName: normalizePlayerName(meta.playerName || p.playerName || p.name || ''),
+    year: g.year ?? meta.year ?? null,
+    season: g.season ?? meta.season ?? null,
+    day: g.day ?? meta.day ?? null,
+    realm: cu.realmName ?? cu.realm ?? cu.realmIndex ?? null,
+    cultivation: cu.cultivation ?? null,
+    itemKinds: Array.isArray(items) ? items.length : (items && typeof items === 'object' ? Object.keys(items).length : null)
+  }
+}
+async function recordSaveAuditEvent(user, req, event = {}) {
+  if (!user) return
+  try {
+    const detail = event.detail == null ? null : JSON.stringify(event.detail)
+    await pool.execute(`INSERT INTO save_audit_events
+      (user_id, username, character_id, player_name, slot, event_type, status, raw_size, data_size, data_hash, client_loaded_at, server_updated_at, detail_json, ip, user_agent)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+        user.id,
+        user.username,
+        event.characterId || null,
+        normalizePlayerName(event.playerName || '') || null,
+        Number.isFinite(Number(event.slot)) ? Math.trunc(Number(event.slot)) : 0,
+        String(event.eventType || 'unknown').slice(0, 40),
+        String(event.status || 'ok').slice(0, 20),
+        Number.isFinite(Number(event.rawSize)) ? Math.trunc(Number(event.rawSize)) : 0,
+        Number.isFinite(Number(event.dataSize)) ? Math.trunc(Number(event.dataSize)) : 0,
+        event.dataHash || null,
+        event.clientLoadedAt || null,
+        event.serverUpdatedAt || null,
+        detail,
+        String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').slice(0, 80),
+        String(req.headers['user-agent'] || '').slice(0, 255)
+      ])
+  } catch (e) { console.error('save audit err', e.message) }
+}
 async function recordEconomyEvent(user, req, event = {}) {
   if (!user) return
   try {
@@ -261,6 +332,8 @@ app.post('/api/characters', async (req, res) => {
     const dataJson = data ? JSON.stringify(data) : null
     await conn.execute('INSERT INTO saves (user_id, character_id, slot, player_name, raw, data_json, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE character_id=VALUES(character_id), player_name=VALUES(player_name), raw=VALUES(raw), data_json=VALUES(data_json), meta_json=VALUES(meta_json)', [user.id, id, slot, name, raw || dataJson || '', dataJson || raw || '', metaJson])
     await conn.commit()
+    const summary = saveSummary(raw || dataJson || '', data, { ...meta, playerName: name, gender })
+    await recordSaveAuditEvent(user, req, { eventType: 'character_create_save', status: 'ok', slot, characterId: id, playerName: name, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, detail: summary })
     send(res, 200, { ok: true, character: { id, slot, name, gender } })
   } catch (e) {
     try { await conn.rollback() } catch {}
@@ -295,7 +368,9 @@ app.get('/api/saves/:slot', async (req, res) => {
     const [rows] = await pool.execute('SELECT * FROM saves WHERE user_id = ? AND slot = ?', [user.id, Number(req.params.slot)])
     if (!rows.length) return send(res, 404, { error: '存档不存在' })
     const r = rows[0]
-    const rawResp = r.raw || ''; send(res, 200, { slot: r.slot, raw: rawResp, meta: r.meta_json, updatedAt: r.updated_at })
+    const rawResp = r.raw || ''
+    await recordSaveAuditEvent(user, req, { eventType: 'save_load', status: 'ok', slot: r.slot, characterId: r.character_id, playerName: r.player_name, rawSize: rawResp.length, dataSize: String(r.data_json || '').length, dataHash: (r.data_json || rawResp) ? crypto.createHash('sha256').update(String(r.data_json || rawResp)).digest('hex') : null, serverUpdatedAt: r.updated_at, detail: { updatedAt: r.updated_at } })
+    send(res, 200, { slot: r.slot, raw: rawResp, meta: r.meta_json, updatedAt: r.updated_at })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
 
@@ -311,19 +386,23 @@ app.put('/api/saves/:slot', async (req, res) => {
     }
     const metaJson = meta ? JSON.stringify(meta) : null
     const clientLoadedAt = meta && meta.lastLoadedAt ? new Date(meta.lastLoadedAt) : null
-    if (clientLoadedAt && Number.isFinite(clientLoadedAt.getTime())) {
-      const [currentRows] = await pool.execute('SELECT updated_at FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
-      if (currentRows.length) {
-        const serverUpdatedAt = new Date(currentRows[0].updated_at)
-        // 同账号多端同时在线时，拒绝旧页面覆盖服务器上更新的存档。
-        if (serverUpdatedAt.getTime() - clientLoadedAt.getTime() > 1500) {
-          return send(res, 409, { error: '云端存档已由其他设备更新，请刷新或重新进入后再继续。', conflict: true, serverUpdatedAt: currentRows[0].updated_at })
-        }
-      }
-    }
     // data 为明文 JSON（新前端直接传），优先存入 data_json；raw 保留兼容旧版加密 blob
     const plainData = data || (raw ? safeJsonParse(raw, null) : null)
     const dataJson = plainData ? JSON.stringify(plainData) : null
+    const summary = saveSummary(raw || dataJson || '', plainData, meta || {})
+    let currentSaveRow = null
+    if (clientLoadedAt && Number.isFinite(clientLoadedAt.getTime())) {
+      const [currentRows] = await pool.execute('SELECT updated_at, character_id, player_name FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+      if (currentRows.length) {
+        currentSaveRow = currentRows[0]
+        const serverUpdatedAt = new Date(currentSaveRow.updated_at)
+        // 同账号多端同时在线时，拒绝旧页面覆盖服务器上更新的存档。
+        if (serverUpdatedAt.getTime() - clientLoadedAt.getTime() > 1500) {
+          await recordSaveAuditEvent(user, req, { eventType: 'save_conflict', status: 'conflict', slot, characterId: currentSaveRow.character_id || saveCharacterId, playerName: currentSaveRow.player_name || playerName || summary.playerName, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, clientLoadedAt: meta.lastLoadedAt, serverUpdatedAt: currentSaveRow.updated_at, detail: { ...summary, reason: 'stale_client_overwrite_rejected' } })
+          return send(res, 409, { error: '云端存档已由其他设备更新，请刷新或重新进入后再继续。', conflict: true, serverUpdatedAt: currentSaveRow.updated_at })
+        }
+      }
+    }
     await pool.execute(
       'INSERT INTO saves (user_id, character_id, slot, player_name, raw, data_json, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE character_id=COALESCE(VALUES(character_id), character_id), player_name=COALESCE(VALUES(player_name), player_name), raw=VALUES(raw), data_json=VALUES(data_json), meta_json=VALUES(meta_json)',
       [user.id, saveCharacterId, slot, playerName || null, raw || dataJson || '', dataJson || raw || '', metaJson]
@@ -343,7 +422,8 @@ app.put('/api/saves/:slot', async (req, res) => {
         )
       }
     } catch (e2) { console.error('lb err', e2.message) }
-    const [savedRows] = await pool.execute('SELECT updated_at FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+    const [savedRows] = await pool.execute('SELECT updated_at, character_id, player_name FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+    await recordSaveAuditEvent(user, req, { eventType: 'save_write', status: 'ok', slot, characterId: savedRows[0]?.character_id || saveCharacterId, playerName: savedRows[0]?.player_name || playerName || summary.playerName, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, clientLoadedAt: meta?.lastLoadedAt || null, serverUpdatedAt: savedRows[0]?.updated_at || null, detail: summary })
     send(res, 200, { ok: true, updatedAt: savedRows[0]?.updated_at || null })
   } catch (e) { console.error('save err', e); send(res, 500, { error: '服务器错误' }) }
 })
@@ -351,7 +431,10 @@ app.put('/api/saves/:slot', async (req, res) => {
 app.delete('/api/saves/:slot', async (req, res) => {
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
-    await pool.execute('DELETE FROM saves WHERE user_id = ? AND slot = ?', [user.id, Number(req.params.slot)])
+    const slot = Number(req.params.slot)
+    const [before] = await pool.execute('SELECT character_id, player_name, updated_at, LENGTH(raw) AS raw_size, LENGTH(data_json) AS data_size FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+    await pool.execute('DELETE FROM saves WHERE user_id = ? AND slot = ?', [user.id, slot])
+    if (before.length) await recordSaveAuditEvent(user, req, { eventType: 'save_delete', status: 'ok', slot, characterId: before[0].character_id, playerName: before[0].player_name, rawSize: before[0].raw_size || 0, dataSize: before[0].data_size || 0, serverUpdatedAt: before[0].updated_at, detail: { deleted: true } })
     send(res, 200, { ok: true })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
@@ -617,6 +700,24 @@ app.get('/api/admin/overview', async (req, res) => {
     send(res, 200, { stats: { userCount: uc, saveCount: sc, sessionCount: pc }, users: enrichedUsers })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
+app.get('/api/admin/save-audit-events', async (req, res) => {
+  try {
+    const admin = await requireAdmin(req, res); if (!admin) return
+    const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 500)
+    const keyword = String(req.query.keyword || '').trim()
+    const type = String(req.query.type || '').trim()
+    const status = String(req.query.status || '').trim()
+    const params = []
+    const where = []
+    if (keyword) { where.push('(username LIKE ? OR player_name LIKE ? OR user_id = ?)'); params.push(`%${keyword}%`, `%${keyword}%`, keyword) }
+    if (type) { where.push('event_type = ?'); params.push(type) }
+    if (status) { where.push('status = ?'); params.push(status) }
+    const sql = `SELECT id, user_id, username, character_id, player_name, slot, event_type, status, raw_size, data_size, data_hash, client_loaded_at, server_updated_at, detail_json, ip, user_agent, created_at FROM save_audit_events ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT ${limit}`
+    const [rows] = await pool.execute(sql, params)
+    send(res, 200, { events: rows.map(r => ({ ...r, detail: safeJsonParse(r.detail_json, null) })) })
+  } catch (e) { console.error('admin save audit events err', e); send(res, 500, { error: '服务器错误' }) }
+})
+
 app.get('/api/admin/economy-events', async (req, res) => {
   try {
     const admin = await requireAdmin(req, res); if (!admin) return
