@@ -21,7 +21,7 @@
   </view>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted } from 'vue'
 
 const SERVER_BASE = 'http://129.204.252.190:3001'
@@ -35,20 +35,9 @@ const statusText = ref('准备连接服务器…')
 const progress = ref(4)
 const failed = ref(false)
 
-type ClientManifest = {
-  version: string
-  build: string
-  builtAt?: string
-  entry: string
-  zipUrl: string
-  sha256?: string
-  size?: number
-  required?: boolean
-}
-
-const plusReady = () => new Promise<void>(resolve => {
+const plusReady = () => new Promise(resolve => {
   // #ifdef APP-PLUS
-  if ((window as any).plus) return resolve()
+  if (window.plus) return resolve()
   document.addEventListener('plusready', () => resolve(), false)
   // #endif
   // #ifndef APP-PLUS
@@ -56,23 +45,23 @@ const plusReady = () => new Promise<void>(resolve => {
   // #endif
 })
 
-const requestJson = <T,>(url: string) => new Promise<T>((resolve, reject) => {
+const requestJson = (url) => new Promise((resolve, reject) => {
   uni.request({
     url,
     method: 'GET',
     timeout: 15000,
     success: res => {
-      if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data as T)
+      if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data)
       else reject(new Error(`服务器返回 ${res.statusCode}`))
     },
     fail: err => reject(new Error(err.errMsg || '网络请求失败'))
   })
 })
 
-const readLocalManifest = () => new Promise<ClientManifest | null>(resolve => {
+const readLocalManifest = () => new Promise(resolve => {
   // #ifdef APP-PLUS
   plus.io.resolveLocalFileSystemURL(VERSION_PATH, entry => {
-    ;(entry as any).file(file => {
+    ;entry.file(file => {
       const reader = new plus.io.FileReader()
       reader.onloadend = e => {
         try { resolve(JSON.parse(String(e.target?.result || ''))) } catch { resolve(null) }
@@ -87,10 +76,10 @@ const readLocalManifest = () => new Promise<ClientManifest | null>(resolve => {
   // #endif
 })
 
-const removeDir = (path: string) => new Promise<void>(resolve => {
+const removeDir = (path) => new Promise(resolve => {
   // #ifdef APP-PLUS
   plus.io.resolveLocalFileSystemURL(path, entry => {
-    ;(entry as any).removeRecursively(() => resolve(), () => resolve())
+    ;entry.removeRecursively(() => resolve(), () => resolve())
   }, () => resolve())
   // #endif
   // #ifndef APP-PLUS
@@ -98,10 +87,10 @@ const removeDir = (path: string) => new Promise<void>(resolve => {
   // #endif
 })
 
-const ensureDir = (path: string) => new Promise<void>((resolve, reject) => {
+const ensureDir = (path) => new Promise((resolve, reject) => {
   // #ifdef APP-PLUS
   plus.io.resolveLocalFileSystemURL('_doc/', root => {
-    ;(root as any).getDirectory(path.replace(/^_doc\//, ''), { create: true }, () => resolve(), err => reject(new Error(err.message)))
+    ;root.getDirectory(path.replace(/^_doc\//, ''), { create: true }, () => resolve(), err => reject(new Error(err.message)))
   }, err => reject(new Error(err.message)))
   // #endif
   // #ifndef APP-PLUS
@@ -109,7 +98,7 @@ const ensureDir = (path: string) => new Promise<void>((resolve, reject) => {
   // #endif
 })
 
-const downloadZip = (manifest: ClientManifest) => new Promise<string>((resolve, reject) => {
+const downloadZip = (manifest) => new Promise((resolve, reject) => {
   // #ifdef APP-PLUS
   const url = manifest.zipUrl.startsWith('http') ? manifest.zipUrl : `${SERVER_BASE}${manifest.zipUrl}`
   const task = plus.downloader.createDownload(url, { filename: ZIP_PATH, timeout: 30 }, (download, status) => {
@@ -129,7 +118,7 @@ const downloadZip = (manifest: ClientManifest) => new Promise<string>((resolve, 
   // #endif
 })
 
-const unzipBundle = (zipPath: string) => new Promise<void>((resolve, reject) => {
+const unzipBundle = (zipPath) => new Promise((resolve, reject) => {
   // #ifdef APP-PLUS
   plus.zip.decompress(zipPath, BUNDLE_DIR, () => resolve(), err => reject(new Error(err.message || '解压失败')))
   // #endif
@@ -138,17 +127,17 @@ const unzipBundle = (zipPath: string) => new Promise<void>((resolve, reject) => 
   // #endif
 })
 
-const localEntryUrl = () => new Promise<string>((resolve, reject) => {
+const localEntryUrl = () => new Promise((resolve, reject) => {
   // #ifdef APP-PLUS
   const target = `${BUNDLE_DIR}/index.html`
-  plus.io.resolveLocalFileSystemURL(target, entry => resolve((entry as any).toLocalURL()), err => reject(new Error(err.message || '本地资源入口不存在')))
+  plus.io.resolveLocalFileSystemURL(target, entry => resolve(entry.toLocalURL()), err => reject(new Error(err.message || '本地资源入口不存在')))
   // #endif
   // #ifndef APP-PLUS
   reject(new Error('非 App 环境'))
   // #endif
 })
 
-const sameBundle = (a: ClientManifest | null, b: ClientManifest) => !!a && a.version === b.version && a.build === b.build && (!b.sha256 || a.sha256 === b.sha256)
+const sameBundle = (a, b) => !!a && a.version === b.version && a.build === b.build && (!b.sha256 || a.sha256 === b.sha256)
 
 const startSync = async () => {
   failed.value = false
@@ -157,7 +146,7 @@ const startSync = async () => {
   statusText.value = '正在连接服务器…'
   try {
     await plusReady()
-    const remoteManifest = await requestJson<ClientManifest>(MANIFEST_URL)
+    const remoteManifest = await requestJson(MANIFEST_URL)
     if (!remoteManifest?.zipUrl || !remoteManifest?.entry) throw new Error('服务器资源清单无效')
     progress.value = 12
     statusText.value = `发现资源版本 ${remoteManifest.version} / ${remoteManifest.build}`
@@ -179,7 +168,7 @@ const startSync = async () => {
 
     webUrl.value = await localEntryUrl()
     progress.value = 100
-  } catch (e: any) {
+  } catch (e) {
     failed.value = true
     progress.value = 0
     statusText.value = e?.message || '连接服务器失败，无法进入游戏'
