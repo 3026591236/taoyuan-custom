@@ -1,0 +1,10 @@
+{
+  "version": "2.5.0",
+  "build": "78f50b2",
+  "builtAt": "2026-07-05T11:30:10Z",
+  "entry": "index.html",
+  "zipUrl": "/api/client/web.zip",
+  "sha256": "b009a296a75b03f52a2def27c03fa8ce86a1ce850e481039cfee16007c360e26",
+  "size": 2824282,
+  "required": true
+}

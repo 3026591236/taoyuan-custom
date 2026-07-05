@@ -10,6 +10,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>我从种田开始修仙 — 像素田园修仙</title>
+    <script>
+      window.__TAOYUAN_API_BASE__ = 'http://129.204.252.190:3001'
+      // native local API proxy: when the game is loaded from client-downloaded local files,
+      // relative /api requests must still go to the backend server.
+      ;(function () {
+        var base = window.__TAOYUAN_API_BASE__
+        var isHttp = location.protocol === 'http:' || location.protocol === 'https:'
+        if (isHttp || !window.fetch || !base) return
+        var rawFetch = window.fetch.bind(window)
+        window.fetch = function (input, init) {
+          if (typeof input === 'string' && input.indexOf('/api/') === 0) return rawFetch(base + input, init)
+          if (input && typeof input === 'object' && input.url && input.url.indexOf('/api/') === 0) return rawFetch(base + input.url, input)
+          return rawFetch(input, init)
+        }
+      })()
+    </script>
     <meta name="description" content="一款像素中国风文字田园模拟经营游戏，灵感来自星露谷物语。春耕夏种秋收冬藏，经营你的世外桃源。" />
     <meta name="keywords" content="我从种田开始修仙,田园修仙,文字游戏,模拟经营,像素游戏,中国风" />
     <meta name="theme-color" content="#1a1a1a" />

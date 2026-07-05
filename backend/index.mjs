@@ -3,6 +3,9 @@ import mysql from 'mysql2/promise'
 import cors from 'cors'
 import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { v4 as uuidv4 } from 'uuid'
 
 // 兼容旧 pbkdf2 密码验证
@@ -17,6 +20,10 @@ function safeJsonParse(val, fallback = null) {
   if (typeof val === 'object') return val
   try { return JSON.parse(String(val)) } catch { return fallback }
 }
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const SOURCE_ROOT = process.env.TAOYUAN_SOURCE_ROOT || path.resolve(__dirname, '..')
+const CLIENT_BUNDLE_DIR = process.env.TAOYUAN_CLIENT_BUNDLE_DIR || path.join(SOURCE_ROOT, 'client-dist')
 
 const app = express()
 app.use(cors())
@@ -275,6 +282,24 @@ async function setConfigMulti(obj) { for (const [k, v] of Object.entries(obj)) a
 
 // ========== 公开 API ==========
 app.get('/api/config', async (req, res) => { try { send(res, 200, await getConfig()) } catch (e) { send(res, 500, { error: '服务器错误' }) } })
+
+
+app.get('/api/client/manifest', async (req, res) => {
+  try {
+    const manifestPath = path.join(CLIENT_BUNDLE_DIR, 'manifest.json')
+    if (!fs.existsSync(manifestPath)) return send(res, 503, { error: '客户端资源包尚未生成' })
+    res.setHeader('Cache-Control', 'no-store')
+    res.sendFile(manifestPath)
+  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+})
+app.get('/api/client/web.zip', async (req, res) => {
+  try {
+    const zipPath = path.join(CLIENT_BUNDLE_DIR, 'web.zip')
+    if (!fs.existsSync(zipPath)) return send(res, 503, { error: '客户端资源包尚未生成' })
+    res.setHeader('Cache-Control', 'no-store')
+    res.download(zipPath, 'taoyuan-web.zip')
+  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+})
 
 // --- 认证 ---
 app.post('/api/auth/register', async (req, res) => {

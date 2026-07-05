@@ -1,0 +1,39 @@
+{
+  "name": "桃源乡",
+  "appid": "__UNI__TAOYUAN",
+  "description": "桃源乡双端客户端壳：强联网下载后端资源包，本地 WebView 加载。",
+  "versionName": "0.1.0",
+  "versionCode": 100,
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-app",
+    "compilerVersion": 3,
+    "splashscreen": {
+      "alwaysShowBeforeRender": true,
+      "waiting": true,
+      "autoclose": true,
+      "delay": 0
+    },
+    "modules": {},
+    "distribute": {
+      "android": {
+        "permissions": [
+          "<uses-permission android:name=\"android.permission.INTERNET\"/>",
+          "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
+        ],
+        "schemes": "taoyuan",
+        "icon": "static/logo-pixel.png"
+      },
+      "ios": {}
+    }
+  },
+  "h5": {
+    "router": {
+      "mode": "hash"
+    },
+    "devServer": {
+      "port": 8099
+    }
+  }
+}
