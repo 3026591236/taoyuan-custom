@@ -75,6 +75,23 @@ async function ensureSchema() {
     INDEX idx_economy_type_time (event_type, created_at),
     INDEX idx_economy_player_name (player_name)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
+  await pool.execute(`CREATE TABLE IF NOT EXISTS feedbacks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(36) NULL,
+    username VARCHAR(16) NULL,
+    player_name VARCHAR(20) NULL,
+    category VARCHAR(20) NOT NULL COMMENT 'feature|bug|suggestion',
+    title VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending|read|resolved|closed',
+    ip VARCHAR(80) NULL,
+    user_agent VARCHAR(255) NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_feedbacks_category (category),
+    INDEX idx_feedbacks_status (status),
+    INDEX idx_feedbacks_created (created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
+
   await pool.execute(`CREATE TABLE IF NOT EXISTS save_audit_events (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
@@ -101,6 +118,12 @@ async function ensureSchema() {
 }
 
 function send(res, status, data) { res.status(status).json(data) }
+function toMysqlDateTime(val) {
+  if (!val) return null
+  const d = val instanceof Date ? val : new Date(val)
+  if (!Number.isFinite(d.getTime())) return null
+  return d.toISOString().slice(0, 19).replace(String.fromCharCode(84), String.fromCharCode(32))
+}
 function saveSummary(raw, data, meta = {}) {
   const dataText = data ? JSON.stringify(data) : ''
   const rawText = raw ? String(raw) : ''
@@ -141,8 +164,8 @@ async function recordSaveAuditEvent(user, req, event = {}) {
         Number.isFinite(Number(event.rawSize)) ? Math.trunc(Number(event.rawSize)) : 0,
         Number.isFinite(Number(event.dataSize)) ? Math.trunc(Number(event.dataSize)) : 0,
         event.dataHash || null,
-        event.clientLoadedAt || null,
-        event.serverUpdatedAt || null,
+        toMysqlDateTime(event.clientLoadedAt),
+        toMysqlDateTime(event.serverUpdatedAt),
         detail,
         String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').slice(0, 80),
         String(req.headers['user-agent'] || '').slice(0, 255)
@@ -577,6 +600,50 @@ function calcCombatPowerFromSave(p = {}, cu = {}) {
   const systemPower = (Number(cu.fieldTier || 0) || 0) * 120 + (Number(cu.caveTier || 0) || 0) * 180 + (Number(cu.yuanShenLevel || 0) || 0) * 260 + (Number(cu.destinedArtifactLevel || 0) || 0) * 360 + (Number(cu.beastBond || 0) || 0) * 12 + Math.floor((Number(cu.sectContribution || 0) || 0) * 0.2)
   return Math.max(0, Math.floor(realmIndex * 1000 + rebirthCount * 50000 + cultivation * 1.2 + aura * 0.25 + mana * 2 + attrPower * 6 + hp * 1.5 + artifactPower + oldArtifactPower + systemPower))
 }
+
+// --- 玩家反馈 ---
+app.post('/api/feedbacks', async (req, res) => {
+  try {
+    const user = await auth(req)
+    const { category, title, content } = req.body || {}
+    if (!category || !title || !content) return send(res, 400, { error: '分类/标题/内容不能为空' })
+    if (!['feature', 'bug', 'suggestion'].includes(category)) return send(res, 400, { error: '分类无效' })
+    await pool.execute(
+      'INSERT INTO feedbacks (user_id, username, player_name, category, title, content, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [user?.id || null, user?.username || null, (req.body?.playerName || '').slice(0, 20), category, title.slice(0, 100), content.slice(0, 2000), req.ip || null, (req.headers['user-agent'] || '').slice(0, 255)]
+    )
+    send(res, 200, { ok: true })
+  } catch (e) { console.error('feedback post err', e); send(res, 500, { error: '服务器错误' }) }
+})
+
+// --- 管理员查看反馈 ---
+app.get('/api/admin/feedbacks', async (req, res) => {
+  try {
+    const u = await requireAdmin(req, res); if (!u) return
+    const status = req.query.status || ''
+    const category = req.query.category || ''
+    const limit = Math.min(Number(req.query.limit) || 200, 500)
+    let where = []
+    let params = []
+    if (status) { where.push('f.status = ?'); params.push(status) }
+    if (category) { where.push('f.category = ?'); params.push(category) }
+    const [rows] = await pool.execute(
+      `SELECT f.* FROM feedbacks f ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY f.id DESC LIMIT ${limit}`,
+      params
+    )
+    send(res, 200, { feedbacks: rows })
+  } catch (e) { console.error('admin feedbacks err', e); send(res, 500, { error: '服务器错误' }) }
+})
+
+app.put('/api/admin/feedbacks/:id', async (req, res) => {
+  try {
+    const u = await requireAdmin(req, res); if (!u) return
+    const { status } = req.body || {}
+    if (!status || !['pending', 'read', 'resolved', 'closed'].includes(status)) return send(res, 400, { error: '状态无效' })
+    await pool.execute('UPDATE feedbacks SET status = ? WHERE id = ?', [status, req.params.id])
+    send(res, 200, { ok: true })
+  } catch (e) { console.error('admin feedback put err', e); send(res, 500, { error: '服务器错误' }) }
+})
 
 // --- 排行榜（优先从 saves.data_json 实时读取；坏数据用 meta/player_name/cache 兜底） ---
 app.get('/api/leaderboard', async (req, res) => {

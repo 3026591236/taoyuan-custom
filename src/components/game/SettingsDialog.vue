@@ -342,6 +342,56 @@
           </template>
         </div>
 
+          <!-- ===== 反馈 ===== -->
+          <template v-if="activeTab === 'feedback'">
+            <div class="max-h-[40vh] overflow-y-auto flex flex-col space-y-3">
+              <div class="border border-accent/20 rounded-xs p-3 mr-1">
+                <p class="text-xs text-muted mb-2">提交反馈</p>
+                <div class="flex space-x-2 mb-3">
+                  <button
+                    v-for="cat in FEEDBACK_CATEGORIES"
+                    :key="cat.key"
+                    class="flex-1 py-2 px-1 border rounded-xs text-xs transition-colors"
+                    :class="feedbackCategory === cat.key ? 'border-accent bg-accent/20 text-accent' : 'border-accent/20 text-muted hover:text-text'"
+                    @click="feedbackCategory = cat.key"
+                  >
+                    <component :is="cat.icon" :size="14" class="block mx-auto mb-1" />
+                    {{ cat.label }}
+                  </button>
+                </div>
+                <div class="flex flex-col space-y-2">
+                  <div>
+                    <label class="text-[10px] text-muted mb-0.5 block">标题</label>
+                    <input
+                      v-model="feedbackTitle"
+                      placeholder="简要描述你的反馈"
+                      maxlength="100"
+                      class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-muted mb-0.5 block">详细内容</label>
+                    <textarea
+                      v-model="feedbackContent"
+                      placeholder="请详细描述..."
+                      maxlength="2000"
+                      rows="4"
+                      class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors resize-none"
+                    ></textarea>
+                  </div>
+                  <Button
+                    class="py-1 px-3 w-full justify-center"
+                    :disabled="feedbackBusy || !feedbackTitle.trim() || !feedbackContent.trim()"
+                    @click="submitFeedback"
+                  >
+                    {{ feedbackBusy ? '提交中...' : '提交反馈' }}
+                  </Button>
+                  <p v-if="feedbackMsg" class="text-xs text-center" :class="feedbackOk ? 'text-success' : 'text-danger'">{{ feedbackMsg }}</p>
+                </div>
+              </div>
+            </div>
+          </template>
+
         <!-- 存档管理（全局底部） -->
         <Button :icon="FolderOpen" :icon-size="12" class="py-1 px-3 w-full justify-center mt-3" @click="showSaveManager = true">
           存档管理
@@ -380,7 +430,10 @@
     ArrowDownRight,
     Settings,
     Palette,
-    Bell
+    Bell,
+    Bug,
+    Lightbulb,
+    MessageSquare
   } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
@@ -394,14 +447,15 @@
   import SaveManager from '@/components/game/SaveManager.vue'
   import ClipboardJS from 'clipboard'
 
-  type SettingsTab = 'general' | 'display' | 'notification'
+  type SettingsTab = 'general' | 'display' | 'notification' | 'feedback'
 
   type BoolSettingKey = 'qmsgIsLimitWidth' | 'qmsgAnimation' | 'qmsgAutoClose' | 'qmsgShowClose' | 'qmsgShowIcon' | 'qmsgShowReverse'
 
   const SETTINGS_TABS: { key: SettingsTab; label: string; icon: Component }[] = [
     { key: 'general', label: '通用', icon: Settings },
     { key: 'display', label: '外观', icon: Palette },
-    { key: 'notification', label: '通知', icon: Bell }
+    { key: 'notification', label: '通知', icon: Bell },
+  { key: 'feedback', label: '反馈', icon: MessageSquare }
   ]
 
   const QMSG_POSITIONS: { value: QmsgPosition; label: string; icon: Component }[] = [
@@ -450,6 +504,53 @@
   } = useWebdav()
 
   const showSaveManager = ref(false)
+  const FEEDBACK_CATEGORIES: { key: string; label: string; icon: Component }[] = [
+    { key: 'feature', label: '功能建议', icon: Lightbulb },
+    { key: 'bug', label: 'BUG反馈', icon: Bug },
+    { key: 'suggestion', label: '意见提交', icon: MessageSquare }
+  ]
+  const feedbackCategory = ref('feature')
+  const feedbackTitle = ref('')
+  const feedbackContent = ref('')
+  const feedbackBusy = ref(false)
+  const feedbackMsg = ref('')
+  const feedbackOk = ref(false)
+  const accountToken = () => localStorage.getItem('taoyuan_account_token') || localStorage.getItem('taoyuan_token') || ''
+  const playerName = () => { try { const d: any = JSON.parse(localStorage.getItem('taoyuan_data_0')||'{}'); return d.player?.playerName||d.playerName||'' } catch { return '' } }
+
+  const submitFeedback = async () => {
+    if (feedbackBusy.value) return
+    feedbackBusy.value = true
+    feedbackMsg.value = ''
+    try {
+      const t = accountToken()
+      const headers: Record<string,string> = { 'Content-Type': 'application/json' }
+      if (t) headers['Authorization'] = 'Bearer ' + t
+      const res = await fetch('/api/feedbacks', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ category: feedbackCategory.value, title: feedbackTitle.value.trim(), content: feedbackContent.value.trim(), playerName: playerName() })
+      })
+      if (res.ok) {
+        feedbackOk.value = true
+        feedbackMsg.value = '感谢反馈！管理员会尽快查看。'
+        feedbackTitle.value = ''
+        feedbackContent.value = ''
+        feedbackCategory.value = 'feature'
+      } else {
+        const d = await res.json().catch(()=>({}))
+        feedbackOk.value = false
+        feedbackMsg.value = d.error || '提交失败，请稍后重试。'
+      }
+    } catch {
+      feedbackOk.value = false
+      feedbackMsg.value = '网络错误，请稍后重试。'
+    } finally {
+      feedbackBusy.value = false
+    }
+  }
+
+
   let clipboard: ClipboardJS | null = null
 
   onMounted(() => {

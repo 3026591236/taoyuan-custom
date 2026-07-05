@@ -212,6 +212,34 @@
             </div>
           </div>
 
+            <template v-if="activeTab === 'feedbacks'">
+              <h2 class="text-accent">玩家反馈</h2>
+              <div class="flex gap-2 mt-3 mb-3 flex-wrap">
+                <button v-for="cat in ['','feature','bug','suggestion']" :key="cat" class="btn text-xs" :class="feedbackFilterCat===cat?'!bg-accent !text-bg':''" @click="feedbackFilterCat=cat;loadFeedbacks()">{{cat||'全部'}}</button>
+                <button v-for="st in ['','pending','read','resolved','closed']" :key="st" class="btn text-xs" :class="feedbackFilterStatus===st?'!bg-accent !text-bg':''" @click="feedbackFilterStatus=st;loadFeedbacks()">{{st||'全部状态'}}</button>
+              </div>
+              <div v-if="feedbacks.length===0" class="text-xs text-muted py-4 text-center">暂无反馈。</div>
+              <div v-for="fb in feedbacks" :key="fb.id" class="border border-accent/15 rounded-xs p-3 mb-2">
+                <div class="flex items-center justify-between mb-1">
+                  <div>
+                    <span class="text-xs font-bold" :class="{'text-blue-400':fb.category==='feature','text-danger':fb.category==='bug','text-yellow-400':fb.category==='suggestion'}">{{fb.category==='feature'?'功能建议':fb.category==='bug'?'BUG反馈':'意见提交'}}</span>
+                    <span class="text-xs text-accent ml-2">{{fb.title}}</span>
+                  </div>
+                  <select v-model="fb.status_tmp" class="bg-bg border border-accent/30 rounded-xs text-xs px-1 py-0.5" @change="updateFeedbackStatus(fb)">
+                    <option value="pending">待处理</option>
+                    <option value="read">已读</option>
+                    <option value="resolved">已解决</option>
+                    <option value="closed">已关闭</option>
+                  </select>
+                </div>
+                <p class="text-xs text-muted whitespace-pre-wrap">{{fb.content}}</p>
+                <div class="flex items-center gap-2 mt-1 text-[10px] text-muted/60">
+                  <span>{{fb.username||'游客'}}</span>
+                  <span v-if="fb.player_name"> · {{fb.player_name}}</span>
+                  <span> · {{new Date(fb.created_at).toLocaleString()}}</span>
+                </div>
+              </div>
+            </template>
           <div v-if="activeTab === 'gm'" class="border border-accent/20 rounded-xs p-3 space-y-3">
             <div class="flex items-center justify-between gap-2">
               <h2 class="text-accent">GM 邮件奖励</h2>
@@ -278,7 +306,7 @@ const username = ref('')
 const password = ref('')
 const user = ref<any>(null)
 const keyword = ref('')
-const activeTab = ref<'basic' | 'about' | 'updates' | 'players' | 'saveAudit' | 'ledger' | 'gm'>('basic')
+const activeTab = ref<'basic' | 'about' | 'updates' | 'players' | 'saveAudit' | 'ledger' | 'gm' | 'feedbacks'>('basic')
 const adminTabs = [
   { key: 'basic', label: '基础配置' },
   { key: 'about', label: '关于/赞助' },
@@ -286,7 +314,8 @@ const adminTabs = [
   { key: 'players', label: '玩家管理' },
   { key: 'saveAudit', label: '存档审计' },
   { key: 'ledger', label: '经济流水' },
-  { key: 'gm', label: 'GM邮件' }
+  { key: 'gm', label: 'GM邮件' },
+  { key: 'feedbacks', label: '玩家反馈' }
 ] as const
 const message = ref('')
 const messageType = ref<'ok' | 'error'>('ok')
@@ -301,6 +330,9 @@ const saveAuditKeyword = ref('')
 const saveAuditType = ref('')
 const saveAuditStatus = ref('')
 const saveAuditLimit = ref(100)
+const feedbacks = ref<any[]>([])
+const feedbackFilterCat = ref('')
+const feedbackFilterStatus = ref('')
 const ALL_ITEMS = [
   { id: 'mana_recovery_pill', name: '回灵丹', category: '丹药' },
   { id: 'qi_gathering_pill', name: '聚气丹', category: '丹药' },
@@ -482,6 +514,19 @@ async function loadEconomyEvents() {
   q.set('limit', String(ledgerLimit.value || 100))
   const data = await api(`/api/admin/economy-events?${q.toString()}`, { headers: headers() })
   economyEvents.value = data.events || []
+}
+async function loadFeedbacks() {
+  if (user.value?.role !== 'admin') return
+  try {
+    const q = new URLSearchParams()
+    if (feedbackFilterCat.value) q.set('category', feedbackFilterCat.value)
+    if (feedbackFilterStatus.value) q.set('status', feedbackFilterStatus.value)
+    const data = await api(`/api/admin/feedbacks?${q.toString()}`, { headers: headers() })
+    feedbacks.value = (data.feedbacks||[]).map((f: any) => ({ ...f, status_tmp: f.status }))
+  } catch {}
+}
+async function updateFeedbackStatus(fb: any) {
+  try { await api(`/api/admin/feedbacks/${fb.id}`, { method: 'PUT', headers: headers(), body: JSON.stringify({ status: fb.status_tmp }) }) } catch { fb.status_tmp = fb.status }
 }
 async function loadSaveAuditEvents() {
   if (user.value?.role !== 'admin') return
