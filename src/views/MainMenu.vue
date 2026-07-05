@@ -72,7 +72,45 @@
 
       <!-- 关于 -->
       <Button class="text-center justify-center text-muted" :icon="Info" @click="showAbout = true">关于游戏</Button>
+      <div class="grid grid-cols-3 gap-2">
+        <Button
+          v-for="cat in HOME_FEEDBACK_CATEGORIES"
+          :key="cat.key"
+          class="text-center justify-center text-muted text-xs py-2"
+          :icon="cat.icon"
+          :icon-size="13"
+          @click.stop="openHomeFeedback(cat.key)"
+        >
+          {{ cat.label }}
+        </Button>
+      </div>
     </div>
+
+    <!-- 首页反馈弹窗 -->
+    <Transition name="panel-fade">
+      <div v-if="showHomeFeedback" class="fixed inset-0 z-50 flex items-center justify-center bg-bg/80" @click.self="showHomeFeedback = false">
+        <div class="game-panel w-full max-w-md mx-4 relative">
+          <button class="absolute top-2 right-2 text-muted hover:text-text" @click="showHomeFeedback = false">
+            <X :size="14" />
+          </button>
+          <h2 class="text-accent text-lg mb-3 text-center">{{ homeFeedbackLabel }}</h2>
+          <div class="flex flex-col space-y-3">
+            <div>
+              <label class="text-xs text-muted mb-1 block">标题</label>
+              <input v-model="homeFeedbackTitle" maxlength="100" class="input" placeholder="简要描述你的反馈" @click.stop />
+            </div>
+            <div>
+              <label class="text-xs text-muted mb-1 block">详细内容</label>
+              <textarea v-model="homeFeedbackContent" maxlength="2000" rows="5" class="input min-h-28" placeholder="请详细描述问题、建议或想要的新功能" @click.stop></textarea>
+            </div>
+            <Button class="justify-center" :disabled="homeFeedbackBusy || !homeFeedbackTitle.trim() || !homeFeedbackContent.trim()" @click="submitHomeFeedback">
+              {{ homeFeedbackBusy ? '提交中...' : '提交反馈' }}
+            </Button>
+            <p v-if="homeFeedbackMsg" class="text-xs text-center" :class="homeFeedbackOk ? 'text-success' : 'text-danger'">{{ homeFeedbackMsg }}</p>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <!-- 公告弹窗 -->
     <Transition name="panel-fade">
@@ -379,7 +417,7 @@
 </template>
 
 <script setup lang="ts">
-  import { Play, ArrowLeft, Info, ShieldCheck, X, UserRound, BookOpen } from 'lucide-vue-next'
+  import { Play, ArrowLeft, Info, ShieldCheck, X, UserRound, BookOpen, Lightbulb, Bug, MessageSquare } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import { ref, computed, onMounted } from 'vue'
@@ -443,6 +481,19 @@
   const accountCharacters = ref<any[]>([])
   const showAnnouncement = ref(false)
   const showUpdateLogs = ref(false)
+  const HOME_FEEDBACK_CATEGORIES = [
+    { key: 'feature', label: '功能反馈', icon: Lightbulb },
+    { key: 'bug', label: 'BUG反馈', icon: Bug },
+    { key: 'suggestion', label: '意见提交', icon: MessageSquare }
+  ] as const
+  const showHomeFeedback = ref(false)
+  const homeFeedbackCategory = ref<'feature' | 'bug' | 'suggestion'>('feature')
+  const homeFeedbackTitle = ref('')
+  const homeFeedbackContent = ref('')
+  const homeFeedbackBusy = ref(false)
+  const homeFeedbackMsg = ref('')
+  const homeFeedbackOk = ref(false)
+  const homeFeedbackLabel = computed(() => HOME_FEEDBACK_CATEGORIES.find(c => c.key === homeFeedbackCategory.value)?.label || '提交反馈')
   const accountToken = () => localStorage.getItem('taoyuan_account_token') || ''
   const accountHeaders = () => ({ 'content-type': 'application/json', authorization: `Bearer ${accountToken()}` })
   const accountApi = async (path: string, options: RequestInit = {}) => {
@@ -450,6 +501,44 @@
     const data = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(data.error || '请求失败')
     return data
+  }
+  const openHomeFeedback = (category: 'feature' | 'bug' | 'suggestion') => {
+    homeFeedbackCategory.value = category
+    homeFeedbackTitle.value = ''
+    homeFeedbackContent.value = ''
+    homeFeedbackMsg.value = ''
+    homeFeedbackOk.value = false
+    showHomeFeedback.value = true
+  }
+  const submitHomeFeedback = async () => {
+    if (homeFeedbackBusy.value) return
+    homeFeedbackBusy.value = true
+    homeFeedbackMsg.value = ''
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      const token = accountToken()
+      if (token) headers.Authorization = `Bearer ${token}`
+      const data = await accountApi('/api/feedbacks', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          category: homeFeedbackCategory.value,
+          title: homeFeedbackTitle.value.trim(),
+          content: homeFeedbackContent.value.trim(),
+          playerName: accountCharacters.value[0]?.meta?.playerName || ''
+        })
+      })
+      homeFeedbackOk.value = true
+      homeFeedbackMsg.value = data?.message || '感谢反馈！管理员会尽快查看。'
+      homeFeedbackTitle.value = ''
+      homeFeedbackContent.value = ''
+      window.setTimeout(() => { showHomeFeedback.value = false }, 900)
+    } catch (e: any) {
+      homeFeedbackOk.value = false
+      homeFeedbackMsg.value = e.message || '提交失败，请稍后重试。'
+    } finally {
+      homeFeedbackBusy.value = false
+    }
   }
   const loadServerConfig = async () => {
     try {

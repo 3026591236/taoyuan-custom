@@ -215,14 +215,14 @@
             <template v-if="activeTab === 'feedbacks'">
               <h2 class="text-accent">玩家反馈</h2>
               <div class="flex gap-2 mt-3 mb-3 flex-wrap">
-                <button v-for="cat in ['','feature','bug','suggestion']" :key="cat" class="btn text-xs" :class="feedbackFilterCat===cat?'!bg-accent !text-bg':''" @click="feedbackFilterCat=cat;loadFeedbacks()">{{cat||'全部'}}</button>
-                <button v-for="st in ['','pending','read','resolved','closed']" :key="st" class="btn text-xs" :class="feedbackFilterStatus===st?'!bg-accent !text-bg':''" @click="feedbackFilterStatus=st;loadFeedbacks()">{{st||'全部状态'}}</button>
+                <button v-for="cat in feedbackCategoryOptions" :key="cat.value" class="btn text-xs" :class="feedbackFilterCat===cat.value?'!bg-accent !text-bg':''" @click="feedbackFilterCat=cat.value;loadFeedbacks()">{{cat.label}}</button>
+                <button v-for="st in feedbackStatusOptions" :key="st.value" class="btn text-xs" :class="feedbackFilterStatus===st.value?'!bg-accent !text-bg':''" @click="feedbackFilterStatus=st.value;loadFeedbacks()">{{st.label}}</button>
               </div>
               <div v-if="feedbacks.length===0" class="text-xs text-muted py-4 text-center">暂无反馈。</div>
               <div v-for="fb in feedbacks" :key="fb.id" class="border border-accent/15 rounded-xs p-3 mb-2">
                 <div class="flex items-center justify-between mb-1">
                   <div>
-                    <span class="text-xs font-bold" :class="{'text-blue-400':fb.category==='feature','text-danger':fb.category==='bug','text-yellow-400':fb.category==='suggestion'}">{{fb.category==='feature'?'功能建议':fb.category==='bug'?'BUG反馈':'意见提交'}}</span>
+                    <span class="text-xs font-bold" :class="{'text-blue-400':fb.category==='feature','text-danger':fb.category==='bug','text-yellow-400':fb.category==='suggestion'}">{{fb.category==='feature'?'功能反馈':fb.category==='bug'?'BUG反馈':'意见提交'}}</span>
                     <span class="text-xs text-accent ml-2">{{fb.title}}</span>
                   </div>
                   <select v-model="fb.status_tmp" class="bg-bg border border-accent/30 rounded-xs text-xs px-1 py-0.5" @change="updateFeedbackStatus(fb)">
@@ -333,6 +333,19 @@ const saveAuditLimit = ref(100)
 const feedbacks = ref<any[]>([])
 const feedbackFilterCat = ref('')
 const feedbackFilterStatus = ref('')
+const feedbackCategoryOptions = [
+  { value: '', label: '全部' },
+  { value: 'feature', label: '功能反馈' },
+  { value: 'bug', label: 'BUG反馈' },
+  { value: 'suggestion', label: '意见提交' }
+]
+const feedbackStatusOptions = [
+  { value: '', label: '全部状态' },
+  { value: 'pending', label: '待处理' },
+  { value: 'read', label: '已读' },
+  { value: 'resolved', label: '已解决' },
+  { value: 'closed', label: '已关闭' }
+]
 const ALL_ITEMS = [
   { id: 'mana_recovery_pill', name: '回灵丹', category: '丹药' },
   { id: 'qi_gathering_pill', name: '聚气丹', category: '丹药' },
