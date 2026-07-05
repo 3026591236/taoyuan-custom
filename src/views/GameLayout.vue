@@ -643,6 +643,7 @@
   const autoSaveCurrent = async () => {
     if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return
     const slot = saveStore.activeSlot
+    localStorage.setItem('taoyuan_active_slot', String(slot))
     if (!saveStore.saveToSlot(slot)) return
     const token = accountToken()
     if (!token) return

@@ -100,6 +100,41 @@
             <button class="btn w-full justify-center" @click="saveConfig">保存更新记录</button>
           </div>
 
+          <div v-if="activeTab === 'ledger'" class="border border-accent/20 rounded-xs p-3 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h2 class="text-accent">经济流水 / 操作日志</h2>
+              <button class="btn text-xs" @click="loadEconomyEvents">刷新流水</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+              <input v-model="ledgerKeyword" class="input" placeholder="用户名/角色名/userId" />
+              <select v-model="ledgerType" class="input">
+                <option value="">全部类型</option>
+                <option value="sell_item">单个出售</option>
+                <option value="sell_item_all">批量出售</option>
+                <option value="sell_all">一键出售</option>
+                <option value="mail_claim">邮件领取</option>
+                <option value="checkin">每日签到</option>
+              </select>
+              <input v-model.number="ledgerLimit" type="number" min="1" max="500" class="input" placeholder="条数" />
+              <button class="btn justify-center" @click="loadEconomyEvents">查询</button>
+            </div>
+            <div v-if="economyEvents.length === 0" class="text-xs text-muted">暂无流水。</div>
+            <div v-for="ev in economyEvents" :key="ev.id" class="border border-accent/10 rounded-xs p-2 text-xs space-y-1">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div><span class="text-accent">{{ ev.username }}</span><span class="text-muted ml-1">/ {{ ev.player_name || '无角色' }}</span></div>
+                <div class="text-muted">{{ formatTime(ev.created_at) }}</div>
+              </div>
+              <div class="flex flex-wrap gap-x-3 gap-y-1">
+                <span>类型：{{ eventTypeLabel(ev.event_type) }}</span>
+                <span>金额：<b :class="Number(ev.amount) >= 0 ? 'text-accent' : 'text-danger'">{{ ev.amount }}</b></span>
+                <span v-if="ev.item_id">物品：{{ ev.item_id }} ×{{ ev.quantity }} {{ ev.quality || '' }}</span>
+                <span v-if="ev.source">来源：{{ ev.source }}</span>
+                <span class="text-muted">IP：{{ ev.ip || '-' }}</span>
+              </div>
+              <pre v-if="ev.detail" class="text-[10px] text-muted whitespace-pre-wrap break-all bg-black/20 p-2 rounded-xs">{{ JSON.stringify(ev.detail, null, 2) }}</pre>
+            </div>
+          </div>
+
           <div v-if="activeTab === 'players'" class="border border-accent/20 rounded-xs p-3 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h2 class="text-accent">玩家 / 云存档总览</h2>
@@ -200,18 +235,23 @@ const username = ref('')
 const password = ref('')
 const user = ref<any>(null)
 const keyword = ref('')
-const activeTab = ref<'basic' | 'about' | 'updates' | 'players' | 'gm'>('basic')
+const activeTab = ref<'basic' | 'about' | 'updates' | 'players' | 'ledger' | 'gm'>('basic')
 const adminTabs = [
   { key: 'basic', label: '基础配置' },
   { key: 'about', label: '关于/赞助' },
   { key: 'updates', label: '更新记录' },
   { key: 'players', label: '玩家管理' },
+  { key: 'ledger', label: '经济流水' },
   { key: 'gm', label: 'GM邮件' }
 ] as const
 const message = ref('')
 const messageType = ref<'ok' | 'error'>('ok')
 const config = reactive<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], aboutQqText: '', aboutQqUrl: '', aboutGithubUrl: '', aboutTapTapUrl: '', sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: '', registrationEnabled: true, maintenanceMode: false })
 const overview = reactive<any>({ stats: { userCount: 0, saveCount: 0, sessionCount: 0 }, users: [] })
+const economyEvents = ref<any[]>([])
+const ledgerKeyword = ref('')
+const ledgerType = ref('')
+const ledgerLimit = ref(100)
 const ALL_ITEMS = [
   { id: 'mana_recovery_pill', name: '回灵丹', category: '丹药' },
   { id: 'qi_gathering_pill', name: '聚气丹', category: '丹药' },
@@ -385,7 +425,16 @@ async function api(path: string, options: RequestInit = {}) {
 async function loadMe() { const data = await api('/api/me', { headers: headers() }); user.value = data.user }
 async function loadConfig() { Object.assign(config, await api(user.value?.role === 'admin' ? '/api/admin/config' : '/api/config', { headers: headers() })) }
 async function loadOverview() { if (user.value?.role === 'admin') Object.assign(overview, await api('/api/admin/overview', { headers: headers() })) }
-async function refreshAll() { try { await loadMe(); await loadConfig(); await loadOverview(); setMsg('后台数据已刷新') } catch (e: any) { setMsg(e.message, 'error') } }
+async function loadEconomyEvents() {
+  if (user.value?.role !== 'admin') return
+  const q = new URLSearchParams()
+  if (ledgerKeyword.value.trim()) q.set('keyword', ledgerKeyword.value.trim())
+  if (ledgerType.value) q.set('type', ledgerType.value)
+  q.set('limit', String(ledgerLimit.value || 100))
+  const data = await api(`/api/admin/economy-events?${q.toString()}`, { headers: headers() })
+  economyEvents.value = data.events || []
+}
+async function refreshAll() { try { await loadMe(); await loadConfig(); await loadOverview(); await loadEconomyEvents(); setMsg('后台数据已刷新') } catch (e: any) { setMsg(e.message, 'error') } }
 async function login() {
   try { const data = await api('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); localStorage.setItem('taoyuan_account_token', data.token); user.value = data.user; await loadConfig(); await loadOverview(); setMsg('登录成功') } catch (e: any) { setMsg(e.message, 'error') }
 }
@@ -440,5 +489,9 @@ const filteredUsers = computed(() => {
 })
 function formatTime(v: string | null) { return v ? new Date(v).toLocaleString() : '无' }
 function formatSize(n: number) { return n > 1024 ? `${(n / 1024).toFixed(1)} KB` : `${n || 0} B` }
-onMounted(async () => { try { await loadMe(); await loadConfig(); await loadOverview() } catch {} })
+function eventTypeLabel(t: string) {
+  const labels: Record<string, string> = { sell_item: '单个出售', sell_item_all: '批量出售', sell_all: '一键出售', mail_claim: '邮件领取', checkin: '每日签到' }
+  return labels[t] || t
+}
+onMounted(async () => { try { await loadMe(); await loadConfig(); await loadOverview(); await loadEconomyEvents() } catch {} })
 </script>

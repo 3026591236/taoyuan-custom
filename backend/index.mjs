@@ -55,9 +55,62 @@ async function ensureSchema() {
   if (!playerNameCols.length) await pool.execute("ALTER TABLE saves ADD COLUMN player_name VARCHAR(20) NULL AFTER slot")
   const [idx] = await pool.execute("SHOW INDEX FROM saves WHERE Key_name = 'idx_saves_player_name'")
   if (!idx.length) await pool.execute("ALTER TABLE saves ADD INDEX idx_saves_player_name (player_name)")
+  await pool.execute(`CREATE TABLE IF NOT EXISTS economy_events (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    username VARCHAR(16) NOT NULL,
+    character_id VARCHAR(36) NULL,
+    player_name VARCHAR(20) NULL,
+    event_type VARCHAR(40) NOT NULL,
+    amount BIGINT NOT NULL DEFAULT 0,
+    item_id VARCHAR(80) NULL,
+    quantity INT NOT NULL DEFAULT 0,
+    quality VARCHAR(30) NULL,
+    source VARCHAR(80) NULL,
+    detail_json LONGTEXT NULL,
+    ip VARCHAR(80) NULL,
+    user_agent VARCHAR(255) NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_economy_user_time (user_id, created_at),
+    INDEX idx_economy_type_time (event_type, created_at),
+    INDEX idx_economy_player_name (player_name)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
 }
 
 function send(res, status, data) { res.status(status).json(data) }
+async function recordEconomyEvent(user, req, event = {}) {
+  if (!user) return
+  try {
+    const slot = Number.isFinite(Number(event.slot)) ? Number(event.slot) : null
+    let characterId = event.characterId || null
+    let playerName = normalizePlayerName(event.playerName || '') || null
+    if ((!characterId || !playerName) && slot !== null) {
+      const [rows] = await pool.execute('SELECT s.character_id, COALESCE(c.name, s.player_name) AS player_name FROM saves s LEFT JOIN characters c ON c.id = s.character_id WHERE s.user_id = ? AND s.slot = ? LIMIT 1', [user.id, slot])
+      if (rows.length) {
+        characterId = characterId || rows[0].character_id || null
+        playerName = playerName || rows[0].player_name || null
+      }
+    }
+    const detail = event.detail == null ? null : JSON.stringify(event.detail)
+    await pool.execute(`INSERT INTO economy_events
+      (user_id, username, character_id, player_name, event_type, amount, item_id, quantity, quality, source, detail_json, ip, user_agent)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+        user.id,
+        user.username,
+        characterId,
+        playerName,
+        String(event.eventType || event.type || 'unknown').slice(0, 40),
+        Number.isFinite(Number(event.amount)) ? Math.trunc(Number(event.amount)) : 0,
+        event.itemId ? String(event.itemId).slice(0, 80) : null,
+        Number.isFinite(Number(event.quantity)) ? Math.trunc(Number(event.quantity)) : 0,
+        event.quality ? String(event.quality).slice(0, 30) : null,
+        event.source ? String(event.source).slice(0, 80) : null,
+        detail,
+        String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').slice(0, 80),
+        String(req.headers['user-agent'] || '').slice(0, 255)
+      ])
+  } catch (e) { console.error('economy event err', e.message) }
+}
 function publicUser(u) {
   if (!u) return null
   return { id: u.id, username: u.username, role: u.role, createdAt: u.created_at, disabled: !!u.disabled, disabledAt: u.disabled_at || null }
@@ -364,6 +417,7 @@ app.post('/api/checkin', async (req, res) => {
     const reward = checkinRewardForStreak(streak)
     const items = checkinItemsForStreak(streak)
     await pool.execute('INSERT INTO checkins (user_id, check_date, reward) VALUES (?, ?, ?)', [user.id, today, reward])
+    await recordEconomyEvent(user, req, { eventType: 'checkin', amount: reward, source: 'daily_checkin', detail: { today, timezone: 'Asia/Shanghai', items, streak } })
     send(res, 200, { ok: true, today, timezone: 'Asia/Shanghai', reward, items, streak })
   } catch (e) { console.error('checkin post err', e); send(res, 500, { error: '服务器错误' }) }
 })
@@ -389,8 +443,20 @@ app.post('/api/mails/:id/claim', async (req, res) => {
     const [exist] = await pool.execute('SELECT id FROM mail_claims WHERE mail_id = ? AND user_id = ?', [req.params.id, user.id])
     if (exist.length) return send(res, 409, { error: '已领取' })
     await pool.execute('INSERT INTO mail_claims (mail_id, user_id) VALUES (?, ?)', [req.params.id, user.id])
-    send(res, 200, { ok: true, rewards: safeJsonParse(mail.rewards, {}) })
+    const rewards = safeJsonParse(mail.rewards, {})
+    await recordEconomyEvent(user, req, { eventType: 'mail_claim', amount: Number(rewards.money || 0), source: 'mail', detail: { mailId: mail.id, title: mail.title, rewards } })
+    send(res, 200, { ok: true, rewards })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
+})
+
+app.post('/api/economy-events', async (req, res) => {
+  try {
+    const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
+    const { eventType, amount, itemId, quantity, quality, source, detail, slot, characterId, playerName } = req.body || {}
+    if (!eventType) return send(res, 400, { error: '事件类型必填' })
+    await recordEconomyEvent(user, req, { eventType, amount, itemId, quantity, quality, source, detail, slot, characterId, playerName })
+    send(res, 200, { ok: true })
+  } catch (e) { console.error('economy event post err', e); send(res, 500, { error: '服务器错误' }) }
 })
 
 // === check char name ===
@@ -551,6 +617,22 @@ app.get('/api/admin/overview', async (req, res) => {
     send(res, 200, { stats: { userCount: uc, saveCount: sc, sessionCount: pc }, users: enrichedUsers })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
+app.get('/api/admin/economy-events', async (req, res) => {
+  try {
+    const admin = await requireAdmin(req, res); if (!admin) return
+    const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 500)
+    const keyword = String(req.query.keyword || '').trim()
+    const type = String(req.query.type || '').trim()
+    const params = []
+    const where = []
+    if (keyword) { where.push('(username LIKE ? OR player_name LIKE ? OR user_id = ?)'); params.push(`%${keyword}%`, `%${keyword}%`, keyword) }
+    if (type) { where.push('event_type = ?'); params.push(type) }
+    const sql = `SELECT id, user_id, username, character_id, player_name, event_type, amount, item_id, quantity, quality, source, detail_json, ip, user_agent, created_at FROM economy_events ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY id DESC LIMIT ${limit}`
+    const [rows] = await pool.execute(sql, params)
+    send(res, 200, { events: rows.map(r => ({ ...r, detail: safeJsonParse(r.detail_json, null) })) })
+  } catch (e) { console.error('admin economy events err', e); send(res, 500, { error: '服务器错误' }) }
+})
+
 app.post('/api/admin/mails', async (req, res) => {
   try {
     const admin = await requireAdmin(req, res); if (!admin) return

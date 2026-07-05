@@ -23,6 +23,18 @@ import { addLog, showFloat } from './useGameLog'
 import { handleEndDay } from './useEndDay'
 import { sfxDig, sfxPlant, sfxWater, sfxHarvest, sfxLevelUp, sfxBuy, sfxCoin } from './useAudio'
 
+const accountToken = () => localStorage.getItem('taoyuan_account_token') || ''
+const reportEconomyEvent = (event: Record<string, unknown>) => {
+  const token = accountToken()
+  if (!token) return
+  const slot = Number(localStorage.getItem('taoyuan_active_slot') || '-1')
+  void fetch('/api/economy-events', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+    body: JSON.stringify({ slot, ...event })
+  }).catch(() => {})
+}
+
 export const QUALITY_NAMES: Record<Quality, string> = {
   normal: '普通',
   fine: '优良',
@@ -291,6 +303,7 @@ export const handleSellItem = (itemId: string, quality: Quality) => {
     sfxCoin()
     showFloat(`+${earned}文`, 'accent')
     addLog(`卖出了${itemDef.name}。(+${earned}文)`)
+    reportEconomyEvent({ eventType: 'sell_item', amount: earned, itemId, quantity: 1, quality, source: 'shop_sell', detail: { itemName: itemDef.name } })
   }
 }
 
@@ -304,6 +317,7 @@ export const handleSellItemAll = (itemId: string, quantity: number, quality: Qua
     sfxCoin()
     showFloat(`+${earned}文`, 'accent')
     addLog(`卖出了${itemDef.name}×${quantity}。(+${earned}文)`)
+    reportEconomyEvent({ eventType: 'sell_item_all', amount: earned, itemId, quantity, quality, source: 'shop_sell_all', detail: { itemName: itemDef.name } })
   }
 }
 
@@ -332,6 +346,7 @@ export const handleSellAll = (filterCategories?: ItemCategory[]) => {
     sfxCoin()
     showFloat(`+${totalEarned}文`, 'accent')
     addLog(`一键出售了${totalCount}件物品。(+${totalEarned}文)`)
+    reportEconomyEvent({ eventType: 'sell_all', amount: totalEarned, quantity: totalCount, source: 'shop_sell_all_bulk', detail: { filterCategories } })
   }
 }
 

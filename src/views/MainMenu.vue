@@ -518,6 +518,7 @@
       const data = await accountApi(`/api/saves/${slot}`, { headers: accountHeaders() })
       if (!saveStore.importSave(slot, data.raw)) throw new Error('云端存档无效或已损坏')
       if (data.updatedAt) localStorage.setItem(`taoyuan_cloud_loaded_at_${slot}`, String(data.updatedAt))
+      localStorage.setItem('taoyuan_active_slot', String(slot))
       refreshSlots()
       showFloat('继续游戏。', 'success')
       handleLoadGame(slot)
