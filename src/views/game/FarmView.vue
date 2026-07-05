@@ -153,52 +153,63 @@
         </div>
       </Transition>
 
-      <!-- 农场网格 -->
-      <div class="border border-accent/20 rounded-xs p-2">
-        <div class="grid gap-0.5 max-w-full md:max-w-md" :style="{ gridTemplateColumns: `repeat(${farmStore.farmSize}, minmax(0, 1fr))` }">
-          <button
-            v-for="plot in farmStore.plots"
-            :key="plot.id"
-            class="farm-plot rounded-xs cursor-pointer transition-colors relative leading-tight"
-            :class="[
-              getPlotDisplay(plot).color,
-              getPlotDisplay(plot).bg,
-              needsWater(plot)
-                ? 'border-2 border-danger/50'
-                : isSprinklerCovered(plot.id)
-                  ? 'border border-water/40'
-                  : 'border border-accent/15',
-              plot.state === 'harvestable' ? 'hover:border-accent/60' : 'hover:border-accent/40'
-            ]"
-            :title="getPlotTooltip(plot)"
-            @click="activePlotId = plot.id"
-          >
-            <div class="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center">
-              <div class="pixel-plot-scene" :class="getPixelPlotClass(plot)">
+      <!-- 像素农场地图 -->
+      <div class="pixel-farm-shell">
+        <div class="pixel-farm-topbar">
+          <div class="pixel-farm-title">
+            <span class="pixel-farm-badge">FIELD</span>
+            <span>{{ farmStore.farmSize }}×{{ farmStore.farmSize }} 像素田畴</span>
+          </div>
+          <div class="pixel-farm-minimap">
+            <span class="pixel-dot pixel-dot-water"></span>
+            <span>{{ unwateredCount }} 待浇</span>
+            <span class="pixel-dot pixel-dot-gold"></span>
+            <span>{{ harvestableCount }} 可收</span>
+          </div>
+        </div>
+        <div class="pixel-farm-board">
+          <div class="pixel-farm-grid" :style="{ gridTemplateColumns: `repeat(${farmStore.farmSize}, minmax(0, 1fr))` }">
+            <button
+              v-for="plot in farmStore.plots"
+              :key="plot.id"
+              class="farm-plot pixel-farm-tile cursor-pointer relative leading-tight"
+              :class="[
+                getPlotDisplay(plot).color,
+                getPlotDisplay(plot).bg,
+                getPixelPlotClass(plot),
+                {
+                  'tile-needs-water': needsWater(plot),
+                  'tile-sprinkler-covered': isSprinklerCovered(plot.id),
+                  'tile-selected': activePlotId === plot.id,
+                  'tile-ready': plot.state === 'harvestable'
+                }
+              ]"
+              :title="getPlotTooltip(plot)"
+              @click="activePlotId = plot.id"
+            >
+              <span class="pixel-tile-coord">{{ plot.id + 1 }}</span>
+              <div class="pixel-plot-scene">
                 <div class="pixel-soil-lines"></div>
                 <div v-if="plot.cropId" class="pixel-crop" :class="getCropPixelClass(plot.cropId, plot.state)">
                   <span class="pixel-crop-sprout">{{ getCropPixelGlyph(plot.cropId, plot.state) }}</span>
                   <span class="pixel-crop-name">{{ getCropName(plot.cropId) }}</span>
                 </div>
                 <component v-else :is="getPlotDisplay(plot).icon" :size="14" class="pixel-empty-icon" />
+                <span v-if="plot.giantCropGroup !== null" class="pixel-giant-mark">★</span>
               </div>
-              <!-- 角标 -->
-              <Droplets
-                v-if="(plot.state === 'planted' || plot.state === 'growing') && !plot.watered"
-                :size="8"
-                class="absolute bottom-0 right-0 text-danger drop-shadow-sm"
-              />
-              <Droplet v-if="hasSprinkler(plot.id)" :size="8" class="absolute top-0 right-0 text-water drop-shadow-sm" />
-              <CirclePlus v-if="plot.fertilizer" :size="8" class="absolute bottom-0 left-0 text-success drop-shadow-sm" />
-              <Bug v-if="plot.infested" :size="8" class="absolute top-0 left-0 text-danger drop-shadow-sm" />
-              <Leaf
-                v-if="plot.weedy"
-                :size="8"
-                class="absolute top-0 left-0 text-success drop-shadow-sm"
-                :class="{ 'left-2': plot.infested }"
-              />
-            </div>
-          </button>
+              <div class="pixel-tile-overlay">
+                <span v-if="needsWater(plot)" class="pixel-status-chip chip-danger"><Droplets :size="8" /></span>
+                <span v-if="hasSprinkler(plot.id)" class="pixel-status-chip chip-water"><Droplet :size="8" /></span>
+                <span v-if="plot.fertilizer" class="pixel-status-chip chip-fert"><CirclePlus :size="8" /></span>
+                <span v-if="plot.infested" class="pixel-status-chip chip-danger"><Bug :size="8" /></span>
+                <span v-if="plot.weedy" class="pixel-status-chip chip-weed"><Leaf :size="8" /></span>
+              </div>
+              <div v-if="plot.cropId && plot.state !== 'harvestable'" class="pixel-growth-track">
+                <span :style="{ width: getPlotGrowthPercent(plot) + '%' }"></span>
+              </div>
+              <div v-if="plot.state === 'harvestable'" class="pixel-ready-ribbon">收</div>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1474,6 +1485,16 @@
     return cropGlyphs[hashCropId(cropId) % cropGlyphs.length] ?? '◆'
   }
 
+  const getPlotGrowthPercent = (plot: (typeof farmStore.plots)[number]): number => {
+    if (!plot.cropId) return 0
+    const crop = getCropById(plot.cropId)
+    if (!crop) return 0
+    const fertDef = plot.fertilizer ? getFertilizerById(plot.fertilizer) : null
+    const speedup = (fertDef?.growthSpeedup ?? 0) + useWalletStore().getCropGrowthBonus()
+    const effectiveDays = speedup > 0 ? Math.max(1, Math.floor(crop.growthDays * (1 - speedup))) : crop.growthDays
+    return Math.max(0, Math.min(100, Math.floor((plot.growthDays / Math.max(1, effectiveDays)) * 100)))
+  }
+
   const getSeedPixelClass = (cropId: string): string => `seed-${cropPixelKind(cropId)} seed-variant-${hashCropId(cropId) % 6}`
   const getSeedPixelGlyph = (cropId: string): string => ['•', '◆', '◇', '✦', '▲', '●'][hashCropId(cropId) % 6] ?? '•'
 
@@ -2421,5 +2442,211 @@
   .seed-variant-3::before { box-shadow: 6px 6px 0 currentColor, 2px 12px 0 currentColor, 10px 12px 0 currentColor; }
   .seed-variant-4::before { box-shadow: -1px 8px 0 currentColor, 4px 11px 0 currentColor, 10px 8px 0 currentColor; }
   .seed-variant-5::before { box-shadow: 1px 7px 0 currentColor, 7px 7px 0 currentColor, 4px 13px 0 currentColor, 11px 13px 0 currentColor; }
+
+
+  /* V0.6.6：真正像素化农场地图层 */
+  .pixel-farm-shell {
+    position: relative;
+    padding: 10px;
+    border: 3px solid rgba(95, 65, 35, .95);
+    border-radius: 0;
+    background:
+      linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25% 75%, rgba(255,255,255,.05) 75%),
+      linear-gradient(45deg, rgba(0,0,0,.14) 25%, transparent 25% 75%, rgba(0,0,0,.14) 75%),
+      #2f241a;
+    background-position: 0 0, 4px 4px, 0 0;
+    background-size: 8px 8px, 8px 8px, auto;
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 214, 122, .12),
+      0 4px 0 rgba(0,0,0,.45);
+    image-rendering: pixelated;
+  }
+  .pixel-farm-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 5px 7px;
+    border: 2px solid rgba(126, 88, 47, .9);
+    background: #1f1812;
+    color: #f1d38b;
+    box-shadow: inset -2px -2px 0 rgba(0,0,0,.35), inset 2px 2px 0 rgba(255,255,255,.06);
+  }
+  .pixel-farm-title { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; }
+  .pixel-farm-badge { padding: 1px 4px; background: #c78b39; color: #24150c; box-shadow: 2px 2px 0 rgba(0,0,0,.35); font-size: 9px; }
+  .pixel-farm-minimap { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: rgba(241,211,139,.75); }
+  .pixel-dot { width: 6px; height: 6px; display: inline-block; box-shadow: 1px 1px 0 rgba(0,0,0,.5); }
+  .pixel-dot-water { background: #48b9e8; }
+  .pixel-dot-gold { background: #f4c85a; }
+  .pixel-farm-board {
+    padding: 8px;
+    border: 2px solid rgba(18, 13, 9, .95);
+    background:
+      repeating-linear-gradient(90deg, rgba(87,58,31,.24) 0 8px, transparent 8px 16px),
+      repeating-linear-gradient(0deg, rgba(44,29,17,.30) 0 8px, transparent 8px 16px),
+      #4a321f;
+  }
+  .pixel-farm-grid {
+    display: grid;
+    gap: 3px;
+    max-width: min(100%, 560px);
+    margin: 0 auto;
+  }
+  .farm-plot.pixel-farm-tile {
+    border: 0;
+    border-radius: 0;
+    outline: 2px solid #1b120b;
+    outline-offset: -2px;
+    background: #3a2819;
+    transition: none;
+    box-shadow:
+      inset 2px 2px 0 rgba(255, 226, 151, .14),
+      inset -3px -3px 0 rgba(0,0,0,.32),
+      0 2px 0 rgba(0,0,0,.42);
+  }
+  .farm-plot.pixel-farm-tile:hover,
+  .farm-plot.pixel-farm-tile.tile-selected {
+    outline-color: #f0cf78;
+    transform: translateY(-1px);
+    z-index: 3;
+    box-shadow:
+      inset 2px 2px 0 rgba(255, 239, 181, .24),
+      inset -3px -3px 0 rgba(0,0,0,.36),
+      0 3px 0 rgba(0,0,0,.52),
+      0 0 0 2px rgba(240,207,120,.18);
+  }
+  .farm-plot.pixel-farm-tile.tile-ready {
+    animation: pixel-ready-pulse 1.25s steps(2, end) infinite;
+  }
+  @keyframes pixel-ready-pulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.22) saturate(1.12); }
+  }
+  .pixel-tile-coord {
+    position: absolute;
+    left: 3px;
+    top: 2px;
+    z-index: 5;
+    font-size: 8px;
+    line-height: 1;
+    color: rgba(255,240,190,.45);
+    text-shadow: 1px 1px 0 #000;
+    pointer-events: none;
+  }
+  .pixel-farm-tile .pixel-plot-scene {
+    inset: 4px;
+    border: 0;
+    box-shadow: none;
+  }
+  .pixel-farm-tile.plot-state-wasteland .pixel-plot-scene {
+    background:
+      radial-gradient(circle at 27% 33%, #1f1a14 0 6%, transparent 7%),
+      radial-gradient(circle at 71% 66%, #262018 0 8%, transparent 9%),
+      repeating-linear-gradient(135deg, #3e342a 0 8px, #30271f 8px 16px);
+  }
+  .pixel-farm-tile.plot-state-tilled .pixel-plot-scene {
+    background:
+      repeating-linear-gradient(0deg, #80512b 0 5px, #5b351d 5px 10px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.16) 0 3px, transparent 3px 12px);
+  }
+  .pixel-farm-tile.plot-state-planted .pixel-plot-scene,
+  .pixel-farm-tile.plot-state-growing .pixel-plot-scene {
+    background:
+      radial-gradient(circle at center, rgba(83,190,87,.12), transparent 48%),
+      repeating-linear-gradient(0deg, #734722 0 5px, #543019 5px 10px);
+  }
+  .pixel-farm-tile.plot-state-harvestable .pixel-plot-scene {
+    background:
+      radial-gradient(circle at center, rgba(246,203,91,.22), transparent 52%),
+      repeating-linear-gradient(0deg, #835724 0 5px, #603b18 5px 10px);
+  }
+  .pixel-farm-tile.plot-watered .pixel-plot-scene,
+  .pixel-farm-tile.tile-sprinkler-covered .pixel-plot-scene {
+    box-shadow: inset 0 -10px 0 rgba(52, 163, 218, .20);
+  }
+  .pixel-farm-tile.tile-needs-water { outline-color: #b64a45; }
+  .pixel-tile-overlay {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    pointer-events: none;
+  }
+  .pixel-status-chip {
+    width: 13px;
+    height: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0,0,0,.65);
+    box-shadow: inset 1px 1px 0 rgba(255,255,255,.12), 1px 1px 0 rgba(0,0,0,.45);
+    background: #2d2118;
+  }
+  .chip-danger { color: #ff7770; background: #4b2020; }
+  .chip-water { color: #79d9ff; background: #17384b; }
+  .chip-fert { color: #a8e86e; background: #263b1f; }
+  .chip-weed { color: #7ee36d; background: #18351f; }
+  .pixel-growth-track {
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    bottom: 4px;
+    z-index: 6;
+    height: 4px;
+    background: rgba(19, 13, 8, .75);
+    border: 1px solid rgba(0,0,0,.75);
+    pointer-events: none;
+  }
+  .pixel-growth-track span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #58c65a, #e9cb61);
+    box-shadow: 1px 0 0 rgba(255,255,255,.22) inset;
+  }
+  .pixel-ready-ribbon {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    z-index: 7;
+    padding: 1px 3px;
+    background: #f2c75c;
+    color: #2a190c;
+    border: 1px solid #1c1208;
+    font-size: 9px;
+    line-height: 1;
+    box-shadow: 1px 1px 0 rgba(0,0,0,.55);
+  }
+  .pixel-giant-mark {
+    position: absolute;
+    left: 3px;
+    bottom: 2px;
+    z-index: 5;
+    color: #ffe284;
+    font-size: 11px;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .pixel-farm-tile .pixel-empty-icon {
+    filter: drop-shadow(1px 1px 0 rgba(0,0,0,.55));
+  }
+  .pixel-farm-tile .pixel-crop-name {
+    max-width: 54px;
+    border-radius: 0;
+    border-color: rgba(0,0,0,.55);
+    background: rgba(18, 12, 8, .62);
+    color: rgba(255, 244, 204, .92);
+    box-shadow: 1px 1px 0 rgba(0,0,0,.4);
+  }
+  @media (max-width: 420px) {
+    .pixel-farm-shell { padding: 7px; }
+    .pixel-farm-board { padding: 5px; }
+    .pixel-farm-grid { gap: 2px; }
+    .pixel-farm-topbar { align-items: flex-start; flex-direction: column; gap: 4px; }
+    .pixel-farm-tile .pixel-crop-name { display: none; }
+    .pixel-tile-coord { display: none; }
+  }
 
 </style>
