@@ -76,24 +76,59 @@
         <div v-if="combatStore.showFlash" class="battle-flash"></div>
         <div v-for="d in combatStore.damageNumbers" :key="d.id" class="damage-number" :class="d.type === 'player' ? 'damage-player' : 'damage-monster'" :style="{ left: d.x + '%', top: d.y + '%' }">-{{ d.value }}</div>
 
-        <div class="text-center p-3" v-if="combatStore.currentMonster">
-          <div class="text-4xl mb-1" :class="{ 'monster-hit': combatStore.showFlash }">{{ combatStore.currentMonster.emoji }}</div>
-          <div class="text-accent font-bold">{{ combatStore.currentMonster.name }}</div>
-          <div class="w-full bg-bg/50 rounded-xs h-3 mt-1 overflow-hidden">
-            <div class="hp-bar-monster h-full transition-all duration-300" :style="{ width: Math.max(0, combatStore.monsterHp / combatStore.currentMonster.hp * 100) + '%' }"></div>
+        <div class="battle-stage" v-if="combatStore.currentMonster">
+          <div class="battle-side player-side" :class="{ 'fighter-hit': combatStore.showFlash }">
+            <div class="battle-name text-success">{{ playerStore.playerName }}</div>
+            <div class="battle-pixel-card" :class="[`avatar-${playerStore.gender}`, cultivationStore.unlocked ? `avatar-realm-${Math.min(cultivationStore.realmIndex, 4)}` : 'avatar-mortal']">
+              <div v-if="cultivationStore.unlocked" class="pixel-avatar-aura"></div>
+              <div class="kenney-sprite player-sprite" :style="playerSpriteStyle()"></div>
+              <div class="pixel-avatar css-avatar-fallback">
+                <span class="px-hair px"></span>
+                <span class="px-bun px"></span>
+                <span class="px-face px"></span>
+                <span class="px-eye px eye-l"></span>
+                <span class="px-eye px eye-r"></span>
+                <span class="px-robe px"></span>
+                <span class="px-belt px"></span>
+                <span class="px-sleeve px sleeve-l"></span>
+                <span class="px-sleeve px sleeve-r"></span>
+                <span class="px-leg px leg-l"></span>
+                <span class="px-leg px leg-r"></span>
+                <span class="px-tool px"></span>
+              </div>
+              <div class="pixel-avatar-shadow"></div>
+            </div>
+            <div class="w-full bg-bg/50 rounded-xs h-3 mt-2 overflow-hidden">
+              <div class="hp-bar-player h-full transition-all duration-300" :style="{ width: Math.max(0, combatStore.playerHp / combatStore.playerMaxHp * 100) + '%' }"></div>
+            </div>
+            <div class="text-[10px] text-muted">{{ combatStore.playerHp }} / {{ combatStore.playerMaxHp }}</div>
           </div>
-          <div class="text-[10px] text-muted">{{ combatStore.monsterHp }} / {{ combatStore.currentMonster.hp }}</div>
-        </div>
 
-        <div class="text-center text-muted text-xs my-1">⚔️ VS ⚔️</div>
-
-        <div class="text-center p-3">
-          <div class="text-2xl mb-1">🧘</div>
-          <div class="text-accent font-bold">{{ playerStore.playerName }}</div>
-          <div class="w-full bg-bg/50 rounded-xs h-3 mt-1 overflow-hidden">
-            <div class="hp-bar-player h-full transition-all duration-300" :style="{ width: Math.max(0, combatStore.playerHp / combatStore.playerMaxHp * 100) + '%' }"></div>
+          <div class="battle-vs">
+            <span>⚔️</span>
+            <b>VS</b>
+            <span>⚔️</span>
           </div>
-          <div class="text-[10px] text-muted">{{ combatStore.playerHp }} / {{ combatStore.playerMaxHp }}</div>
+
+          <div class="battle-side monster-side" :class="{ 'monster-hit': combatStore.showFlash }">
+            <div class="battle-name text-accent">{{ combatStore.currentMonster.name }}</div>
+            <div class="monster-pixel-card" :class="{ 'tower-monster': combatStore.isTowerCombat }">
+              <div class="monster-aura"></div>
+              <div class="kenney-sprite monster-sprite" :style="monsterSpriteStyle()"></div>
+              <div class="monster-pixel-body css-monster-fallback">
+                <span class="monster-emoji">{{ combatStore.currentMonster.emoji }}</span>
+                <span class="monster-eye eye-l"></span>
+                <span class="monster-eye eye-r"></span>
+                <span class="monster-claw claw-l"></span>
+                <span class="monster-claw claw-r"></span>
+              </div>
+              <div class="monster-shadow"></div>
+            </div>
+            <div class="w-full bg-bg/50 rounded-xs h-3 mt-2 overflow-hidden">
+              <div class="hp-bar-monster h-full transition-all duration-300" :style="{ width: Math.max(0, combatStore.monsterHp / combatStore.currentMonster.hp * 100) + '%' }"></div>
+            </div>
+            <div class="text-[10px] text-muted">{{ combatStore.monsterHp }} / {{ combatStore.currentMonster.hp }}</div>
+          </div>
         </div>
       </div>
 
@@ -127,12 +162,35 @@
   import Divider from '@/components/game/Divider.vue'
   import { useCombatStore, type RealmZone } from '@/stores/useCombatStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
+  import { useCultivationStore } from '@/stores/useCultivationStore'
+  import kenneyRoguelikeCharacters from '@/assets/kenney/roguelike-characters/roguelikeChar_transparent.png'
 
   const combatStore = useCombatStore()
   const playerStore = usePlayerStore()
+  const cultivationStore = useCultivationStore()
   const towerLeaderboard = ref<Array<{ userId: string; username: string; playerName: string; floor: number; realmName: string; rebirthCount: number }>>([])
   const towerRankLoading = ref(false)
   const towerRankError = ref('')
+
+  const spriteStyle = (col: number, row: number) => ({
+    backgroundImage: `url(${kenneyRoguelikeCharacters})`,
+    backgroundPosition: `-${1 + col * 17}px -${1 + row * 17}px`
+  })
+
+  const playerSpriteStyle = () => {
+    const realmBonus = cultivationStore.unlocked ? Math.min(2, Math.floor(cultivationStore.realmIndex / 8)) : 0
+    const baseCol = playerStore.gender === 'female' ? 1 : 0
+    return spriteStyle(baseCol + realmBonus, 0)
+  }
+
+  const monsterSpriteStyle = () => {
+    const name = combatStore.currentMonster?.name || ''
+    if (combatStore.isTowerCombat) return spriteStyle(name.includes('首领') || name.includes('镇塔') ? 9 : 8, 1)
+    if (name.includes('龙') || name.includes('蛟') || name.includes('王') || name.includes('boss')) return spriteStyle(11, 1)
+    if (name.includes('狼') || name.includes('虎') || name.includes('熊') || name.includes('兽')) return spriteStyle(6, 1)
+    if (name.includes('妖') || name.includes('魔') || name.includes('鬼')) return spriteStyle(10, 1)
+    return spriteStyle(7, 1)
+  }
 
   const loadTowerLeaderboard = async () => {
     towerRankLoading.value = true
@@ -195,4 +253,58 @@
 
   .tower-rank-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto auto; gap: 0.5rem; align-items: center; font-size: 11px; padding: 0.35rem 0.45rem; border: 1px solid rgba(var(--color-accent-rgb, 255,180,0), 0.12); border-radius: 3px; background: rgba(0,0,0,0.18); }
   .tower-rank-no { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+
+  .kenney-sprite { position: absolute; left: 50%; top: 34px; width: 16px; height: 16px; background-repeat: no-repeat; image-rendering: pixelated; transform: translateX(-50%) scale(4); transform-origin: center; z-index: 3; filter: drop-shadow(1px 2px 0 rgba(0,0,0,.5)); }
+  .player-sprite { top: 42px; }
+  .monster-sprite { top: 46px; transform: translateX(-50%) scale(4.2); }
+  .css-avatar-fallback, .css-monster-fallback { opacity: 0; pointer-events: none; }
+
+  .battle-stage { min-height: 240px; display: grid; grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr); gap: 0.75rem; align-items: end; padding: 1rem 0.75rem 0.75rem; }
+  .battle-side { min-width: 0; text-align: center; position: relative; }
+  .battle-name { min-height: 1.25rem; font-weight: 700; font-size: 12px; margin-bottom: 0.35rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .battle-vs { align-self: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem; color: rgba(241, 211, 139, .8); text-shadow: 0 0 8px rgba(255, 180, 0, .25); font-size: 13px; }
+  .battle-vs b { font-size: 11px; letter-spacing: .08em; }
+  .battle-pixel-card, .monster-pixel-card { position: relative; width: 86px; height: 124px; margin: 0 auto; border: 2px solid rgba(var(--color-accent-rgb, 255,180,0), .28); background: linear-gradient(180deg, rgba(44,36,30,.95), rgba(22,18,16,.98)), repeating-linear-gradient(90deg, transparent 0 7px, rgba(255,255,255,.04) 7px 8px); image-rendering: pixelated; overflow: hidden; box-shadow: inset 0 0 0 2px rgba(0,0,0,.25), 0 8px 0 rgba(0,0,0,.15); }
+  .battle-pixel-card::before, .monster-pixel-card::before { content: ''; position: absolute; left: 8px; right: 8px; bottom: 12px; height: 6px; background: repeating-linear-gradient(90deg, rgba(87,58,32,.9) 0 6px, rgba(47,35,24,.9) 6px 12px); }
+  .battle-pixel-card::after, .monster-pixel-card::after { content: ''; position: absolute; left: 6px; right: 6px; top: 6px; bottom: 6px; border: 1px solid rgba(224,178,94,.18); pointer-events: none; }
+  .pixel-avatar-aura { position: absolute; inset: 10px 7px 18px; border: 2px double rgba(120,245,220,.38); background: radial-gradient(circle at center, rgba(255,255,255,.06), transparent 58%); box-shadow: 0 0 10px rgba(120,245,220,.22), inset 0 0 12px rgba(120,245,220,.12); }
+  .avatar-realm-1 .pixel-avatar-aura { border-color: rgba(95,207,122,.45); box-shadow: 0 0 10px rgba(95,207,122,.22); }
+  .avatar-realm-2 .pixel-avatar-aura { border-color: rgba(83,178,245,.48); box-shadow: 0 0 12px rgba(83,178,245,.28); }
+  .avatar-realm-3 .pixel-avatar-aura { border-color: rgba(191,119,255,.52); box-shadow: 0 0 14px rgba(191,119,255,.32); }
+  .avatar-realm-4 .pixel-avatar-aura { border-color: rgba(245,198,92,.58); box-shadow: 0 0 16px rgba(245,198,92,.35); }
+  .pixel-avatar { position: absolute; left: 23px; top: 8px; width: 40px; height: 92px; transform: scale(1.2); transform-origin: top center; filter: drop-shadow(2px 3px 0 rgba(0,0,0,.45)); }
+  .px { position: absolute; display: block; box-shadow: inset -2px -2px 0 rgba(0,0,0,.18); }
+  .px-bun { left: 14px; top: 0; width: 12px; height: 8px; background: #2a1c18; border-top: 2px solid #6b4230; }
+  .px-hair { left: 9px; top: 8px; width: 22px; height: 18px; background: #2a1c18; border-top: 3px solid #513024; box-shadow: inset -3px -3px 0 rgba(0,0,0,.24), 0 8px 0 #1d1412; }
+  .px-face { left: 11px; top: 14px; width: 18px; height: 18px; background: #e7b98a; box-shadow: inset -3px -3px 0 #c58d65, inset 2px 2px 0 #ffd2a5; }
+  .px-face::after { content: ''; position: absolute; left: 7px; top: 12px; width: 4px; height: 2px; background: #a86055; }
+  .px-eye { top: 23px; width: 3px; height: 3px; background: #211712; box-shadow: none; }
+  .eye-l { left: 16px; } .eye-r { left: 24px; }
+  .px-robe { left: 8px; top: 34px; width: 24px; height: 38px; background: linear-gradient(90deg, #4d7e52 0 35%, #6da86b 35% 65%, #3f6845 65%); box-shadow: inset -3px -3px 0 rgba(0,0,0,.25), inset 3px 0 0 rgba(255,255,255,.08); }
+  .avatar-female .px-robe { background: linear-gradient(90deg, #694987 0 35%, #9365ad 35% 65%, #563a72 65%); }
+  .px-belt { left: 7px; top: 49px; width: 26px; height: 5px; background: #d7b25e; border-top: 1px solid rgba(255,255,255,.24); box-shadow: none; }
+  .px-sleeve { top: 36px; width: 8px; height: 28px; background: #487349; box-shadow: inset -2px -2px 0 rgba(0,0,0,.22); }
+  .avatar-female .px-sleeve { background: #674a7f; }
+  .sleeve-l { left: 1px; } .sleeve-r { right: 1px; }
+  .px-leg { top: 71px; width: 9px; height: 18px; background: #3f4f3d; box-shadow: inset -2px -2px 0 rgba(0,0,0,.25), 0 13px 0 #221b18; }
+  .leg-l { left: 10px; } .leg-r { right: 10px; }
+  .px-tool { width: 5px; height: 42px; right: -4px; top: 35px; background: #8f6033; transform: rotate(-12deg); box-shadow: 0 -6px 0 #d1b063, 0 -10px 0 #ede09a, inset -2px 0 0 rgba(0,0,0,.25); }
+  .avatar-realm-2 .px-tool { box-shadow: 0 -6px 0 #72c9ff, 0 -10px 0 #d8f5ff, inset -2px 0 0 rgba(0,0,0,.25); }
+  .avatar-realm-3 .px-tool { box-shadow: 0 -6px 0 #c58bff, 0 -10px 0 #f0d9ff, inset -2px 0 0 rgba(0,0,0,.25); }
+  .avatar-realm-4 .px-tool { box-shadow: 0 -6px 0 #ffd86d, 0 -10px 0 #fff2ad, inset -2px 0 0 rgba(0,0,0,.25), 0 0 7px #ffd86d; }
+  .pixel-avatar-shadow, .monster-shadow { position: absolute; left: 20px; right: 20px; bottom: 13px; height: 5px; background: rgba(0,0,0,.35); }
+  .monster-aura { position: absolute; inset: 14px 8px 18px; border: 2px double rgba(255,100,80,.32); box-shadow: 0 0 14px rgba(255,80,60,.18); }
+  .tower-monster .monster-aura { border-color: rgba(245,198,92,.45); box-shadow: 0 0 18px rgba(245,198,92,.28); }
+  .monster-pixel-body { position: absolute; left: 18px; top: 22px; width: 50px; height: 70px; background: linear-gradient(90deg, #704142 0 28%, #9a5950 28% 70%, #5e3338 70%); box-shadow: inset -4px -4px 0 rgba(0,0,0,.28), inset 3px 3px 0 rgba(255,255,255,.08), 0 -8px 0 #3c2530; filter: drop-shadow(2px 3px 0 rgba(0,0,0,.45)); }
+  .tower-monster .monster-pixel-body { background: linear-gradient(90deg, #6a512b 0 28%, #a47732 28% 70%, #514022 70%); box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.08), 0 -8px 0 #3b2c20, 0 0 8px rgba(245,198,92,.18); }
+  .monster-emoji { position: absolute; left: 50%; top: 15px; transform: translateX(-50%); font-size: 24px; line-height: 1; filter: saturate(.9); }
+  .monster-eye { position: absolute; top: 34px; width: 4px; height: 4px; background: #ffe071; box-shadow: 0 0 4px #ff6b45; }
+  .monster-eye.eye-l { left: 15px; } .monster-eye.eye-r { left: 31px; }
+  .monster-claw { position: absolute; top: 54px; width: 8px; height: 14px; background: #d8c08a; box-shadow: inset -2px -2px 0 rgba(0,0,0,.25); }
+  .claw-l { left: -7px; transform: rotate(10deg); } .claw-r { right: -7px; transform: rotate(-10deg); }
+  .fighter-hit { animation: player-hit 0.28s ease; }
+  @keyframes player-hit { 0%,100% { transform: translateX(0); } 45% { transform: translateX(5px); } }
+  @media (max-width: 420px) { .battle-stage { grid-template-columns: 1fr 34px 1fr; gap: .35rem; padding-left: .4rem; padding-right: .4rem; } .battle-pixel-card, .monster-pixel-card { width: 74px; height: 112px; } .pixel-avatar { left: 17px; transform: scale(1.1); } .monster-pixel-body { left: 12px; transform: scale(.95); transform-origin: top center; } .battle-vs { font-size: 11px; } }
+
 </style>
