@@ -37,6 +37,7 @@ const router = createRouter({
         { path: 'yuan-shen', name: 'yuan-shen', component: () => import('@/views/game/YuanShenView.vue') },
         { path: 'divine-beast', name: 'divine-beast', component: () => import('@/views/game/DivineBeastView.vue') },
         { path: 'leaderboard', name: 'leaderboard', component: () => import('@/views/game/LeaderboardView.vue') },
+        { path: 'events', name: 'events', component: () => import('@/views/game/EventView.vue') },
         { path: 'combat', name: 'combat', component: () => import('@/views/game/CombatView.vue') },
         { path: 'forge', name: 'forge', component: () => import('@/views/game/ForgeView.vue') },
         { path: 'sect', name: 'sect', component: () => import('@/views/game/SectView.vue') },

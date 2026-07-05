@@ -118,6 +118,10 @@
               <Flame :size="18" />
               <span>秘境</span>
             </button>
+            <button class="map-loc" :class="{ 'map-loc-active': current === 'events' }" @click="go('events' as PanelKey)">
+              <span style="font-size:18px">⏳</span>
+              <span>限时活动</span>
+            </button>
             <button class="map-loc" @click="handleSpecial('openSect')">
               <Swords :size="18" />
               <span>门派</span>
