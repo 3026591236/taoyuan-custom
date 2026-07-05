@@ -4,6 +4,7 @@ import { addLog, showFloat } from '@/composables/useGameLog'
 import { useGameStore } from './useGameStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
+import { useSkillStore } from './useSkillStore'
 
 export type SpiritRoot = 'mixed' | 'wood' | 'water' | 'earth' | 'fire' | 'metal' | 'celestial'
 export type ArtifactKey = 'glimmerHoe' | 'spiritKettle' | 'spiritRain'
@@ -242,6 +243,25 @@ export const useCultivationStore = defineStore('cultivation', () => {
 
   const realm = computed(() => REALMS[realmIndex.value] ?? REALMS[0]!)
   const realmName = computed(() => realm.value.name)
+  const combatPower = computed(() => {
+    const player = usePlayerStore()
+    const inventory = useInventoryStore()
+    const skills = useSkillStore()
+    const artifactMap = artifacts.value as Record<string, any>
+    let artifactPower = 0
+    for (const v of Object.values(artifactMap)) {
+      if (!v || typeof v !== 'object') continue
+      artifactPower += Math.floor(Number(v.atk || 0) * 12 + Number(v.def || 0) * 10 + Number(v.aura || 0) * 4 + Number(v.cultivation || 0) * 6)
+    }
+    const oldArtifactPower = ['glimmerHoe', 'spiritKettle', 'spiritRain'].filter(k => artifactMap[k] === true).length * 80
+    const weaponPower = Math.max(0, Number(inventory.getWeaponAttack?.() || 0)) * 16
+    const ringPower = Math.floor((inventory.getRingEffectValue?.('attack_bonus') || 0) * 120 + (inventory.getRingEffectValue?.('defense_bonus') || 0) * 100 + (inventory.getRingEffectValue?.('max_hp_bonus') || 0) * 3)
+    const realmPower = realmIndex.value * 1000 + rebirthCount.value * 50000
+    const cultivationPower = Math.floor(cultivation.value * 1.2 + aura.value * 0.25 + mana.value * 2)
+    const bodyPower = Math.floor(player.attributePower * 6 + player.getMaxHp() * 1.5 + skills.combatLevel * 180)
+    const systemPower = fieldTier.value * 120 + caveTier.value * 180 + yuanShenLevel.value * 260 + destinedArtifactLevel.value * 360 + beastBond.value * 12 + sectContribution.value * 0.2
+    return Math.max(0, Math.floor(realmPower + cultivationPower + bodyPower + weaponPower + ringPower + artifactPower + oldArtifactPower + systemPower))
+  })
   const maxCultivation = computed(() => realm.value.maxCultivation)
   const maxMana = computed(() => realm.value.maxMana + fieldTier.value * 10)
   const fieldTierName = computed(() => FIELD_TIERS[fieldTier.value] ?? FIELD_TIERS[0]!)
@@ -801,5 +821,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     sectContribution.value = (data as any).sectContribution ?? 0
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
 })

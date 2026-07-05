@@ -43,6 +43,10 @@
             <span class="text-xs text-accent">{{ cultivationStore.realmName }}</span>
             <span class="text-xs text-muted">{{ cultivationStore.spiritRootName }}</span>
           </div>
+          <div v-if="cultivationStore.unlocked" class="flex items-center justify-between mb-1">
+            <span class="text-xs text-muted">战力</span>
+            <span class="text-xs text-accent font-bold">{{ cultivationStore.combatPower.toLocaleString() }}</span>
+          </div>
 
           <div class="flex flex-col space-y-1.5">
             <!-- 体力 -->

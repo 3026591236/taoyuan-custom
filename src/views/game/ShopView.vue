@@ -577,6 +577,37 @@
             </div>
           </div>
 
+          <!-- 修仙市集 -->
+          <h4 class="text-accent text-sm mb-2 mt-4">
+            <Sparkles :size="14" class="inline" />
+            修仙市集
+          </h4>
+          <div class="flex flex-col space-y-2">
+            <div
+              v-for="item in shopStore.cultivationMarketItems"
+              :key="item.itemId"
+              class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-2 cursor-pointer hover:bg-accent/5"
+              @click="
+                openBatchBuyModal(
+                  item.name,
+                  item.description,
+                  discounted(item.price),
+                  () => handleBuyItem(item.itemId, item.price, item.name),
+                  () => playerStore.money >= discounted(item.price),
+                  count => handleBatchBuyItem(item.itemId, item.price, item.name, count),
+                  () => getMaxBuyable(discounted(item.price)),
+                  item.itemId
+                )
+              "
+            >
+              <div>
+                <p class="text-sm">{{ item.name }}</p>
+                <p class="text-muted text-xs">{{ item.description }}</p>
+              </div>
+              <span class="text-xs text-accent whitespace-nowrap">{{ discounted(item.price) }}文</span>
+            </div>
+          </div>
+
           <!-- 草药 -->
           <h4 class="text-accent text-sm mb-2 mt-4">
             <Sprout :size="14" class="inline" />
@@ -1014,7 +1045,8 @@
     X,
     Crown,
     Footprints,
-    Filter
+    Filter,
+    Sparkles
   } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import { useFarmStore } from '@/stores/useFarmStore'

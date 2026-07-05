@@ -558,6 +558,26 @@ app.get("/api/check-char-name", async (req, res) => {
   } catch (e) { console.error("check-char-name err", e); send(res, 500, { error: "Server error" }) }
 })
 
+
+function calcCombatPowerFromSave(p = {}, cu = {}) {
+  const artifacts = cu.artifacts || {}
+  let artifactPower = 0
+  for (const v of Object.values(artifacts)) {
+    if (v && typeof v === 'object') artifactPower += Math.floor(Number(v.atk || 0) * 12 + Number(v.def || 0) * 10 + Number(v.aura || 0) * 4 + Number(v.cultivation || 0) * 6)
+  }
+  const oldArtifactPower = ['glimmerHoe', 'spiritKettle', 'spiritRain'].filter(k => artifacts[k] === true).length * 80
+  const realmIndex = Number(cu.realmIndex ?? cu.realm ?? 0) || 0
+  const rebirthCount = Number(cu.rebirthCount || 0) || 0
+  const cultivation = Number(cu.cultivation || 0) || 0
+  const aura = Number(cu.aura || 0) || 0
+  const mana = Number(cu.mana || 0) || 0
+  const attrs = p.attributes || {}
+  const attrPower = Number(p.attributePower || 0) || Object.values(attrs).reduce((sum, v) => sum + Number(v?.level || 0), 0)
+  const hp = Number(p.maxHp || p.baseMaxHp || 100) || 100
+  const systemPower = (Number(cu.fieldTier || 0) || 0) * 120 + (Number(cu.caveTier || 0) || 0) * 180 + (Number(cu.yuanShenLevel || 0) || 0) * 260 + (Number(cu.destinedArtifactLevel || 0) || 0) * 360 + (Number(cu.beastBond || 0) || 0) * 12 + Math.floor((Number(cu.sectContribution || 0) || 0) * 0.2)
+  return Math.max(0, Math.floor(realmIndex * 1000 + rebirthCount * 50000 + cultivation * 1.2 + aura * 0.25 + mana * 2 + attrPower * 6 + hp * 1.5 + artifactPower + oldArtifactPower + systemPower))
+}
+
 // --- 排行榜（优先从 saves.data_json 实时读取；坏数据用 meta/player_name/cache 兜底） ---
 app.get('/api/leaderboard', async (req, res) => {
   try {
@@ -589,7 +609,10 @@ app.get('/api/leaderboard', async (req, res) => {
         username: r.username,
         playerName: p.playerName || p.name || meta.playerName || r.player_name || '无名',
         realmName: cu.realmName || r.cached_realm_name || REALMS[realmIdx] || '凡人',
+        realmIndex: Number(cu.realmIndex ?? cu.realm ?? 0) || 0,
+        rebirthCount: Number(cu.rebirthCount || 0) || 0,
         cultivation: Number(cu.cultivation ?? r.cached_cultivation ?? 0) || 0,
+        combatPower: calcCombatPowerFromSave(p, cu),
         aura: Number(cu.aura ?? r.cached_aura ?? 0) || 0,
         money: Number(p.money ?? meta.money ?? r.cached_money ?? 0) || 0,
         year: Number(g.year ?? meta.year ?? r.cached_year ?? 1) || 1,
@@ -602,8 +625,9 @@ app.get('/api/leaderboard', async (req, res) => {
     entries.sort((a, b) => {
       if (by === 'money') return (b.money || 0) - (a.money || 0)
       if (by === 'aura') return (b.aura || 0) - (a.aura || 0)
+      if (by === 'power') return (b.combatPower || 0) - (a.combatPower || 0)
       if (by === 'rebirth') return (b.rebirthCount || 0) - (a.rebirthCount || 0)
-      return (b.cultivation || 0) - (a.cultivation || 0)
+      return ((b.rebirthCount || 0) - (a.rebirthCount || 0)) || ((b.realmIndex || 0) - (a.realmIndex || 0)) || ((b.cultivation || 0) - (a.cultivation || 0))
     })
     for (const e of entries.slice(0, 50)) {
       try {

@@ -14,6 +14,22 @@ import type { TravelingMerchantStock } from '@/data/travelingMerchant'
 import type { Quality } from '@/types'
 import { useHiddenNpcStore } from './useHiddenNpcStore'
 
+export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
+  { itemId: 'spirit_stone', name: '灵石', price: 260, description: '修炼、炼器、布阵的基础灵材' },
+  { itemId: 'spirit_dust', name: '灵砂', price: 180, description: '阵法描纹和符箓调和用的细砂' },
+  { itemId: 'array_fragment', name: '阵纹残片', price: 900, description: '破损阵盘残片，可研究聚灵阵' },
+  { itemId: 'chuanxiong', name: '川芎', price: 130, description: '百草园基础药材，炼精丹常用' },
+  { itemId: 'yuzhu', name: '玉竹', price: 130, description: '温润补灵的基础灵药' },
+  { itemId: 'baizhi', name: '白芷', price: 130, description: '化神丹与补灵丹辅材' },
+  { itemId: 'chishao', name: '赤芍', price: 210, description: '中阶丹方常用药材' },
+  { itemId: 'chenxiang', name: '沉香', price: 210, description: '木火灵性温和的炼丹辅材' },
+  { itemId: 'suoyang', name: '锁阳', price: 360, description: '炼精与化神丹重要辅药' },
+  { itemId: 'shenqu', name: '神曲', price: 680, description: '调和高阶丹性的稀有药材' },
+  { itemId: 'mana_recovery_pill', name: '回灵丹', price: 520, description: '回复灵力的小丹，适合修炼前备药' },
+  { itemId: 'qi_gathering_pill', name: '聚气丹', price: 980, description: '辅助聚气修行，初期修士常备' },
+  { itemId: 'foundation_pill', name: '筑基丹', price: 3600, description: '辅助突破的珍贵丹药' }
+]
+
 /** 商铺商品项 */
 export interface ShopItemEntry {
   itemId: string
@@ -100,6 +116,8 @@ export const useShopStore = defineStore('shop', () => {
       price: f.shopPrice!
     }))
   )
+
+  const cultivationMarketItems = computed<ShopItemEntry[]>(() => CULTIVATION_MARKET_ITEMS)
 
   const apothecaryItems = computed<ShopItemEntry[]>(() => [
     { itemId: 'herb', name: '草药', price: 50, description: '山间野生的草药' },
@@ -408,6 +426,7 @@ export const useShopStore = defineStore('shop', () => {
     fishingShopItems,
     // 药铺
     shopFertilizers,
+    cultivationMarketItems,
     apothecaryItems,
     // 绸缎庄
     textileItems,

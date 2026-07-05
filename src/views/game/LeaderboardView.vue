@@ -36,7 +36,8 @@
   import Divider from '@/components/game/Divider.vue'
 
   const tabs = [
-    { key: 'cultivation', label: '修为' },
+    { key: 'cultivation', label: '境界' },
+    { key: 'power', label: '战力' },
     { key: 'money', label: '铜钱' },
     { key: 'aura', label: '灵气' }
   ]
@@ -54,7 +55,8 @@
   const formatValue = (entry: any) => {
     if (activeTab.value === 'money') return `${(entry.money || 0).toLocaleString()}文`
     if (activeTab.value === 'aura') return `${entry.aura || 0}`
-    return `${entry.cultivation || 0}`
+    if (activeTab.value === 'power') return `${(entry.combatPower || 0).toLocaleString()}`
+    return `${entry.realmName || '凡人'} · ${entry.cultivation || 0}`
   }
 
   const loadLeaderboard = async () => {
