@@ -13,6 +13,7 @@ import { useShopStore } from './useShopStore'
 import { useAnimalStore } from './useAnimalStore'
 import { useCultivationStore } from './useCultivationStore'
 import { useGameStore } from './useGameStore'
+import type { AttributeKey } from './usePlayerStore'
 
 export const useQuestStore = defineStore('quest', () => {
   const inventoryStore = useInventoryStore()
@@ -57,7 +58,7 @@ export const useQuestStore = defineStore('quest', () => {
   interface JourneyReward {
     money?: number
     aura?: number
-    attributeExp?: Partial<Record<'constitution' | 'strength' | 'agility' | 'perception', number>>
+    attributeExp?: Partial<Record<AttributeKey, number>>
   }
 
   interface JourneyTaskDef {
@@ -76,23 +77,23 @@ export const useQuestStore = defineStore('quest', () => {
   const journeyDailyBaselines = ref<Partial<Record<JourneyMetric, number>>>({})
 
   const JOURNEY_TASKS: JourneyTaskDef[] = [
-    { id: 'guide_first_harvest', type: 'guide', title: '春种第一获', desc: '收获任意作物，感受田庄第一份回报。', metric: 'cropHarvest', target: 1, reward: { money: 120, attributeExp: { constitution: 6 } } },
-    { id: 'guide_pulse_20', type: 'guide', title: '地脉初闻', desc: '通过收获作物累计20点地脉感应。', metric: 'earthPulse', target: 20, reward: { money: 180, attributeExp: { perception: 8 } } },
-    { id: 'guide_pulse_100', type: 'guide', title: '田间灵机', desc: '累计100点地脉感应，为启蒙灵田做准备。', metric: 'earthPulse', target: 100, reward: { money: 300, attributeExp: { constitution: 8, perception: 8 } } },
-    { id: 'guide_unlock_cultivation', type: 'guide', title: '启蒙灵田', desc: '完成灵田启蒙，让种田正式连向修仙。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 60, attributeExp: { perception: 10 } } },
-    { id: 'guide_field_tier_1', type: 'guide', title: '黄阶灵田', desc: '把灵田提升到黄阶，开启更稳定的灵气产出。', metric: 'fieldTier', target: 1, reward: { aura: 90, attributeExp: { constitution: 10 } } },
-    { id: 'guide_realm_lianqi', type: 'guide', title: '炼气入门', desc: '突破到炼气一层，迈出修仙第一步。', metric: 'realmIndex', target: 1, reward: { aura: 120, attributeExp: { perception: 12 } } },
-    { id: 'guide_first_battle', type: 'guide', title: '初战凶兽', desc: '累计击败1只怪物，检验修行成果。', metric: 'monsterKills', target: 1, reward: { money: 260, attributeExp: { strength: 8, agility: 8 } } },
-    { id: 'daily_harvest_5', type: 'daily', title: '今日勤耕', desc: '累计收获5次作物，稳定积累地脉与资质。', metric: 'cropHarvest', target: 5, reward: { money: 160, attributeExp: { constitution: 5 } } },
-    { id: 'daily_commission_1', type: 'daily', title: '乡里委托', desc: '完成1个委托，让田庄和村落流动起来。', metric: 'completedCommissions', target: 1, reward: { money: 220, attributeExp: { perception: 5 } } },
-    { id: 'daily_battle_3', type: 'daily', title: '磨砺身手', desc: '累计击败3只怪物，提升战斗资质。', metric: 'monsterKills', target: 3, reward: { money: 180, attributeExp: { strength: 6, agility: 6 } } },
-    { id: 'seven_day_1', type: 'sevenDay', day: 1, title: '第一日：安身立田', desc: '收获3次作物，建立最初的田庄节奏。', metric: 'cropHarvest', target: 3, reward: { money: 240, attributeExp: { constitution: 8 } } },
-    { id: 'seven_day_2', type: 'sevenDay', day: 2, title: '第二日：感应地脉', desc: '累计40点地脉感应，理解种田与修仙的关系。', metric: 'earthPulse', target: 40, reward: { money: 260, attributeExp: { perception: 10 } } },
-    { id: 'seven_day_3', type: 'sevenDay', day: 3, title: '第三日：灵田启蒙', desc: '完成灵田启蒙，普通农事开始转化灵气。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 100, attributeExp: { perception: 12 } } },
-    { id: 'seven_day_4', type: 'sevenDay', day: 4, title: '第四日：炼气修行', desc: '突破到炼气一层，形成第一段修仙目标。', metric: 'realmIndex', target: 1, reward: { aura: 120, attributeExp: { constitution: 10 } } },
-    { id: 'seven_day_5', type: 'sevenDay', day: 5, title: '第五日：外出磨砺', desc: '击败5只怪物，补上战斗成长线。', metric: 'monsterKills', target: 5, reward: { money: 360, attributeExp: { strength: 12, agility: 12 } } },
-    { id: 'seven_day_6', type: 'sevenDay', day: 6, title: '第六日：经营有成', desc: '累计赚取3000文，为灵田、法宝和洞府准备资源。', metric: 'moneyEarned', target: 3000, reward: { money: 500, attributeExp: { perception: 10 } } },
-    { id: 'seven_day_7', type: 'sevenDay', day: 7, title: '第七日：小有所成', desc: '角色资质总评达到24，感受日常行为带来的角色成长。', metric: 'attributePower', target: 24, reward: { aura: 160, money: 600, attributeExp: { constitution: 10, strength: 10, agility: 10, perception: 10 } } }
+    { id: 'guide_first_harvest', type: 'guide', title: '春种第一获', desc: '收获任意作物，感受田庄第一份回报。', metric: 'cropHarvest', target: 1, reward: { money: 180, attributeExp: { physique: 14 } } },
+    { id: 'guide_pulse_20', type: 'guide', title: '地脉初闻', desc: '通过收获作物累计20点地脉感应。', metric: 'earthPulse', target: 20, reward: { money: 260, attributeExp: { perception: 16 } } },
+    { id: 'guide_pulse_100', type: 'guide', title: '田间灵机', desc: '累计100点地脉感应，为启蒙灵田做准备。', metric: 'earthPulse', target: 100, reward: { money: 420, attributeExp: { physique: 16, perception: 16 } } },
+    { id: 'guide_unlock_cultivation', type: 'guide', title: '启蒙灵田', desc: '完成灵田启蒙，让种田正式连向修仙。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 90, attributeExp: { perception: 20 } } },
+    { id: 'guide_field_tier_1', type: 'guide', title: '黄阶灵田', desc: '把灵田提升到黄阶，开启更稳定的灵气产出。', metric: 'fieldTier', target: 1, reward: { aura: 130, attributeExp: { physique: 20 } } },
+    { id: 'guide_realm_lianqi', type: 'guide', title: '炼气入门', desc: '突破到炼气一层，迈出修仙第一步。', metric: 'realmIndex', target: 1, reward: { aura: 180, attributeExp: { perception: 24 } } },
+    { id: 'guide_first_battle', type: 'guide', title: '初战凶兽', desc: '累计击败1只怪物，检验修行成果。', metric: 'monsterKills', target: 1, reward: { money: 360, attributeExp: { strength: 18, agility: 18 } } },
+    { id: 'daily_harvest_5', type: 'daily', title: '今日勤耕', desc: '累计收获5次作物，稳定积累地脉与资质。', metric: 'cropHarvest', target: 5, reward: { money: 260, attributeExp: { physique: 14 } } },
+    { id: 'daily_commission_1', type: 'daily', title: '乡里委托', desc: '完成1个委托，让田庄和村落流动起来。', metric: 'completedCommissions', target: 1, reward: { money: 320, attributeExp: { perception: 14 } } },
+    { id: 'daily_battle_3', type: 'daily', title: '磨砺身手', desc: '累计击败3只怪物，提升战斗资质。', metric: 'monsterKills', target: 3, reward: { money: 280, attributeExp: { strength: 16, agility: 16 } } },
+    { id: 'seven_day_1', type: 'sevenDay', day: 1, title: '第一日：安身立田', desc: '收获3次作物，建立最初的田庄节奏。', metric: 'cropHarvest', target: 3, reward: { money: 360, attributeExp: { physique: 20 } } },
+    { id: 'seven_day_2', type: 'sevenDay', day: 2, title: '第二日：感应地脉', desc: '累计40点地脉感应，理解种田与修仙的关系。', metric: 'earthPulse', target: 40, reward: { money: 380, attributeExp: { perception: 24 } } },
+    { id: 'seven_day_3', type: 'sevenDay', day: 3, title: '第三日：灵田启蒙', desc: '完成灵田启蒙，普通农事开始转化灵气。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 160, attributeExp: { perception: 28 } } },
+    { id: 'seven_day_4', type: 'sevenDay', day: 4, title: '第四日：炼气修行', desc: '突破到炼气一层，形成第一段修仙目标。', metric: 'realmIndex', target: 1, reward: { aura: 190, attributeExp: { physique: 26 } } },
+    { id: 'seven_day_5', type: 'sevenDay', day: 5, title: '第五日：外出磨砺', desc: '击败5只怪物，补上战斗成长线。', metric: 'monsterKills', target: 5, reward: { money: 520, attributeExp: { strength: 30, agility: 30 } } },
+    { id: 'seven_day_6', type: 'sevenDay', day: 6, title: '第六日：经营有成', desc: '累计赚取3000文，为灵田、法宝和洞府准备资源。', metric: 'moneyEarned', target: 3000, reward: { money: 720, attributeExp: { perception: 28 } } },
+    { id: 'seven_day_7', type: 'sevenDay', day: 7, title: '第七日：小有所成', desc: '角色资质总评达到24，感受日常行为带来的角色成长。', metric: 'attributePower', target: 24, reward: { aura: 260, money: 900, attributeExp: { physique: 30, strength: 30, agility: 30, perception: 30 } } }
   ]
 
   const getJourneyDayKey = (): string => {

@@ -243,6 +243,13 @@ const defaultConfig = {
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
       {
+        version: 'V0.9.2 玩家强度提升',
+        date: '2026-07-05',
+        title: 'V0.9.2 玩家强度提升',
+        content: '提升资质成长带来的攻击、生命、身法和减伤收益；修复修行志根骨奖励字段错配；提高修行志目标奖励，让每日目标和七日成长的变强反馈更明显。',
+        highlights: ['资质战力增强', '修行志奖励提升', '根骨奖励修复']
+      },
+      {
         version: 'V0.9.1 箱子制造与体力恢复修复',
         date: '2026-07-05',
         title: 'V0.9.1 箱子制造与体力恢复修复',

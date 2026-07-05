@@ -117,16 +117,20 @@ export const usePlayerStore = defineStore('player', () => {
   )
 
   const attributeAttackBonus = computed(() =>
-    Math.floor((attributes.value.strength.level - 1) * 1.5 + (attributes.value.perception.level - 1) * 0.6)
+    Math.floor((attributes.value.strength.level - 1) * 2.4 + (attributes.value.perception.level - 1) * 1.0)
   )
 
   const attributeDefenseBonus = computed(() =>
-    Math.floor((attributes.value.physique.level - 1) * 0.006 + (attributes.value.agility.level - 1) * 0.003)
+    Math.min(0.45, (attributes.value.physique.level - 1) * 0.008 + (attributes.value.agility.level - 1) * 0.006)
   )
 
-  const attributeMaxHpBonus = computed(() => (attributes.value.physique.level - 1) * 6)
+  const attributeMaxHpBonus = computed(() => (attributes.value.physique.level - 1) * 10)
 
-  const attributeSpeedBonus = computed(() => Math.floor((attributes.value.agility.level - 1) * 0.4))
+  const attributeSpeedBonus = computed(() => Math.floor((attributes.value.agility.level - 1) * 0.8))
+
+  const attributeCombatPower = computed(() =>
+    attributePower.value * 12 + attributeAttackBonus.value * 8 + attributeMaxHpBonus.value + attributeSpeedBonus.value * 5 + Math.floor(attributeDefenseBonus.value * 1000)
+  )
 
   /** 计算当前最大 HP（基础 + 战斗等级 + 专精加成 + 仙缘加成 + 公会加成 + 角色资质） */
   const getMaxHp = (): number => {
@@ -339,6 +343,7 @@ export const usePlayerStore = defineStore('player', () => {
     baseMaxHp,
     attributes,
     attributePower,
+    attributeCombatPower,
     attributeAttackBonus,
     attributeDefenseBonus,
     attributeMaxHpBonus,

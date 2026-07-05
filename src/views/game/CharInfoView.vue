@@ -78,7 +78,7 @@
       <div class="mt-2 pt-2 border-t border-accent/10">
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-xs text-muted">角色资质</span>
-          <span class="text-[10px] text-accent">总评 {{ playerStore.attributePower }}</span>
+          <span class="text-[10px] text-accent">战力 {{ playerStore.attributeCombatPower }} · 总评 {{ playerStore.attributePower }}</span>
         </div>
         <div class="grid grid-cols-2 gap-1.5">
           <div v-for="item in attributeList" :key="item.key" class="border border-accent/10 rounded-xs px-2 py-1">
@@ -92,9 +92,10 @@
             <p class="text-[10px] text-muted mt-0.5">{{ item.hint }}</p>
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-1 mt-1.5 text-[10px] text-muted">
+        <div class="grid grid-cols-4 gap-1 mt-1.5 text-[10px] text-muted">
           <span>攻击 +{{ playerStore.attributeAttackBonus }}</span>
           <span>生命 +{{ playerStore.attributeMaxHpBonus }}</span>
+          <span>身法 +{{ playerStore.attributeSpeedBonus }}</span>
           <span>减伤 {{ Math.round(playerStore.attributeDefenseBonus * 100) }}%</span>
         </div>
       </div>
