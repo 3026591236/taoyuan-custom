@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 </script>
 <style>
 page { background: #0d1117; color: #e6edf3; }

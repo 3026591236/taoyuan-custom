@@ -2,8 +2,8 @@
     "name" : "桃源乡",
     "appid" : "__UNI__190B089",
     "description" : "桃源乡双端客户端壳：强联网下载后端资源包，本地 WebView 加载。",
-    "versionName" : "0.1.0",
-    "versionCode" : 100,
+    "versionName" : "0.1.1",
+    "versionCode" : 101,
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,
@@ -26,7 +26,14 @@
                 "icon" : "static/logo-pixel.svg"
             },
             "ios" : {
-                "dSYMs" : false
+                "dSYMs" : false,
+                "idfa" : false,
+                "plistcmds" : [
+                    "Set :NSAppTransportSecurity:NSAllowsArbitraryLoads true",
+                    "Set :NSAppTransportSecurity:NSAllowsArbitraryLoadsInWebContent true",
+                    "Set :NSAppTransportSecurity:NSAllowsLocalNetworking true",
+                    "Set :WKAppBoundDomains:0 129.204.252.190"
+                ]
             }
         }
     },

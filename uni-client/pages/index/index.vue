@@ -9,6 +9,7 @@
       <text class="subtitle">正在连接服务器同步客户端资源</text>
       <view class="bar"><view class="bar-inner" :style="{ width: progress + '%' }" /></view>
       <text class="status">{{ statusText }}</text>
+      <text class="debug">{{ debugText }}</text>
       <button v-if="failed" class="retry" @click="startSync">重新连接</button>
     </view>
 
@@ -34,11 +35,13 @@ const webUrl = ref('')
 const statusText = ref('准备连接服务器…')
 const progress = ref(4)
 const failed = ref(false)
+const debugText = ref('客户端启动中…')
 
-const plusReady = () => new Promise(resolve => {
+const plusReady = () => new Promise((resolve, reject) => {
   // #ifdef APP-PLUS
-  if (window.plus) return resolve()
-  document.addEventListener('plusready', () => resolve(), false)
+  if (window.plus) { debugText.value = 'plus ready: immediate'; return resolve() }
+  const timer = setTimeout(() => reject(new Error('客户端运行环境未就绪，请重新打开 App')), 12000)
+  document.addEventListener('plusready', () => { clearTimeout(timer); debugText.value = 'plus ready: event'; resolve() }, false)
   // #endif
   // #ifndef APP-PLUS
   resolve()
@@ -51,10 +54,11 @@ const requestJson = (url) => new Promise((resolve, reject) => {
     method: 'GET',
     timeout: 15000,
     success: res => {
+      debugText.value = `manifest HTTP ${res.statusCode}`
       if (res.statusCode >= 200 && res.statusCode < 300) resolve(res.data)
       else reject(new Error(`服务器返回 ${res.statusCode}`))
     },
-    fail: err => reject(new Error(err.errMsg || '网络请求失败'))
+    fail: err => { debugText.value = `manifest fail: ${err.errMsg || 'unknown'}`; reject(new Error(err.errMsg || '网络请求失败')) }
   })
 })
 
@@ -101,7 +105,9 @@ const ensureDir = (path) => new Promise((resolve, reject) => {
 const downloadZip = (manifest) => new Promise((resolve, reject) => {
   // #ifdef APP-PLUS
   const url = manifest.zipUrl.startsWith('http') ? manifest.zipUrl : `${SERVER_BASE}${manifest.zipUrl}`
-  const task = plus.downloader.createDownload(url, { filename: ZIP_PATH, timeout: 30 }, (download, status) => {
+  debugText.value = `download: ${url}`
+  const task = plus.downloader.createDownload(url, { filename: ZIP_PATH, timeout: 60 }, (download, status) => {
+    debugText.value = `download done: ${status}`
     if (status === 200 && download.filename) resolve(download.filename)
     else reject(new Error(`资源下载失败：${status}`))
   })
@@ -120,7 +126,8 @@ const downloadZip = (manifest) => new Promise((resolve, reject) => {
 
 const unzipBundle = (zipPath) => new Promise((resolve, reject) => {
   // #ifdef APP-PLUS
-  plus.zip.decompress(zipPath, BUNDLE_DIR, () => resolve(), err => reject(new Error(err.message || '解压失败')))
+  debugText.value = `unzip: ${zipPath}`
+  plus.zip.decompress(zipPath, BUNDLE_DIR, () => { debugText.value = 'unzip ok'; resolve() }, err => { debugText.value = `unzip fail: ${err.message || ''}`; reject(new Error(err.message || '解压失败')) })
   // #endif
   // #ifndef APP-PLUS
   resolve()
@@ -130,7 +137,7 @@ const unzipBundle = (zipPath) => new Promise((resolve, reject) => {
 const localEntryUrl = () => new Promise((resolve, reject) => {
   // #ifdef APP-PLUS
   const target = `${BUNDLE_DIR}/index.html`
-  plus.io.resolveLocalFileSystemURL(target, entry => resolve(entry.toLocalURL()), err => reject(new Error(err.message || '本地资源入口不存在')))
+  plus.io.resolveLocalFileSystemURL(target, entry => { const url = entry.toLocalURL(); debugText.value = `entry: ${url}`; resolve(url) }, err => { debugText.value = `entry fail: ${err.message || ''}`; reject(new Error(err.message || '本地资源入口不存在')) })
   // #endif
   // #ifndef APP-PLUS
   reject(new Error('非 App 环境'))
@@ -144,6 +151,7 @@ const startSync = async () => {
   webUrl.value = ''
   progress.value = 6
   statusText.value = '正在连接服务器…'
+  debugText.value = `server: ${SERVER_BASE}`
   try {
     await plusReady()
     const remoteManifest = await requestJson(MANIFEST_URL)
@@ -166,7 +174,9 @@ const startSync = async () => {
       statusText.value = '本地资源已是最新，正在进入游戏…'
     }
 
-    webUrl.value = await localEntryUrl()
+    const entryUrl = await localEntryUrl()
+    statusText.value = '正在打开游戏…'
+    webUrl.value = entryUrl
     progress.value = 100
   } catch (e) {
     failed.value = true
@@ -187,5 +197,6 @@ onMounted(() => { startSync() })
 .bar { width: 520rpx; max-width: 76vw; height: 12rpx; border-radius: 999rpx; overflow: hidden; background: rgba(200,164,92,.18); margin-bottom: 24rpx; }
 .bar-inner { height: 100%; background: #c8a45c; transition: width .25s ease; }
 .status { color: #8b949e; font-size: 24rpx; text-align: center; line-height: 1.6; }
+.debug { margin-top: 18rpx; max-width: 86vw; color: rgba(139,148,158,.72); font-size: 20rpx; text-align: center; line-height: 1.45; word-break: break-all; }
 .retry { margin-top: 36rpx; color: #0d1117; background: #c8a45c; border-radius: 10rpx; font-size: 28rpx; padding: 0 42rpx; }
 </style>
