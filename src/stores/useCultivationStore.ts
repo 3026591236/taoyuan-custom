@@ -131,8 +131,6 @@ export const REALMS = [
   { name: '筑基后期', maxCultivation: 24000, maxMana: 720, breakthroughCost: 7500 },
   { name: '金丹初期', maxCultivation: 40000, maxMana: 1000, breakthroughCost: 12000 },
   { name: '金丹中期', maxCultivation: 65000, maxMana: 1400, breakthroughCost: 18000 },
-  { name: '金丹初期', maxCultivation: 32000, maxMana: 600, breakthroughCost: 8000 },
-  { name: '金丹中期', maxCultivation: 65000, maxMana: 1400, breakthroughCost: 18000 },
   { name: '金丹后期', maxCultivation: 100000, maxMana: 2000, breakthroughCost: 28000 },
   { name: '元婴初期', maxCultivation: 160000, maxMana: 2800, breakthroughCost: 42000 },
   { name: '元婴中期', maxCultivation: 250000, maxMana: 3800, breakthroughCost: 60000 },
