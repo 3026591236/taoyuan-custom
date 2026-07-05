@@ -255,7 +255,7 @@
             <input v-model="gmMail.title" class="input" placeholder="例如：开服补偿" />
             <label class="block text-sm">邮件内容</label>
             <textarea v-model="gmMail.content" class="input min-h-20" placeholder="给玩家看的说明" />
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               <div>
                 <label class="block text-sm">铜钱</label>
                 <input v-model.number="gmMail.rewards.money" class="input" type="number" min="0" placeholder="0" />
@@ -263,6 +263,22 @@
               <div>
                 <label class="block text-sm">体力</label>
                 <input v-model.number="gmMail.rewards.stamina" class="input" type="number" min="0" placeholder="0" />
+              </div>
+              <div>
+                <label class="block text-sm">修为</label>
+                <input v-model.number="gmMail.rewards.cultivation" class="input" type="number" min="0" placeholder="0" />
+              </div>
+              <div>
+                <label class="block text-sm">灵气</label>
+                <input v-model.number="gmMail.rewards.aura" class="input" type="number" min="0" placeholder="0" />
+              </div>
+              <div>
+                <label class="block text-sm">灵力</label>
+                <input v-model.number="gmMail.rewards.mana" class="input" type="number" min="0" placeholder="0" />
+              </div>
+              <div>
+                <label class="block text-sm">灵石</label>
+                <input v-model.number="gmMail.rewards.spiritStone" class="input" type="number" min="0" placeholder="0" />
               </div>
             </div>
             <div class="space-y-2">
@@ -504,7 +520,7 @@ const gmMail = reactive<any>({
   to: 'all',
   title: '系统奖励',
   content: '',
-  rewards: { money: 0, stamina: 0, items: [] }
+  rewards: { money: 0, stamina: 0, cultivation: 0, aura: 0, mana: 0, spiritStone: 0, items: [] }
 })
 
 const token = () => localStorage.getItem('taoyuan_account_token') || ''
@@ -593,6 +609,10 @@ async function sendGmMail() {
     gmMail.content = ''
     gmMail.rewards.money = 0
     gmMail.rewards.stamina = 0
+    gmMail.rewards.cultivation = 0
+    gmMail.rewards.aura = 0
+    gmMail.rewards.mana = 0
+    gmMail.rewards.spiritStone = 0
     gmMail.rewards.items = []
     await loadOverview()
     setMsg('GM 邮件已发送')

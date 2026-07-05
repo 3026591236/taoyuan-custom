@@ -242,6 +242,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: '2026-07-06', title: 'V1.1.1 教程与后台奖励完善', content: '新手教程补充天劫渡劫、功法市集和仙途七线说明；后台 GM 邮件奖励新增修为、灵气、灵力、灵石发放，玩家领取邮件后直接写入当前角色。' },
 
       {
         version: 'V1.1 七线补全',

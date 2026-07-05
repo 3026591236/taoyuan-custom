@@ -746,6 +746,10 @@
     const parts: string[] = []
     if (rewards?.money) parts.push(`铜钱 +${rewards.money}`)
     if (rewards?.stamina) parts.push(`体力 +${rewards.stamina}`)
+    if (rewards?.cultivation) parts.push(`修为 +${rewards.cultivation}`)
+    if (rewards?.aura) parts.push(`灵气 +${rewards.aura}`)
+    if (rewards?.mana) parts.push(`灵力 +${rewards.mana}`)
+    if (rewards?.spiritStone || rewards?.spirit_stone) parts.push(`灵石 +${rewards.spiritStone || rewards.spirit_stone}`)
     for (const item of rewards?.items || []) parts.push(`${getItemName(item.itemId)}×${item.quantity}`)
     return parts.join('，') || '无'
   }
@@ -756,6 +760,10 @@
       const rewards = data.rewards || {}
       if (rewards.money) playerStore.earnMoney(Number(rewards.money) || 0)
       if (rewards.stamina) playerStore.restoreStamina(Number(rewards.stamina) || 0)
+      if (rewards.cultivation) cultivationStore.cultivation += Number(rewards.cultivation) || 0
+      if (rewards.aura) cultivationStore.aura += Number(rewards.aura) || 0
+      if (rewards.mana) cultivationStore.mana = Math.min(cultivationStore.maxMana, cultivationStore.mana + (Number(rewards.mana) || 0))
+      if (rewards.spiritStone || rewards.spirit_stone) inventoryStore.addItem('spirit_stone', Number(rewards.spiritStone || rewards.spirit_stone) || 0)
       for (const item of rewards.items || []) {
         inventoryStore.addItem(String(item.itemId), Number(item.quantity) || 1, item.quality || 'normal')
       }
