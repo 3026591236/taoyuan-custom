@@ -626,6 +626,28 @@
     await autoSaveCurrent()
   }
 
+  let staminaRegenTimer: number | null = null
+  const startOnlineStaminaRegen = () => {
+    if (staminaRegenTimer != null) return
+    staminaRegenTimer = window.setInterval(() => {
+      if (!gameStore.isGameStarted) return
+      if (playerStore.stamina >= playerStore.maxStamina) return
+      const before = playerStore.stamina
+      playerStore.restoreStamina(1)
+      if (playerStore.stamina > before) {
+        addLog(`体力自然恢复 +${playerStore.stamina - before}。`)
+        showFloat(`体力 +${playerStore.stamina - before}`, 'success')
+        void autoSaveCurrent()
+      }
+    }, 60000)
+  }
+  const stopOnlineStaminaRegen = () => {
+    if (staminaRegenTimer != null) {
+      window.clearInterval(staminaRegenTimer)
+      staminaRegenTimer = null
+    }
+  }
+
   let accountAutoSaveTimer: number | null = null
   const saveKey = (slot: number) => `taoyuanxiang_save_${slot}`
   const accountToken = () => localStorage.getItem('taoyuan_account_token') || ''
@@ -897,10 +919,11 @@
   })
 
   // 实时时钟生命周期
-  onMounted(() => { startClock(); startAccountAutoSave(); void loadCheckinStatus(); void loadMails(); void grantOfflineRewards(); void autoSaveCurrent() })
+  onMounted(() => { startClock(); startAccountAutoSave(); startOnlineStaminaRegen(); void loadCheckinStatus(); void loadMails(); void grantOfflineRewards(); void autoSaveCurrent() })
   onUnmounted(() => {
     stopClock()
     stopAccountAutoSave()
+    stopOnlineStaminaRegen()
     if (worldAnnouncementTimer != null) window.clearInterval(worldAnnouncementTimer)
     void autoSaveCurrent()
   })
