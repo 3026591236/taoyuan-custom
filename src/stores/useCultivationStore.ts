@@ -70,6 +70,26 @@ export const HERB_DATA: Record<string, { name: string; emoji: string; rarity: nu
 
 
 
+
+export type SpiritMealId = 'plain_spirit_porridge' | 'dew_rice_soup' | 'vermilion_elixir_soup' | 'three_treasure_spirit_meal'
+export interface SpiritMealRecipe {
+  id: SpiritMealId
+  name: string
+  desc: string
+  materials: { itemId: string; quantity: number; name: string }[]
+  stamina: number
+  aura: number
+  cultivation: number
+  mana: number
+  minFieldTier: number
+}
+export const SPIRIT_MEAL_RECIPES: SpiritMealRecipe[] = [
+  { id: 'plain_spirit_porridge', name: '灵谷粥', desc: '以普通稻米引气入体，适合刚启蒙后的每日温养。', materials: [{ itemId: 'rice', quantity: 3, name: '水稻' }], stamina: 3, aura: 18, cultivation: 35, mana: 8, minFieldTier: 0 },
+  { id: 'dew_rice_soup', name: '凝露灵粥', desc: '蕴灵稻配凝露草，灵气温和，能稳定增长修为。', materials: [{ itemId: 'spirit_rice', quantity: 2, name: '蕴灵稻' }, { itemId: 'dew_grass', quantity: 1, name: '凝露草' }], stamina: 5, aura: 55, cultivation: 120, mana: 18, minFieldTier: 0 },
+  { id: 'vermilion_elixir_soup', name: '朱果丹羹', desc: '朱果入羹，药力绵长，适合突破前积蓄底蕴。', materials: [{ itemId: 'vermilion_fruit', quantity: 1, name: '朱果' }, { itemId: 'dew_grass', quantity: 2, name: '凝露草' }], stamina: 8, aura: 120, cultivation: 260, mana: 35, minFieldTier: 1 },
+  { id: 'three_treasure_spirit_meal', name: '三宝灵膳', desc: '灵稻、凝露草、朱果三味合一，每日只宜少食。', materials: [{ itemId: 'spirit_rice', quantity: 5, name: '蕴灵稻' }, { itemId: 'dew_grass', quantity: 3, name: '凝露草' }, { itemId: 'vermilion_fruit', quantity: 2, name: '朱果' }], stamina: 12, aura: 260, cultivation: 620, mana: 70, minFieldTier: 2 }
+]
+
 export const REALMS = [
   { name: '凡人', maxCultivation: 100, maxMana: 30, breakthroughCost: 30 },
   { name: '炼气一层', maxCultivation: 220, maxMana: 45, breakthroughCost: 60 },
@@ -106,7 +126,7 @@ export const REALMS = [
 ]
 
 
-const FIELD_TIERS = ['普通田', '黄阶灵田', '玄阶灵田', '地阶灵田', '天阶洞天']
+export const FIELD_TIERS = ['普通田', '黄阶灵田', '玄阶灵田', '地阶灵田', '天阶洞天']
 export const SPIRIT_ROOT_NAMES: Record<SpiritRoot, string> = {
   mixed: '杂灵根', wood: '木灵根', water: '水灵根', earth: '土灵根', fire: '火灵根', metal: '金灵根', celestial: '天灵根'
 }
@@ -158,6 +178,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const earthPulse = ref(0)
   const totalAuraHarvested = ref(0)
   const alchemyUnlocked = ref(false)
+  const spiritMealLastDaily = ref<Record<SpiritMealId, string>>({ plain_spirit_porridge: '', dew_rice_soup: '', vermilion_elixir_soup: '', three_treasure_spirit_meal: '' })
   const artifacts = ref<Record<ArtifactKey, boolean>>({ glimmerHoe: false, spiritKettle: false, spiritRain: false })
   const foundationPillBlessing = ref(0)
 
@@ -362,6 +383,50 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return gain
   }
 
+
+  const gameDayKey = () => {
+    const game = useGameStore()
+    return `${game.year}-${game.season}-${game.day}`
+  }
+  const spiritMealAvailable = (id: SpiritMealId) => spiritMealLastDaily.value[id] !== gameDayKey()
+  const cookSpiritMeal = (id: SpiritMealId) => {
+    if (!unlocked.value) return unlock()
+    const recipe = SPIRIT_MEAL_RECIPES.find(r => r.id === id)
+    if (!recipe) return false
+    if (fieldTier.value < recipe.minFieldTier) {
+      showFloat(`需要${FIELD_TIERS[recipe.minFieldTier] || '更高阶灵田'}。`, 'danger')
+      return false
+    }
+    if (!spiritMealAvailable(id)) {
+      showFloat('这道灵膳今日已经食用过了。', 'danger')
+      return false
+    }
+    const inventory = useInventoryStore()
+    for (const mat of recipe.materials) {
+      if (inventory.getItemCount(mat.itemId) < mat.quantity) {
+        showFloat(`${mat.name}不足。`, 'danger')
+        return false
+      }
+    }
+    const player = usePlayerStore()
+    if (!player.consumeStamina(recipe.stamina)) {
+      showFloat(`体力不足，需要${recipe.stamina}点。`, 'danger')
+      return false
+    }
+    for (const mat of recipe.materials) inventory.removeItem(mat.itemId, mat.quantity)
+    const tierBonus = 1 + fieldTier.value * 0.12 + (hasCaveSlot('herbgarden') ? 0.18 : 0)
+    const auraGain = Math.floor(recipe.aura * tierBonus)
+    const cultivationGain = Math.floor(recipe.cultivation * (1 + fieldTier.value * 0.08 + (beast.value === 'crane' ? 0.12 : 0)))
+    const manaGain = Math.floor(recipe.mana * (1 + (hasCaveSlot('meditation') ? 0.15 : 0)))
+    aura.value += auraGain
+    cultivation.value = Math.min(maxCultivation.value, cultivation.value + cultivationGain)
+    mana.value = Math.min(maxMana.value, mana.value + manaGain)
+    spiritMealLastDaily.value[id] = gameDayKey()
+    useGameStore().advanceTime(1)
+    addLog(`烹成「${recipe.name}」，药食同源，灵气+${auraGain}，修为+${cultivationGain}，灵力+${manaGain}。`)
+    showFloat(`${recipe.name}：修为+${cultivationGain}`, 'success')
+    return true
+  }
 
   const unlockAlchemy = () => {
     if (!unlocked.value) return unlock()
@@ -632,7 +697,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
-  const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, earthPulse: earthPulse.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, herbGardenLevel: herbGardenLevel.value, herbLastDaily: herbLastDaily.value, herbs: herbs.value, spiritArrayLevel: spiritArrayLevel.value, spiritArrayLastDaily: spiritArrayLastDaily.value, elements: elements.value, yuanShenLevel: yuanShenLevel.value, yuanShenExp: yuanShenExp.value, destinedArtifact: destinedArtifact.value, destinedArtifactLevel: destinedArtifactLevel.value, talismans: talismans.value, talismanCooldown: talismanCooldown.value, rebirthCount: rebirthCount.value, rebirthBonus: rebirthBonus.value, lingYun: lingYun.value, rebirthUnlocked: rebirthUnlocked.value, beast: beast.value, beastBond: beastBond.value, sect: sect.value, sectSkills: sectSkills.value, sectContribution: sectContribution.value })
+  const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, earthPulse: earthPulse.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, spiritMealLastDaily: spiritMealLastDaily.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, herbGardenLevel: herbGardenLevel.value, herbLastDaily: herbLastDaily.value, herbs: herbs.value, spiritArrayLevel: spiritArrayLevel.value, spiritArrayLastDaily: spiritArrayLastDaily.value, elements: elements.value, yuanShenLevel: yuanShenLevel.value, yuanShenExp: yuanShenExp.value, destinedArtifact: destinedArtifact.value, destinedArtifactLevel: destinedArtifactLevel.value, talismans: talismans.value, talismanCooldown: talismanCooldown.value, rebirthCount: rebirthCount.value, rebirthBonus: rebirthBonus.value, lingYun: lingYun.value, rebirthUnlocked: rebirthUnlocked.value, beast: beast.value, beastBond: beastBond.value, sect: sect.value, sectSkills: sectSkills.value, sectContribution: sectContribution.value })
   const deserialize = (data?: Partial<ReturnType<typeof serialize>>) => {
     if (!data) return
     unlocked.value = data.unlocked ?? false
@@ -645,6 +710,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     earthPulse.value = data.earthPulse ?? (data.unlocked ? 100 : 0)
     totalAuraHarvested.value = data.totalAuraHarvested ?? 0
     alchemyUnlocked.value = (data as any).alchemyUnlocked ?? false
+    spiritMealLastDaily.value = { plain_spirit_porridge: '', dew_rice_soup: '', vermilion_elixir_soup: '', three_treasure_spirit_meal: '', ...((data as any).spiritMealLastDaily ?? {}) }
     artifacts.value = { glimmerHoe: false, spiritKettle: false, spiritRain: false, ...((data as any).artifacts ?? {}) }
     foundationPillBlessing.value = (data as any).foundationPillBlessing ?? 0
     caveTier.value = (data as any).caveTier ?? 0
@@ -672,5 +738,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     sectContribution.value = (data as any).sectContribution ?? 0
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, unlockTalisman, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, unlockTalisman, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
 })

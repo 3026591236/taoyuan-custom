@@ -47,6 +47,25 @@
       <p class="mt-1">建议路线：种田收获 → 地脉感应100 → 启蒙灵田 → 种灵植 → 炼丹突破。</p>
     </div>
 
+    <!-- ===== 灵膳修行 ===== -->
+    <Divider title label="🍲 灵膳修行" />
+    <div v-if="!cultivation.unlocked" class="border border-accent/10 rounded-xs p-3 text-xs text-muted">启蒙灵田后，可把农产与灵植做成每日灵膳，直接转化为灵气、修为与灵力。</div>
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div v-for="meal in spiritMeals" :key="meal.id" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs space-y-2">
+        <div class="flex justify-between gap-2">
+          <div>
+            <p class="text-accent text-sm">{{ meal.name }}</p>
+            <p class="text-muted leading-relaxed">{{ meal.desc }}</p>
+          </div>
+          <span class="text-[10px]" :class="cultivation.spiritMealAvailable(meal.id) ? 'text-success' : 'text-muted'">{{ cultivation.spiritMealAvailable(meal.id) ? '今日可食' : '今日已食' }}</span>
+        </div>
+        <p class="text-[10px] text-muted">材料：{{ meal.materials.map(m => `${m.name}×${m.quantity}`).join('、') }}</p>
+        <p class="text-[10px] text-muted">收益：灵气+{{ meal.aura }} / 修为+{{ meal.cultivation }} / 灵力+{{ meal.mana }} / 体力-{{ meal.stamina }}</p>
+        <p v-if="meal.minFieldTier > 0" class="text-[10px] text-caution">需要 {{ fieldTierName(meal.minFieldTier) }}</p>
+        <Button class="w-full justify-center" :disabled="!cultivation.spiritMealAvailable(meal.id) || cultivation.fieldTier < meal.minFieldTier" @click="cultivation.cookSpiritMeal(meal.id)">食用灵膳</Button>
+      </div>
+    </div>
+
     <!-- ===== 轮回殿 ===== -->
     <Divider title label="🔄 轮回殿" />
     <div class="border border-red-600/40 rounded-xs p-3 bg-red-950/20">
@@ -130,10 +149,12 @@
 import { computed, ref } from 'vue'
 import Divider from '@/components/game/Divider.vue'
 import Button from '@/components/game/Button.vue'
-import { useCultivationStore } from '@/stores/useCultivationStore'
+import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS } from '@/stores/useCultivationStore'
 import type { ArtifactKey } from '@/stores/useCultivationStore'
 
 const cultivation = useCultivationStore()
+const spiritMeals = SPIRIT_MEAL_RECIPES
+const fieldTierName = (idx: number) => FIELD_TIERS[idx] ?? '更高阶灵田'
 
 const artifacts: Array<{ key: ArtifactKey; name: string; desc: string; aura: number; money: number }> = [
   { key: 'glimmerHoe', name: '流光锄', desc: '锄刃引动地脉，灵植收获时额外产出灵气。', aura: 220, money: 2000 },
