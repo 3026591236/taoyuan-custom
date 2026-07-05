@@ -1,9 +1,9 @@
 {
     "name" : "桃源乡",
     "appid" : "__UNI__190B089",
-    "description" : "桃源乡双端客户端壳：直接加载线上 H5 游戏。",
-    "versionName" : "0.1.2",
-    "versionCode" : 102,
+    "description" : "桃源乡 iOS/Android H5 套壳客户端。",
+    "versionName" : "0.1.3",
+    "versionCode" : 103,
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,
@@ -22,8 +22,7 @@
                     "<uses-permission android:name=\"android.permission.INTERNET\"/>",
                     "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
                 ],
-                "schemes" : "taoyuan",
-                "icon" : "static/logo-pixel.png"
+                "schemes" : "taoyuan"
             },
             "ios" : {
                 "dSYMs" : false,
@@ -32,9 +31,43 @@
                     "Set :NSAppTransportSecurity:NSAllowsArbitraryLoads true",
                     "Set :NSAppTransportSecurity:NSAllowsArbitraryLoadsInWebContent true",
                     "Set :NSAppTransportSecurity:NSAllowsLocalNetworking true"
-                ],
-                "icon" : "static/logo-pixel.png"
+                ]
+            },
+            "icons" : {
+                "ios" : {
+                    "appstore" : "static/icon-1024.png",
+                    "iphone" : {
+                        "app@2x" : "static/icon-120.png",
+                        "app@3x" : "static/icon-180.png",
+                        "spotlight@2x" : "static/icon-80.png",
+                        "spotlight@3x" : "static/icon-120.png",
+                        "settings@2x" : "static/icon-58.png",
+                        "settings@3x" : "static/icon-87.png",
+                        "notification@2x" : "static/icon-40.png",
+                        "notification@3x" : "static/icon-60.png"
+                    },
+                    "ipad" : {
+                        "app" : "static/icon-76.png",
+                        "app@2x" : "static/icon-152.png",
+                        "proapp@2x" : "static/icon-167.png",
+                        "spotlight" : "static/icon-40.png",
+                        "spotlight@2x" : "static/icon-80.png",
+                        "settings" : "static/icon-29.png",
+                        "settings@2x" : "static/icon-58.png",
+                        "notification" : "static/icon-20.png",
+                        "notification@2x" : "static/icon-40.png"
+                    }
+                },
+                "android" : {
+                    "hdpi" : "static/icon-72.png",
+                    "xhdpi" : "static/icon-96.png",
+                    "xxhdpi" : "static/icon-144.png",
+                    "xxxhdpi" : "static/icon-192.png"
+                }
             }
+        },
+        "launchwebview" : {
+            "kernel" : "WKWebview"
         }
     },
     "h5" : {
