@@ -69,6 +69,19 @@ export const useGameStore = defineStore('game', () => {
   const midnightWarned = ref(false)
   const dailyLuck = ref(0)
 
+  type DailyFateType = 'harvest' | 'combat' | 'tower' | 'travel' | 'cultivation' | 'wealth'
+  const DAILY_FATES: { type: DailyFateType; name: string; desc: string; bonusText: string }[] = [
+    { type: 'harvest', name: '灵雨润田', desc: '今日田间灵机活跃，收获更容易得到额外地脉感应。', bonusText: '收获地脉感应 +20%' },
+    { type: 'combat', name: '锋芒毕露', desc: '今日气血沸腾，红尘历练与秘境战斗收获更多修为灵气。', bonusText: '战斗修为/灵气 +12%' },
+    { type: 'tower', name: '登塔吉兆', desc: '今日登仙塔灵压顺遂，登塔胜利奖励更丰厚。', bonusText: '登仙塔修为/灵气 +18%' },
+    { type: 'travel', name: '清风随行', desc: '今日行路轻快，跨区域移动更省时间。', bonusText: '移动耗时 -20%' },
+    { type: 'cultivation', name: '灵台清明', desc: '今日修行心境澄澈，打坐与炼化更容易增长修为。', bonusText: '修行效率 +10%' },
+    { type: 'wealth', name: '财星照命', desc: '今日财运正旺，经营与任务的铜钱回报更讨喜。', bonusText: '今日目标铜钱 +15%' }
+  ]
+  const dailyFateType = ref<DailyFateType>('harvest')
+  const dailyFate = computed(() => DAILY_FATES.find(f => f.type === dailyFateType.value) ?? DAILY_FATES[0]!)
+  const dailyFateBonus = (type: DailyFateType): number => dailyFateType.value === type ? 1 : 0
+
   /** 山丘田庄：地表矿脉（日结生成，在农场面板开采后清除） */
   const surfaceOrePatch = ref<{ oreId: string; quantity: number } | null>(null)
 
@@ -164,6 +177,7 @@ export const useGameStore = defineStore('game', () => {
     if (travelSpeedBonus > 0) {
       multiplier *= 1 - travelSpeedBonus
     }
+    if (dailyFateType.value === 'travel') multiplier *= 0.8
     return baseCost * multiplier
   }
 
@@ -215,8 +229,9 @@ export const useGameStore = defineStore('game', () => {
     const nextDay = day.value + 1 > 28 ? 1 : day.value + 1
     const nextSeason = day.value + 1 > 28 ? SEASON_ORDER[(SEASON_ORDER.indexOf(season.value) + 1) % 4]! : season.value
     tomorrowWeather.value = rollWeather(nextSeason, nextDay)
-    // 每日运势: -0.1 ~ +0.1
+    // 每日运势: -0.1 ~ +0.1，并刷新今日机缘
     dailyLuck.value = Math.random() * 0.2 - 0.1
+    dailyFateType.value = DAILY_FATES[Math.floor(Math.random() * DAILY_FATES.length)]!.type
     hour.value = DAY_START_HOUR
     midnightWarned.value = false
     currentLocationGroup.value = 'farm'
@@ -245,6 +260,8 @@ export const useGameStore = defineStore('game', () => {
     currentLocation.value = 'farm'
     currentLocationGroup.value = 'farm'
     farmMapType.value = mapType
+    dailyLuck.value = Math.random() * 0.2 - 0.1
+    dailyFateType.value = DAILY_FATES[0]!.type
     isGameStarted.value = true
   }
 
@@ -261,6 +278,7 @@ export const useGameStore = defineStore('game', () => {
       currentLocationGroup: currentLocationGroup.value,
       farmMapType: farmMapType.value,
       dailyLuck: dailyLuck.value,
+      dailyFateType: dailyFateType.value,
       surfaceOrePatch: surfaceOrePatch.value,
       creekCatch: creekCatch.value
     }
@@ -279,6 +297,7 @@ export const useGameStore = defineStore('game', () => {
     currentLocationGroup.value = data.currentLocationGroup ?? 'farm'
     farmMapType.value = data.farmMapType ?? 'standard'
     dailyLuck.value = data.dailyLuck ?? 0
+    dailyFateType.value = data.dailyFateType ?? 'harvest'
     surfaceOrePatch.value = data.surfaceOrePatch ?? null
     creekCatch.value = data.creekCatch ?? []
     isGameStarted.value = true
@@ -297,6 +316,9 @@ export const useGameStore = defineStore('game', () => {
     farmMapType,
     midnightWarned,
     dailyLuck,
+    dailyFateType,
+    dailyFate,
+    dailyFateBonus,
     surfaceOrePatch,
     creekCatch,
     seasonIndex,

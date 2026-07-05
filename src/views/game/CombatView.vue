@@ -22,6 +22,26 @@
         <button class="btn w-full justify-center" :disabled="Boolean(combatStore.towerLockReason())" @click="combatStore.challengeTower()">挑战下一层</button>
         <p v-if="combatStore.towerLockReason()" class="text-[10px] text-danger mt-2">{{ combatStore.towerLockReason() }}</p>
 
+        <div class="mt-3 border border-accent/15 rounded-xs p-2 bg-bg/30">
+          <div class="flex items-center justify-between mb-1">
+            <h4 class="text-xs text-accent">🎁 阶段宝箱</h4>
+            <span v-if="combatStore.nextTowerMilestone" class="text-[10px] text-muted">下个：第{{ combatStore.nextTowerMilestone.floor }}层</span>
+          </div>
+          <p class="text-[10px] text-muted mb-2">每5层可领精英宝箱，每10层可领镇塔宝箱，让每次登塔都有明确追求。</p>
+          <div v-if="combatStore.towerClaimableMilestones.length" class="space-y-1 mb-2">
+            <div v-for="box in combatStore.towerClaimableMilestones.slice(0, 3)" :key="box.floor" class="flex items-center justify-between gap-2 border border-success/30 rounded-xs px-2 py-1 bg-success/5">
+              <span class="text-[10px] text-success truncate">{{ box.title }}</span>
+              <button class="text-[10px] text-accent" @click="handleClaimTowerMilestone(box.floor)">领取</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-5 gap-1 text-[10px]">
+            <div v-for="box in combatStore.towerMilestoneRewards.slice(0, 10)" :key="box.floor" class="tower-box" :class="box.claimed ? 'claimed' : box.reached ? 'ready' : ''">
+              <span>第{{ box.floor }}层</span>
+              <b>{{ box.claimed ? '已领' : box.reached ? '可领' : '未达' }}</b>
+            </div>
+          </div>
+        </div>
+
         <div class="mt-3 border-t border-accent/20 pt-2">
           <div class="flex items-center justify-between mb-2">
             <h4 class="text-xs text-accent">🏆 实时爬塔榜</h4>
@@ -164,6 +184,7 @@
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useCultivationStore } from '@/stores/useCultivationStore'
   import kenneyRoguelikeCharacters from '@/assets/kenney/roguelike-characters/roguelikeChar_transparent.png'
+  import { showFloat } from '@/composables/useGameLog'
 
   const combatStore = useCombatStore()
   const playerStore = usePlayerStore()
@@ -190,6 +211,11 @@
     if (name.includes('狼') || name.includes('虎') || name.includes('熊') || name.includes('兽')) return spriteStyle(6, 1)
     if (name.includes('妖') || name.includes('魔') || name.includes('鬼')) return spriteStyle(10, 1)
     return spriteStyle(7, 1)
+  }
+
+  const handleClaimTowerMilestone = (floor: number) => {
+    const res = combatStore.claimTowerMilestone(floor)
+    showFloat(res.message, res.success ? 'success' : 'danger')
   }
 
   const loadTowerLeaderboard = async () => {
@@ -307,4 +333,10 @@
   @keyframes player-hit { 0%,100% { transform: translateX(0); } 45% { transform: translateX(5px); } }
   @media (max-width: 420px) { .battle-stage { grid-template-columns: 1fr 34px 1fr; gap: .35rem; padding-left: .4rem; padding-right: .4rem; } .battle-pixel-card, .monster-pixel-card { width: 74px; height: 112px; } .pixel-avatar { left: 17px; transform: scale(1.1); } .monster-pixel-body { left: 12px; transform: scale(.95); transform-origin: top center; } .battle-vs { font-size: 11px; } }
 
+
+  .tower-box { border: 1px solid rgba(var(--color-accent-rgb, 255,180,0), 0.12); border-radius: 3px; padding: 0.25rem; text-align: center; color: rgba(255,255,255,0.45); background: rgba(0,0,0,0.18); }
+  .tower-box span { display: block; }
+  .tower-box b { display: block; font-weight: 600; }
+  .tower-box.ready { border-color: rgba(72, 187, 120, 0.55); color: rgb(72, 187, 120); background: rgba(72, 187, 120, 0.08); }
+  .tower-box.claimed { opacity: 0.55; color: rgba(255,255,255,0.35); }
 </style>

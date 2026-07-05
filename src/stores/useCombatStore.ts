@@ -5,6 +5,7 @@ import { addLog } from '@/composables/useGameLog'
 import { useCultivationStore } from './useCultivationStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
+import { useGameStore } from './useGameStore'
 
 export type ZoneKind = 'trial' | 'beast' | 'realm' | 'tower'
 
@@ -123,6 +124,7 @@ export const useCombatStore = defineStore('combat', () => {
   const dailyRuns = ref<Record<string, { date: string; count: number }>>({})
   const towerHighestFloor = ref(0)
   const towerCurrentFloor = ref(0)
+  const towerMilestoneClaimed = ref<number[]>([])
   let dmgId = 0
 
   const activeZone = computed(() => REALM_ZONES.find(z => z.id === currentZone.value) || null)
@@ -131,7 +133,23 @@ export const useCombatStore = defineStore('combat', () => {
   const towerCost = computed(() => 12 + Math.ceil(towerNextFloor.value * 2.5))
   const towerStaminaCost = computed(() => 4 + Math.ceil(towerNextFloor.value / 8))
   const combatTitle = computed(() => isTowerCombat.value ? `🗼 登仙塔 · 第${towerCurrentFloor.value}层` : `${activeZone.value?.emoji || ''} ${activeZone.value?.name || '战场'}`)
-  const combatRewardHint = computed(() => isTowerCombat.value ? '逐层试炼 / 首通记录 / 修为灵气与稀有材料' : (activeZone.value?.rewardHint || ''))
+  const combatRewardHint = computed(() => isTowerCombat.value ? '逐层试炼 / 首通记录 / 每5层宝箱 / 每10层镇塔大奖' : (activeZone.value?.rewardHint || ''))
+  const towerMilestoneRewards = computed(() => {
+    const rewards: { floor: number; title: string; desc: string; claimed: boolean; reached: boolean }[] = []
+    for (let floor = 5; floor <= Math.max(50, Math.ceil((towerHighestFloor.value + 10) / 5) * 5); floor += 5) {
+      const boss = floor % 10 === 0
+      rewards.push({
+        floor,
+        title: boss ? `第${floor}层镇塔宝箱` : `第${floor}层精英宝箱`,
+        desc: boss ? '大量灵石、法宝碎片、灵蕴玉概率奖励' : '灵石、魂晶、少量法宝碎片',
+        claimed: towerMilestoneClaimed.value.includes(floor),
+        reached: towerHighestFloor.value >= floor
+      })
+    }
+    return rewards
+  })
+  const nextTowerMilestone = computed(() => towerMilestoneRewards.value.find(r => !r.claimed) || null)
+  const towerClaimableMilestones = computed(() => towerMilestoneRewards.value.filter(r => r.reached && !r.claimed))
   const trialZones = computed(() => REALM_ZONES.filter(z => z.kind === 'trial'))
   const beastZones = computed(() => REALM_ZONES.filter(z => z.kind === 'beast'))
   const realmZones = computed(() => REALM_ZONES.filter(z => z.kind === 'realm'))
@@ -294,8 +312,10 @@ export const useCombatStore = defineStore('combat', () => {
     const m = currentMonster.value!
     const zone = activeZone.value
     const rebirthBoost = 1 + (c.rebirthCount || 0) * 0.03
-    const exp = Math.floor(m.exp * rebirthBoost)
-    const aura = Math.floor(m.aura * rebirthBoost)
+    const gameStore = useGameStore()
+    const fateBoost = isTowerCombat.value && gameStore.dailyFateType === 'tower' ? 1.18 : (!isTowerCombat.value && gameStore.dailyFateType === 'combat' ? 1.12 : 1)
+    const exp = Math.floor(m.exp * rebirthBoost * fateBoost)
+    const aura = Math.floor(m.aura * rebirthBoost * fateBoost)
     c.cultivation = (c.cultivation || 0) + exp
     c.aura = (c.aura || 0) + aura
     const p = usePlayerStore()
@@ -308,7 +328,10 @@ export const useCombatStore = defineStore('combat', () => {
     if (isTowerCombat.value) {
       const oldHighest = towerHighestFloor.value
       towerHighestFloor.value = Math.max(towerHighestFloor.value, towerCurrentFloor.value)
-      if (towerHighestFloor.value > oldHighest) addLog(`登仙塔最高层刷新：第${towerHighestFloor.value}层！`)
+      if (towerHighestFloor.value > oldHighest) {
+        addLog(`登仙塔最高层刷新：第${towerHighestFloor.value}层！`)
+        if (Math.floor(towerHighestFloor.value / 5) > Math.floor(oldHighest / 5)) addLog('新的登塔阶段宝箱已可领取！')
+      }
     }
     if (zone?.kind === 'beast') {
       c.lingYun = (c.lingYun || 0) + 1
@@ -338,6 +361,29 @@ export const useCombatStore = defineStore('combat', () => {
     drops.value = []
   }
 
+  const claimTowerMilestone = (floor: number): { success: boolean; message: string } => {
+    const target = Math.floor(Number(floor) || 0)
+    if (target <= 0 || target % 5 !== 0) return { success: false, message: '无效的登塔宝箱。' }
+    if (towerHighestFloor.value < target) return { success: false, message: `尚未到达第${target}层。` }
+    if (towerMilestoneClaimed.value.includes(target)) return { success: false, message: '这个宝箱已经领取过了。' }
+    const inv = useInventoryStore()
+    const boss = target % 10 === 0
+    const spiritStones = boss ? 18 + target * 2 : 8 + target
+    const soulCrystals = boss ? Math.max(2, Math.floor(target / 10)) : Math.max(1, Math.floor(target / 15))
+    inv.addItem('spirit_stone', spiritStones)
+    inv.addItem('soul_crystal', soulCrystals)
+    if (boss) {
+      inv.addItem('artifact_shard', 1 + Math.floor(target / 30))
+      if (target >= 20) inv.addItem('lingyun_jade', 1)
+    } else if (target >= 15) {
+      inv.addItem('artifact_shard', 1)
+    }
+    towerMilestoneClaimed.value.push(target)
+    const msg = boss ? `领取第${target}层镇塔宝箱：灵石×${spiritStones}、魂晶×${soulCrystals}、法宝碎片等奖励。` : `领取第${target}层精英宝箱：灵石×${spiritStones}、魂晶×${soulCrystals}。`
+    addLog(msg)
+    return { success: true, message: msg }
+  }
+
   const collectDrops = () => {
     const inv = useInventoryStore()
     let okCount = 0
@@ -348,19 +394,20 @@ export const useCombatStore = defineStore('combat', () => {
     addLog(okCount ? '拾取了所有掉落物' : '背包已满或物品未登记，部分掉落未能拾取')
   }
 
-  const serialize = () => ({ dailyRuns: dailyRuns.value, towerHighestFloor: towerHighestFloor.value })
+  const serialize = () => ({ dailyRuns: dailyRuns.value, towerHighestFloor: towerHighestFloor.value, towerMilestoneClaimed: towerMilestoneClaimed.value })
   const deserialize = (data: unknown) => {
     if (!data || typeof data !== 'object') return
     dailyRuns.value = (data as any).dailyRuns || {}
     towerHighestFloor.value = Number((data as any).towerHighestFloor || 0)
+    towerMilestoneClaimed.value = Array.isArray((data as any).towerMilestoneClaimed) ? (data as any).towerMilestoneClaimed.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n)) : []
   }
 
   return {
     currentZone, activeZone, currentMonster, monsterHp, playerHp, playerMaxHp, playerAtk, playerDef,
     combatLog, isFighting, combatResult, drops, showFlash, damageNumbers, dailyRuns,
-    isTowerCombat, towerHighestFloor, towerCurrentFloor, towerNextFloor, towerCost, towerStaminaCost, combatTitle, combatRewardHint, towerLockReason,
+    isTowerCombat, towerHighestFloor, towerCurrentFloor, towerNextFloor, towerCost, towerStaminaCost, towerMilestoneRewards, nextTowerMilestone, towerClaimableMilestones, combatTitle, combatRewardHint, towerLockReason,
     trialZones, beastZones, realmZones, getDailyCount, isZoneUnlocked, lockReason,
-    enterZone, challengeTower, startFight, leaveCombat, collectDrops, serialize, deserialize,
+    enterZone, challengeTower, startFight, leaveCombat, collectDrops, claimTowerMilestone, serialize, deserialize,
     REALM_ZONES
   }
 })

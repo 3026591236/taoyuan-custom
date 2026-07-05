@@ -11,6 +11,33 @@
       {{ sleepLabel }}
     </Button>
 
+    <div v-if="nextJourneyTask" class="daily-hook-card">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 mb-1">
+            <span class="text-[10px] px-1 border border-accent/30 rounded-xs text-accent">今日机缘</span>
+            <span class="text-[10px] text-success truncate">{{ gameStore.dailyFate.name }} · {{ gameStore.dailyFate.bonusText }}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm">🎯</span>
+            <span class="text-xs text-accent font-bold truncate">{{ nextJourneyTask.title }}</span>
+            <span v-if="questStore.journeySummary.claimable > 0" class="text-[10px] text-success">可领{{ questStore.journeySummary.claimable }}</span>
+          </div>
+          <p class="text-[11px] text-muted leading-relaxed mt-1 truncate">{{ nextJourneyTask.desc }}</p>
+          <div class="mt-1 flex items-center gap-2">
+            <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10 overflow-hidden">
+              <div class="h-full bg-accent transition-all" :style="{ width: Math.min(100, Math.floor((nextJourneyTask.progress / nextJourneyTask.target) * 100)) + '%' }" />
+            </div>
+            <span class="text-[10px] text-muted whitespace-nowrap">{{ Math.min(nextJourneyTask.progress, nextJourneyTask.target) }}/{{ nextJourneyTask.target }}</span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1 shrink-0">
+          <Button v-if="nextJourneyTask.done && !nextJourneyTask.claimed" class="!px-2 !py-1 text-[10px] !bg-accent !text-bg" @click="claimNextJourney">领取</Button>
+          <Button class="!px-2 !py-1 text-[10px]" @click="goJourneyTarget">前往</Button>
+        </div>
+      </div>
+    </div>
+
     <!-- 内容 -->
     <div class="game-panel flex-1 min-h-0 overflow-y-auto">
       <router-view v-slot="{ Component }">
@@ -475,6 +502,7 @@
   import { useAnimalStore } from '@/stores/useAnimalStore'
   import { useGameStore, SEASON_NAMES } from '@/stores/useGameStore'
   import { useHomeStore } from '@/stores/useHomeStore'
+  import { useQuestStore } from '@/stores/useQuestStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { useNpcStore } from '@/stores/useNpcStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
@@ -484,7 +512,7 @@
   import { useDialogs } from '@/composables/useDialogs'
   import type { MorningChoiceEvent } from '@/data/farmEvents'
   import { handleEndDay } from '@/composables/useEndDay'
-  import { addLog, logHistory, clearAllLogs, clearDayLogs, _registerDayLabelGetter } from '@/composables/useGameLog'
+  import { addLog, showFloat, logHistory, clearAllLogs, clearDayLogs, _registerDayLabelGetter } from '@/composables/useGameLog'
   import {
     LATE_NIGHT_RECOVERY_MAX,
     LATE_NIGHT_RECOVERY_MIN,
@@ -525,6 +553,7 @@
   const playerStore = usePlayerStore()
   const saveStore = useSaveStore()
   const farmStore = useFarmStore()
+  const questStore = useQuestStore()
   const { switchToSeasonalBgm } = useAudio()
 
 
@@ -827,6 +856,34 @@
   const currentPanel = computed(() => {
     return (route.name as string) ?? 'farm'
   })
+
+  const nextJourneyTask = computed(() => questStore.nextJourneyTask)
+  const journeyTargetMap: Record<string, string> = {
+    cropHarvest: 'farm',
+    earthPulse: 'farm',
+    fieldTier: 'cultivation',
+    cultivationUnlocked: 'cultivation',
+    realmIndex: 'cultivation',
+    moneyEarned: 'farm',
+    monsterKills: 'combat',
+    mineFloor: 'mining',
+    completedCommissions: 'quest',
+    craftedPills: 'alchemy',
+    attributePower: 'charinfo'
+  }
+  const goJourneyTarget = () => {
+    const task = nextJourneyTask.value
+    if (!task) return
+    const target = journeyTargetMap[task.metric] || 'quest'
+    void router.push({ name: target })
+  }
+  const claimNextJourney = () => {
+    const task = nextJourneyTask.value
+    if (!task) return
+    const res = questStore.claimJourneyTask(task.id)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+    addLog(res.message)
+  }
 
   const sleepLabel = computed(() => {
     if (gameStore.hour >= 24) return '倒头就睡'
@@ -1195,5 +1252,13 @@
     10% { opacity: 1; transform: translateX(-50%) translateY(0); }
     80% { opacity: 1; }
     100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+  }
+
+  .daily-hook-card {
+    border: 1px solid rgba(var(--color-accent-rgb, 255,180,0), 0.35);
+    background: linear-gradient(135deg, rgba(var(--color-accent-rgb, 255,180,0), 0.12), rgba(20, 12, 4, 0.72));
+    border-radius: 4px;
+    padding: 0.55rem 0.7rem;
+    box-shadow: 0 0 18px rgba(var(--color-accent-rgb, 255,180,0), 0.08);
   }
 </style>

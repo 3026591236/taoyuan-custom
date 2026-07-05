@@ -154,13 +154,22 @@ export const useQuestStore = defineStore('quest', () => {
     return { total: tasks.length, done, claimed, claimable }
   })
 
+  const nextJourneyTask = computed(() => {
+    const tasks = journeyTasks.value
+    return tasks.find(t => t.done && !t.claimed) || tasks.find(t => t.type === 'guide' && !t.claimed) || tasks.find(t => t.type === 'daily' && !t.claimed) || tasks.find(t => t.type === 'sevenDay' && !t.claimed) || null
+  })
+
+  const activeJourneyTasks = computed(() => journeyTasks.value.filter(t => !t.claimed).slice(0, 5))
+
   const claimJourneyTask = (taskId: string): { success: boolean; message: string } => {
     const task = journeyTasks.value.find(t => t.id === taskId)
     if (!task) return { success: false, message: '修行志目标不存在。' }
     if (!task.done) return { success: false, message: '目标尚未完成。' }
     if (task.claimed) return { success: false, message: '奖励已经领取过了。' }
 
-    if (task.reward.money) playerStore.earnMoney(task.reward.money)
+    const gameStore = useGameStore()
+    const moneyReward = task.reward.money ? Math.floor(task.reward.money * (gameStore.dailyFateType === 'wealth' ? 1.15 : 1)) : 0
+    if (moneyReward) playerStore.earnMoney(moneyReward)
     if (task.reward.attributeExp) playerStore.addAttributeExpBatch(task.reward.attributeExp)
     if (task.reward.aura) {
       const cultivationStore = useCultivationStore()
@@ -169,7 +178,7 @@ export const useQuestStore = defineStore('quest', () => {
     journeyClaimed.value.push(getJourneyClaimKey(task))
 
     const rewardText = [
-      task.reward.money ? `${task.reward.money}文` : '',
+      moneyReward ? `${moneyReward}文` : '',
       task.reward.aura ? `灵气${task.reward.aura}` : '',
       task.reward.attributeExp ? '资质经验' : ''
     ].filter(Boolean).join('、')
@@ -587,6 +596,8 @@ export const useQuestStore = defineStore('quest', () => {
     journeyDailyBaselines,
     journeyTasks,
     journeySummary,
+    nextJourneyTask,
+    activeJourneyTasks,
     MAX_ACTIVE_QUESTS,
     generateDailyQuests,
     generateSpecialOrder,

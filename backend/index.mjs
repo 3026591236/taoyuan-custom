@@ -235,6 +235,11 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: '2026-07-05', title: 'V0.8 留存与上瘾循环优化', content: `• 主界面新增「今日目标/下一步」卡片，直接展示修行志当前目标、进度、奖励和一键领奖/前往。
+• 新增每日随机「今日机缘」，每天给种田、战斗、登塔、移动、修行或铜钱收益不同加成。
+• 修行志奖励反馈强化，完成后更容易看到可领取状态；财运机缘会提高今日目标铜钱奖励。
+• 登仙塔新增每5层/10层阶段宝箱，最高层刷新后提示可领取，宝箱奖励灵石、魂晶、法宝碎片等。
+• 首日体验更集中：把种田、地脉、修行志、修仙战斗串成更明确的下一步目标链。` },
     { date: '2026-07-05', title: 'V0.6.11 登仙塔与实时爬塔榜', content: `• 秘境页新增「登仙塔」玩法：逐层自动挑战，胜利刷新个人最高层。
 • 每层消耗灵力与体力，层数越高敌人越强、奖励越丰厚。
 • 每5层出现精英，每10层出现镇塔首领。
