@@ -1,9 +1,9 @@
 {
     "name" : "桃源乡",
     "appid" : "__UNI__190B089",
-    "description" : "桃源乡双端客户端壳：强联网下载后端资源包，本地 WebView 加载。",
-    "versionName" : "0.1.1",
-    "versionCode" : 101,
+    "description" : "桃源乡双端客户端壳：直接加载线上 H5 游戏。",
+    "versionName" : "0.1.2",
+    "versionCode" : 102,
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,
@@ -23,7 +23,7 @@
                     "<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\"/>"
                 ],
                 "schemes" : "taoyuan",
-                "icon" : "static/logo-pixel.svg"
+                "icon" : "static/logo-pixel.png"
             },
             "ios" : {
                 "dSYMs" : false,
@@ -31,9 +31,9 @@
                 "plistcmds" : [
                     "Set :NSAppTransportSecurity:NSAllowsArbitraryLoads true",
                     "Set :NSAppTransportSecurity:NSAllowsArbitraryLoadsInWebContent true",
-                    "Set :NSAppTransportSecurity:NSAllowsLocalNetworking true",
-                    "Set :WKAppBoundDomains:0 129.204.252.190"
-                ]
+                    "Set :NSAppTransportSecurity:NSAllowsLocalNetworking true"
+                ],
+                "icon" : "static/logo-pixel.png"
             }
         }
     },
