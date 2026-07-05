@@ -13,6 +13,7 @@ import { useShopStore } from './useShopStore'
 import { useAnimalStore } from './useAnimalStore'
 import { useCultivationStore } from './useCultivationStore'
 import { useGameStore } from './useGameStore'
+import { useCombatStore } from './useCombatStore'
 import type { AttributeKey } from './usePlayerStore'
 
 export const useQuestStore = defineStore('quest', () => {
@@ -54,6 +55,8 @@ export const useQuestStore = defineStore('quest', () => {
     | 'completedCommissions'
     | 'craftedPills'
     | 'attributePower'
+    | 'manualLevels'
+    | 'towerFloor'
 
   interface JourneyReward {
     money?: number
@@ -93,7 +96,14 @@ export const useQuestStore = defineStore('quest', () => {
     { id: 'seven_day_4', type: 'sevenDay', day: 4, title: '第四日：炼气修行', desc: '突破到炼气一层，形成第一段修仙目标。', metric: 'realmIndex', target: 1, reward: { aura: 190, attributeExp: { physique: 26 } } },
     { id: 'seven_day_5', type: 'sevenDay', day: 5, title: '第五日：外出磨砺', desc: '击败5只怪物，补上战斗成长线。', metric: 'monsterKills', target: 5, reward: { money: 520, attributeExp: { strength: 30, agility: 30 } } },
     { id: 'seven_day_6', type: 'sevenDay', day: 6, title: '第六日：经营有成', desc: '累计赚取3000文，为灵田、法宝和洞府准备资源。', metric: 'moneyEarned', target: 3000, reward: { money: 720, attributeExp: { perception: 28 } } },
-    { id: 'seven_day_7', type: 'sevenDay', day: 7, title: '第七日：小有所成', desc: '角色资质总评达到24，感受日常行为带来的角色成长。', metric: 'attributePower', target: 24, reward: { aura: 260, money: 900, attributeExp: { physique: 30, strength: 30, agility: 30, perception: 30 } } }
+    { id: 'seven_day_7', type: 'sevenDay', day: 7, title: '第七日：小有所成', desc: '角色资质总评达到24，感受日常行为带来的角色成长。', metric: 'attributePower', target: 24, reward: { aura: 260, money: 900, attributeExp: { physique: 30, strength: 30, agility: 30, perception: 30 } } },
+    { id: 'v11_story_realm_2', type: 'guide', title: '仙途主线：灵田异变', desc: '境界达到炼气二层，触发灵田异变剧情，明确继续修仙的主线目标。', metric: 'realmIndex', target: 2, reward: { aura: 220, money: 500, attributeExp: { perception: 24 } } },
+    { id: 'v11_story_realm_10', type: 'guide', title: '仙途主线：宗门来客', desc: '境界达到筑基，宗门执事来访，开启宗门因果与飞升线索。', metric: 'realmIndex', target: 10, reward: { aura: 520, money: 1200, attributeExp: { physique: 28, perception: 28 } } },
+    { id: 'v11_equipment_set', type: 'guide', title: '装备套装：青木雏形', desc: '功法总层数达到3层，形成第一套法宝/装备追求，后续可扩展套装词条。', metric: 'manualLevels', target: 3, reward: { aura: 300, money: 900, attributeExp: { strength: 28, physique: 28 } } },
+    { id: 'v11_dungeon_floor_5', type: 'guide', title: '深层秘境：五层首通', desc: '登仙塔达到5层，完成第一个深层秘境首通目标。', metric: 'towerFloor', target: 5, reward: { aura: 360, money: 1000, attributeExp: { strength: 32, agility: 32 } } },
+    { id: 'v11_social_help', type: 'guide', title: '玩家互动：仙盟互助', desc: '累计完成3个委托，解锁仙盟互助/寄售玩法的雏形奖励。', metric: 'completedCommissions', target: 3, reward: { aura: 180, money: 888, attributeExp: { perception: 24 } } },
+    { id: 'v11_event_hunt', type: 'guide', title: '限时活动：妖潮来袭', desc: '累计击败20只怪物，领取限时讨伐活动奖励。', metric: 'monsterKills', target: 20, reward: { aura: 520, money: 1500, attributeExp: { strength: 40, agility: 40 } } },
+    { id: 'v11_return_bonus', type: 'guide', title: '回访福利：仙缘再临', desc: '进入游戏即可领取一次V1.1回访福利，让老玩家回来就有收获。', metric: 'cultivationUnlocked', target: 0, reward: { aura: 188, money: 666, attributeExp: { physique: 18, strength: 18, agility: 18, perception: 18 } } }
   ]
 
   const getJourneyDayKey = (): string => {
@@ -115,6 +125,8 @@ export const useQuestStore = defineStore('quest', () => {
       case 'completedCommissions': return completedQuestCount.value
       case 'craftedPills': return achievementStore.stats.totalRecipesCooked
       case 'attributePower': return playerStore.attributePower
+      case 'manualLevels': return Object.values(cultivationStore.manuals).reduce((sum, level) => sum + (Number(level) || 0), 0)
+      case 'towerFloor': return useCombatStore().towerHighestFloor
       default: return 0
     }
   }

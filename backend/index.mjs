@@ -242,6 +242,15 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+
+      {
+        version: 'V1.1 七线补全',
+        date: '2026-07-05',
+        title: 'V1.1 七线补全',
+        content: '修行志新增七条长期目标：修仙主线剧情、装备套装追求、深层秘境首通、仙盟互助、限时妖潮活动、下一步变强引导和回访福利，让玩家从新手到中后期都有明确追求与奖励反馈。',
+        highlights: ['修仙主线目标', '装备套装追求', '深层秘境首通', '活动与回访福利']
+      },
+
       {
         version: 'V1.0.1 功法与灵石市集扩展',
         date: '2026-07-05',
