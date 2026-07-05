@@ -242,6 +242,13 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+      {
+        version: 'V0.9.1 箱子制造与体力恢复修复',
+        date: '2026-07-05',
+        title: '箱子制造与体力恢复修复',
+        content: '修复工坊箱子满足材料仍无法制造的问题，增加材料扣除失败保护；新增随游戏时间缓慢恢复体力，每15分钟恢复1点，体力行动也会折算少量恢复。',
+        highlights: ['修复箱子制造', '体力随时间缓慢恢复', '材料失败保护']
+      },
     { date: '2026-07-05', title: 'V0.9 玩家爽感与回访优化', content: `• 新增回访离线收益：离线20分钟以上再次进入游戏，可获得铜钱、体力、灵石；修仙已解锁时额外获得修为和灵气，最多累计12小时。
 • 新增全局奖励弹窗，签到、邮件、今日目标、离线收益都会用更明显的奖励反馈展示。
 • 每日签到反馈强化：连续天数和获得物品会集中展示，让玩家每天回来更有仪式感。

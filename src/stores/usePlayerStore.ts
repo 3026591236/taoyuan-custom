@@ -63,6 +63,8 @@ export const usePlayerStore = defineStore('player', () => {
   const staminaCapLevel = ref(0) // 0=120, 1=160, 2=200, 3=250, 4=300
   /** 额外体力上限加成（仙翁金丹等），不受仙桃阶梯覆盖 */
   const bonusMaxStamina = ref(0)
+  /** 游戏时间缓慢恢复体力：累计小时，满15分钟恢复1点 */
+  const staminaRegenProgress = ref(0)
 
   // HP 系统
   const hp = ref(BASE_MAX_HP)
@@ -160,12 +162,31 @@ export const usePlayerStore = defineStore('player', () => {
     const effectiveAmount = Math.max(1, Math.floor(amount * (1 - spiritSave)))
     if (stamina.value < effectiveAmount) return false
     stamina.value -= effectiveAmount
+    // 很多体力行动本身不推进时钟；按行动量折算少量游戏时间恢复，避免体力只降不回。
+    // 约每消耗 4 点体力视为经过 15 分钟，恢复 1 点，上限仍受 maxStamina 限制。
+    recoverStaminaByGameTime(effectiveAmount / 16)
     return true
   }
 
   /** 恢复体力 */
   const restoreStamina = (amount: number) => {
     stamina.value = Math.min(stamina.value + amount, maxStamina.value)
+  }
+
+  /** 按游戏时间缓慢恢复体力：每15分钟恢复1点，满体力时清空累计 */
+  const recoverStaminaByGameTime = (hours: number): number => {
+    if (hours <= 0) return 0
+    if (stamina.value >= maxStamina.value) {
+      staminaRegenProgress.value = 0
+      return 0
+    }
+    staminaRegenProgress.value += hours
+    const recovered = Math.min(Math.floor(staminaRegenProgress.value / 0.25), maxStamina.value - stamina.value)
+    if (recovered <= 0) return 0
+    stamina.value += recovered
+    staminaRegenProgress.value -= recovered * 0.25
+    if (stamina.value >= maxStamina.value) staminaRegenProgress.value = 0
+    return recovered
   }
 
   /** 受到伤害（扣 HP），返回实际伤害值 */
@@ -260,6 +281,7 @@ export const usePlayerStore = defineStore('player', () => {
       maxStamina: maxStamina.value,
       staminaCapLevel: staminaCapLevel.value,
       bonusMaxStamina: bonusMaxStamina.value,
+      staminaRegenProgress: staminaRegenProgress.value,
       hp: hp.value,
       baseMaxHp: baseMaxHp.value,
       attributes: attributes.value
@@ -276,6 +298,7 @@ export const usePlayerStore = defineStore('player', () => {
     maxStamina.value = data.maxStamina
     staminaCapLevel.value = data.staminaCapLevel
     bonusMaxStamina.value = (data as any).bonusMaxStamina ?? 0
+    staminaRegenProgress.value = Math.max(0, Math.min((data as any).staminaRegenProgress ?? 0, 0.24))
     // 旧存档兼容：如果没有 bonusMaxStamina 字段，从 maxStamina 和 staminaCapLevel 推算
     if ((data as any).bonusMaxStamina == null) {
       const expectedBase = STAMINA_CAPS[staminaCapLevel.value] ?? 120
@@ -311,6 +334,7 @@ export const usePlayerStore = defineStore('player', () => {
     maxStamina,
     staminaCapLevel,
     bonusMaxStamina,
+    staminaRegenProgress,
     hp,
     baseMaxHp,
     attributes,
@@ -329,6 +353,7 @@ export const usePlayerStore = defineStore('player', () => {
     getIsLowHp,
     consumeStamina,
     restoreStamina,
+    recoverStaminaByGameTime,
     takeDamage,
     restoreHealth,
     dailyReset,

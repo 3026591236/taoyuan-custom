@@ -145,20 +145,29 @@ export const useGameStore = defineStore('game', () => {
     const prevHour = hour.value
     const newHour = hour.value + effectiveHours
 
+    const playerStore = usePlayerStore()
+    let staminaRecovered = 0
+
     if (newHour >= PASSOUT_HOUR) {
+      const passedHours = Math.max(0, PASSOUT_HOUR - prevHour)
+      staminaRecovered = playerStore.recoverStaminaByGameTime(passedHours)
       hour.value = PASSOUT_HOUR
-      return { ok: true, passedOut: true, message: '已经凌晨2点了，你撑不住倒下了……' }
+      const recoveryMsg = staminaRecovered > 0 ? `路上缓过劲来，体力恢复${staminaRecovered}点。` : ''
+      return { ok: true, passedOut: true, message: `${recoveryMsg}${recoveryMsg ? ' ' : ''}已经凌晨2点了，你撑不住倒下了……` }
     }
 
     hour.value = newHour
+    staminaRecovered = playerStore.recoverStaminaByGameTime(effectiveHours)
+    const recoveryMsg = staminaRecovered > 0 ? `休整片刻，体力恢复${staminaRecovered}点。` : ''
 
     // 跨午夜提示（仅一次）
     if (!midnightWarned.value && prevHour < MIDNIGHT_HOUR && hour.value >= MIDNIGHT_HOUR) {
       midnightWarned.value = true
-      return { ok: true, passedOut: false, message: '已经过了午夜，你开始感到困倦……' }
+      return { ok: true, passedOut: false, message: `${recoveryMsg}${recoveryMsg ? ' ' : ''}已经过了午夜，你开始感到困倦……` }
     }
 
-    return { ok: true, passedOut: false, message: '' }
+    return { ok: true, passedOut: false, message: recoveryMsg }
+
   }
 
   /** 查询切换到目标 tab 的移动耗时 */

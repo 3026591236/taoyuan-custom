@@ -1029,22 +1029,36 @@
 
   const handleCraftChest = (tier: ChestTier) => {
     const def = CHEST_DEFS[tier]
+    if (!warehouseStore.unlocked) {
+      addLog('请先解锁仓库，再制造箱子。')
+      return
+    }
     if (warehouseStore.chests.length >= warehouseStore.maxChests) {
       addLog('箱子槽位已满，请先扩建仓库。')
       return
     }
-    if (processingStore.consumeCraftMaterials(def.craftCost, def.craftMoney)) {
-      sfxClick()
-      warehouseStore.addChest(tier)
-      addLog(`制造了${def.name}，已放入仓库。`)
-      const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine)
-      if (tr.message) addLog(tr.message)
-      if (tr.passedOut) {
-        handleEndDay()
-        return
-      }
-    } else {
-      addLog('材料不足。')
+    if (!processingStore.canCraft(def.craftCost, def.craftMoney)) {
+      addLog('材料或铜钱不足。')
+      return
+    }
+    if (!processingStore.consumeCraftMaterials(def.craftCost, def.craftMoney)) {
+      addLog('材料扣除失败，请整理背包/仓库后再试。')
+      return
+    }
+    if (!warehouseStore.addChest(tier)) {
+      // 极少数情况下创建失败，退回铜钱和材料，避免玩家损失。
+      playerStore.earnMoney(def.craftMoney)
+      for (const c of def.craftCost) inventoryStore.addItem(c.itemId, c.quantity)
+      addLog('箱子创建失败，材料已退回。请刷新后再试。')
+      return
+    }
+    sfxClick()
+    addLog(`制造了${def.name}，已放入仓库。`)
+    const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine)
+    if (tr.message) addLog(tr.message)
+    if (tr.passedOut) {
+      handleEndDay()
+      return
     }
   }
 
