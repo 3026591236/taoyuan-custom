@@ -112,6 +112,12 @@ const MISC_ITEMS: ItemDef[] = [
     healthRestore: 999
   },
 
+  { id: 'storage_talisman', name: '纳物符', category: 'misc', description: '刻有须弥小阵的符箓，使用后背包永久+1格，可突破普通上限。', sellPrice: 600, edible: false },
+  { id: 'cosmos_bag', name: '乾坤袋', category: 'misc', description: '内藏一方小小空间，使用后背包永久+4格，可突破普通上限。', sellPrice: 2400, edible: false },
+  { id: 'wood_scripture', name: '青木长生诀', category: 'misc', description: '温养生机的入门功法秘籍，学习后提升修炼与生命底蕴。', sellPrice: 1800, edible: false },
+  { id: 'thunder_scripture', name: '九霄雷诀', category: 'misc', description: '引雷淬体的进阶功法秘籍，学习后提升战力和渡劫把握。', sellPrice: 3200, edible: false },
+  { id: 'void_scripture', name: '太虚归元功', category: 'misc', description: '凝神归元的高阶功法秘籍，学习后提升灵力、元神与突破稳定性。', sellPrice: 5200, edible: false },
+
   // 修仙 V0.5：红尘历练 / 凶兽 / 转生材料
   { id: 'spirit_stone', name: '灵石', category: 'material', description: '蕴含灵气的石头，可用于修炼、炼器与阵法。', sellPrice: 80, edible: false },
   { id: 'chuanxiong', name: '川芎', category: 'material', description: '百草园药材，活血行气，是炼精丹与高阶丹方的基础药。', sellPrice: 35, edible: false },

@@ -775,6 +775,7 @@
   import { useGameStore } from '@/stores/useGameStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
+  import { useCultivationStore } from '@/stores/useCultivationStore'
   import { useSettingsStore } from '@/stores/useSettingsStore'
   import { useSkillStore } from '@/stores/useSkillStore'
   import { getItemById, getItemSource } from '@/data'
@@ -789,6 +790,7 @@
 
   const inventoryStore = useInventoryStore()
   const playerStore = usePlayerStore()
+  const cultivationStore = useCultivationStore()
   const skillStore = useSkillStore()
   const gameStore = useGameStore()
   const cookingStore = useCookingStore()
@@ -1295,7 +1297,7 @@
   }
 
   /** 可使用的特殊物品 */
-  const USABLE_ITEMS = new Set(['rain_totem', 'stamina_fruit'])
+  const USABLE_ITEMS = new Set(['rain_totem', 'stamina_fruit', 'storage_talisman', 'cosmos_bag', 'wood_scripture', 'thunder_scripture', 'void_scripture'])
 
   const isUsable = (itemId: string): boolean => {
     return USABLE_ITEMS.has(itemId)
@@ -1315,6 +1317,23 @@
       if (!inventoryStore.removeItem(itemId, 1, quality)) return
       playerStore.upgradeMaxStamina()
       addLog(`食用了仙桃，体力上限永久提升至${playerStore.maxStamina}！`)
+    }
+    if (itemId === 'storage_talisman') {
+      if (!inventoryStore.removeItem(itemId, 1, quality)) return
+      inventoryStore.expandCapacityExtra()
+      addLog(`使用了纳物符，背包永久扩容至${inventoryStore.capacity}格！`)
+    }
+    if (itemId === 'cosmos_bag') {
+      if (!inventoryStore.removeItem(itemId, 1, quality)) return
+      for (let i = 0; i < 4; i++) inventoryStore.expandCapacityExtra()
+      addLog(`使用了乾坤袋，背包永久扩容至${inventoryStore.capacity}格！`)
+    }
+    if (itemId === 'wood_scripture' || itemId === 'thunder_scripture' || itemId === 'void_scripture') {
+      const map: Record<string, string> = { wood_scripture: 'wood', thunder_scripture: 'thunder', void_scripture: 'void' }
+      const result = cultivationStore.learnManual(map[itemId])
+      if (!result.success) { addLog(result.message); return }
+      if (!inventoryStore.removeItem(itemId, 1, quality)) return
+      addLog(result.message)
     }
     // 物品消耗完则关闭弹窗
     if (!inventoryStore.items.find(i => i.itemId === itemId && i.quality === quality)) {

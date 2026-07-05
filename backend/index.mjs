@@ -243,6 +243,13 @@ const defaultConfig = {
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
       {
+        version: 'V1.0.1 功法与灵石市集扩展',
+        date: '2026-07-05',
+        title: 'V1.0.1 功法与灵石市集扩展',
+        content: '修仙市集新增灵石兑换的纳物符、乾坤袋，可使用后永久扩展背包；新增青木长生诀、九霄雷诀、太虚归元功三门功法，购买秘籍后可学习并消耗灵气/修为参悟升级，提升修炼收益、战力和渡劫成功率。',
+        highlights: ['灵石市集扩容道具', '新增功法系统', '功法参悟升级', '渡劫成功率加成']
+      },
+      {
         version: 'V1.0 天劫渡劫与挂机修仙',
         date: '2026-07-05',
         title: 'V1.0 天劫渡劫与挂机修仙',

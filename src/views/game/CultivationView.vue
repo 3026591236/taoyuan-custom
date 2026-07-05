@@ -53,6 +53,23 @@
       </template>
     </div>
 
+    <Divider title label="📜 功法" />
+    <div v-if="!cultivation.unlocked" class="border border-accent/10 rounded-xs p-3 text-xs text-muted">启蒙灵田后可研读功法。功法秘籍可在修仙市集用灵石兑换。</div>
+    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div v-for="manual in manuals" :key="manual.key" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs space-y-2">
+        <div class="flex justify-between gap-2">
+          <p class="text-accent text-sm">{{ manual.name }}</p>
+          <span :class="cultivation.manuals[manual.key] > 0 ? 'text-success' : 'text-muted'">{{ cultivation.manuals[manual.key] ? `${cultivation.manuals[manual.key]}层` : '未习得' }}</span>
+        </div>
+        <p class="text-muted leading-relaxed">{{ manual.desc }}</p>
+        <p class="text-[10px] text-muted">效果：{{ manual.effects }}</p>
+        <p class="text-[10px] text-muted">升级：灵气{{ manual.auraCost * Math.max(1, cultivation.manuals[manual.key] || 1) }} / 修为{{ manual.cultivationCost * Math.max(1, cultivation.manuals[manual.key] || 1) }}</p>
+        <Button class="w-full justify-center" :disabled="!cultivation.manuals[manual.key] || cultivation.manuals[manual.key] >= manual.maxLevel" @click="handleUpgradeManual(manual.key)">
+          {{ !cultivation.manuals[manual.key] ? '先在市集购买秘籍' : cultivation.manuals[manual.key] >= manual.maxLevel ? '功法圆满' : '参悟升级' }}
+        </Button>
+      </div>
+    </div>
+
     <div class="border border-accent/10 rounded-xs p-3 text-xs text-muted leading-relaxed">
       <p class="text-accent mb-1">灵植联动</p>
       <p>现在普通作物会先积累地脉感应，启蒙后也能转化少量灵气；蕴灵稻、凝露草、朱果则是更高效的灵植和炼丹材料。</p>
@@ -175,14 +192,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { sfxThunder, sfxLevelUp, sfxHurt } from '@/composables/useAudio'
+import { addLog } from '@/composables/useGameLog'
 import Divider from '@/components/game/Divider.vue'
 import Button from '@/components/game/Button.vue'
-import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS } from '@/stores/useCultivationStore'
-import type { ArtifactKey } from '@/stores/useCultivationStore'
+import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANUALS } from '@/stores/useCultivationStore'
+import type { ArtifactKey, CultivationManualKey } from '@/stores/useCultivationStore'
 
 const cultivation = useCultivationStore()
 const spiritMeals = SPIRIT_MEAL_RECIPES
 const fieldTierName = (idx: number) => FIELD_TIERS[idx] ?? '更高阶灵田'
+const manuals = (Object.entries(CULTIVATION_MANUALS) as Array<[CultivationManualKey, typeof CULTIVATION_MANUALS[CultivationManualKey]]>).map(([key, def]) => ({ key, ...def }))
 
 const artifacts: Array<{ key: ArtifactKey; name: string; desc: string; aura: number; money: number }> = [
   { key: 'glimmerHoe', name: '流光锄', desc: '锄刃引动地脉，灵植收获时额外产出灵气。', aura: 220, money: 2000 },
@@ -212,6 +231,10 @@ const handleBreakthrough = () => {
   const ok = cultivation.breakthrough()
   if (major && cultivation.lastTribulationResult !== 'none') playTribulationFx(cultivation.lastTribulationResult)
   else if (ok) sfxLevelUp()
+}
+const handleUpgradeManual = (key: CultivationManualKey) => {
+  const result = cultivation.upgradeManual(key)
+  addLog(result.message)
 }
 const confirmRebirth = () => {
   if (!cultivation.canRebirth) return

@@ -27,7 +27,12 @@ export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
   { itemId: 'shenqu', name: '神曲', price: 680, description: '调和高阶丹性的稀有药材' },
   { itemId: 'mana_recovery_pill', name: '回灵丹', price: 520, description: '回复灵力的小丹，适合修炼前备药' },
   { itemId: 'qi_gathering_pill', name: '聚气丹', price: 980, description: '辅助聚气修行，初期修士常备' },
-  { itemId: 'foundation_pill', name: '筑基丹', price: 3600, description: '辅助突破的珍贵丹药' }
+  { itemId: 'foundation_pill', name: '筑基丹', price: 3600, description: '辅助突破的珍贵丹药' },
+  { itemId: 'storage_talisman', name: '纳物符', price: 12, description: '灵石兑换，使用后背包永久+1格，可突破普通上限', currency: 'spirit_stone' },
+  { itemId: 'cosmos_bag', name: '乾坤袋', price: 45, description: '灵石兑换，使用后背包永久+4格，可突破普通上限', currency: 'spirit_stone' },
+  { itemId: 'wood_scripture', name: '青木长生诀', price: 30, description: '灵石兑换，学习后解锁功法，提升修炼与气血', currency: 'spirit_stone' },
+  { itemId: 'thunder_scripture', name: '九霄雷诀', price: 80, description: '灵石兑换，雷法功法，提升战力与渡劫成功率', currency: 'spirit_stone' },
+  { itemId: 'void_scripture', name: '太虚归元功', price: 150, description: '灵石兑换，高阶功法，提升灵力、元神与突破稳定性', currency: 'spirit_stone' }
 ]
 
 /** 商铺商品项 */
@@ -36,6 +41,7 @@ export interface ShopItemEntry {
   name: string
   price: number
   description: string
+  currency?: 'money' | 'spirit_stone'
 }
 
 export const useShopStore = defineStore('shop', () => {
@@ -175,12 +181,16 @@ export const useShopStore = defineStore('shop', () => {
   // === 通用购买/出售 ===
 
   /** 购买通用物品 */
-  const buyItem = (itemId: string, price: number, quantity: number = 1): boolean => {
+  const buyItem = (itemId: string, price: number, quantity: number = 1, currency: 'money' | 'spirit_stone' = 'money'): boolean => {
     if (inventoryStore.isAllFull && !inventoryStore.items.some(s => s.itemId === itemId && s.quantity + quantity <= 999)) return false
-    const totalCost = applyDiscount(price) * quantity
-    if (!playerStore.spendMoney(totalCost)) return false
+    const totalCost = (currency === 'spirit_stone' ? price : applyDiscount(price)) * quantity
+    if (currency === 'spirit_stone') {
+      if (inventoryStore.getItemCount('spirit_stone') < totalCost) return false
+      if (!inventoryStore.removeItem('spirit_stone', totalCost)) return false
+    } else if (!playerStore.spendMoney(totalCost)) return false
     if (!inventoryStore.addItem(itemId, quantity)) {
-      playerStore.earnMoney(totalCost)
+      if (currency === 'spirit_stone') inventoryStore.addItem('spirit_stone', totalCost)
+      else playerStore.earnMoney(totalCost)
       return false
     }
     return true

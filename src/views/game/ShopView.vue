@@ -322,11 +322,11 @@
                 openBatchBuyModal(
                   item.name,
                   item.description,
-                  discounted(item.price),
-                  () => handleBuyItem(item.itemId, item.price, item.name),
-                  () => playerStore.money >= discounted(item.price),
-                  count => handleBatchBuyItem(item.itemId, item.price, item.name, count),
-                  () => getMaxBuyable(discounted(item.price)),
+                  item.currency === 'spirit_stone' ? item.price : discounted(item.price),
+                  () => handleBuyMarketItem(item),
+                  () => canBuyMarketItem(item),
+                  count => handleBatchBuyMarketItem(item, count),
+                  () => getMaxBuyableMarket(item),
                   item.itemId
                 )
               "
@@ -524,11 +524,11 @@
                 openBatchBuyModal(
                   item.name,
                   item.description,
-                  discounted(item.price),
-                  () => handleBuyItem(item.itemId, item.price, item.name),
-                  () => playerStore.money >= discounted(item.price),
-                  count => handleBatchBuyItem(item.itemId, item.price, item.name, count),
-                  () => getMaxBuyable(discounted(item.price)),
+                  item.currency === 'spirit_stone' ? item.price : discounted(item.price),
+                  () => handleBuyMarketItem(item),
+                  () => canBuyMarketItem(item),
+                  count => handleBatchBuyMarketItem(item, count),
+                  () => getMaxBuyableMarket(item),
                   item.itemId
                 )
               "
@@ -591,11 +591,11 @@
                 openBatchBuyModal(
                   item.name,
                   item.description,
-                  discounted(item.price),
-                  () => handleBuyItem(item.itemId, item.price, item.name),
-                  () => playerStore.money >= discounted(item.price),
-                  count => handleBatchBuyItem(item.itemId, item.price, item.name, count),
-                  () => getMaxBuyable(discounted(item.price)),
+                  item.currency === 'spirit_stone' ? item.price : discounted(item.price),
+                  () => handleBuyMarketItem(item),
+                  () => canBuyMarketItem(item),
+                  count => handleBatchBuyMarketItem(item, count),
+                  () => getMaxBuyableMarket(item),
                   item.itemId
                 )
               "
@@ -604,7 +604,7 @@
                 <p class="text-sm">{{ item.name }}</p>
                 <p class="text-muted text-xs">{{ item.description }}</p>
               </div>
-              <span class="text-xs text-accent whitespace-nowrap">{{ discounted(item.price) }}文</span>
+              <span class="text-xs text-accent whitespace-nowrap">{{ item.currency === 'spirit_stone' ? `${item.price}灵石` : `${discounted(item.price)}文` }}</span>
             </div>
           </div>
 
@@ -1054,6 +1054,7 @@
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useShopStore } from '@/stores/useShopStore'
+  import type { ShopItemEntry } from '@/stores/useShopStore'
   import { useWalletStore } from '@/stores/useWalletStore'
   import { useWarehouseStore } from '@/stores/useWarehouseStore'
   import { getItemById } from '@/data'
@@ -1528,6 +1529,27 @@
       addLog(`购买了${count}个${name}。(-${unitPrice * count}文)`)
     } else {
       addLog('铜钱不足或背包已满。')
+    }
+  }
+
+  const canBuyMarketItem = (item: ShopItemEntry) => item.currency === 'spirit_stone'
+    ? inventoryStore.getItemCount('spirit_stone') >= item.price
+    : playerStore.money >= discounted(item.price)
+  const getMaxBuyableMarket = (item: ShopItemEntry): number => {
+    const unit = item.currency === 'spirit_stone' ? item.price : discounted(item.price)
+    const owned = item.currency === 'spirit_stone' ? inventoryStore.getItemCount('spirit_stone') : playerStore.money
+    return Math.min(999, Math.max(1, Math.floor(owned / Math.max(1, unit))))
+  }
+  const handleBuyMarketItem = (item: ShopItemEntry) => handleBatchBuyMarketItem(item, 1)
+  const handleBatchBuyMarketItem = (item: ShopItemEntry, count: number) => {
+    const currency = item.currency ?? 'money'
+    const unit = currency === 'spirit_stone' ? item.price : discounted(item.price)
+    if (shopStore.buyItem(item.itemId, item.price, count, currency)) {
+      sfxBuy()
+      showFloat(`-${unit * count}${currency === 'spirit_stone' ? '灵石' : '文'}`, 'danger')
+      addLog(`购买了${count}个${item.name}。(-${unit * count}${currency === 'spirit_stone' ? '灵石' : '文'})`)
+    } else {
+      addLog(currency === 'spirit_stone' ? '灵石不足或背包已满。' : '铜钱不足或背包已满。')
     }
   }
 
