@@ -6,7 +6,7 @@ import { useCultivationStore } from './useCultivationStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
 
-export type ZoneKind = 'trial' | 'beast' | 'realm'
+export type ZoneKind = 'trial' | 'beast' | 'realm' | 'tower'
 
 export interface Monster {
   id: string
@@ -121,9 +121,17 @@ export const useCombatStore = defineStore('combat', () => {
   const showFlash = ref(false)
   const damageNumbers = ref<{ id: number; value: number; type: 'player' | 'monster'; x: number; y: number }[]>([])
   const dailyRuns = ref<Record<string, { date: string; count: number }>>({})
+  const towerHighestFloor = ref(0)
+  const towerCurrentFloor = ref(0)
   let dmgId = 0
 
   const activeZone = computed(() => REALM_ZONES.find(z => z.id === currentZone.value) || null)
+  const isTowerCombat = computed(() => currentZone.value === 'ascension_tower')
+  const towerNextFloor = computed(() => towerHighestFloor.value + 1)
+  const towerCost = computed(() => 12 + Math.ceil(towerNextFloor.value * 2.5))
+  const towerStaminaCost = computed(() => 4 + Math.ceil(towerNextFloor.value / 8))
+  const combatTitle = computed(() => isTowerCombat.value ? `🗼 登仙塔 · 第${towerCurrentFloor.value}层` : `${activeZone.value?.emoji || ''} ${activeZone.value?.name || '战场'}`)
+  const combatRewardHint = computed(() => isTowerCombat.value ? '逐层试炼 / 首通记录 / 修为灵气与稀有材料' : (activeZone.value?.rewardHint || ''))
   const trialZones = computed(() => REALM_ZONES.filter(z => z.kind === 'trial'))
   const beastZones = computed(() => REALM_ZONES.filter(z => z.kind === 'beast'))
   const realmZones = computed(() => REALM_ZONES.filter(z => z.kind === 'realm'))
@@ -167,6 +175,62 @@ export const useCombatStore = defineStore('combat', () => {
     return ''
   }
 
+  const towerFloorMonster = (floor: number): Monster => {
+    const tier = Math.max(1, floor)
+    const boss = tier % 10 === 0
+    const elite = !boss && tier % 5 === 0
+    const names = boss
+      ? [{ emoji: '🐉', name: '镇塔龙魂' }, { emoji: '👁️', name: '问道心魔' }, { emoji: '🗿', name: '古塔守将' }]
+      : elite
+        ? [{ emoji: '🦅', name: '凌霄妖禽' }, { emoji: '⚡', name: '雷纹傀儡' }, { emoji: '🔥', name: '赤焰塔灵' }]
+        : [{ emoji: '👺', name: '塔中妖影' }, { emoji: '🧿', name: '巡塔灵魄' }, { emoji: '🦂', name: '玄砂毒蝎' }, { emoji: '🐺', name: '噬月灵狼' }]
+    const pick = names[(tier + Math.floor(Math.random() * names.length)) % names.length]!
+    const scale = boss ? 1.9 : elite ? 1.35 : 1
+    const realmBoost = Math.floor(tier / 10) * 18
+    return {
+      id: `tower_${tier}`,
+      name: `${pick.name}·${tier}层`,
+      emoji: pick.emoji,
+      hp: Math.floor((95 + tier * 34 + Math.pow(tier, 1.35) * 6) * scale),
+      atk: Math.floor((14 + tier * 4.2 + realmBoost) * scale),
+      def: Math.floor((4 + tier * 1.9 + Math.floor(tier / 6) * 3) * scale),
+      exp: Math.floor((38 + tier * 18) * (boss ? 1.8 : elite ? 1.35 : 1)),
+      aura: Math.floor((14 + tier * 8) * (boss ? 1.8 : elite ? 1.35 : 1)),
+      drops: [
+        { itemId: 'spirit_stone', name: '灵石', qty: 4 + Math.ceil(tier / 2), chance: 0.9 },
+        { itemId: 'soul_crystal', name: '魂晶', qty: 1 + Math.floor(tier / 20), chance: Math.min(0.18 + tier * 0.006, 0.55) },
+        { itemId: 'artifact_shard', name: '法宝碎片', qty: 1, chance: boss ? 0.42 : elite ? 0.22 : 0.08 },
+        { itemId: 'lingyun_jade', name: '灵蕴玉', qty: 1, chance: boss ? 0.18 : 0.03 }
+      ]
+    }
+  }
+
+  const towerLockReason = () => {
+    const c = useCultivationStore()
+    if (!c.unlocked) return '尚未踏入修行，先在修行页感应地脉。'
+    if ((c.realmIndex || 0) < 1) return '境界不足，需要炼气一层后开启登仙塔。'
+    return ''
+  }
+
+  const challengeTower = (floor = towerNextFloor.value) => {
+    const c = useCultivationStore()
+    const p = usePlayerStore()
+    const reason = towerLockReason()
+    if (reason) { addLog(reason); return }
+    const targetFloor = Math.max(1, Math.min(Math.floor(floor || towerNextFloor.value), towerHighestFloor.value + 1))
+    const manaCost = 12 + Math.ceil(targetFloor * 2.5)
+    const staminaCost = 4 + Math.ceil(targetFloor / 8)
+    if ((c.mana || 0) < manaCost) { addLog(`灵力不足，登塔需要${manaCost}点。`); return }
+    if (!p.consumeStamina(staminaCost)) { addLog(`体力不足，登塔需要${staminaCost}点。`); return }
+    c.mana = (c.mana || 0) - manaCost
+    currentZone.value = 'ascension_tower'
+    towerCurrentFloor.value = targetFloor
+    combatLog.value = []
+    combatResult.value = null
+    drops.value = []
+    startFight(towerFloorMonster(targetFloor))
+  }
+
   const enterZone = (zoneId: string) => {
     const c = useCultivationStore()
     const p = usePlayerStore()
@@ -197,7 +261,7 @@ export const useCombatStore = defineStore('combat', () => {
     isFighting.value = true
     combatResult.value = null
     drops.value = []
-    combatLog.value = [`进入${activeZone.value?.emoji || ''}${activeZone.value?.name || '战场'}，遭遇 ${monster.emoji}${monster.name}！`]
+    combatLog.value = [isTowerCombat.value ? `踏入登仙塔第${towerCurrentFloor.value}层，遭遇 ${monster.emoji}${monster.name}！` : `进入${activeZone.value?.emoji || ''}${activeZone.value?.name || '战场'}，遭遇 ${monster.emoji}${monster.name}！`]
     void doAutoFight()
   }
 
@@ -238,9 +302,14 @@ export const useCombatStore = defineStore('combat', () => {
     const attributeUps = p.addAttributeExpBatch({
       strength: Math.max(4, Math.floor(m.exp / 10)),
       agility: Math.max(2, Math.floor(m.aura / 12)),
-      perception: zone?.kind === 'trial' ? 2 : 0
+      perception: zone?.kind === 'trial' || isTowerCombat.value ? 2 : 0
     })
     addLog(`击败 ${m.emoji}${m.name}！获得 ${exp} 修为，${aura} 灵气${attributeUps.length ? `，${attributeUps.join('，')}` : ''}`)
+    if (isTowerCombat.value) {
+      const oldHighest = towerHighestFloor.value
+      towerHighestFloor.value = Math.max(towerHighestFloor.value, towerCurrentFloor.value)
+      if (towerHighestFloor.value > oldHighest) addLog(`登仙塔最高层刷新：第${towerHighestFloor.value}层！`)
+    }
     if (zone?.kind === 'beast') {
       c.lingYun = (c.lingYun || 0) + 1
       addLog('镇压凶兽，灵蕴+1')
@@ -263,6 +332,7 @@ export const useCombatStore = defineStore('combat', () => {
     isFighting.value = false
     currentZone.value = null
     currentMonster.value = null
+    towerCurrentFloor.value = 0
     combatLog.value = []
     combatResult.value = null
     drops.value = []
@@ -278,17 +348,19 @@ export const useCombatStore = defineStore('combat', () => {
     addLog(okCount ? '拾取了所有掉落物' : '背包已满或物品未登记，部分掉落未能拾取')
   }
 
-  const serialize = () => ({ dailyRuns: dailyRuns.value })
+  const serialize = () => ({ dailyRuns: dailyRuns.value, towerHighestFloor: towerHighestFloor.value })
   const deserialize = (data: unknown) => {
     if (!data || typeof data !== 'object') return
     dailyRuns.value = (data as any).dailyRuns || {}
+    towerHighestFloor.value = Number((data as any).towerHighestFloor || 0)
   }
 
   return {
     currentZone, activeZone, currentMonster, monsterHp, playerHp, playerMaxHp, playerAtk, playerDef,
     combatLog, isFighting, combatResult, drops, showFlash, damageNumbers, dailyRuns,
+    isTowerCombat, towerHighestFloor, towerCurrentFloor, towerNextFloor, towerCost, towerStaminaCost, combatTitle, combatRewardHint, towerLockReason,
     trialZones, beastZones, realmZones, getDailyCount, isZoneUnlocked, lockReason,
-    enterZone, startFight, leaveCombat, collectDrops, serialize, deserialize,
+    enterZone, challengeTower, startFight, leaveCombat, collectDrops, serialize, deserialize,
     REALM_ZONES
   }
 })

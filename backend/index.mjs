@@ -707,6 +707,46 @@ app.get('/api/leaderboard', async (req, res) => {
     send(res, 200, { leaderboard: entries.slice(0, 50) })
   } catch (e) { console.error('lb err', e); send(res, 500, { error: '服务器错误' }) }
 })
+
+// --- 登仙塔排行榜（从最新云档实时读取） ---
+app.get('/api/tower-leaderboard', async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(Number(req.query.limit || 10), 50))
+    const [rows] = await pool.execute(
+      `SELECT s.user_id, u.username, s.slot, s.player_name, s.data_json, s.meta_json, s.updated_at
+       FROM saves s
+       INNER JOIN (SELECT user_id, MAX(updated_at) as max_ts FROM saves GROUP BY user_id) latest
+         ON s.user_id = latest.user_id AND s.updated_at = latest.max_ts
+       JOIN users u ON u.id = s.user_id
+       ORDER BY s.updated_at DESC`
+    )
+    const entries = []
+    for (const r of rows) {
+      let d = null
+      if (r.data_json && r.data_json !== 'null' && r.data_json !== '') {
+        try { d = typeof r.data_json === 'string' ? JSON.parse(r.data_json) : r.data_json } catch {}
+      }
+      const meta = safeJsonParse(r.meta_json, {}) || {}
+      const p = (d && (d.player || d.playerStore || (d.stores && d.stores.player))) || {}
+      const combat = (d && (d.combat || d.combatStore || (d.stores && d.stores.combat))) || {}
+      const cu = (d && (d.cultivation || d.cultivationStore || (d.stores && d.stores.cultivation))) || {}
+      const floor = Number(combat.towerHighestFloor || 0) || 0
+      if (floor <= 0) continue
+      const realmIdx = Number(cu.realmIndex ?? cu.realm ?? 0) || 0
+      entries.push({
+        userId: r.user_id,
+        username: r.username,
+        playerName: p.playerName || p.name || meta.playerName || r.player_name || '无名',
+        floor,
+        realmName: cu.realmName || REALMS[realmIdx] || '凡人',
+        rebirthCount: Number(cu.rebirthCount || 0) || 0,
+        updatedAt: r.updated_at
+      })
+    }
+    entries.sort((a, b) => (b.floor - a.floor) || (b.rebirthCount - a.rebirthCount) || String(b.updatedAt).localeCompare(String(a.updatedAt)))
+    send(res, 200, { leaderboard: entries.slice(0, limit) })
+  } catch (e) { console.error('tower leaderboard err', e); send(res, 500, { error: '服务器错误' }) }
+})
 // --- 突破公告 ---
 app.post('/api/breakthrough-announce', async (req, res) => {
   try {

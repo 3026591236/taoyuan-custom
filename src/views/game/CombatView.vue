@@ -1,13 +1,46 @@
 <template>
   <div class="space-y-3">
-    <Divider title label="⚔️ 红尘历练 · 挑战凶兽" />
+    <Divider title label="⚔️ 红尘历练 · 登仙塔" />
 
     <div class="border border-accent/20 rounded-xs p-3 text-xs text-muted leading-relaxed">
       <p class="text-accent mb-1">V0.5 玩法说明</p>
-      <p>先通过「红尘历练」获取修为和材料，再挑战「上古凶兽」获取真灵秘录、轮回尘、灵蕴玉等转生材料。转生次数会逐步解锁更高阶历练区域。</p>
+      <p>先通过「红尘历练」获取修为和材料，也可挑战「登仙塔」逐层试炼、刷新最高层记录。凶兽与秘境会产出转生和炼器材料。</p>
     </div>
 
     <div v-if="!combatStore.currentZone" class="space-y-4">
+      <section class="border border-accent/30 rounded-xs p-3 bg-accent/5">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-accent text-sm">🗼 登仙塔</h3>
+          <span class="text-[10px] text-muted">最高 {{ combatStore.towerHighestFloor }} 层 / 下层 {{ combatStore.towerNextFloor }}</span>
+        </div>
+        <p class="text-xs text-muted leading-relaxed mb-2">逐层自动战斗，胜利后记录最高层。每层消耗灵力与体力，层数越高敌人越强，奖励也越丰厚；每 5 层精英，每 10 层镇塔首领。</p>
+        <div class="grid grid-cols-3 gap-2 text-[10px] mb-2">
+          <div class="stat-card"><span>下层</span><b>第{{ combatStore.towerNextFloor }}层</b></div>
+          <div class="stat-card"><span>消耗</span><b>{{ combatStore.towerCost }}灵力</b></div>
+          <div class="stat-card"><span>体力</span><b>{{ combatStore.towerStaminaCost }}</b></div>
+        </div>
+        <button class="btn w-full justify-center" :disabled="Boolean(combatStore.towerLockReason())" @click="combatStore.challengeTower()">挑战下一层</button>
+        <p v-if="combatStore.towerLockReason()" class="text-[10px] text-danger mt-2">{{ combatStore.towerLockReason() }}</p>
+
+        <div class="mt-3 border-t border-accent/20 pt-2">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs text-accent">🏆 实时爬塔榜</h4>
+            <button class="text-[10px] text-muted hover:text-accent" :disabled="towerRankLoading" @click="loadTowerLeaderboard">刷新</button>
+          </div>
+          <div v-if="towerRankLoading" class="text-[10px] text-muted">榜单加载中...</div>
+          <div v-else-if="towerRankError" class="text-[10px] text-danger">{{ towerRankError }}</div>
+          <div v-else-if="towerLeaderboard.length === 0" class="text-[10px] text-muted">暂无玩家登塔记录，来拿第一个榜首吧。</div>
+          <div v-else class="space-y-1">
+            <div v-for="(row, index) in towerLeaderboard" :key="row.userId" class="tower-rank-row">
+              <span class="tower-rank-no" :class="{ 'text-accent': index < 3 }">#{{ index + 1 }}</span>
+              <span class="truncate">{{ row.playerName || row.username || '无名' }}</span>
+              <span class="text-muted hidden sm:inline">{{ row.rebirthCount ? row.rebirthCount + '转' : '' }}{{ row.realmName }}</span>
+              <b class="text-success">{{ row.floor }}层</b>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section>
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-accent text-sm">🌄 红尘历练</h3>
@@ -35,8 +68,8 @@
 
     <div v-else class="space-y-3">
       <div class="flex items-center justify-between border border-accent/20 rounded-xs p-2 text-xs">
-        <span class="text-accent">{{ combatStore.activeZone?.emoji }} {{ combatStore.activeZone?.name }}</span>
-        <span class="text-muted">{{ combatStore.activeZone?.rewardHint }}</span>
+        <span class="text-accent">{{ combatStore.combatTitle }}</span>
+        <span class="text-muted">{{ combatStore.combatRewardHint }}</span>
       </div>
 
       <div class="relative battle-arena">
@@ -75,12 +108,13 @@
           <div v-for="(d, i) in combatStore.drops" :key="i" class="text-xs text-muted">• {{ d.name }}×{{ d.qty }}</div>
           <button class="btn w-full justify-center mt-2" @click="combatStore.collectDrops">拾取全部</button>
         </div>
-        <button class="btn w-full justify-center" @click="combatStore.leaveCombat">返回历练</button>
+        <button v-if="combatStore.isTowerCombat" class="btn w-full justify-center" @click="combatStore.challengeTower()">继续挑战第{{ combatStore.towerNextFloor }}层</button>
+        <button class="btn w-full justify-center" @click="combatStore.leaveCombat">返回秘境</button>
       </div>
 
       <div v-if="combatStore.combatResult === 'lose'" class="space-y-2">
         <div class="text-center text-danger font-bold text-lg">💀 败北...</div>
-        <button class="btn w-full justify-center" @click="combatStore.leaveCombat">返回历练</button>
+        <button class="btn w-full justify-center" @click="combatStore.leaveCombat">返回秘境</button>
       </div>
 
       <div v-if="combatStore.isFighting" class="text-center text-xs text-muted animate-pulse">战斗中...</div>
@@ -89,13 +123,33 @@
 </template>
 
 <script setup lang="ts">
-  import { defineComponent, h } from 'vue'
+  import { defineComponent, h, onMounted, ref } from 'vue'
   import Divider from '@/components/game/Divider.vue'
   import { useCombatStore, type RealmZone } from '@/stores/useCombatStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
 
   const combatStore = useCombatStore()
   const playerStore = usePlayerStore()
+  const towerLeaderboard = ref<Array<{ userId: string; username: string; playerName: string; floor: number; realmName: string; rebirthCount: number }>>([])
+  const towerRankLoading = ref(false)
+  const towerRankError = ref('')
+
+  const loadTowerLeaderboard = async () => {
+    towerRankLoading.value = true
+    towerRankError.value = ''
+    try {
+      const res = await fetch('/api/tower-leaderboard?limit=10')
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || '排行榜加载失败')
+      towerLeaderboard.value = Array.isArray(data.leaderboard) ? data.leaderboard : []
+    } catch (e: any) {
+      towerRankError.value = e?.message || '排行榜加载失败'
+    } finally {
+      towerRankLoading.value = false
+    }
+  }
+
+  onMounted(() => { void loadTowerLeaderboard() })
 
   const ZoneCard = defineComponent({
     props: { zone: { type: Object as () => RealmZone, required: true } },
@@ -138,4 +192,7 @@
   .hp-bar-player { background: linear-gradient(90deg, #44ff44, #66ff88); border-radius: 2px; }
   .victory-text { animation: victory-glow 1s ease-in-out infinite alternate; }
   @keyframes victory-glow { 0% { text-shadow: 0 0 5px rgba(255,180,0,0.5); } 100% { text-shadow: 0 0 20px rgba(255,180,0,0.9), 0 0 40px rgba(255,180,0,0.4); } }
+
+  .tower-rank-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto auto; gap: 0.5rem; align-items: center; font-size: 11px; padding: 0.35rem 0.45rem; border: 1px solid rgba(var(--color-accent-rgb, 255,180,0), 0.12); border-radius: 3px; background: rgba(0,0,0,0.18); }
+  .tower-rank-no { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
 </style>
