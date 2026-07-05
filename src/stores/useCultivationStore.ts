@@ -68,6 +68,30 @@ export const HERB_DATA: Record<string, { name: string; emoji: string; rarity: nu
   longkui: { name: '龙葵', emoji: '🐉', rarity: 5, desc: '蕴含龙气' },
 }
 
+export interface SpiritStoneExchangeRecipe {
+  id: string
+  name: string
+  itemId: string
+  itemName: string
+  quantity: number
+  spiritStones: number
+  desc: string
+}
+
+export const SPIRIT_STONE_EXCHANGES: SpiritStoneExchangeRecipe[] = [
+  { id: 'wood_spirit', name: '木灵珠折灵', itemId: 'wood_spirit', itemName: '木灵珠', quantity: 1, spiritStones: 3, desc: '将多余木行灵珠折换为灵石。' },
+  { id: 'soul_crystal', name: '魂晶折灵', itemId: 'soul_crystal', itemName: '魂晶', quantity: 1, spiritStones: 5, desc: '阴魂晶核可析出较多灵石。' },
+  { id: 'thunder_essence', name: '雷精折灵', itemId: 'thunder_essence', itemName: '雷精', quantity: 1, spiritStones: 8, desc: '雷力精粹折成稳定灵石。' },
+  { id: 'nether_core', name: '冥核折灵', itemId: 'nether_core', itemName: '冥核', quantity: 1, spiritStones: 10, desc: '高阶冥核可换较多灵石。' },
+  { id: 'artifact_shard', name: '法宝碎片折灵', itemId: 'artifact_shard', itemName: '法宝碎片', quantity: 1, spiritStones: 12, desc: '碎片中的残余灵蕴可重炼为灵石。' },
+  { id: 'star_iron', name: '星陨铁折灵', itemId: 'star_iron', itemName: '星陨铁', quantity: 1, spiritStones: 15, desc: '天外奇铁蕴含浓厚灵力。' },
+  { id: 'lingyun_jade', name: '灵蕴玉折灵', itemId: 'lingyun_jade', itemName: '灵蕴玉', quantity: 1, spiritStones: 20, desc: '转生材料价值较高，慎重折换。' }
+]
+
+const REAL_DAILY_ACCUMULATION_CAP = 7
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+
 
 
 
@@ -591,28 +615,47 @@ export const useCultivationStore = defineStore('cultivation', () => {
   }
 
   const todayKey = () => new Date().toISOString().slice(0, 10)
+  const parseDay = (key?: string) => {
+    if (!key) return null
+    const [y, m, d] = key.split('-').map(Number)
+    if (!y || !m || !d) return null
+    return Date.UTC(y, m - 1, d)
+  }
+  const realDailyPendingDays = (last?: string) => {
+    const today = todayKey()
+    if (!last) return 1
+    const lastMs = parseDay(last)
+    const todayMs = parseDay(today)
+    if (lastMs === null || todayMs === null) return 1
+    return Math.max(0, Math.min(REAL_DAILY_ACCUMULATION_CAP, Math.floor((todayMs - lastMs) / MS_PER_DAY)))
+  }
+  const herbClaimDays = computed(() => hasCaveSlot('herbgarden') ? realDailyPendingDays(herbLastDaily.value) : 0)
+  const herbDailyYield = computed(() => 12 + herbGardenLevel.value * 3)
+  const spiritArrayClaimDays = computed(() => hasCaveSlot('spiritArray') ? realDailyPendingDays(spiritArrayLastDaily.value) : 0)
+  const spiritArrayElementYield = computed(() => 5 + spiritArrayLevel.value * 2)
+  const spiritArrayStoneYield = computed(() => 10 + spiritArrayLevel.value * 5)
 
   const claimDailyHerbs = () => {
     if (!hasCaveSlot('herbgarden')) { showFloat('请先在洞府安置百草园。', 'danger'); return false }
-    const today = todayKey()
-    if (herbLastDaily.value === today) { showFloat('今日药材已领取。', 'danger'); return false }
+    const days = herbClaimDays.value
+    if (days <= 0) { showFloat('今日药材已领取。', 'danger'); return false }
     const inventory = useInventoryStore()
-    const qty = Math.max(1, herbGardenLevel.value + 1)
+    const qty = herbDailyYield.value * days
     const ids = Object.keys(HERB_DATA)
     for (let i = 0; i < qty; i++) {
       const id = ids[Math.floor(Math.random() * ids.length)]!
       herbs.value[id] = (herbs.value[id] ?? 0) + 1
       inventory.addItem(id, 1)
     }
-    herbLastDaily.value = today
-    addLog(`百草园收获药材${qty}份。`)
+    herbLastDaily.value = todayKey()
+    addLog(`百草园按现实日期收获${days}天药材，共${qty}株。`)
     showFloat(`药材+${qty}`, 'success')
     return true
   }
 
   const upgradeHerbGarden = () => {
     if (!hasCaveSlot('herbgarden')) { showFloat('请先安置百草园。', 'danger'); return false }
-    const cost = (herbGardenLevel.value + 1) * 3000
+    const cost = (herbGardenLevel.value + 1) * 2000
     const player = usePlayerStore()
     if (!player.spendMoney(cost)) { showFloat(`铜钱不足，需要${cost}文。`, 'danger'); return false }
     herbGardenLevel.value++
@@ -622,11 +665,31 @@ export const useCultivationStore = defineStore('cultivation', () => {
 
   const claimDailyElements = () => {
     if (!hasCaveSlot('spiritArray')) { showFloat('请先在洞府安置聚灵阵。', 'danger'); return false }
-    const today = todayKey()
-    if (spiritArrayLastDaily.value === today) { showFloat('今日五行元气已凝聚。', 'danger'); return false }
-    for (const key of ['wood', 'water', 'earth', 'fire', 'metal']) elements.value[key] = (elements.value[key] ?? 0) + Math.max(1, spiritArrayLevel.value + 1)
-    spiritArrayLastDaily.value = today
-    showFloat('五行元气已凝聚', 'success')
+    const days = spiritArrayClaimDays.value
+    if (days <= 0) { showFloat('今日五行元气已凝聚。', 'danger'); return false }
+    const perElement = spiritArrayElementYield.value
+    const stones = spiritArrayStoneYield.value * days
+    const totalElement = perElement * days
+    for (const key of ['wood', 'water', 'earth', 'fire', 'metal']) elements.value[key] = (elements.value[key] ?? 0) + totalElement
+    useInventoryStore().addItem('spirit_stone', stones)
+    spiritArrayLastDaily.value = todayKey()
+    addLog(`聚灵阵按现实日期凝聚${days}天五行元气，每种+${totalElement}，并产出灵石${stones}枚。`)
+    showFloat(`元气+${totalElement}/种 灵石+${stones}`, 'success')
+    return true
+  }
+
+  const exchangeForSpiritStones = (id: string) => {
+    const recipe = SPIRIT_STONE_EXCHANGES.find(r => r.id === id)
+    if (!recipe) { showFloat('未知折灵配方。', 'danger'); return false }
+    const inventory = useInventoryStore()
+    if (inventory.getItemCount(recipe.itemId) < recipe.quantity) {
+      showFloat(`${recipe.itemName}不足，需要${recipe.quantity}个。`, 'danger')
+      return false
+    }
+    if (!inventory.removeItem(recipe.itemId, recipe.quantity)) return false
+    inventory.addItem('spirit_stone', recipe.spiritStones)
+    addLog(`灵石坊折换：${recipe.itemName}×${recipe.quantity} → 灵石×${recipe.spiritStones}。`)
+    showFloat(`灵石+${recipe.spiritStones}`, 'success')
     return true
   }
 
@@ -738,5 +801,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     sectContribution.value = (data as any).sectContribution ?? 0
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, unlockTalisman, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, unlock, meditate, refineAura, breakthrough, upgradeField, addAuraFromHarvest, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
 })

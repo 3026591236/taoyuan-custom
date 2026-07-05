@@ -34,10 +34,11 @@
     <div v-else class="space-y-2">
       <div class="grid grid-cols-2 gap-2 text-xs">
         <div class="stat-card"><span>百草园</span><b>Lv.{{ cultivation.herbGardenLevel }}</b></div>
-        <div class="stat-card"><span>日产</span><b>{{ 10 + cultivation.herbGardenLevel }}株/种</b></div>
+        <div class="stat-card"><span>现实日收益</span><b>{{ cultivation.herbDailyYield }}株</b></div>
+        <div class="stat-card col-span-2"><span>可领取</span><b>{{ cultivation.herbClaimDays }}天（最多累计7天）</b></div>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <Button class="justify-center" @click="cultivation.claimDailyHerbs">领取今日药材</Button>
+        <Button class="justify-center" :disabled="cultivation.herbClaimDays <= 0" @click="cultivation.claimDailyHerbs">领取现实日药材</Button>
         <Button class="justify-center" :disabled="cultivation.herbGardenLevel >= 10" @click="cultivation.upgradeHerbGarden">
           升级（{{ (cultivation.herbGardenLevel + 1) * 2000 }}文）
         </Button>
@@ -59,14 +60,36 @@
     <div v-else class="space-y-2">
       <div class="grid grid-cols-2 gap-2 text-xs mb-2">
         <div class="stat-card"><span>聚灵阵</span><b>Lv.{{ cultivation.spiritArrayLevel }}</b></div>
-        <div class="stat-card"><span>日产</span><b>{{ 1 + cultivation.spiritArrayLevel }}/种</b></div>
+        <div class="stat-card"><span>现实日元气</span><b>{{ cultivation.spiritArrayElementYield }}/种</b></div>
+        <div class="stat-card"><span>现实日灵石</span><b>{{ cultivation.spiritArrayStoneYield }}</b></div>
+        <div class="stat-card"><span>可领取</span><b>{{ cultivation.spiritArrayClaimDays }}天</b></div>
       </div>
-      <Button class="w-full justify-center" @click="cultivation.claimDailyElements">凝聚五行元气</Button>
+      <Button class="w-full justify-center" :disabled="cultivation.spiritArrayClaimDays <= 0" @click="cultivation.claimDailyElements">凝聚现实日元气与灵石</Button>
       <div class="grid grid-cols-5 gap-1">
         <div v-for="el in elementList" :key="el.key" class="border border-accent/10 rounded-xs p-2 text-center text-xs">
           <span class="text-sm">{{ el.emoji }}</span>
           <p class="text-[10px] text-accent">{{ el.name }}</p>
           <p class="text-[10px] text-muted">{{ getElement(el.key) }}</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ===== 灵石坊 ===== -->
+    <Divider title label="💎 灵石坊" />
+    <div class="game-panel p-3 space-y-2">
+      <p class="text-xs text-muted leading-relaxed">灵石目前是背包材料：秘境会掉落，炼器会消耗，普通出售仍换铜钱；多余修仙材料可在这里折换成灵石。</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="recipe in SPIRIT_STONE_EXCHANGES" :key="recipe.id" class="border border-accent/15 rounded-xs p-2 text-xs space-y-1">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-accent">{{ recipe.name }}</span>
+            <span class="text-muted">持有 {{ itemCount(recipe.itemId) }}</span>
+          </div>
+          <p class="text-[10px] text-muted leading-relaxed">{{ recipe.desc }}</p>
+          <Button class="w-full justify-between" :disabled="itemCount(recipe.itemId) < recipe.quantity" @click="cultivation.exchangeForSpiritStones(recipe.id)">
+            <span>{{ recipe.itemName }}×{{ recipe.quantity }}</span>
+            <span>→ 灵石×{{ recipe.spiritStones }}</span>
+          </Button>
         </div>
       </div>
     </div>
@@ -77,7 +100,7 @@
 import { computed } from 'vue'
 import Divider from '@/components/game/Divider.vue'
 import Button from '@/components/game/Button.vue'
-import { useCultivationStore, HERB_DATA } from '@/stores/useCultivationStore'
+import { useCultivationStore, HERB_DATA, SPIRIT_STONE_EXCHANGES } from '@/stores/useCultivationStore'
 import { useInventoryStore } from '@/stores/useInventoryStore'
 import type { CaveSlotType } from '@/stores/useCultivationStore'
 
