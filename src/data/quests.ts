@@ -92,6 +92,8 @@ interface SpecialOrderTemplate {
   targetItemId: string
   targetItemName: string
   quantity: number
+  /** 多材料目标（可选）；存在时会覆盖单目标展示与提交逻辑 */
+  targets?: { itemId: string; name: string; quantity: number }[]
   days: number
   moneyReward: number
   itemReward: { itemId: string; quantity: number }[]
@@ -423,6 +425,10 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     targetItemId: 'ice_soul_lotus',
     targetItemName: '冰魄雪莲',
     quantity: 2,
+    targets: [
+      { itemId: 'ice_soul_lotus', name: '冰魄雪莲', quantity: 2 },
+      { itemId: 'purple_ganoderma', name: '紫韵灵芝', quantity: 2 }
+    ],
     days: 7,
     moneyReward: 6200,
     itemReward: [
@@ -434,7 +440,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     npcId: 'lin_lao',
     tier: 4,
     orderTag: '宗门灵植',
-    description: '宗门长老需要冰魄雪莲炼制护魂丹，奖励高阶炼器材料。'
+    description: '宗门长老需要冰魄雪莲与紫韵灵芝合炼护魂丹，奖励高阶炼器材料。'
   }
 ]
 
@@ -465,6 +471,7 @@ export const generateSpecialOrder = (season: Season, tier: number): QuestInstanc
     targetItemName: template.targetItemName,
     targetQuantity: template.quantity,
     collectedQuantity: 0,
+    targets: template.targets?.map(t => ({ itemId: t.itemId, name: t.name, quantity: t.quantity, collectedQuantity: 0 })),
     moneyReward: template.moneyReward,
     friendshipReward: TIER_FRIENDSHIP[clampedTier - 1]!,
     daysRemaining: template.days,

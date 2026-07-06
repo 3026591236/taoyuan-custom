@@ -24,6 +24,14 @@ export interface QuestTemplateDef {
   friendshipReward: number
 }
 
+/** 任务多材料进度 */
+export interface QuestTargetProgress {
+  itemId: string
+  name: string
+  quantity: number
+  collectedQuantity: number
+}
+
 /** 任务实例(运行时) */
 export interface QuestInstance {
   id: string
@@ -35,6 +43,8 @@ export interface QuestInstance {
   targetItemName: string
   targetQuantity: number
   collectedQuantity: number
+  /** 多材料目标（V1.3.8，用于特殊订单；旧单目标订单留空） */
+  targets?: QuestTargetProgress[]
   moneyReward: number
   friendshipReward: number
   daysRemaining: number

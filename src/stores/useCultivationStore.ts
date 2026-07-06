@@ -69,6 +69,8 @@ export const REALM_EVENTS: RealmEvent[] = [
   { id: 'heart_demon_purge', name: '心魔净化', desc: '秘境中的灵泉洗涤了你的心魔。', chance: 0.06, minRealm: 8, effect: 'demon_clear', value: 12 },
   { id: 'spirit_herb', name: '野生灵药', desc: '路边发现一株野生灵药，小心采下。', chance: 0.15, minRealm: 0, effect: 'item', value: 0, itemReward: { itemId: 'dew_grass', name: '凝露草', qty: 2 } },
   { id: 'rare_spirit_herb', name: '稀有灵药', desc: '石缝中隐现一株珍稀灵药，灵气四溢。', chance: 0.07, minRealm: 12, effect: 'item', value: 0, itemReward: { itemId: 'ice_soul_lotus', name: '冰魄雪莲', qty: 1 } },
+  { id: 'rare_seed_cache', name: '灵种遗藏', desc: '古修遗落的灵种匣被你发现，种子仍有生机。', chance: 0.05, minRealm: 12, effect: 'item', value: 0, itemReward: { itemId: 'seed_ice_soul_lotus', name: '冰魄雪莲种子', qty: 1 } },
+  { id: 'ganoderma_spore', name: '灵芝孢子', desc: '秘境枯木间飘出紫色孢子，正可带回灵田培育。', chance: 0.05, minRealm: 14, effect: 'item', value: 0, itemReward: { itemId: 'seed_purple_ganoderma', name: '紫韵灵芝孢子', qty: 1 } },
   { id: 'treasure_hint', name: '灵宝感应', desc: '你感应到远处有灵宝的气息，顿悟了一丝天道。', chance: 0.05, minRealm: 16, effect: 'artifact_hint', value: 5 },
   { id: 'spirit_vein_deep', name: '深层灵脉', desc: '秘境深处涌出浓郁灵气，修为大进。', chance: 0.05, minRealm: 18, effect: 'aura', value: 500 },
   { id: 'ancient_insight', name: '先贤启示', desc: '幻象中一位先贤向你传授心法，顿悟大增。', chance: 0.04, minRealm: 14, effect: 'insight', value: 25 },

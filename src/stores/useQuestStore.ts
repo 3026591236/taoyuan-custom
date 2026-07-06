@@ -239,6 +239,45 @@ export const useQuestStore = defineStore('quest', () => {
     specialOrder.value = order
   }
 
+
+  const refreshQuestTargets = (quest: QuestInstance) => {
+    if (quest.targets?.length) {
+      quest.targets.forEach(t => {
+        t.collectedQuantity = Math.min(inventoryStore.getItemCount(t.itemId), t.quantity)
+      })
+      quest.collectedQuantity = quest.targets.every(t => t.collectedQuantity >= t.quantity) ? quest.targetQuantity : 0
+      return
+    }
+    if (quest.type !== 'delivery') {
+      quest.collectedQuantity = Math.min(inventoryStore.getItemCount(quest.targetItemId), quest.targetQuantity)
+    }
+  }
+
+  const questTargetsReady = (quest: QuestInstance): { ok: boolean; message?: string } => {
+    if (quest.targets?.length) {
+      for (const t of quest.targets) {
+        const bagCount = inventoryStore.getItemCount(t.itemId)
+        const effective = Math.max(t.collectedQuantity, bagCount)
+        if (effective < t.quantity) return { ok: false, message: `${t.name}收集进度不足（${effective}/${t.quantity}）。` }
+        if (quest.type === 'special_order' && bagCount < t.quantity) return { ok: false, message: `背包中${t.name}不足，特殊订单需要实际交付物品。` }
+      }
+      return { ok: true }
+    }
+    const bagCount = inventoryStore.getItemCount(quest.targetItemId)
+    const effectiveProgress = Math.max(quest.collectedQuantity, bagCount)
+    if (effectiveProgress < quest.targetQuantity) return { ok: false, message: `${quest.targetItemName}收集进度不足（${effectiveProgress}/${quest.targetQuantity}）。` }
+    if (quest.type === 'special_order' && bagCount < quest.targetQuantity) return { ok: false, message: `背包中${quest.targetItemName}不足，特殊订单需要实际交付物品。` }
+    return { ok: true }
+  }
+
+  const removeQuestTargets = (quest: QuestInstance) => {
+    if (quest.targets?.length) {
+      quest.targets.forEach(t => inventoryStore.removeItem(t.itemId, t.quantity))
+      return
+    }
+    inventoryStore.removeItem(quest.targetItemId, quest.targetQuantity)
+  }
+
   /** 接取任务 */
   const acceptQuest = (questId: string): { success: boolean; message: string } => {
     if (activeQuests.value.length >= MAX_ACTIVE_QUESTS) {
@@ -251,9 +290,7 @@ export const useQuestStore = defineStore('quest', () => {
     quest.accepted = true
 
     // 非送货类委托：检查背包中已有的物品数量
-    if (quest.type !== 'delivery') {
-      quest.collectedQuantity = Math.min(inventoryStore.getItemCount(quest.targetItemId), quest.targetQuantity)
-    }
+    refreshQuestTargets(quest)
 
     activeQuests.value.push(quest)
     boardQuests.value.splice(idx, 1)
@@ -269,7 +306,7 @@ export const useQuestStore = defineStore('quest', () => {
 
     const order = specialOrder.value
     order.accepted = true
-    order.collectedQuantity = Math.min(inventoryStore.getItemCount(order.targetItemId), order.targetQuantity)
+    refreshQuestTargets(order)
 
     activeQuests.value.push(order)
     specialOrder.value = null
@@ -290,18 +327,11 @@ export const useQuestStore = defineStore('quest', () => {
       }
       inventoryStore.removeItem(quest.targetItemId, quest.targetQuantity)
     } else {
-      // 钓鱼/挖矿/采集类按收集进度完成；特殊订单需要真实提交背包物品
-      const bagCount = inventoryStore.getItemCount(quest.targetItemId)
-      const effectiveProgress = Math.max(quest.collectedQuantity, bagCount)
-      if (effectiveProgress < quest.targetQuantity) {
-        return { success: false, message: `${quest.targetItemName}收集进度不足（${effectiveProgress}/${quest.targetQuantity}）。` }
-      }
-      if (quest.type === 'special_order') {
-        if (bagCount < quest.targetQuantity) {
-          return { success: false, message: `背包中${quest.targetItemName}不足，特殊订单需要实际交付物品。` }
-        }
-        inventoryStore.removeItem(quest.targetItemId, quest.targetQuantity)
-      }
+      // 钓鱼/挖矿/采集类按收集进度完成；特殊订单需要真实提交背包物品；V1.3.8 支持多材料目标
+      refreshQuestTargets(quest)
+      const ready = questTargetsReady(quest)
+      if (!ready.ok) return { success: false, message: ready.message || '任务材料不足。' }
+      if (quest.type === 'special_order') removeQuestTargets(quest)
     }
 
     // 发放铜钱奖励
@@ -334,7 +364,12 @@ export const useQuestStore = defineStore('quest', () => {
   const onItemObtained = (itemId: string, quantity: number = 1) => {
     for (const quest of activeQuests.value) {
       if (quest.type === 'delivery') continue // 送货类不自动追踪
-      if (quest.targetItemId === itemId && quest.collectedQuantity < quest.targetQuantity) {
+      if (quest.targets?.length) {
+        quest.targets.forEach(t => {
+          if (t.itemId === itemId && t.collectedQuantity < t.quantity) t.collectedQuantity = Math.min(t.collectedQuantity + quantity, t.quantity)
+        })
+        quest.collectedQuantity = quest.targets.every(t => t.collectedQuantity >= t.quantity) ? quest.targetQuantity : 0
+      } else if (quest.targetItemId === itemId && quest.collectedQuantity < quest.targetQuantity) {
         quest.collectedQuantity = Math.min(quest.collectedQuantity + quantity, quest.targetQuantity)
       }
     }

@@ -241,7 +241,7 @@
             <p class="text-xs leading-relaxed mb-2">{{ selectedBoardQuest.description }}</p>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
               <p class="text-xs text-muted mb-1">目标</p>
-              <p class="text-xs">{{ selectedBoardQuest.targetItemName }} × {{ selectedBoardQuest.targetQuantity }}</p>
+              <p class="text-xs">{{ targetSummary(selectedBoardQuest) }}</p>
             </div>
             <div class="border border-accent/10 rounded-xs p-2 mb-3">
               <p class="text-xs text-muted mb-1">奖励</p>
@@ -272,7 +272,7 @@
             <p class="text-xs leading-relaxed mb-2">{{ questStore.specialOrder.description }}</p>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
               <p class="text-xs text-muted mb-1">目标</p>
-              <p class="text-xs">{{ questStore.specialOrder.targetItemName }} × {{ questStore.specialOrder.targetQuantity }}</p>
+              <p class="text-xs">{{ targetSummary(questStore.specialOrder) }}</p>
             </div>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
               <p class="text-xs text-muted mb-1">限时</p>
@@ -320,7 +320,7 @@
                 </span>
               </div>
               <p v-else class="text-xs">
-                背包中 {{ inventoryStore.getItemCount(selectedActiveQuest.targetItemId) }}/{{ selectedActiveQuest.targetQuantity }}
+                {{ targetProgressText(selectedActiveQuest) }}
               </p>
             </div>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">
@@ -366,7 +366,16 @@
   const questStore = useQuestStore()
   const inventoryStore = useInventoryStore()
 
-  const getItemName = (id: string): string => {
+  
+const targetSummary = (quest: any) => quest?.targets?.length
+  ? quest.targets.map((t: any) => `${t.name} × ${t.quantity}`).join('、')
+  : `${quest.targetItemName} × ${quest.targetQuantity}`
+
+const targetProgressText = (quest: any) => quest?.targets?.length
+  ? quest.targets.map((t: any) => `${t.name} ${inventoryStore.getItemCount(t.itemId)}/${t.quantity}`).join('；')
+  : `背包中 ${inventoryStore.getItemCount(quest.targetItemId)}/${quest.targetQuantity}`
+
+const getItemName = (id: string): string => {
     return getItemById(id)?.name ?? id
   }
 
