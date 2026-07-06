@@ -283,6 +283,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-06", title: "V1.2.8 渡劫天雷节奏优化", content: "放慢渡劫特效节奏，天雷改为逐道落下；雷劈次数会随境界提升逐步增加，最多10道，并在动画中显示本次天雷数量。" },
     { date: "2026-07-06", title: "V1.2.7 初战妖兽引导修复", content: "修复修仙之途战斗胜利未计入修行志怪物击杀的问题；将初战凶兽任务改名为初战妖兽，并明确引导到地图 → 修仙之途 → 秘境，可通过红尘历练、秘境探索或登仙塔低层完成。" },
     { date: "2026-07-06", title: "V1.2.6 地图入口图标优化", content: "修仙地图中修仙之途入口统一为原版线性图标风格，去除表情图标；修仙市集简称为市集，限时活动简称为活动，让地图按钮更整齐清爽。" },
     { date: "2026-07-06", title: "V1.2.5 玩家独立邮箱", content: "邮件系统改为每个玩家独立存储邮件副本；全服邮件会拆分到每个玩家邮箱，定向补偿只进入目标玩家邮箱，领取状态也独立保存，避免共用邮件池造成显示混乱。" },

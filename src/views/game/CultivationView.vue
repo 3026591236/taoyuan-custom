@@ -162,12 +162,17 @@
       <div v-if="tribulationFx" class="tribulation-overlay" :class="tribulationFx">
         <div class="tribulation-cloud cloud-a"></div>
         <div class="tribulation-cloud cloud-b"></div>
-        <div class="lightning bolt-a"></div>
-        <div class="lightning bolt-b"></div>
+        <div
+          v-for="bolt in tribulationBolts"
+          :key="bolt.index"
+          class="lightning"
+          :style="{ left: bolt.left, animationDelay: bolt.delay, transform: bolt.transform }"
+        ></div>
         <div class="tribulation-ground"></div>
         <div class="pixel-hero" :class="tribulationFx">
           <span class="px bun"></span><span class="px hair"></span><span class="px face"></span><span class="px eye eye-l"></span><span class="px eye eye-r"></span><span class="px robe"></span><span class="px belt"></span><span class="px sleeve sleeve-l"></span><span class="px sleeve sleeve-r"></span><span class="px leg leg-l"></span><span class="px leg leg-r"></span>
         </div>
+        <div class="tribulation-count">{{ tribulationStrikeCount }}道天雷淬身</div>
         <div class="tribulation-text">{{ tribulationFx === 'success' ? '渡劫成功' : '天劫失败' }}</div>
       </div>
     </Teleport>
@@ -248,11 +253,25 @@ const nextSpiritRootName = computed(() => {
   return nextRoot ? spiritRootNameMap[nextRoot] : '[已达天灵根]'
 })
 const tribulationFx = ref<'success' | 'fail' | null>(null)
+const tribulationStrikeCount = ref(3)
+const tribulationBolts = computed(() => Array.from({ length: tribulationStrikeCount.value }, (_, i) => {
+  const offset = (i % 5 - 2) * 7
+  const side = i % 2 === 0 ? -1 : 1
+  const scale = 0.82 + (i % 3) * 0.08
+  return {
+    index: i,
+    left: `${50 + offset}%`,
+    delay: `${i * 0.58}s`,
+    transform: `scale(${scale}) rotate(${side * (5 + (i % 4) * 3)}deg)`
+  }
+}))
+const getTribulationStrikeCount = () => Math.min(10, Math.max(3, Math.floor((cultivation.realmIndex + 5) / 3)))
 const playTribulationFx = (result: 'success' | 'fail') => {
+  tribulationStrikeCount.value = getTribulationStrikeCount()
   tribulationFx.value = result
   void sfxThunder()
-  setTimeout(() => { result === 'success' ? sfxLevelUp() : sfxHurt() }, 520)
-  setTimeout(() => { tribulationFx.value = null }, 1900)
+  setTimeout(() => { result === 'success' ? sfxLevelUp() : sfxHurt() }, tribulationStrikeCount.value * 580 + 520)
+  setTimeout(() => { tribulationFx.value = null }, tribulationStrikeCount.value * 580 + 1700)
 }
 const handleBreakthrough = () => {
   const major = cultivation.isMajorBreakthrough
@@ -288,8 +307,7 @@ const manaPercent = computed(() => Math.min(100, Math.round((cultivation.mana / 
 .tribulation-cloud { position: absolute; top: 8%; width: 260px; height: 76px; background: #111827; border: 3px solid rgba(148,163,184,.55); box-shadow: 0 0 35px rgba(96,165,250,.28); image-rendering: pixelated; }
 .cloud-a { left: 12%; animation: cloudShake .2s steps(2) infinite; }
 .cloud-b { right: 10%; top: 14%; animation: cloudShake .25s steps(2) infinite reverse; }
-.lightning { position: absolute; top: 8%; left: 50%; width: 18px; height: 60%; background: linear-gradient(#fff, #fde68a 30%, #60a5fa); clip-path: polygon(45% 0, 72% 0, 55% 32%, 82% 32%, 35% 100%, 48% 48%, 22% 48%); filter: drop-shadow(0 0 18px #fef08a); animation: thunderStrike .42s steps(2) 3; }
-.bolt-b { left: 56%; transform: scale(.72) rotate(8deg); animation-delay: .18s; }
+.lightning { position: absolute; top: 8%; width: 18px; height: 60%; background: linear-gradient(#fff, #fde68a 30%, #60a5fa); clip-path: polygon(45% 0, 72% 0, 55% 32%, 82% 32%, 35% 100%, 48% 48%, 22% 48%); filter: drop-shadow(0 0 18px #fef08a); opacity: 0; animation: thunderStrike .74s steps(2) 1 both; }
 .tribulation-ground { position: absolute; bottom: 18%; width: 180px; height: 12px; background: rgba(15,23,42,.9); border: 2px solid rgba(224,178,94,.4); }
 .pixel-hero { position: relative; width: 64px; height: 118px; image-rendering: pixelated; transform: scale(1.25); animation: heroShock .12s steps(2) infinite; }
 .pixel-hero.success { filter: drop-shadow(0 0 16px #facc15); animation: heroAscend .9s ease-out infinite alternate; }
@@ -306,9 +324,10 @@ const manaPercent = computed(() => Math.min(100, Math.round((cultivation.mana / 
 .sleeve-l { left: 4px; } .sleeve-r { right: 4px; }
 .leg { top: 95px; width: 12px; height: 18px; background: #3f4f3d; }
 .leg-l { left: 20px; } .leg-r { right: 18px; }
-.tribulation-text { position: absolute; bottom: 13%; color: #fef3c7; font-size: 22px; letter-spacing: 4px; text-shadow: 0 0 12px #facc15; animation: textPulse .35s steps(2) infinite; }
+.tribulation-count { position: absolute; bottom: 18%; color: #bfdbfe; font-size: 13px; letter-spacing: 3px; text-shadow: 0 0 10px #60a5fa; }
+.tribulation-text { position: absolute; bottom: 13%; color: #fef3c7; font-size: 22px; letter-spacing: 4px; text-shadow: 0 0 12px #facc15; animation: textPulse .55s steps(2) infinite; }
 .tribulation-overlay.fail .tribulation-text { color: #93c5fd; text-shadow: 0 0 12px #60a5fa; }
-@keyframes thunderStrike { 0%, 100% { opacity: 0; } 20%, 70% { opacity: 1; } }
+@keyframes thunderStrike { 0%, 100% { opacity: 0; } 18%, 58% { opacity: 1; } 72% { opacity: .35; } }
 @keyframes cloudShake { 0% { transform: translateX(0); } 100% { transform: translateX(6px); } }
 @keyframes heroShock { 0% { transform: scale(1.25) translateX(-2px); } 100% { transform: scale(1.25) translateX(2px); } }
 @keyframes heroAscend { from { transform: scale(1.25) translateY(0); } to { transform: scale(1.25) translateY(-10px); } }
