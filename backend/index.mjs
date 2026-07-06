@@ -283,6 +283,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-06", title: "V1.3.2 宗门差异与专属委派", content: "继续深化宗门系统：三宗新增专属委派，剑宗可剑冢试剑获得星陨铁与灵石，丹宗可丹房看炉消耗凝露草换灵植种子，符宗可符阵巡检消耗灵石换魂晶与木灵珠；宗门技能、职位、功勋更明确接入战力估算，让三宗定位更有差异。" },
     { date: "2026-07-06", title: "V1.3.1 宗门纵深第一期", content: "宗门系统从单纯选择门派和升级技能，扩展为职位、每日宗门日课、贡献、功勋和宗门宝库循环；新增外门/内门/亲传/执事/长老候补晋升，日课可获得贡献功勋，贡献可升级技能或兑换灵石、灵植种子、秘境材料。" },
     { date: "2026-07-06", title: "V1.3.0 玩法内容纵深第一期", content: "更新方向从新增入口转向深耕已有玩法：特殊订单新增宗门灵植订单，要求提交蕴灵稻、凝露草、朱果、雪莲等灵植，奖励灵石、种子与秘境材料；特殊订单提交时会实际扣除目标物品，让种田、订单、修仙、秘境材料形成更完整循环。" },
     { date: "2026-07-06", title: "V1.2.8 渡劫天雷节奏优化", content: "放慢渡劫特效节奏，天雷改为逐道落下；雷劈次数会随境界提升逐步增加，最多10道，并在动画中显示本次天雷数量。" },

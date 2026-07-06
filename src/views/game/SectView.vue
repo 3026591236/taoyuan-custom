@@ -39,6 +39,22 @@
           <div class="border border-accent/10 rounded-xs p-1"><p class="text-muted">职位</p><p class="text-accent">{{ currentRank!.name }}</p></div>
         </div>
         <div class="text-[10px] text-accent mt-2">宗门加成：{{ currentSect?.bonusDesc }}；职位加成：{{ currentRank!.bonus }}</div>
+        <div class="text-[10px] text-success mt-1">宗门特性：{{ currentSect?.identity }}</div>
+      </div>
+
+      <div class="border border-accent/20 rounded-xs p-3 space-y-2">
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-accent">宗门专属委派</p>
+          <span class="text-[10px] text-muted">每日一次 · {{ isDailyDone(`commission_${cultivationStore.sect}`) ? '今日已完成' : '今日可完成' }}</span>
+        </div>
+        <div class="border border-accent/10 rounded-xs p-2">
+          <p class="text-xs">{{ currentCommission?.name }}</p>
+          <p class="text-[10px] text-muted leading-relaxed">{{ currentCommission?.desc }}</p>
+          <p class="text-[10px] text-accent">奖励：{{ currentCommission?.rewardText }}，并获得贡献{{ currentCommission?.contribution }}、功勋{{ currentCommission?.merit }}</p>
+          <button class="btn w-full justify-center text-xs mt-2" :disabled="!currentCommission || isDailyDone(`commission_${cultivationStore.sect}`) || !canDoCommission" @click="finishCommission">
+            执行委派
+          </button>
+        </div>
       </div>
 
       <div class="border border-accent/20 rounded-xs p-3 space-y-2">
@@ -117,7 +133,7 @@
   const SECTS = [
     {
       id: 'sword' as const, name: '剑宗', emoji: '⚔️', motto: '剑气纵横三万里，一剑光寒十九洲',
-      desc: '以剑入道，重视历练、斩妖和剑意磨砺。', bonusDesc: '攻击与战斗成长更强',
+      desc: '以剑入道，重视历练、斩妖和剑意磨砺。', bonusDesc: '攻击与战斗成长更强', identity: '宗门技能额外提升战力，适合主打秘境与登仙塔。',
       skills: [
         { name: '御剑术', desc: '飞剑与基础攻击成长提高，适合红尘历练。' },
         { name: '剑意', desc: '提升暴击与破防理解，强化秘境表现。' },
@@ -126,7 +142,7 @@
     },
     {
       id: 'alchemy' as const, name: '丹宗', emoji: '⚗️', motto: '一炉定乾坤，丹成天下闻',
-      desc: '炼丹圣地，重视灵植、丹房和药理积累。', bonusDesc: '炼丹、灵植与恢复收益更好',
+      desc: '炼丹圣地，重视灵植、丹房和药理积累。', bonusDesc: '炼丹、灵植与恢复收益更好', identity: '职位提升带来稳定战力，委派偏向丹药、灵植与材料循环。',
       skills: [
         { name: '丹火', desc: '提升炼丹火候，减少材料浪费。' },
         { name: '药理', desc: '提升丹药与灵植转化效果。' },
@@ -135,7 +151,7 @@
     },
     {
       id: 'talisman' as const, name: '符宗', emoji: '📜', motto: '一符镇天地，万法皆可封',
-      desc: '以符入道，重视灵力调度、阵法和防御。', bonusDesc: '灵力消耗与防御表现更优',
+      desc: '以符入道，重视灵力调度、阵法和防御。', bonusDesc: '灵力消耗与防御表现更优', identity: '宗门技能与职位共同强化战力，委派偏向符材和防御资源。',
       skills: [
         { name: '灵符术', desc: '提升灵力运用效率，适合长期修行。' },
         { name: '封印术', desc: '削弱妖兽攻势，提高挑战容错。' },
@@ -158,6 +174,25 @@
     { id: 'donate', name: '上交灵材', desc: '上交灵石×5换取更高宗门评价。', contribution: 70, merit: 18, require: () => inventoryStore.getItemCount('spirit_stone') >= 5, consume: () => inventoryStore.removeItem('spirit_stone', 5), rewardText: '需灵石×5' }
   ]
 
+  const COMMISSIONS: Record<SectId, { name: string; desc: string; contribution: number; merit: number; rewardText: string; require?: () => boolean; consume?: () => void; reward: () => void }> = {
+    sword: {
+      name: '剑冢试剑', desc: '前往宗门剑冢磨砺剑意，适合战斗流弟子每日完成。', contribution: 65, merit: 20, rewardText: '星陨铁×1、灵石×4',
+      reward: () => { inventoryStore.addItem('star_iron', 1); inventoryStore.addItem('spirit_stone', 4) }
+    },
+    alchemy: {
+      name: '丹房看炉', desc: '协助丹房守炉调火，需要上交凝露草×2，回报灵植与丹材。', contribution: 70, merit: 22, rewardText: '蕴灵稻种子×3、朱果种子×1',
+      require: () => inventoryStore.getItemCount('dew_grass') >= 2,
+      consume: () => inventoryStore.removeItem('dew_grass', 2),
+      reward: () => { inventoryStore.addItem('seed_spirit_rice', 3); inventoryStore.addItem('seed_vermilion_fruit', 1) }
+    },
+    talisman: {
+      name: '符阵巡检', desc: '巡检山门符阵并补全阵脚，需要灵石×3，回报符材与魂晶。', contribution: 68, merit: 21, rewardText: '魂晶×1、木灵珠×1',
+      require: () => inventoryStore.getItemCount('spirit_stone') >= 3,
+      consume: () => inventoryStore.removeItem('spirit_stone', 3),
+      reward: () => { inventoryStore.addItem('soul_crystal', 1); inventoryStore.addItem('wood_spirit', 1) }
+    }
+  }
+
   const TREASURY = [
     { id: 'spirit_stone_pack', name: '灵石匣', desc: '领取灵石×10，补充修仙市集和功法消耗。', cost: 90, reward: () => inventoryStore.addItem('spirit_stone', 10) },
     { id: 'spirit_seed_pack', name: '灵植种匣', desc: '蕴灵稻、凝露草、朱果种子各×2。', cost: 150, reward: () => { inventoryStore.addItem('seed_spirit_rice', 2); inventoryStore.addItem('seed_dew_grass', 2); inventoryStore.addItem('seed_vermilion_fruit', 2) } },
@@ -165,6 +200,8 @@
   ]
 
   const currentSect = computed(() => SECTS.find(s => s.id === cultivationStore.sect))
+  const currentCommission = computed(() => cultivationStore.sect ? COMMISSIONS[cultivationStore.sect] : null)
+  const canDoCommission = computed(() => !currentCommission.value?.require || currentCommission.value.require())
   const currentRank = computed(() => RANKS[cultivationStore.sectRank || 0] ?? RANKS[0])
   const nextRank = computed(() => RANKS[(cultivationStore.sectRank || 0) + 1] ?? null)
   const skillLevelCap = computed(() => Math.min(5, 3 + (cultivationStore.sectRank || 0)))
@@ -225,6 +262,22 @@
     cultivationStore.sectRank += 1
     addLog(`宗门职位晋升为「${next.name}」！`)
     showFloat(`晋升${next.name}`, 'success')
+  }
+
+  const finishCommission = () => {
+    resetDailyIfNeeded()
+    if (!cultivationStore.sect || !currentCommission.value || isDailyDone(`commission_${cultivationStore.sect}`) || !canDoCommission.value) return
+    const commission = currentCommission.value
+    commission.consume?.()
+    const rankBonus = 1 + (cultivationStore.sectRank || 0) * 0.12
+    const contribution = Math.floor(commission.contribution * rankBonus)
+    const merit = Math.floor(commission.merit * rankBonus)
+    cultivationStore.sectContribution = (cultivationStore.sectContribution || 0) + contribution
+    cultivationStore.sectMerit = (cultivationStore.sectMerit || 0) + merit
+    commission.reward()
+    cultivationStore.sectDailyDone.push(`commission_${cultivationStore.sect}`)
+    addLog(`完成宗门委派「${commission.name}」，贡献+${contribution}，功勋+${merit}。`)
+    showFloat('宗门委派完成', 'success')
   }
 
   const getSectSkillLevel = (idx: number) => (cultivationStore.sectSkills?.[idx] || 0)
