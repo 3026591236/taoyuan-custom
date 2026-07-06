@@ -40,6 +40,7 @@
         </div>
         <div class="text-[10px] text-accent mt-2">宗门加成：{{ currentSect?.bonusDesc }}；职位加成：{{ currentRank!.bonus }}</div>
         <div class="text-[10px] text-success mt-1">宗门特性：{{ currentSect?.identity }}</div>
+        <div class="text-[10px] text-caution mt-1">实战加成：{{ sectBonusText }}</div>
       </div>
 
       <div class="border border-accent/20 rounded-xs p-3 space-y-2">
@@ -196,8 +197,18 @@
   const TREASURY = [
     { id: 'spirit_stone_pack', name: '灵石匣', desc: '领取灵石×10，补充修仙市集和功法消耗。', cost: 90, reward: () => inventoryStore.addItem('spirit_stone', 10) },
     { id: 'spirit_seed_pack', name: '灵植种匣', desc: '蕴灵稻、凝露草、朱果种子各×2。', cost: 150, reward: () => { inventoryStore.addItem('seed_spirit_rice', 2); inventoryStore.addItem('seed_dew_grass', 2); inventoryStore.addItem('seed_vermilion_fruit', 2) } },
+    { id: 'high_spirit_seed_pack', name: '高阶灵植种匣', desc: '冰魄雪莲种子×2、紫韵灵芝孢子×2。', cost: 350, reward: () => { inventoryStore.addItem('seed_ice_soul_lotus', 2); inventoryStore.addItem('seed_purple_ganoderma', 2) } },
     { id: 'secret_material', name: '秘境材料匣', desc: '木灵珠×1、魂晶×1，用于炼丹与后续养成。', cost: 220, reward: () => { inventoryStore.addItem('wood_spirit', 1); inventoryStore.addItem('soul_crystal', 1) } }
   ]
+
+
+  const pct = (n: number) => `${Math.round(n * 100)}%`
+  const sectBonusText = computed(() => {
+    if (cultivationStore.sect === 'sword') return `剑宗攻击+${pct(cultivationStore.sectCombatAttackBonusRate || 0)}`
+    if (cultivationStore.sect === 'alchemy') return `丹宗额外成丹率+${pct(cultivationStore.sectAlchemyExtraOutputChance || 0)}，灵植灵气+${pct(cultivationStore.sectSpiritCropAuraBonusRate || 0)}`
+    if (cultivationStore.sect === 'talisman') return `符宗防御+${pct(cultivationStore.sectCombatDefenseBonusRate || 0)}，气血+${pct(cultivationStore.sectMaxHpBonusRate || 0)}，闭关心魔净化+${cultivationStore.sectDemonClearBonus || 0}`
+    return '未加入宗门'
+  })
 
   const currentSect = computed(() => SECTS.find(s => s.id === cultivationStore.sect))
   const currentCommission = computed(() => cultivationStore.sect ? COMMISSIONS[cultivationStore.sect as SectId] : null)

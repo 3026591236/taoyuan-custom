@@ -317,6 +317,15 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const sectMerit = ref(0)
   const sectDailyKey = ref('')
   const sectDailyDone = ref<string[]>([])
+
+  // V1.3.9：宗门差异化实装。按宗门技能与职位给实际玩法加成。
+  const sectSkillTotal = computed(() => sectSkills.value.reduce((sum, lv) => sum + (Number(lv) || 0), 0))
+  const sectCombatAttackBonusRate = computed(() => sect.value === 'sword' ? Math.min(0.35, 0.04 * sectSkillTotal.value + 0.025 * (sectRank.value || 0)) : 0)
+  const sectCombatDefenseBonusRate = computed(() => sect.value === 'talisman' ? Math.min(0.30, 0.035 * sectSkillTotal.value + 0.025 * (sectRank.value || 0)) : 0)
+  const sectMaxHpBonusRate = computed(() => sect.value === 'talisman' ? Math.min(0.24, 0.025 * sectSkillTotal.value + 0.02 * (sectRank.value || 0)) : 0)
+  const sectAlchemyExtraOutputChance = computed(() => sect.value === 'alchemy' ? Math.min(0.35, 0.04 * sectSkillTotal.value + 0.03 * (sectRank.value || 0)) : 0)
+  const sectSpiritCropAuraBonusRate = computed(() => sect.value === 'alchemy' ? Math.min(0.30, 0.035 * sectSkillTotal.value + 0.02 * (sectRank.value || 0)) : 0)
+  const sectDemonClearBonus = computed(() => sect.value === 'talisman' ? Math.min(10, sectSkillTotal.value + (sectRank.value || 0) * 2) : 0)
   const manuals = ref<Record<CultivationManualKey, number>>({ wood: 0, thunder: 0, void: 0 })
   const lessonDailyKey = ref('')
   const lessonDailyDone = ref<CultivationLessonId[]>([])
@@ -573,7 +582,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const foxBonus = beast.value === 'fox' ? 0.3 : 0
     const artifactBonus = artifacts.value.glimmerHoe ? 0.25 : 0
     const rainBonus = artifacts.value.spiritRain ? 0.2 : 0
-    const gain = Math.max(1, Math.floor(base * qty * directRatio * (1 + fieldTier.value * 0.25 + artifactBonus + rainBonus + caveFarmBonus + foxBonus)))
+    const gain = Math.max(1, Math.floor(base * qty * directRatio * (1 + fieldTier.value * 0.25 + artifactBonus + rainBonus + caveFarmBonus + foxBonus + (spiritCrop ? sectSpiritCropAuraBonusRate.value : 0))))
     aura.value += gain
     totalAuraHarvested.value += gain
     addLog(`${spiritCrop ? '灵植' : '作物'}收获牵动田间灵机，获得灵气${gain}点。`)
@@ -594,7 +603,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const gain = Math.floor(8 + fieldTier.value * 4 + yuanShenLevel.value * 0.8 + manuals.value.void * 5 + manuals.value.thunder * 3 + pathInsightBonus + (isMajorBreakthrough.value ? 10 : 0))
     insight.value = Math.min(100, insight.value + gain)
     const pathDemonClear = cultivationPath.value === 'balanced' ? 4 : cultivationPath.value === 'thunder' ? 2 : 0
-    const demonClear = Math.min(heartDemon.value, 5 + manuals.value.void + Math.floor(yuanShenLevel.value / 8) + pathDemonClear)
+    const demonClear = Math.min(heartDemon.value, 5 + manuals.value.void + Math.floor(yuanShenLevel.value / 8) + pathDemonClear + sectDemonClearBonus.value)
     heartDemon.value = Math.max(0, heartDemon.value - demonClear)
     useGameStore().advanceTime(1)
     addLog(`闭关参悟一刻，消耗体力${staminaCost}、灵力${manaCost}，顿悟+${gain}${demonClear ? `，心魔-${demonClear}` : ''}。`)
@@ -759,9 +768,11 @@ export const useCultivationStore = defineStore('cultivation', () => {
     for (const mat of recipe.materials) inventory.removeItem(mat.itemId, mat.quantity)
     aura.value -= auraCost
     mana.value -= recipe.mana
-    inventory.addItem(pillId, recipe.output)
-    addLog(`炼成${recipe.name}×${recipe.output}。`)
-    showFloat(`${recipe.name}+${recipe.output}`, 'success')
+    const extraOutput = Math.random() < sectAlchemyExtraOutputChance.value ? 1 : 0
+    const finalOutput = recipe.output + extraOutput
+    inventory.addItem(pillId, finalOutput)
+    addLog(`炼成${recipe.name}×${finalOutput}${extraOutput ? '（丹宗加成，额外成丹）' : ''}。`)
+    showFloat(`${recipe.name}+${finalOutput}`, 'success')
     return true
   }
 
@@ -1206,5 +1217,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     manuals.value = { wood: 0, thunder: 0, void: 0, ...((data as any).manuals ?? {}) }
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
 })

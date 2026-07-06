@@ -162,19 +162,19 @@ export const useCombatStore = defineStore('combat', () => {
     const base = 12 + (c.realmIndex || 0) * 9 + Math.floor((c.cultivation || 0) / 45) + (c.rebirthCount || 0) * 18
     const beastBonus = c.beast === 'crane' ? Math.floor(base * 0.2) : 0
     const artifactBonus = (c.destinedArtifactLevel || 0) * 8
-    return base + beastBonus + artifactBonus + p.attributeAttackBonus
+    return Math.floor((base + beastBonus + artifactBonus + p.attributeAttackBonus) * (1 + (c.sectCombatAttackBonusRate || 0)))
   })
 
   const playerDef = computed(() => {
     const c = useCultivationStore()
     const p = usePlayerStore()
-    return 6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus
+    return Math.floor((6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus) * (1 + (c.sectCombatDefenseBonusRate || 0)))
   })
 
   const playerMaxHp = computed(() => {
     const c = useCultivationStore()
     const p = usePlayerStore()
-    return 120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus
+    return Math.floor((120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus) * (1 + (c.sectMaxHpBonusRate || 0)))
   })
 
   const getDailyCount = (zoneId: string) => {
