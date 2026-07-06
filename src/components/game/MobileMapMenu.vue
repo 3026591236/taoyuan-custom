@@ -90,6 +90,10 @@
               <Sparkles :size="18" />
               <span>修行</span>
             </button>
+            <button class="map-loc" @click="goCultivationMarket">
+              <span style="font-size:18px">🛒</span>
+              <span>修仙市集</span>
+            </button>
             <button class="map-loc" :class="{ 'map-loc-active': current === 'alchemy' }" @click="go('alchemy')">
               <span style="font-size:18px">🏺</span>
               <span>炼丹</span>
@@ -173,11 +177,13 @@
 
 <script setup lang="ts">
   import { computed } from 'vue'
+  import { useRouter } from 'vue-router'
   import { X, Gift, Mail, Trophy, Swords, Sparkles, Flame, Cog } from 'lucide-vue-next'
   import { TABS, navigateToPanel } from '@/composables/useNavigation'
   import type { PanelKey } from '@/composables/useNavigation'
 
   defineProps<{ open: boolean; current: string; checkinChecked?: boolean; checkinBusy?: boolean; unclaimedMailCount?: number }>()
+  const router = useRouter()
   const emit = defineEmits<{ close: []; checkin: []; openMail: []; openLeaderboard: []; openCombat: []; openForge: []; openSect: [] }>()
 
   const tabMap = computed(() => {
@@ -198,6 +204,11 @@
     navigateToPanel(key)
     emit('close')
   }
+  const goCultivationMarket = () => {
+    router.push({ path: '/game/shop', query: { market: 'cultivation' } })
+    emit('close')
+  }
+
   const handleCheckin = () => {
     emit('checkin')
   }

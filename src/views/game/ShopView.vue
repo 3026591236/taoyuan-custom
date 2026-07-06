@@ -578,7 +578,7 @@
           </div>
 
           <!-- 修仙市集 -->
-          <h4 class="text-accent text-sm mb-2 mt-4">
+          <h4 id="cultivation-market" ref="cultivationMarketRef" class="text-accent text-sm mb-2 mt-4 scroll-mt-4">
             <Sparkles :size="14" class="inline" />
             修仙市集
           </h4>
@@ -1026,7 +1026,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, nextTick, onMounted, watch } from 'vue'
+  import { useRoute } from 'vue-router'
   import {
     ShoppingCart,
     Coins,
@@ -1081,6 +1082,20 @@
   const WOOD_PRICE = 50
 
   const shopStore = useShopStore()
+  const route = useRoute()
+  const cultivationMarketRef = ref<HTMLElement | null>(null)
+  const scrollToCultivationMarket = async () => {
+    if (route.query.market !== 'cultivation') return
+    mobileTab.value = 'buy'
+    shopStore.currentShopId = null
+    await nextTick()
+    cultivationMarketRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    showFloat('已定位到修仙市集', 'success')
+  }
+  onMounted(scrollToCultivationMarket)
+  watch(() => route.query.market, scrollToCultivationMarket)
+
+
   const playerStore = usePlayerStore()
   const inventoryStore = useInventoryStore()
   const farmStore = useFarmStore()
