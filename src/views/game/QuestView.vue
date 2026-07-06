@@ -382,7 +382,7 @@
     cultivationUnlocked: '→ 修仙',
     realmIndex: '→ 修仙',
     moneyEarned: '→ 商店/委托',
-    monsterKills: '→ 战斗',
+    monsterKills: '→ 修仙之途·秘境',
     mineFloor: '→ 矿洞',
     completedCommissions: '→ 委托',
     craftedPills: '→ 加工/炼丹',

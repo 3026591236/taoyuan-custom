@@ -6,6 +6,7 @@ import { useCultivationStore } from './useCultivationStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
 import { useGameStore } from './useGameStore'
+import { useAchievementStore } from './useAchievementStore'
 
 export type ZoneKind = 'trial' | 'beast' | 'realm' | 'tower'
 
@@ -318,6 +319,7 @@ export const useCombatStore = defineStore('combat', () => {
     const aura = Math.floor(m.aura * rebirthBoost * fateBoost)
     c.cultivation = (c.cultivation || 0) + exp
     c.aura = (c.aura || 0) + aura
+    useAchievementStore().recordMonsterKill()
     const p = usePlayerStore()
     const attributeUps = p.addAttributeExpBatch({
       strength: Math.max(4, Math.floor(m.exp / 10)),

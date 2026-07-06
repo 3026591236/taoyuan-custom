@@ -91,7 +91,7 @@ export const useQuestStore = defineStore('quest', () => {
     { id: 'guide_unlock_cultivation', type: 'guide', title: '启蒙灵田', desc: '完成灵田启蒙，让种田正式连向修仙。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 90, attributeExp: { perception: 20 } } },
     { id: 'guide_field_tier_1', type: 'guide', title: '黄阶灵田', desc: '把灵田提升到黄阶，开启更稳定的灵气产出。', metric: 'fieldTier', target: 1, reward: { aura: 130, attributeExp: { physique: 20 } } },
     { id: 'guide_realm_lianqi', type: 'guide', title: '炼气入门', desc: '突破到炼气一层，迈出修仙第一步。', metric: 'realmIndex', target: 1, reward: { aura: 180, attributeExp: { perception: 24 } } },
-    { id: 'guide_first_battle', type: 'guide', title: '初战凶兽', desc: '累计击败1只怪物，检验修行成果。', metric: 'monsterKills', target: 1, reward: { money: 360, attributeExp: { strength: 18, agility: 18 } } },
+    { id: 'guide_first_battle', type: 'guide', title: '初战妖兽', desc: '前往地图 → 修仙之途 → 秘境，完成任意一次红尘历练、秘境探索或登仙塔战斗并获胜。', metric: 'monsterKills', target: 1, reward: { money: 360, attributeExp: { strength: 18, agility: 18 } } },
     { id: 'daily_harvest_5', type: 'daily', title: '今日勤耕', desc: '累计收获5次作物，稳定积累地脉与资质。', metric: 'cropHarvest', target: 5, reward: { money: 260, attributeExp: { physique: 14 } } },
     { id: 'daily_commission_1', type: 'daily', title: '乡里委托', desc: '完成1个委托，让田庄和村落流动起来。', metric: 'completedCommissions', target: 1, reward: { money: 320, attributeExp: { perception: 14 } } },
     { id: 'daily_battle_3', type: 'daily', title: '磨砺身手', desc: '累计击败3只怪物，提升战斗资质。', metric: 'monsterKills', target: 3, reward: { money: 280, attributeExp: { strength: 16, agility: 16 } } },
