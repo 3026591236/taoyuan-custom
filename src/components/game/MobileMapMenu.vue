@@ -76,7 +76,7 @@
           </div>
         </div>
 
-        <div class="map-path" style="color:#c084fc;">· · ✦ 修仙之途 ✦ · ·</div>
+        <div class="map-path map-path-cultivation">── 修仙之途 ──</div>
 
         <!-- 修仙 -->
         <div class="map-area map-area-cultivation">
@@ -91,31 +91,31 @@
               <span>修行</span>
             </button>
             <button class="map-loc" @click="goCultivationMarket">
-              <span style="font-size:18px">🛒</span>
-              <span>修仙市集</span>
+              <Store :size="18" />
+              <span>市集</span>
             </button>
             <button class="map-loc" :class="{ 'map-loc-active': current === 'alchemy' }" @click="go('alchemy')">
-              <span style="font-size:18px">🏺</span>
+              <FlaskConical :size="18" />
               <span>炼丹</span>
             </button>
             <button class="map-loc" :class="{ 'map-loc-active': current === 'cave' }" @click="go('cave')">
-              <span style="font-size:18px">🏔️</span>
+              <Mountain :size="18" />
               <span>洞府</span>
             </button>
             <button class="map-loc" :class="{ 'map-loc-active': current === 'destined-artifact' }" @click="go('destined-artifact')">
-              <span style="font-size:18px">⚔️</span>
+              <Sword :size="18" />
               <span>法宝</span>
             </button>
             <button class="map-loc" :class="{ 'map-loc-active': current === 'talisman' }" @click="go('talisman')">
-              <span style="font-size:18px">📜</span>
+              <ScrollText :size="18" />
               <span>制符</span>
             </button>
             <button class="map-loc" :class="{ 'map-loc-active': current === 'yuan-shen' }" @click="go('yuan-shen')">
-              <span style="font-size:18px">🧘</span>
+              <CircleDot :size="18" />
               <span>元神</span>
             </button>
             <button class="map-loc" :class="{ 'map-loc-active': current === 'divine-beast' }" @click="go('divine-beast')">
-              <span style="font-size:18px">🐾</span>
+              <PawPrint :size="18" />
               <span>灵兽</span>
             </button>
             <button class="map-loc" @click="handleSpecial('openCombat')">
@@ -123,8 +123,8 @@
               <span>秘境</span>
             </button>
             <button class="map-loc" :class="{ 'map-loc-active': current === 'events' }" @click="go('events' as PanelKey)">
-              <span style="font-size:18px">⏳</span>
-              <span>限时活动</span>
+              <CalendarDays :size="18" />
+              <span>活动</span>
             </button>
             <button class="map-loc" @click="handleSpecial('openSect')">
               <Swords :size="18" />
@@ -139,7 +139,7 @@
               <span>排行</span>
             </button>
             <button class="map-loc" @click="go('chat' as PanelKey)">
-              <span style="font-size:18px">💬</span>
+              <MessageCircle :size="18" />
               <span>聊天</span>
             </button>
           </div>
@@ -182,7 +182,7 @@
 <script setup lang="ts">
   import { computed } from 'vue'
   import { useRouter } from 'vue-router'
-  import { X, Gift, Mail, Trophy, Swords, Sparkles, Flame, Cog } from 'lucide-vue-next'
+  import { X, Gift, Mail, Trophy, Swords, Sparkles, Flame, Cog, Store, FlaskConical, Mountain, Sword, ScrollText, CircleDot, PawPrint, CalendarDays, MessageCircle } from 'lucide-vue-next'
   import { TABS, navigateToPanel } from '@/composables/useNavigation'
   import type { PanelKey } from '@/composables/useNavigation'
 
@@ -296,6 +296,10 @@
     line-height: 1;
     padding: 4px 0;
     letter-spacing: 0.3em;
+  }
+  .map-path-cultivation {
+    color: #c084fc;
+    letter-spacing: 0.18em;
   }
 
   .mail-dot {
