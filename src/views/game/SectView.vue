@@ -200,7 +200,7 @@
   ]
 
   const currentSect = computed(() => SECTS.find(s => s.id === cultivationStore.sect))
-  const currentCommission = computed(() => cultivationStore.sect ? COMMISSIONS[cultivationStore.sect] : null)
+  const currentCommission = computed(() => cultivationStore.sect ? COMMISSIONS[cultivationStore.sect as SectId] : null)
   const canDoCommission = computed(() => !currentCommission.value?.require || currentCommission.value.require())
   const currentRank = computed(() => RANKS[cultivationStore.sectRank || 0] ?? RANKS[0])
   const nextRank = computed(() => RANKS[(cultivationStore.sectRank || 0) + 1] ?? null)

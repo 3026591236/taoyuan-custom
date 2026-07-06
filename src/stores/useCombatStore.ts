@@ -347,6 +347,11 @@ export const useCombatStore = defineStore('combat', () => {
         addLog(`掉落 ${d.name}×${d.qty}`)
       }
     }
+    // V1.3.7: 秘境稀有事件
+    if (zone?.kind === 'realm' || zone?.kind === 'beast') {
+      const eventName = c.triggerRealmEvent()
+      if (eventName) addLog(`✨ 秘境奇遇：${eventName}`)
+    }
   }
 
   const onLose = () => {

@@ -51,6 +51,30 @@ export const CULTIVATION_MANUALS: Record<CultivationManualKey, { name: string; d
 
 const ARTIFACT_NAMES: Record<ArtifactKey, string> = { glimmerHoe: '流光锄', spiritKettle: '引灵壶', spiritRain: '灵雨诀' }
 
+// V1.3.7: 秘境稀有事件
+export interface RealmEvent {
+  id: string
+  name: string
+  desc: string
+  chance: number
+  minRealm: number
+  effect: 'insight' | 'aura' | 'item' | 'demon_clear' | 'artifact_hint'
+  value: number
+  itemReward?: { itemId: string; name: string; qty: number }
+}
+
+export const REALM_EVENTS: RealmEvent[] = [
+  { id: 'spirit_vein', name: '灵脉发现', desc: '你在秘境深处发现了一条隐秘灵脉，灵气如泉涌出。', chance: 0.12, minRealm: 5, effect: 'aura', value: 200 },
+  { id: 'ancient_cave', name: '古修遗府', desc: '一座上古修士的洞府现于眼前，内藏修行感悟。', chance: 0.08, minRealm: 10, effect: 'insight', value: 15 },
+  { id: 'heart_demon_purge', name: '心魔净化', desc: '秘境中的灵泉洗涤了你的心魔。', chance: 0.06, minRealm: 8, effect: 'demon_clear', value: 12 },
+  { id: 'spirit_herb', name: '野生灵药', desc: '路边发现一株野生灵药，小心采下。', chance: 0.15, minRealm: 0, effect: 'item', value: 0, itemReward: { itemId: 'dew_grass', name: '凝露草', qty: 2 } },
+  { id: 'rare_spirit_herb', name: '稀有灵药', desc: '石缝中隐现一株珍稀灵药，灵气四溢。', chance: 0.07, minRealm: 12, effect: 'item', value: 0, itemReward: { itemId: 'ice_lotus', name: '冰魄雪莲', qty: 1 } },
+  { id: 'treasure_hint', name: '灵宝感应', desc: '你感应到远处有灵宝的气息，顿悟了一丝天道。', chance: 0.05, minRealm: 16, effect: 'artifact_hint', value: 5 },
+  { id: 'spirit_vein_deep', name: '深层灵脉', desc: '秘境深处涌出浓郁灵气，修为大进。', chance: 0.05, minRealm: 18, effect: 'aura', value: 500 },
+  { id: 'ancient_insight', name: '先贤启示', desc: '幻象中一位先贤向你传授心法，顿悟大增。', chance: 0.04, minRealm: 14, effect: 'insight', value: 25 },
+]
+
+
 export const BEAST_DATA: Record<BeastId, { name: string; emoji: string; desc: string; bonusType: string; bonusDesc: string; feedCrop: string; feedQty: number }> = {
   fox: { name: '灵狐', emoji: '🦊', desc: '机敏灵慧，善于感应灵脉走向', bonusType: 'aura', bonusDesc: '灵气获取+30%', feedCrop: 'dew_grass', feedQty: 5 },
   crane: { name: '仙鹤', emoji: '🦢', desc: '清雅高洁，修行时心境通透', bonusType: 'meditation', bonusDesc: '打坐修为+40%', feedCrop: 'spirit_rice', feedQty: 5 },
@@ -91,7 +115,11 @@ const ALCHEMY_RECIPES = {
   nirvana_soul_pill: { name: '涅魂丹', materials: [{ itemId: 'thunder_essence', quantity: 2 }, { itemId: 'longkui', quantity: 2 }, { itemId: 'shenqu', quantity: 12 }, { itemId: 'soul_crystal', quantity: 3 }], aura: 1200, mana: 140, output: 1 },
   dragon_face_pill: { name: '龙颜丹', materials: [{ itemId: 'longkui', quantity: 3 }, { itemId: 'suoyang', quantity: 20 }, { itemId: 'chenxiang', quantity: 20 }], aura: 700, mana: 90, output: 1 },
   spirit_mending_pill: { name: '补灵丹', materials: [{ itemId: 'baizhi', quantity: 25 }, { itemId: 'yuzhu', quantity: 25 }, { itemId: 'ziwan', quantity: 25 }], aura: 550, mana: 55, output: 1 },
-  rebirth_pill: { name: '轮回丹', materials: [{ itemId: 'longkui', quantity: 10 }, { itemId: 'shenqu', quantity: 15 }, { itemId: 'ziwan', quantity: 15 }, { itemId: 'suoyang', quantity: 10 }], aura: 3000, mana: 200, output: 1 }
+  rebirth_pill: { name: '轮回丹', materials: [{ itemId: 'longkui', quantity: 10 }, { itemId: 'shenqu', quantity: 15 }, { itemId: 'ziwan', quantity: 15 }, { itemId: 'suoyang', quantity: 10 }], aura: 3000, mana: 200, output: 1 },
+  // V1.3.7: 灵植炼丹闭环 — 新增灵植丹方
+  snow_lotus_pill: { name: '雪莲清心丹', materials: [{ itemId: 'ice_lotus', quantity: 3 }, { itemId: 'dew_grass', quantity: 2 }], aura: 200, mana: 30, output: 1, minRealm: 10 },
+  ganoderma_pill: { name: '灵芝培元丹', materials: [{ itemId: 'purple_ganoderma', quantity: 3 }, { itemId: 'spirit_rice', quantity: 5 }, { itemId: 'dew_grass', quantity: 2 }], aura: 400, mana: 60, output: 1, minRealm: 14 },
+  ice_soul_pill: { name: '冰魄护魂丹', materials: [{ itemId: 'ice_lotus', quantity: 5 }, { itemId: 'purple_ganoderma', quantity: 3 }, { itemId: 'soul_crystal', quantity: 2 }], aura: 800, mana: 100, output: 1, minRealm: 18 }
 } as const
 export type PillId = keyof typeof ALCHEMY_RECIPES
 export const getAlchemyRecipes = () => ALCHEMY_RECIPES
@@ -525,7 +553,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const addAuraFromHarvest = (cropId: string, qty = 1) => {
     const base = getSpiritCropAura(cropId)
     if (base <= 0) return 0
-    const spiritCrop = cropId === 'spirit_rice' || cropId === 'dew_grass' || cropId === 'vermilion_fruit'
+    const spiritCrop = cropId === 'spirit_rice' || cropId === 'dew_grass' || cropId === 'vermilion_fruit' || cropId === 'ice_lotus' || cropId === 'purple_ganoderma'
     if (!unlocked.value) {
       const pulseGain = Math.max(1, Math.floor(base * qty * (spiritCrop ? 8 : 2)))
       const before = earthPulse.value
@@ -570,6 +598,41 @@ export const useCultivationStore = defineStore('cultivation', () => {
     addLog(`闭关参悟一刻，消耗体力${staminaCost}、灵力${manaCost}，顿悟+${gain}${demonClear ? `，心魔-${demonClear}` : ''}。`)
     showFloat(`顿悟+${gain}`, 'accent')
     return true
+  }
+// V1.3.7: 秘境稀有事件触发
+  const triggerRealmEvent = (): string | null => {
+    const inventory = useInventoryStore()
+    const eligible = REALM_EVENTS.filter(e => e.chance > 0 && realmIndex.value >= e.minRealm)
+    for (const event of eligible) {
+      if (Math.random() < event.chance) {
+        switch (event.effect) {
+          case 'insight':
+            insight.value = Math.min(100, insight.value + event.value)
+            addLog(`${event.name}：${event.desc} 顿悟+${event.value}。`)
+            break
+          case 'aura':
+            aura.value += event.value
+            addLog(`${event.name}：${event.desc} 灵气+${event.value}。`)
+            break
+          case 'demon_clear':
+            heartDemon.value = Math.max(0, heartDemon.value - event.value)
+            addLog(`${event.name}：${event.desc} 心魔-${event.value}。`)
+            break
+          case 'item':
+            if (event.itemReward) {
+              inventory.addItem(event.itemReward.itemId, event.itemReward.qty)
+              addLog(`${event.name}：${event.desc} 获得${event.itemReward.name}×${event.itemReward.qty}。`)
+            }
+            break
+          case 'artifact_hint':
+            insight.value = Math.min(100, insight.value + event.value)
+            addLog(`${event.name}：${event.desc} 顿悟+${event.value}。`)
+            break
+        }
+        return event.name
+      }
+    }
+    return null
   }
 
   const gameDayKey = () => {
@@ -675,6 +738,10 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const craftPill = (pillId: PillId) => {
     if (!alchemyUnlocked.value && !unlockAlchemy()) return false
     const recipe = ALCHEMY_RECIPES[pillId]
+    if ((recipe as any).minRealm && realmIndex.value < (recipe as any).minRealm) {
+      showFloat(`此丹方需达到${REALMS[(recipe as any).minRealm]?.name || '更高境界'}方能炼制。`, 'danger')
+      return
+    }
     const inventory = useInventoryStore()
     for (const mat of recipe.materials) {
       if (inventory.getItemCount(mat.itemId) < mat.quantity) {
@@ -1137,5 +1204,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     manuals.value = { wood: 0, thunder: 0, void: 0, ...((data as any).manuals ?? {}) }
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
 })

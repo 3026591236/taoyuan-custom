@@ -102,6 +102,30 @@ const MISC_ITEMS: ItemDef[] = [
     healthRestore: 80
   },
   {
+    id: 'snow_lotus_pill',
+    name: '雪莲清心丹',
+    category: 'food',
+    description: '雪莲炼成的清心丹，服用后压制心魔并提升顿悟。',
+    sellPrice: 350,
+    edible: false
+  },
+  {
+    id: 'ganoderma_pill',
+    name: '灵芝培元丹',
+    category: 'food',
+    description: '灵芝炼成的培元丹，服用后大幅增长修为与灵气。',
+    sellPrice: 550,
+    edible: false
+  },
+  {
+    id: 'ice_soul_pill',
+    name: '冰魄护魂丹',
+    category: 'food',
+    description: '雪莲与灵芝合炼的护魂丹，服用后大量回复灵力并压制心魔。',
+    sellPrice: 980,
+    edible: false
+  },
+  {
     id: 'nirvana_soul_pill',
     name: '涅魂丹',
     category: 'food',
@@ -135,6 +159,8 @@ const MISC_ITEMS: ItemDef[] = [
   { id: 'array_fragment', name: '阵纹残片', category: 'material', description: '破损阵盘上的纹路碎片，适合聚灵阵进阶研究。', sellPrice: 260, edible: false },
   { id: 'wood_spirit', name: '木灵珠', category: 'material', description: '木行灵气凝成的珠子，常见于树精体内。', sellPrice: 120, edible: false },
   { id: 'fox_fur', name: '狐皮', category: 'material', description: '青丘灵狐掉落的柔韧狐皮，可用于制符与炼器。', sellPrice: 140, edible: false },
+  { id: 'ice_lotus', name: '冰魄雪莲', category: 'material', description: '高阶灵植，冰寒灵气凝结，可炼制清心护魂丹药。', sellPrice: 280, edible: false },
+  { id: 'purple_ganoderma', name: '紫韵灵芝', category: 'material', description: '高阶灵植，蕴含醇厚灵气，可炼制培元丹药。', sellPrice: 320, edible: false },
   { id: 'bear_gall', name: '熊胆', category: 'material', description: '灵熊胆囊，炼丹时可作猛药。', sellPrice: 180, edible: false },
   { id: 'soul_crystal', name: '魂晶', category: 'material', description: '阴魂凝结的晶核，元神修炼常用材料。', sellPrice: 220, edible: false },
   { id: 'spider_silk', name: '蛛丝', category: 'material', description: '冥蛛吐出的坚韧蛛丝，可织符箓底材。', sellPrice: 160, edible: false },

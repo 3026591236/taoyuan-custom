@@ -143,7 +143,7 @@ export const useQuestStore = defineStore('quest', () => {
       case 'completedCommissions': return completedQuestCount.value
       case 'craftedPills': return achievementStore.stats.totalRecipesCooked
       case 'attributePower': return playerStore.attributePower
-      case 'manualLevels': return Object.values(cultivationStore.manuals).reduce((sum, level) => sum + (Number(level) || 0), 0)
+      case 'manualLevels': return Object.values(cultivationStore.manuals).reduce((sum: number, level: unknown) => sum + (Number(level) || 0), 0)
       case 'towerFloor': return useCombatStore().towerHighestFloor
       case 'fishCaught': return achievementStore.stats.totalFishCaught
       case 'recipesCooked': return achievementStore.stats.totalRecipesCooked
