@@ -242,6 +242,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: '2026-07-06', title: 'V1.2.4 游戏内聊天', content: '新增世界频道聊天系统，登录后可在聊天面板发送和查看消息，支持实时轮询刷新。' },
     { date: '2026-07-06', title: 'V1.2.3 排行差距与功法推荐', content: '排行榜增加距上一名/上榜差距提示，修仙页增加功法选择推荐，活动页增加每日签到联动提示。' },
     { date: '2026-07-06', title: 'V1.2.2 战斗收益与活动中心', content: '战斗页增加区域产出说明与掉落用途标签，修仙页增加挂机收益估算，活动页升级为小型活动中心展示更多进行中目标。' },
     { date: '2026-07-06', title: 'V1.2.1 引导与用途说明', content: '修行志目标增加地点提示，修仙市集商品显示用途标签，背包物品显示用途说明，角色页新增成长诊断建议。' },
@@ -863,6 +864,74 @@ app.get('/api/world-announcements', async (req, res) => {
     send(res, 200, { announcements: rows })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
+
+
+// ========== 聊天 API ==========
+app.get('/api/chat', async (req, res) => {
+  try {
+    const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
+    const channel = String(req.query.channel || 'world').slice(0, 20)
+    const afterId = Number(req.query.after) || 0
+    const limit = Math.min(Number(req.query.limit) || 50, 100)
+    let rows
+    if (channel === 'private') {
+      const peerId = String(req.query.peer || '').slice(0, 36)
+      if (!peerId) return send(res, 400, { error: '缺少对方ID' })
+      const [r] = await pool.execute(
+        'SELECT c.*, u.username FROM chat_messages c JOIN users u ON u.id = c.from_user_id WHERE c.channel = ? AND ((c.from_user_id = ? AND c.to_user_id = ?) OR (c.from_user_id = ? AND c.to_user_id = ?)) AND c.id > ? ORDER BY c.id ASC LIMIT ?',
+        ['private', user.id, peerId, peerId, user.id, afterId, limit]
+      )
+      rows = r
+    } else {
+      const [r] = await pool.execute(
+        'SELECT c.*, u.username FROM chat_messages c JOIN users u ON u.id = c.from_user_id WHERE c.channel = ? AND c.id > ? ORDER BY c.id DESC LIMIT ?',
+        [channel, afterId, limit]
+      )
+      rows = r.reverse()
+    }
+    const playerName = await getPlayerName(user)
+    send(res, 200, { messages: rows.map(m => ({ id: m.id, channel: m.channel, fromUserId: m.from_user_id, fromUsername: m.from_username, fromPlayerName: m.from_player_name, fromRealmName: m.from_realm_name, content: m.content, createdAt: m.created_at })), playerNames: playerName ? { [user.id]: playerName } : {} })
+  } catch (e) { console.error('chat fetch err', e.message); send(res, 500, { error: '服务器错误' }) }
+})
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
+    const { channel, content, toUserId } = req.body || {}
+    const ch = String(channel || 'world').slice(0, 20)
+    const text = String(content || '').trim().slice(0, 200)
+    if (!text) return send(res, 400, { error: '消息不能为空' })
+    if (text.length > 200) return send(res, 400, { error: '消息过长（200字以内）' })
+    // Rate limit: max 5 messages per 10 seconds (simple check)
+    const [recent] = await pool.execute('SELECT COUNT(*) as c FROM chat_messages WHERE from_user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 10 SECOND)', [user.id])
+    if (recent[0].c >= 5) return send(res, 429, { error: '发送太快了，请稍等' })
+    const playerName = await getPlayerName(user)
+    const realmName = await getPlayerRealmName(user)
+    const toUid = ch === 'private' ? String(toUserId || '').slice(0, 36) : null
+    if (ch === 'private' && !toUid) return send(res, 400, { error: '缺少对方ID' })
+    const [result] = await pool.execute(
+      'INSERT INTO chat_messages (channel, from_user_id, from_username, from_player_name, from_realm_name, to_user_id, content) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [ch, user.id, user.username, playerName || user.username, realmName, toUid, text]
+    )
+    send(res, 200, { ok: true, id: result.insertId })
+  } catch (e) { console.error('chat send err', e.message); send(res, 500, { error: '服务器错误' }) }
+})
+
+async function getPlayerName(user) {
+  try {
+    const [chars] = await pool.execute('SELECT c.name FROM characters c INNER JOIN saves s ON s.character_id = c.id WHERE s.user_id = ? ORDER BY s.updated_at DESC LIMIT 1', [user.id])
+    if (chars.length) return chars[0].name
+    const [saves] = await pool.execute('SELECT player_name FROM saves WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1', [user.id])
+    return saves.length ? saves[0].player_name : null
+  } catch { return null }
+}
+
+async function getPlayerRealmName(user) {
+  try {
+    const [rows] = await pool.execute('SELECT lb.realm_name FROM leaderboard lb WHERE lb.user_id = ? LIMIT 1', [user.id])
+    return rows.length ? rows[0].realm_name : null
+  } catch { return null }
+}
 
 // ========== 管理员 API ==========
 app.get('/api/admin/users', async (req, res) => {

@@ -39,6 +39,7 @@ const router = createRouter({
         { path: 'leaderboard', name: 'leaderboard', component: () => import('@/views/game/LeaderboardView.vue') },
         { path: 'events', name: 'events', component: () => import('@/views/game/EventView.vue') },
         { path: 'combat', name: 'combat', component: () => import('@/views/game/CombatView.vue') },
+        { path: 'chat', name: 'chat', component: () => import('@/views/game/ChatView.vue') },
         { path: 'forge', name: 'forge', component: () => import('@/views/game/ForgeView.vue') },
         { path: 'sect', name: 'sect', component: () => import('@/views/game/SectView.vue') },
         { path: 'breeding', name: 'breeding', component: () => import('@/views/game/BreedingView.vue') },

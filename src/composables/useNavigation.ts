@@ -34,7 +34,8 @@ import {
   Trophy,
   Landmark,
   Swords,
-  Gift
+  Gift,
+  MessageCircle
 } from 'lucide-vue-next'
 import { useNpcStore } from '@/stores/useNpcStore'
 
@@ -71,6 +72,7 @@ export type PanelKey =
   | 'divine-beast'
   | 'leaderboard'
   | 'events'
+  | 'chat'
   | 'combat'
   | 'forge'
   | 'sect'
@@ -101,6 +103,7 @@ export const TABS: { key: PanelKey; label: string; icon: Component; getIcon?: ()
   { key: 'leaderboard', label: '排行', icon: Trophy },
   { key: 'events', label: '限时活动', icon: Gift },
   { key: 'combat', label: '秘境', icon: Flame },
+  { key: 'chat', label: '仙盟传音', icon: MessageCircle },
   { key: 'forge', label: '炼器', icon: Cog },
   { key: 'sect', label: '门派', icon: Users },
   { key: 'inventory', label: '背包', icon: Package },
