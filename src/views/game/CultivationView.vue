@@ -157,7 +157,16 @@
       </div>
     </div>
 
-    <!-- 天劫动画 -->
+    <!-- ===== 仙盟传音 ===== -->
+    <Divider title label="💬 聊天" />
+    <div class="border border-accent/20 rounded-xs p-3 bg-panel/30 text-xs space-y-2">
+      <p class="text-muted leading-relaxed">与各路修士交流心得、互通有无。世界频道，实时畅聊。</p>
+      <Button class="w-full justify-center" @click="router.push({ name: 'chat' })">
+        <span>进入仙盟传音</span>
+      </Button>
+    </div>
+
+        <!-- 天劫动画 -->
     <Teleport to="body">
       <div v-if="tribulationFx" class="tribulation-overlay" :class="tribulationFx">
         <div class="tribulation-cloud cloud-a"></div>
@@ -209,6 +218,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { sfxThunder, sfxLevelUp, sfxHurt } from '@/composables/useAudio'
 import { addLog } from '@/composables/useGameLog'
 import Divider from '@/components/game/Divider.vue'
@@ -217,6 +227,7 @@ import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANU
 import type { ArtifactKey, CultivationManualKey } from '@/stores/useCultivationStore'
 
 const cultivation = useCultivationStore()
+const router = useRouter()
   // === 挂机收益估算 ===
   const idleAuraPerMin = computed(() => {
     if (!cultivation.unlocked) return 0
