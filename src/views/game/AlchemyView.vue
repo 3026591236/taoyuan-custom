@@ -6,6 +6,14 @@
       <Button class="w-full justify-center" :disabled="!cultivation.unlocked" @click="cultivation.unlockAlchemy">安置炼丹炉（5000文）</Button>
     </div>
     <div v-else>
+      <div class="border border-accent/20 rounded-xs p-3 bg-panel/30 mb-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-sm text-accent">炉火品相</span>
+          <span class="text-[10px] text-muted">普通 / 上品 / 极品</span>
+        </div>
+        <p class="text-[10px] text-muted mt-1 leading-relaxed">炼丹现在会判定品相：上品会附带丹香收益，极品额外+1成丹并获得更强收益。丹宗、丹修流派和洞府炼丹位会提高上品/极品概率。</p>
+        <p v-if="cultivation.lastAlchemyQuality" class="text-[10px] text-success mt-1">上次成丹：{{ cultivation.lastAlchemyQuality.label }}{{ pillName(cultivation.lastAlchemyQuality.pillId) }}{{ cultivation.lastAlchemyQuality.bonusText ? `；${cultivation.lastAlchemyQuality.bonusText}` : '' }}</p>
+      </div>
       <div class="flex gap-1 mb-2 flex-wrap">
         <button v-for="cat in pillCategories" :key="cat" class="tab-btn" :class="{ active: pillFilter === cat }" @click="pillFilter = cat">{{ cat }}</button>
       </div>
@@ -42,6 +50,7 @@ import type { PillId } from '@/stores/useCultivationStore'
 const cultivation = useCultivationStore()
 const inventory = useInventoryStore()
 const itemCount = (id: string) => inventory.getItemCount(id)
+const pillName = (id: PillId) => pillRecipes.find(p => p.id === id)?.name ?? '丹药'
 const realmNameByIndex = (idx: number) => REALMS[idx]?.name ?? ''
 
 const pillFilter = ref('全部')

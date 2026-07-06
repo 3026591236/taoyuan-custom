@@ -124,6 +124,7 @@ const ALCHEMY_RECIPES = {
   ice_soul_pill: { name: '冰魄护魂丹', materials: [{ itemId: 'ice_soul_lotus', quantity: 5 }, { itemId: 'purple_ganoderma', quantity: 3 }, { itemId: 'soul_crystal', quantity: 2 }], aura: 800, mana: 100, output: 1, minRealm: 18 }
 } as const
 export type PillId = keyof typeof ALCHEMY_RECIPES
+export type AlchemyQuality = 'normal' | 'fine' | 'perfect'
 export const getAlchemyRecipes = () => ALCHEMY_RECIPES
 export const HERB_DATA: Record<string, { name: string; emoji: string; rarity: number; desc: string }> = {
   chuanxiong: { name: '川芎', emoji: '🌿', rarity: 1, desc: '活血行气' },
@@ -273,6 +274,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const earthPulse = ref(0)
   const totalAuraHarvested = ref(0)
   const alchemyUnlocked = ref(false)
+  const lastAlchemyQuality = ref<{ pillId: PillId; quality: AlchemyQuality; label: string; bonusText: string } | null>(null)
   const spiritMealLastDaily = ref<Record<SpiritMealId, string>>({ plain_spirit_porridge: '', dew_rice_soup: '', vermilion_elixir_soup: '', three_treasure_spirit_meal: '' })
   const artifacts = ref<Record<ArtifactKey, boolean>>({ glimmerHoe: false, spiritKettle: false, spiritRain: false })
   const foundationPillBlessing = ref(0)
@@ -746,6 +748,63 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
+
+  const rollAlchemyQuality = (): { quality: AlchemyQuality; label: string; outputBonus: number; bonusRate: number } => {
+    const caveBonus = hasCaveSlot('alchemy') ? 0.08 : 0
+    const alchemySectBonus = sect.value === 'alchemy' ? Math.min(0.16, 0.02 * sectSkillTotal.value + 0.015 * (sectRank.value || 0)) : 0
+    const pathBonus = cultivationPath.value === 'alchemy' ? 0.08 : 0
+    const highRealmBonus = Math.min(0.08, Math.max(0, realmIndex.value - 10) * 0.004)
+    const perfectChance = Math.min(0.24, 0.04 + caveBonus * 0.4 + alchemySectBonus + pathBonus * 0.5 + highRealmBonus)
+    const fineChance = Math.min(0.55, 0.22 + caveBonus + alchemySectBonus + pathBonus + highRealmBonus)
+    const roll = Math.random()
+    if (roll < perfectChance) return { quality: 'perfect', label: '极品', outputBonus: 1, bonusRate: 0.30 }
+    if (roll < perfectChance + fineChance) return { quality: 'fine', label: '上品', outputBonus: 0, bonusRate: 0.15 }
+    return { quality: 'normal', label: '普通', outputBonus: 0, bonusRate: 0 }
+  }
+
+  const applyAlchemyQualityBonus = (pillId: PillId, quality: AlchemyQuality, bonusRate: number): string => {
+    if (quality === 'normal' || bonusRate <= 0) return ''
+    if (pillId === 'mana_recovery_pill') {
+      const manaGain = quality === 'perfect' ? 18 : 8
+      mana.value = Math.min(maxMana.value, mana.value + manaGain)
+      return `炉火回灵，灵力+${manaGain}`
+    }
+    if (pillId === 'qi_gathering_pill' || pillId === 'lianjing_pill' || pillId === 'huaqi_pill' || pillId === 'lianqi_pill' || pillId === 'huashen_pill' || pillId === 'lianshen_pill' || pillId === 'ganoderma_pill') {
+      const gain = Math.max(30, Math.floor((ALCHEMY_RECIPES[pillId].aura + ALCHEMY_RECIPES[pillId].mana * 3) * bonusRate))
+      cultivation.value = Math.min(maxCultivation.value, cultivation.value + gain)
+      return `丹香入体，修为+${gain}`
+    }
+    if (pillId === 'foundation_pill' || pillId === 'returning_void_pill' || pillId === 'refining_void_pill' || pillId === 'merge_way_pill') {
+      const blessing = Math.max(120, Math.floor(ALCHEMY_RECIPES[pillId].aura * bonusRate))
+      foundationPillBlessing.value += blessing
+      return `药力凝实，突破灵气额外-${blessing}`
+    }
+    if (pillId === 'snow_lotus_pill' || pillId === 'ice_soul_pill') {
+      const clear = Math.min(heartDemon.value, quality === 'perfect' ? 6 : 3)
+      heartDemon.value = Math.max(0, heartDemon.value - clear)
+      insight.value = Math.min(100, insight.value + (quality === 'perfect' ? 6 : 3))
+      return `清心丹香，顿悟+${quality === 'perfect' ? 6 : 3}${clear ? `，心魔-${clear}` : ''}`
+    }
+    if (pillId === 'soul_mending_pill' || pillId === 'nirvana_soul_pill' || pillId === 'good_fortune_pill') {
+      const exp = quality === 'perfect' ? 80 : 35
+      addYuanShenExp(exp)
+      return `魂香温养，元神经验+${exp}`
+    }
+    if (pillId === 'spirit_mending_pill') {
+      const manaGain = quality === 'perfect' ? 12 : 6
+      mana.value = Math.min(maxMana.value, mana.value + manaGain)
+      return `补灵余韵，灵力+${manaGain}`
+    }
+    if (pillId === 'dragon_face_pill') {
+      const exp = quality === 'perfect' ? 80 : 40
+      usePlayerStore().addAttributeExpBatch({ physique: exp, perception: exp })
+      return `龙颜余香，体魄/悟性经验+${exp}`
+    }
+    const auraGain = Math.max(20, Math.floor(ALCHEMY_RECIPES[pillId].aura * bonusRate * 0.5))
+    aura.value += auraGain
+    return `丹气回流，灵气+${auraGain}`
+  }
+
   const craftPill = (pillId: PillId) => {
     if (!alchemyUnlocked.value && !unlockAlchemy()) return false
     const recipe = ALCHEMY_RECIPES[pillId]
@@ -768,11 +827,14 @@ export const useCultivationStore = defineStore('cultivation', () => {
     for (const mat of recipe.materials) inventory.removeItem(mat.itemId, mat.quantity)
     aura.value -= auraCost
     mana.value -= recipe.mana
+    const quality = rollAlchemyQuality()
     const extraOutput = Math.random() < sectAlchemyExtraOutputChance.value ? 1 : 0
-    const finalOutput = recipe.output + extraOutput
+    const finalOutput = recipe.output + extraOutput + quality.outputBonus
+    const bonusText = applyAlchemyQualityBonus(pillId, quality.quality, quality.bonusRate)
+    lastAlchemyQuality.value = { pillId, quality: quality.quality, label: quality.label, bonusText }
     inventory.addItem(pillId, finalOutput)
-    addLog(`炼成${recipe.name}×${finalOutput}${extraOutput ? '（丹宗加成，额外成丹）' : ''}。`)
-    showFloat(`${recipe.name}+${finalOutput}`, 'success')
+    addLog(`炼成${quality.label}${recipe.name}×${finalOutput}${extraOutput ? '（丹宗加成，额外成丹）' : ''}${quality.outputBonus ? '（极品加成，额外成丹）' : ''}${bonusText ? `；${bonusText}` : ''}。`)
+    showFloat(`${quality.label}${recipe.name}+${finalOutput}`, quality.quality === 'perfect' ? 'accent' : 'success')
     return true
   }
 
@@ -1217,5 +1279,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     manuals.value = { wood: 0, thunder: 0, void: 0, ...((data as any).manuals ?? {}) }
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
 })

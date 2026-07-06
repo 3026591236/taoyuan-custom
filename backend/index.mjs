@@ -283,6 +283,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-06", title: "V1.4.1 炼丹品相", content: "炼丹新增普通/上品/极品品相判定：上品附带丹香收益，极品额外成丹并获得更强收益；丹宗、丹修流派和洞府炼丹位会提高高品概率。" },
     { date: "2026-07-06", title: "V1.4.0 秘境抉择", content: "秘境探索和挑战凶兽胜利后有概率触发秘境抉择：古修遗府、灵脉泉眼、妖兽巢穴提供二选一奖励，让玩家按突破、材料、灵植或稳妥恢复目标做取舍。" },
     { date: "2026-07-06", title: "V1.3.9 宗门差异深化", content: "三宗特性接入实战循环：剑宗提升战斗攻击，丹宗提高额外成丹与灵植灵气收益，符宗提升防御/气血并强化闭关净化心魔；宗门页新增实战加成展示。" },
     { date: "2026-07-06", title: "V1.3.8 多材料订单与秘境灵种", content: "特殊订单支持多材料交付，护魂丹双材令现在需要冰魄雪莲+紫韵灵芝；任务详情显示多材料与背包进度；秘境奇遇新增灵种遗藏/灵芝孢子，可掉落高阶灵植种子。" },
