@@ -27,6 +27,12 @@
         <div class="flex justify-between mb-1"><span>灵力</span><b>{{ cultivation.mana }}/{{ cultivation.maxMana }}</b></div>
         <div class="bar"><div class="bar-fill mana" :style="{ width: manaPercent + '%' }" /></div>
       </div>
+      <div v-if="cultivation.unlocked" class="stat-card">
+        <span>顿悟</span><b class="text-success">{{ cultivation.insight }}/100</b>
+      </div>
+      <div v-if="cultivation.unlocked" class="stat-card">
+        <span>心魔</span><b :class="cultivation.heartDemon >= 60 ? 'text-danger' : cultivation.heartDemon >= 30 ? 'text-caution' : 'text-muted'">{{ cultivation.heartDemon }}/100</b>
+      </div>
     </div>
 
     <div v-if="!cultivation.unlocked" class="game-panel p-3 text-center space-y-2">
@@ -37,6 +43,7 @@
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">
       <Button class="justify-between" @click="cultivation.meditate"><span>打坐调息</span><span class="text-muted text-xs">修为/灵力</span></Button>
       <Button class="justify-between" @click="cultivation.refineAura"><span>炼化灵气</span><span class="text-muted text-xs">灵气→修为</span></Button>
+      <Button class="justify-between" @click="cultivation.meditateInSeclusion"><span>闭关参悟</span><span class="text-muted text-xs">顿悟/心魔</span></Button>
       <Button class="justify-between" :disabled="!cultivation.canBreakthrough" @click="handleBreakthrough"><span>{{ cultivation.isMajorBreakthrough ? '渡劫突破' : '尝试突破' }}</span><span class="text-muted text-xs">{{ cultivation.isMajorBreakthrough ? `成功率${cultivation.tribulationSuccessPercent}%` : '消耗灵气' }}</span></Button>
       <Button class="justify-between" @click="cultivation.upgradeField"><span>温养灵田</span><span class="text-muted text-xs">提升等阶</span></Button>
     </div>
@@ -67,10 +74,11 @@
       <template v-if="cultivation.isMajorBreakthrough">
         <p>下一境界：<span class="text-accent">{{ cultivation.nextRealm.name }}</span>，跨大境界会引动雷劫。</p>
         <p>当前渡劫通过率：<span class="text-caution">{{ cultivation.tribulationSuccessPercent }}%</span>；元神伤势：<span class="text-danger">{{ cultivation.yuanShenInjury }}</span>层。</p>
-        <p class="text-muted">失败惩罚：扣除突破灵气、损失部分修为和灵力，元神受伤，严重时元神掉级。可炼养魂丹/涅魂丹恢复。</p>
+        <p>顿悟会提升渡劫稳定性，心魔会压低成功率。当前顿悟：<span class="text-success">{{ cultivation.insight }}</span>，心魔：<span class="text-danger">{{ cultivation.heartDemon }}</span>。</p>
+        <p class="text-muted">失败惩罚：扣除突破灵气、损失部分修为和灵力，元神受伤，严重时元神掉级，并积累心魔。可闭关、炼养魂丹/涅魂丹恢复。</p>
       </template>
       <template v-else>
-        <p class="text-muted">小层突破不会触发雷劫；跨入筑基、金丹、元婴等大境界时才会渡劫。</p>
+        <p class="text-muted">小层突破不会触发雷劫；闭关参悟可积累顿悟，小层突破会消耗少量顿悟并压低心魔。</p>
       </template>
     </div>
 
