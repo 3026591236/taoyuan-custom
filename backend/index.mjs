@@ -56,6 +56,21 @@ async function ensureSchema() {
     INDEX idx_character_user (user_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
+
+  await pool.execute(`CREATE TABLE IF NOT EXISTS chat_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    channel VARCHAR(20) NOT NULL DEFAULT 'world',
+    from_user_id VARCHAR(36) NOT NULL,
+    from_username VARCHAR(50),
+    from_player_name VARCHAR(50),
+    from_realm_name VARCHAR(50),
+    to_user_id VARCHAR(36) DEFAULT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_chat_channel_id (channel, id),
+    INDEX idx_chat_from_user (from_user_id, created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
+
   const [characterIdCols] = await pool.execute("SHOW COLUMNS FROM saves LIKE 'character_id'")
   if (!characterIdCols.length) await pool.execute("ALTER TABLE saves ADD COLUMN character_id VARCHAR(36) NULL AFTER user_id")
   const [playerNameCols] = await pool.execute("SHOW COLUMNS FROM saves LIKE 'player_name'")
