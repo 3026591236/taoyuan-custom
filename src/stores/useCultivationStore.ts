@@ -68,7 +68,7 @@ export const REALM_EVENTS: RealmEvent[] = [
   { id: 'ancient_cave', name: '古修遗府', desc: '一座上古修士的洞府现于眼前，内藏修行感悟。', chance: 0.08, minRealm: 10, effect: 'insight', value: 15 },
   { id: 'heart_demon_purge', name: '心魔净化', desc: '秘境中的灵泉洗涤了你的心魔。', chance: 0.06, minRealm: 8, effect: 'demon_clear', value: 12 },
   { id: 'spirit_herb', name: '野生灵药', desc: '路边发现一株野生灵药，小心采下。', chance: 0.15, minRealm: 0, effect: 'item', value: 0, itemReward: { itemId: 'dew_grass', name: '凝露草', qty: 2 } },
-  { id: 'rare_spirit_herb', name: '稀有灵药', desc: '石缝中隐现一株珍稀灵药，灵气四溢。', chance: 0.07, minRealm: 12, effect: 'item', value: 0, itemReward: { itemId: 'ice_lotus', name: '冰魄雪莲', qty: 1 } },
+  { id: 'rare_spirit_herb', name: '稀有灵药', desc: '石缝中隐现一株珍稀灵药，灵气四溢。', chance: 0.07, minRealm: 12, effect: 'item', value: 0, itemReward: { itemId: 'ice_soul_lotus', name: '冰魄雪莲', qty: 1 } },
   { id: 'treasure_hint', name: '灵宝感应', desc: '你感应到远处有灵宝的气息，顿悟了一丝天道。', chance: 0.05, minRealm: 16, effect: 'artifact_hint', value: 5 },
   { id: 'spirit_vein_deep', name: '深层灵脉', desc: '秘境深处涌出浓郁灵气，修为大进。', chance: 0.05, minRealm: 18, effect: 'aura', value: 500 },
   { id: 'ancient_insight', name: '先贤启示', desc: '幻象中一位先贤向你传授心法，顿悟大增。', chance: 0.04, minRealm: 14, effect: 'insight', value: 25 },
@@ -117,9 +117,9 @@ const ALCHEMY_RECIPES = {
   spirit_mending_pill: { name: '补灵丹', materials: [{ itemId: 'baizhi', quantity: 25 }, { itemId: 'yuzhu', quantity: 25 }, { itemId: 'ziwan', quantity: 25 }], aura: 550, mana: 55, output: 1 },
   rebirth_pill: { name: '轮回丹', materials: [{ itemId: 'longkui', quantity: 10 }, { itemId: 'shenqu', quantity: 15 }, { itemId: 'ziwan', quantity: 15 }, { itemId: 'suoyang', quantity: 10 }], aura: 3000, mana: 200, output: 1 },
   // V1.3.7: 灵植炼丹闭环 — 新增灵植丹方
-  snow_lotus_pill: { name: '雪莲清心丹', materials: [{ itemId: 'ice_lotus', quantity: 3 }, { itemId: 'dew_grass', quantity: 2 }], aura: 200, mana: 30, output: 1, minRealm: 10 },
+  snow_lotus_pill: { name: '雪莲清心丹', materials: [{ itemId: 'ice_soul_lotus', quantity: 3 }, { itemId: 'dew_grass', quantity: 2 }], aura: 200, mana: 30, output: 1, minRealm: 10 },
   ganoderma_pill: { name: '灵芝培元丹', materials: [{ itemId: 'purple_ganoderma', quantity: 3 }, { itemId: 'spirit_rice', quantity: 5 }, { itemId: 'dew_grass', quantity: 2 }], aura: 400, mana: 60, output: 1, minRealm: 14 },
-  ice_soul_pill: { name: '冰魄护魂丹', materials: [{ itemId: 'ice_lotus', quantity: 5 }, { itemId: 'purple_ganoderma', quantity: 3 }, { itemId: 'soul_crystal', quantity: 2 }], aura: 800, mana: 100, output: 1, minRealm: 18 }
+  ice_soul_pill: { name: '冰魄护魂丹', materials: [{ itemId: 'ice_soul_lotus', quantity: 5 }, { itemId: 'purple_ganoderma', quantity: 3 }, { itemId: 'soul_crystal', quantity: 2 }], aura: 800, mana: 100, output: 1, minRealm: 18 }
 } as const
 export type PillId = keyof typeof ALCHEMY_RECIPES
 export const getAlchemyRecipes = () => ALCHEMY_RECIPES
@@ -553,7 +553,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const addAuraFromHarvest = (cropId: string, qty = 1) => {
     const base = getSpiritCropAura(cropId)
     if (base <= 0) return 0
-    const spiritCrop = cropId === 'spirit_rice' || cropId === 'dew_grass' || cropId === 'vermilion_fruit' || cropId === 'ice_lotus' || cropId === 'purple_ganoderma'
+    const spiritCrop = cropId === 'spirit_rice' || cropId === 'dew_grass' || cropId === 'vermilion_fruit' || cropId === 'ice_soul_lotus' || cropId === 'purple_ganoderma'
     if (!unlocked.value) {
       const pulseGain = Math.max(1, Math.floor(base * qty * (spiritCrop ? 8 : 2)))
       const before = earthPulse.value

@@ -4979,6 +4979,28 @@ export const CROPS: CropDef[] = [
     regrowthDays: 5,
     maxHarvests: 3
   },
+  {
+    id: 'ice_soul_lotus',
+    name: '冰魄雪莲',
+    seedId: 'seed_ice_soul_lotus',
+    season: ['winter'],
+    growthDays: 6,
+    sellPrice: 560,
+    seedPrice: 300,
+    deepWatering: false,
+    description: '冰寒灵气凝成的高阶灵植，可炼制清心护魂丹药。'
+  },
+  {
+    id: 'purple_ganoderma',
+    name: '紫韵灵芝',
+    seedId: 'seed_purple_ganoderma',
+    season: ['spring', 'autumn'],
+    growthDays: 7,
+    sellPrice: 640,
+    seedPrice: 340,
+    deepWatering: false,
+    description: '蕴含醇厚灵气的高阶灵芝，可炼培元丹药。'
+  },
 
 ]
 

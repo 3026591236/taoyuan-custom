@@ -383,6 +383,58 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 4,
     orderTag: '宗门灵植',
     description: '冬日供奉需要雪莲镇住灵脉，完成后可获得高阶灵石奖励和雷精。'
+  },
+  {
+    name: '高阶雪莲清心丹材',
+    targetItemId: 'ice_soul_lotus',
+    targetItemName: '冰魄雪莲',
+    quantity: 3,
+    days: 7,
+    moneyReward: 4200,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 12 },
+      { itemId: 'soul_crystal', quantity: 2 }
+    ],
+    seasons: ['winter'],
+    npcId: 'lin_lao',
+    tier: 3,
+    orderTag: '宗门灵植',
+    description: '宗门丹房急需冰魄雪莲炼制清心护魂类丹药。'
+  },
+  {
+    name: '灵芝培元委托',
+    targetItemId: 'purple_ganoderma',
+    targetItemName: '紫韵灵芝',
+    quantity: 3,
+    days: 7,
+    moneyReward: 4800,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 15 },
+      { itemId: 'thunder_essence', quantity: 1 }
+    ],
+    seasons: ['spring', 'autumn'],
+    npcId: 'lin_lao',
+    tier: 3,
+    orderTag: '宗门灵植',
+    description: '宗门丹房征集紫韵灵芝，准备用于培元丹药。'
+  },
+  {
+    name: '护魂丹双材令',
+    targetItemId: 'ice_soul_lotus',
+    targetItemName: '冰魄雪莲',
+    quantity: 2,
+    days: 7,
+    moneyReward: 6200,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 20 },
+      { itemId: 'star_iron', quantity: 1 },
+      { itemId: 'artifact_shard', quantity: 1 }
+    ],
+    seasons: ['spring', 'autumn', 'winter'],
+    npcId: 'lin_lao',
+    tier: 4,
+    orderTag: '宗门灵植',
+    description: '宗门长老需要冰魄雪莲炼制护魂丹，奖励高阶炼器材料。'
   }
 ]
 
