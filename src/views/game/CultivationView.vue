@@ -41,6 +41,27 @@
       <Button class="justify-between" @click="cultivation.upgradeField"><span>温养灵田</span><span class="text-muted text-xs">提升等阶</span></Button>
     </div>
 
+    <div v-if="cultivation.unlocked" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs space-y-2">
+      <div class="flex items-center justify-between">
+        <p class="text-accent">🌅 每日修行课业</p>
+        <span class="text-[10px] text-muted">每日每门一次</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div v-for="lesson in cultivationLessons" :key="lesson.id" class="border border-accent/10 rounded-xs p-2 space-y-1">
+          <div class="flex justify-between gap-2">
+            <p class="text-xs text-accent">{{ lesson.name }}</p>
+            <span class="text-[10px] text-success">{{ lesson.focus }}</span>
+          </div>
+          <p class="text-[10px] text-muted leading-relaxed">{{ lesson.desc }}</p>
+          <p class="text-[10px] text-muted">消耗：体力{{ lesson.stamina }}<template v-if="lesson.auraCost"> / 灵气{{ lesson.auraCost }}</template><template v-if="lesson.manaCost"> / 灵力{{ lesson.manaCost }}</template><template v-if="lesson.itemCost"> / {{ lesson.itemCost.name }}×{{ lesson.itemCost.quantity }}</template></p>
+          <p class="text-[10px] text-muted">收益：<template v-if="lesson.reward.aura">灵气+{{ lesson.reward.aura }} </template><template v-if="lesson.reward.cultivation">修为+{{ lesson.reward.cultivation }} </template><template v-if="lesson.reward.mana">灵力+{{ lesson.reward.mana }} </template><template v-if="lesson.reward.yuanShenExp">元神经验+{{ lesson.reward.yuanShenExp }}</template></p>
+          <Button class="w-full justify-center text-xs" :disabled="!cultivation.lessonAvailable(lesson.id)" @click="cultivation.doCultivationLesson(lesson.id)">
+            {{ cultivation.lessonAvailable(lesson.id) ? '完成课业' : '今日已完成' }}
+          </Button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="cultivation.unlocked" class="border rounded-xs p-3 text-xs leading-relaxed" :class="cultivation.isMajorBreakthrough ? 'border-caution/40 bg-caution/5' : 'border-accent/10'">
       <p class="text-accent mb-1">{{ cultivation.isMajorBreakthrough ? '⚡ 天劫预兆' : '突破提示' }}</p>
       <template v-if="cultivation.isMajorBreakthrough">
@@ -218,7 +239,7 @@ import { sfxThunder, sfxLevelUp, sfxHurt } from '@/composables/useAudio'
 import { addLog } from '@/composables/useGameLog'
 import Divider from '@/components/game/Divider.vue'
 import Button from '@/components/game/Button.vue'
-import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANUALS } from '@/stores/useCultivationStore'
+import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANUALS, CULTIVATION_LESSONS } from '@/stores/useCultivationStore'
 import type { ArtifactKey, CultivationManualKey } from '@/stores/useCultivationStore'
 
 const cultivation = useCultivationStore()
@@ -232,6 +253,7 @@ const cultivation = useCultivationStore()
     return Math.max(1, Math.floor(4 + cultivation.realmIndex * 0.28 + cultivation.fieldTier * 0.8 + (cultivation.hasCaveSlot("meditation") ? 3 : 0) + (cultivation.beast === "crane" ? 2 : 0) + (cultivation.manuals?.void ?? 0) * 0.25))
   })
 
+const cultivationLessons = CULTIVATION_LESSONS
 const spiritMeals = SPIRIT_MEAL_RECIPES
 const fieldTierName = (idx: number) => FIELD_TIERS[idx] ?? '更高阶灵田'
 const manuals = (Object.entries(CULTIVATION_MANUALS) as Array<[CultivationManualKey, typeof CULTIVATION_MANUALS[CultivationManualKey]]>).map(([key, def]) => ({ key, ...def }))
