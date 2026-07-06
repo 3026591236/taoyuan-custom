@@ -159,6 +159,8 @@ const MISC_ITEMS: ItemDef[] = [
   { id: 'array_fragment', name: '阵纹残片', category: 'material', description: '破损阵盘上的纹路碎片，适合聚灵阵进阶研究。', sellPrice: 260, edible: false },
   { id: 'wood_spirit', name: '木灵珠', category: 'material', description: '木行灵气凝成的珠子，常见于树精体内。', sellPrice: 120, edible: false },
   { id: 'fox_fur', name: '狐皮', category: 'material', description: '青丘灵狐掉落的柔韧狐皮，可用于制符与炼器。', sellPrice: 140, edible: false },
+  { id: 'seed_ice_soul_lotus', name: '冰魄雪莲种子', category: 'seed', description: '冰魄雪莲的种子，冬令方可种植。', sellPrice: 150, edible: false },
+  { id: 'seed_purple_ganoderma', name: '紫韵灵芝孢子', category: 'seed', description: '紫韵灵芝的孢子，春秋可种植。', sellPrice: 170, edible: false },
   { id: 'ice_soul_lotus', name: '冰魄雪莲', category: 'material', description: '高阶灵植，冰寒灵气凝结，可炼制清心护魂丹药。', sellPrice: 280, edible: false },
   { id: 'purple_ganoderma', name: '紫韵灵芝', category: 'material', description: '高阶灵植，蕴含醇厚灵气，可炼制培元丹药。', sellPrice: 320, edible: false },
   { id: 'bear_gall', name: '熊胆', category: 'material', description: '灵熊胆囊，炼丹时可作猛药。', sellPrice: 180, edible: false },

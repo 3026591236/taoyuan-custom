@@ -386,6 +386,8 @@ const ALL_ITEMS = [
   { id: 'seed_dew_grass', name: '凝露草种子', category: '种子' },
   { id: 'seed_spirit_rice', name: '蕴灵稻种子', category: '种子' },
   { id: 'seed_vermilion_fruit', name: '朱果种子', category: '种子' },
+  { id: 'seed_ice_soul_lotus', name: '冰魄雪莲种子', category: '种子' },
+  { id: 'seed_purple_ganoderma', name: '紫韵灵芝孢子', category: '种子' },
   { id: 'seed_moonlight_rice', name: '月光稻种子', category: '种子' },
   { id: 'seed_phoenix_pepper', name: '凤椒种子', category: '种子' },
   { id: 'seed_snow_lotus', name: '雪莲种子', category: '种子' },
