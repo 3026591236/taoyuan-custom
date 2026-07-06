@@ -28,6 +28,9 @@
         <div class="bar"><div class="bar-fill mana" :style="{ width: manaPercent + '%' }" /></div>
       </div>
       <div v-if="cultivation.unlocked" class="stat-card">
+        <span>心境</span><b class="text-accent">{{ cultivation.pathTitle }}</b>
+      </div>
+      <div v-if="cultivation.unlocked" class="stat-card">
         <span>顿悟</span><b class="text-success">{{ cultivation.insight }}/100</b>
       </div>
       <div v-if="cultivation.unlocked" class="stat-card">
@@ -46,6 +49,23 @@
       <Button class="justify-between" @click="cultivation.meditateInSeclusion"><span>闭关参悟</span><span class="text-muted text-xs">顿悟/心魔</span></Button>
       <Button class="justify-between" :disabled="!cultivation.canBreakthrough" @click="handleBreakthrough"><span>{{ cultivation.isMajorBreakthrough ? '渡劫突破' : '尝试突破' }}</span><span class="text-muted text-xs">{{ cultivation.isMajorBreakthrough ? `成功率${cultivation.tribulationSuccessPercent}%` : '消耗灵气' }}</span></Button>
       <Button class="justify-between" @click="cultivation.upgradeField"><span>温养灵田</span><span class="text-muted text-xs">提升等阶</span></Button>
+    </div>
+
+    <div v-if="cultivation.unlocked" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs space-y-2">
+      <div class="flex items-center justify-between">
+        <p class="text-accent">🧭 修行流派</p>
+        <span class="text-[10px] text-muted">当前：{{ cultivation.currentCultivationPath.name }} · {{ cultivation.pathTitle }}</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <button v-for="path in cultivationPaths" :key="path.id" class="border rounded-xs p-2 text-left transition" :class="cultivation.cultivationPath === path.id ? 'border-accent/60 bg-accent/10' : 'border-accent/10 bg-panel/20'" @click="cultivation.setCultivationPath(path.id)">
+          <div class="flex justify-between gap-1">
+            <p class="text-xs text-accent">{{ path.name }}</p>
+            <span class="text-[10px] text-success">{{ path.focus }}</span>
+          </div>
+          <p class="text-[10px] text-muted">{{ path.title }}</p>
+          <p class="text-[10px] text-muted leading-relaxed mt-1">{{ path.bonusDesc }}</p>
+        </button>
+      </div>
     </div>
 
     <div v-if="cultivation.unlocked" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs space-y-2">
@@ -247,7 +267,7 @@ import { sfxThunder, sfxLevelUp, sfxHurt } from '@/composables/useAudio'
 import { addLog } from '@/composables/useGameLog'
 import Divider from '@/components/game/Divider.vue'
 import Button from '@/components/game/Button.vue'
-import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANUALS, CULTIVATION_LESSONS } from '@/stores/useCultivationStore'
+import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANUALS, CULTIVATION_LESSONS, CULTIVATION_PATHS } from '@/stores/useCultivationStore'
 import type { ArtifactKey, CultivationManualKey } from '@/stores/useCultivationStore'
 
 const cultivation = useCultivationStore()
@@ -261,6 +281,7 @@ const cultivation = useCultivationStore()
     return Math.max(1, Math.floor(4 + cultivation.realmIndex * 0.28 + cultivation.fieldTier * 0.8 + (cultivation.hasCaveSlot("meditation") ? 3 : 0) + (cultivation.beast === "crane" ? 2 : 0) + (cultivation.manuals?.void ?? 0) * 0.25))
   })
 
+const cultivationPaths = CULTIVATION_PATHS
 const cultivationLessons = CULTIVATION_LESSONS
 const spiritMeals = SPIRIT_MEAL_RECIPES
 const fieldTierName = (idx: number) => FIELD_TIERS[idx] ?? '更高阶灵田'
