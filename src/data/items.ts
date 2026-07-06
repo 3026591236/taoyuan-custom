@@ -163,7 +163,6 @@ const MISC_ITEMS: ItemDef[] = [
   { id: 'seed_purple_ganoderma', name: '紫韵灵芝孢子', category: 'seed', description: '紫韵灵芝的孢子，春秋可种植。', sellPrice: 170, edible: false },
   { id: 'ice_soul_lotus', name: '冰魄雪莲', category: 'material', description: '高阶灵植，冰寒灵气凝结，可炼制清心护魂丹药。', sellPrice: 280, edible: false },
   { id: 'purple_ganoderma', name: '紫韵灵芝', category: 'material', description: '高阶灵植，蕴含醇厚灵气，可炼制培元丹药。', sellPrice: 320, edible: false },
-  { id: 'bear_gall', name: '熊胆', category: 'material', description: '灵熊胆囊，炼丹时可作猛药。', sellPrice: 180, edible: false },
   { id: 'soul_crystal', name: '魂晶', category: 'material', description: '阴魂凝结的晶核，元神修炼常用材料。', sellPrice: 220, edible: false },
   { id: 'spider_silk', name: '蛛丝', category: 'material', description: '冥蛛吐出的坚韧蛛丝，可织符箓底材。', sellPrice: 160, edible: false },
   { id: 'nether_core', name: '冥核', category: 'material', description: '幽冥洞窟深处的阴冥核心，炼器价值很高。', sellPrice: 420, edible: false },
