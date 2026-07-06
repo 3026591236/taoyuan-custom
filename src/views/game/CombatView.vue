@@ -158,6 +158,16 @@
 
       <div v-if="combatStore.combatResult === 'win'" class="space-y-2">
         <div class="text-center text-accent font-bold text-lg victory-text">🎉 胜利！</div>
+        <div v-if="combatStore.pendingRealmChoice" class="border border-caution/40 rounded-xs p-3 bg-caution/5 space-y-2">
+          <div class="text-sm text-caution font-bold">✨ 秘境抉择 · {{ combatStore.pendingRealmChoice.title }}</div>
+          <p class="text-xs text-muted leading-relaxed">{{ combatStore.pendingRealmChoice.desc }}</p>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <button v-for="option in combatStore.pendingRealmChoice.options" :key="option.id" class="btn text-left flex-col items-start gap-1" @click="handleRealmChoice(option.id)">
+              <span class="text-accent">{{ option.label }}</span>
+              <span class="text-[10px] text-muted leading-relaxed">{{ option.desc }}</span>
+            </button>
+          </div>
+        </div>
         <div v-if="combatStore.drops.length" class="border border-accent/20 rounded-xs p-2">
           <p class="text-xs text-accent mb-1">掉落物品：</p>
           <div v-for="(d, i) in combatStore.drops" :key="i" class="text-xs text-muted">• {{ d.name }}×{{ d.qty }} <span v-if="dropPurpose(d.name)" class="text-[10px] text-accent/70">{{ dropPurpose(d.name) }}</span></div>
@@ -234,6 +244,11 @@
 
   const handleClaimTowerMilestone = (floor: number) => {
     const res = combatStore.claimTowerMilestone(floor)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+  }
+
+  const handleRealmChoice = (optionId: string) => {
+    const res = combatStore.chooseRealmOption(optionId)
     showFloat(res.message, res.success ? 'success' : 'danger')
   }
 

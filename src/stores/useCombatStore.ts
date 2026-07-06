@@ -23,6 +23,21 @@ export interface Monster {
   aura: number
 }
 
+
+export interface RealmChoiceOption {
+  id: string
+  label: string
+  desc: string
+  effect: () => string
+}
+
+export interface RealmChoiceEvent {
+  id: string
+  title: string
+  desc: string
+  options: RealmChoiceOption[]
+}
+
 export interface RealmZone {
   id: string
   name: string
@@ -127,6 +142,7 @@ export const useCombatStore = defineStore('combat', () => {
   const towerHighestFloor = ref(0)
   const towerCurrentFloor = ref(0)
   const towerMilestoneClaimed = ref<number[]>([])
+  const pendingRealmChoice = ref<RealmChoiceEvent | null>(null)
   let dmgId = 0
 
   const activeZone = computed(() => REALM_ZONES.find(z => z.id === currentZone.value) || null)
@@ -351,7 +367,64 @@ export const useCombatStore = defineStore('combat', () => {
     if (zone?.kind === 'realm' || zone?.kind === 'beast') {
       const eventName = c.triggerRealmEvent()
       if (eventName) addLog(`✨ 秘境奇遇：${eventName}`)
+      maybeTriggerRealmChoice()
     }
+  }
+
+
+  const maybeTriggerRealmChoice = () => {
+    const zone = activeZone.value
+    if (!zone || isTowerCombat.value || (zone.kind !== 'realm' && zone.kind !== 'beast')) return
+    if (pendingRealmChoice.value || Math.random() > (zone.kind === 'beast' ? 0.42 : 0.34)) return
+    const c = useCultivationStore()
+    const inv = useInventoryStore()
+    const player = usePlayerStore()
+    const realmScale = Math.max(1, Math.floor((c.realmIndex || 0) / 4) + 1)
+    const beastScale = zone.kind === 'beast' ? 2 : 1
+    const events: RealmChoiceEvent[] = [
+      {
+        id: 'ancient_residence',
+        title: '古修遗府',
+        desc: '石门半掩，墙上刻着残缺功法。你只能趁灵雾散尽前选择一处搜寻。',
+        options: [
+          { id: 'study', label: '参悟石刻', desc: `获得顿悟与修为，适合准备突破。`, effect: () => { const insight = 8 + realmScale * 3; const exp = 35 * realmScale * beastScale; c.insight = Math.min(100, (c.insight || 0) + insight); c.cultivation = (c.cultivation || 0) + exp; return `参悟古修石刻，顿悟+${insight}，修为+${exp}` } },
+          { id: 'search', label: '搜寻遗宝', desc: `获得灵石和法宝碎片，适合补材料。`, effect: () => { const stones = 8 * realmScale * beastScale; const shards = zone.kind === 'beast' ? 2 : 1; inv.addItem('spirit_stone', stones); inv.addItem('artifact_shard', shards); return `搜出遗府残宝，灵石×${stones}、法宝碎片×${shards}` } }
+        ]
+      },
+      {
+        id: 'spirit_spring',
+        title: '灵脉泉眼',
+        desc: '泉眼喷薄灵机，一半可纳入经脉，一半可灌入灵田。',
+        options: [
+          { id: 'absorb', label: '纳入经脉', desc: '直接获得灵气与灵力恢复。', effect: () => { const aura = 45 * realmScale * beastScale; c.aura = (c.aura || 0) + aura; c.mana = Math.min(c.maxMana || c.mana || 0, (c.mana || 0) + 25 + realmScale * 5); return `吸纳泉眼灵机，灵气+${aura}，灵力已恢复` } },
+          { id: 'field', label: '灌注灵田', desc: '获得灵植种子，强化种田-修仙循环。', effect: () => { inv.addItem('seed_spirit_rice', 2 + realmScale); inv.addItem('seed_dew_grass', 1 + Math.floor(realmScale / 2)); if ((c.realmIndex || 0) >= 12) inv.addItem('seed_ice_soul_lotus', 1); return `引泉灌田，获得蕴灵稻种子×${2 + realmScale}、凝露草种子×${1 + Math.floor(realmScale / 2)}${(c.realmIndex || 0) >= 12 ? '、冰魄雪莲种子×1' : ''}` } }
+        ]
+      },
+      {
+        id: 'beast_lair',
+        title: '妖兽巢穴',
+        desc: '战斗余波震开巢穴暗门，里面仍有妖气盘踞。',
+        options: [
+          { id: 'pursue', label: '乘胜追击', desc: '消耗少量体力，换取更多战利品。', effect: () => { const cost = Math.min(player.stamina || 0, 4 + beastScale * 2); if (cost > 0) player.consumeStamina(cost); const stones = 10 * realmScale * beastScale; inv.addItem('spirit_stone', stones); inv.addItem(zone.kind === 'beast' ? 'true_spirit_record' : 'soul_crystal', 1); return `深入巢穴追击，体力-${cost}，灵石×${stones}、${zone.kind === 'beast' ? '真灵秘录' : '魂晶'}×1` } },
+          { id: 'steady', label: '稳妥撤退', desc: '压制心魔并恢复状态。', effect: () => { const clear = Math.min(c.heartDemon || 0, 6 + realmScale * 2); c.heartDemon = Math.max(0, (c.heartDemon || 0) - clear); c.mana = Math.min(c.maxMana || c.mana || 0, (c.mana || 0) + 15 + realmScale * 4); return `稳住道心撤出，心魔-${clear}，灵力恢复` } }
+        ]
+      }
+    ]
+    const picked = events[Math.floor(Math.random() * events.length)]
+    if (!picked) return
+    pendingRealmChoice.value = picked
+    addLog(`✨ 秘境抉择：${picked.title}`)
+  }
+
+  const chooseRealmOption = (optionId: string) => {
+    const event = pendingRealmChoice.value
+    if (!event) return { success: false, message: '当前没有可处理的秘境抉择。' }
+    const option = event.options.find(o => o.id === optionId)
+    if (!option) return { success: false, message: '无效的秘境选择。' }
+    const message = option.effect()
+    addLog(`秘境抉择·${event.title}：${message}`)
+    pendingRealmChoice.value = null
+    return { success: true, message }
   }
 
   const onLose = () => {
@@ -364,6 +437,7 @@ export const useCombatStore = defineStore('combat', () => {
     isFighting.value = false
     currentZone.value = null
     currentMonster.value = null
+    pendingRealmChoice.value = null
     towerCurrentFloor.value = 0
     combatLog.value = []
     combatResult.value = null
@@ -413,10 +487,10 @@ export const useCombatStore = defineStore('combat', () => {
 
   return {
     currentZone, activeZone, currentMonster, monsterHp, playerHp, playerMaxHp, playerAtk, playerDef,
-    combatLog, isFighting, combatResult, drops, showFlash, damageNumbers, dailyRuns,
+    combatLog, isFighting, combatResult, drops, pendingRealmChoice, showFlash, damageNumbers, dailyRuns,
     isTowerCombat, towerHighestFloor, towerCurrentFloor, towerNextFloor, towerCost, towerStaminaCost, towerMilestoneRewards, nextTowerMilestone, towerClaimableMilestones, combatTitle, combatRewardHint, towerLockReason,
     trialZones, beastZones, realmZones, getDailyCount, isZoneUnlocked, lockReason,
-    enterZone, challengeTower, startFight, leaveCombat, collectDrops, claimTowerMilestone, serialize, deserialize,
+    enterZone, challengeTower, startFight, leaveCombat, collectDrops, chooseRealmOption, claimTowerMilestone, serialize, deserialize,
     REALM_ZONES
   }
 })
