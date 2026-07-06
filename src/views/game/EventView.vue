@@ -52,6 +52,32 @@
       </div>
     </section>
 
+    
+
+    <section class="game-panel space-y-3">
+      <h2 class="text-accent">更多目标</h2>
+      <p class="text-xs text-muted">以下目标与修行志共用进度，完成后同样可领取奖励。</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="task in eventJourneyTasks" :key="task.id" class="border rounded-xs p-3" :class="task.done && !task.claimed ? 'border-success/30 bg-success/5' : task.claimed ? 'border-accent/10 opacity-70' : 'border-accent/20'">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-sm text-accent">{{ task.title }}</p>
+              <p class="text-[10px] text-muted mt-1">{{ task.desc }}</p>
+              <div class="mt-1 flex items-center gap-2">
+                <div class="flex-1 h-1 bg-bg rounded-xs overflow-hidden border border-accent/10">
+                  <div class="h-full bg-accent transition-all" :style="{ width: Math.min(100, Math.floor((task.progress / task.target) * 100)) + '%' }" />
+                </div>
+                <span class="text-[10px] text-muted">{{ Math.min(task.progress, task.target) }}/{{ task.target }}</span>
+              </div>
+            </div>
+            <button class="text-[10px] px-2 py-1 border rounded-xs whitespace-nowrap" :class="task.done && !task.claimed ? 'border-success/50 text-success' : 'border-accent/10 text-muted'" :disabled="!task.done || task.claimed" @click="claimTask(task.id)">
+              {{ task.claimed ? '已领' : task.done ? '领取' : '进行中' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="game-panel space-y-2">
       <h2 class="text-accent">活动说明</h2>
       <ul class="text-xs text-muted list-disc list-inside space-y-1 leading-relaxed">
@@ -84,6 +110,17 @@ function claimEventReward() {
   addLog(res.message)
   showFloat(res.message, res.success ? 'success' : 'danger')
 }
+
+  const eventJourneyTaskIds = ['v11_dungeon_floor_5', 'v12_tower_10', 'v12_fish_20', 'v12_mine_10', 'v12_cook_10', 'v12_collect_40']
+  const eventJourneyTasks = computed(() => {
+    const tasks = eventJourneyTaskIds.map(id => questStore.journeyTasks.find(t => t.id === id)).filter((t): t is NonNullable<typeof t> => !!t)
+    return tasks.filter(t => !t.claimed).slice(0, 6)
+  })
+  function claimTask(taskId: string) {
+    const res = questStore.claimJourneyTask(taskId)
+    addLog(res.message)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+  }
 </script>
 
 <style scoped>

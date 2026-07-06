@@ -160,7 +160,7 @@
         <div class="text-center text-accent font-bold text-lg victory-text">🎉 胜利！</div>
         <div v-if="combatStore.drops.length" class="border border-accent/20 rounded-xs p-2">
           <p class="text-xs text-accent mb-1">掉落物品：</p>
-          <div v-for="(d, i) in combatStore.drops" :key="i" class="text-xs text-muted">• {{ d.name }}×{{ d.qty }}</div>
+          <div v-for="(d, i) in combatStore.drops" :key="i" class="text-xs text-muted">• {{ d.name }}×{{ d.qty }} <span v-if="dropPurpose(d.name)" class="text-[10px] text-accent/70">{{ dropPurpose(d.name) }}</span></div>
           <button class="btn w-full justify-center mt-2" @click="combatStore.collectDrops">拾取全部</button>
         </div>
         <button v-if="combatStore.isTowerCombat" class="btn w-full justify-center" @click="combatStore.challengeTower()">继续挑战第{{ combatStore.towerNextFloor }}层</button>
@@ -212,6 +212,19 @@
     if (name.includes('妖') || name.includes('魔') || name.includes('鬼')) return spriteStyle(10, 1)
     return spriteStyle(7, 1)
   }
+
+
+  const DROP_PURPOSE: Record<string, string> = {
+    '灵石': '→ 市集货币',
+    '铜矿石': '→ 锻造材料',
+    '铁矿石': '→ 锻造材料',
+    '金矿石': '→ 高级锻造',
+    '灵草': '→ 炼丹材料',
+    '蕴灵稻': '→ 灵膳/灵植',
+    '凝露草': '→ 灵膳/灵植',
+    '朱果': '→ 灵膳/灵植',
+  }
+  const dropPurpose = (name: string): string => DROP_PURPOSE[name] ?? ''
 
   const handleClaimTowerMilestone = (floor: number) => {
     const res = combatStore.claimTowerMilestone(floor)

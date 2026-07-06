@@ -70,7 +70,18 @@
       </div>
     </div>
 
-    <div class="border border-accent/10 rounded-xs p-3 text-xs text-muted leading-relaxed">
+    
+    <!-- 挂机收益估算 -->
+    <div v-if="cultivation.unlocked" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs space-y-1">
+      <p class="text-accent mb-1">📊 挂机收益估算（每分钟）</p>
+      <div class="grid grid-cols-2 gap-1 text-[10px]">
+        <span>灵气 ≈ {{ idleAuraPerMin }}/分</span>
+        <span>修为 ≈ {{ idleCultivationPerMin }}/分</span>
+      </div>
+      <p class="text-[10px] text-muted mt-1">受灵田、洞府、功法等加成影响。在线或离线均按此速率累计。</p>
+    </div>
+
+<div class="border border-accent/10 rounded-xs p-3 text-xs text-muted leading-relaxed">
       <p class="text-accent mb-1">灵植联动</p>
       <p>现在普通作物会先积累地脉感应，启蒙后也能转化少量灵气；蕴灵稻、凝露草、朱果则是更高效的灵植和炼丹材料。</p>
       <p class="mt-1">建议路线：种田收获 → 地脉感应100 → 启蒙灵田 → 种灵植 → 炼丹突破。</p>
@@ -199,6 +210,16 @@ import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANU
 import type { ArtifactKey, CultivationManualKey } from '@/stores/useCultivationStore'
 
 const cultivation = useCultivationStore()
+  // === 挂机收益估算 ===
+  const idleAuraPerMin = computed(() => {
+    if (!cultivation.unlocked) return 0
+    return Math.max(1, Math.floor(1.2 + cultivation.fieldTier * 0.35 + cultivation.caveAuraRegen * 0.08 + (cultivation.hasCaveSlot("spiritArray") ? 0.8 : 0) + (cultivation.manuals?.wood ?? 0) * 0.12))
+  })
+  const idleCultivationPerMin = computed(() => {
+    if (!cultivation.unlocked) return 0
+    return Math.max(1, Math.floor(4 + cultivation.realmIndex * 0.28 + cultivation.fieldTier * 0.8 + (cultivation.hasCaveSlot("meditation") ? 3 : 0) + (cultivation.beast === "crane" ? 2 : 0) + (cultivation.manuals?.void ?? 0) * 0.25))
+  })
+
 const spiritMeals = SPIRIT_MEAL_RECIPES
 const fieldTierName = (idx: number) => FIELD_TIERS[idx] ?? '更高阶灵田'
 const manuals = (Object.entries(CULTIVATION_MANUALS) as Array<[CultivationManualKey, typeof CULTIVATION_MANUALS[CultivationManualKey]]>).map(([key, def]) => ({ key, ...def }))

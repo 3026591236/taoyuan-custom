@@ -242,6 +242,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: '2026-07-06', title: 'V1.2.2 战斗收益与活动中心', content: '战斗页增加区域产出说明与掉落用途标签，修仙页增加挂机收益估算，活动页升级为小型活动中心展示更多进行中目标。' },
     { date: '2026-07-06', title: 'V1.2.1 引导与用途说明', content: '修行志目标增加地点提示，修仙市集商品显示用途标签，背包物品显示用途说明，角色页新增成长诊断建议。' },
     { date: '2026-07-06', title: 'V1.2 全功能可玩性增强', content: '修行志扩展为全功能目标系统，新增钓鱼、挖矿、烹饪、收集、培育、功法、登塔、委托等长期与每日目标，并展示奖励内容，让每个玩法都有更明确的下一步。' },
     { date: '2026-07-06', title: 'V1.1.8 时间控制按钮优化', content: '时间倍率控制移回剩余时间条旁，改为减速和加速两个按钮，避免占用金钱与灵石显示区域。' },
