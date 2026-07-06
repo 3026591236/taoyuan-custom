@@ -72,6 +72,7 @@ export type PanelKey =
   | 'leaderboard'
   | 'events'
   | 'combat'
+  | 'chat'
   | 'forge'
   | 'sect'
 

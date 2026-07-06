@@ -138,6 +138,10 @@
               <Trophy :size="18" />
               <span>排行</span>
             </button>
+            <button class="map-loc" @click="go('chat' as PanelKey)">
+              <span style="font-size:18px">💬</span>
+              <span>聊天</span>
+            </button>
           </div>
         </div>
 
