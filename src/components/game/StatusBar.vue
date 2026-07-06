@@ -20,14 +20,6 @@
           <Sparkles :size="12" class="inline" />
           {{ spiritStoneCount }}灵石
         </span>
-        <button
-          class="time-speed-btn"
-          :title="`时间速度：${gameSpeedLabel}，点击切换 0.2/0.3/0.5/1/2/4/8 倍`"
-          @click="cycleSpeed"
-        >
-          <FastForward :size="12" class="inline" />
-          {{ gameSpeedLabel }}
-        </button>
       </div>
     </div>
 
@@ -64,9 +56,14 @@
         </div>
         <!-- 剩余时间 -->
         <div class="flex items-center space-x-1">
-          <Clock :size="12" class="tinline" />
+          <Clock :size="12" class="inline" />
           <div class="w-12 md:w-16 h-2 bg-bg rounded-xs border border-accent/20">
             <div class="h-full rounded-xs transition-all duration-300" :class="timeBarColor" :style="{ width: timePercent + '%' }" />
+          </div>
+          <div class="time-speed-control" title="时间速度：0.2/0.3/0.5/1/2/4/8倍">
+            <button class="time-speed-btn" title="减慢时间" @click="slowDown">－</button>
+            <span class="time-speed-label">{{ gameSpeedLabel }}</span>
+            <button class="time-speed-btn" title="加快时间" @click="speedUp">＋</button>
           </div>
         </div>
       </div>
@@ -81,13 +78,13 @@
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { useGameClock } from '@/composables/useGameClock'
   import { DAY_START_HOUR, DAY_END_HOUR } from '@/data/timeConstants'
-  import { Zap, Heart, Clock, Coins, Sparkles, FastForward } from 'lucide-vue-next'
+  import { Zap, Heart, Clock, Coins, Sparkles } from 'lucide-vue-next'
 
   const gameStore = useGameStore()
   const playerStore = usePlayerStore()
   const inventoryStore = useInventoryStore()
   const spiritStoneCount = computed(() => inventoryStore.getItemCount('spirit_stone'))
-  const { gameSpeedLabel, cycleSpeed } = useGameClock()
+  const { gameSpeedLabel, slowDown, speedUp } = useGameClock()
 
   const staminaBarColor = computed(() => {
     const pct = playerStore.staminaPercent
@@ -141,13 +138,29 @@
     animation: staminaPulse 1s ease-in-out infinite;
   }
 
+  .time-speed-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 4px;
+    color: var(--color-accent, #d4a017);
+  }
+
+  .time-speed-label {
+    min-width: 26px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1;
+  }
+
   .time-speed-btn {
+    width: 18px;
+    height: 18px;
     border: 1px solid rgba(212, 160, 23, 0.35);
     border-radius: 2px;
-    padding: 1px 5px;
     color: var(--color-accent, #d4a017);
     background: rgba(212, 160, 23, 0.08);
-    line-height: 1.2;
+    line-height: 1;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 

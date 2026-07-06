@@ -94,6 +94,17 @@ export const useGameClock = () => {
     localStorage.setItem(SPEED_STORAGE_KEY, String(next))
   }
 
+  const adjustSpeed = (direction: 'slower' | 'faster') => {
+    const index = Math.max(0, GAME_SPEED_OPTIONS.findIndex(s => s === gameSpeed.value))
+    const nextIndex = direction === 'slower'
+      ? Math.max(0, index - 1)
+      : Math.min(GAME_SPEED_OPTIONS.length - 1, index + 1)
+    setSpeed(GAME_SPEED_OPTIONS[nextIndex] ?? 1)
+  }
+
+  const slowDown = () => adjustSpeed('slower')
+  const speedUp = () => adjustSpeed('faster')
+
   /** 循环切换速度 0.2→0.3→0.5→1→2→4→8→0.2 */
   const cycleSpeed = () => {
     const index = GAME_SPEED_OPTIONS.findIndex(s => s === gameSpeed.value)
@@ -116,6 +127,8 @@ export const useGameClock = () => {
     pauseClock,
     resumeClock,
     setSpeed,
+    slowDown,
+    speedUp,
     cycleSpeed,
     togglePause
   }
