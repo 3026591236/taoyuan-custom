@@ -1,6 +1,6 @@
 <template>
   <div class="border-b border-accent/30 pb-2 md:pb-3 flex flex-col space-y-1">
-    <!-- 第一行：日期时间天气 + 铜钱 -->
+    <!-- 第一行：日期时间天气 + 铜钱/灵石 -->
     <div class="flex items-center justify-between text-xs md:text-sm">
       <div class="flex items-center space-x-2 md:space-x-3">
         <span class="text-accent font-bold">我从种田开始修仙</span>
@@ -11,10 +11,16 @@
         <span :class="{ 'text-danger': gameStore.isLateNight }">{{ gameStore.timeDisplay }}</span>
         <span class="text-muted">{{ WEATHER_NAMES[gameStore.weather] }}</span>
       </div>
-      <span class="text-accent shrink-0">
-        <Coins :size="12" class="inline" />
-        {{ playerStore.money }}文
-      </span>
+      <div class="text-accent shrink-0 flex items-center space-x-2">
+        <span>
+          <Coins :size="12" class="inline" />
+          {{ playerStore.money }}文
+        </span>
+        <span title="灵石">
+          <Sparkles :size="12" class="inline" />
+          {{ spiritStoneCount }}灵石
+        </span>
+      </div>
     </div>
 
     <!-- 第二行：状态条 + 音频控制 -->
@@ -64,11 +70,14 @@
   import { computed } from 'vue'
   import { useGameStore, SEASON_NAMES, WEATHER_NAMES } from '@/stores/useGameStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
+  import { useInventoryStore } from '@/stores/useInventoryStore'
   import { DAY_START_HOUR, DAY_END_HOUR } from '@/data/timeConstants'
-  import { Zap, Heart, Clock, Coins } from 'lucide-vue-next'
+  import { Zap, Heart, Clock, Coins, Sparkles } from 'lucide-vue-next'
 
   const gameStore = useGameStore()
   const playerStore = usePlayerStore()
+  const inventoryStore = useInventoryStore()
+  const spiritStoneCount = computed(() => inventoryStore.getItemCount('spirit_stone'))
 
   const staminaBarColor = computed(() => {
     const pct = playerStore.staminaPercent

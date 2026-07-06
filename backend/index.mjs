@@ -242,6 +242,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: '2026-07-06', title: 'V1.1.6 顶部灵石显示', content: '在顶部金钱位置旁新增灵石余额显示，进入修仙市集购买功法、纳物符、乾坤袋时可直接查看当前灵石数量。' },
     { date: '2026-07-06', title: 'V1.1.5 灵石购买修复', content: '修复修仙市集灵石商品购买弹窗仍显示铜钱、批量购买校验异常的问题；灵石商品现在显示灵石单价与总价，并按灵石余额购买。' },
     { date: '2026-07-06', title: 'V1.1.4 修仙市集商品修复', content: '修复修仙市集入口只停留在普通商圈的问题，现在进入后会打开独立修仙市集，直接展示灵石、丹药、纳物符、乾坤袋与功法秘籍。' },
     { date: '2026-07-06', title: 'V1.1.3 修仙市集入口', content: '新增地图「修仙之途 → 修仙市集」按钮，点击后直接进入商店并定位到修仙市集，方便购买功法秘籍、纳物符和乾坤袋。' },
