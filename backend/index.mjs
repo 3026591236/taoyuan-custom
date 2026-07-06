@@ -283,6 +283,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-06", title: "V1.2.5 玩家独立邮箱", content: "邮件系统改为每个玩家独立存储邮件副本；全服邮件会拆分到每个玩家邮箱，定向补偿只进入目标玩家邮箱，领取状态也独立保存，避免共用邮件池造成显示混乱。" },
     { date: '2026-07-06', title: 'V1.2.4 游戏内聊天', content: '新增世界频道聊天系统，登录后可在聊天面板发送和查看消息，支持实时轮询刷新。' },
     { date: '2026-07-06', title: 'V1.2.3 排行差距与功法推荐', content: '排行榜增加距上一名/上榜差距提示，修仙页增加功法选择推荐，活动页增加每日签到联动提示。' },
     { date: '2026-07-06', title: 'V1.2.2 战斗收益与活动中心', content: '战斗页增加区域产出说明与掉落用途标签，修仙页增加挂机收益估算，活动页升级为小型活动中心展示更多进行中目标。' },
