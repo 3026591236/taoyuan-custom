@@ -4,7 +4,7 @@
 
     <!-- 返回按钮（在子商铺时显示） -->
     <Button v-if="shopStore.currentShopId" class="mb-3 w-full md:w-auto" :icon="ChevronLeft" @click="shopStore.currentShopId = null">
-      返回商圈
+      {{ shopStore.currentShopId === 'cultivation-market' ? '返回商圈' : '返回商圈' }}
     </Button>
 
     <!-- 移动端：购买/出售切换 -->
@@ -92,6 +92,42 @@
                 <span v-if="!isOpen(shop)" class="text-danger text-xs ml-2">{{ closedReason(shop) }}</span>
               </div>
               <ChevronRight v-if="isOpen(shop)" :size="14" class="text-muted" />
+            </div>
+          </div>
+        </template>
+
+        <!-- ====== 修仙市集 ====== -->
+        <template v-else-if="shopStore.currentShopId === 'cultivation-market'">
+          <ShopHeader name="修仙市集" npc="灵石商会" />
+          <p class="text-muted text-xs mb-3">专售修仙资源、储物法器与功法秘籍。这里的核心商品使用灵石兑换。</p>
+
+          <h4 id="cultivation-market" ref="cultivationMarketRef" class="text-accent text-sm mb-2 mt-3 scroll-mt-4">
+            <Sparkles :size="14" class="inline" />
+            修仙相关商品
+          </h4>
+          <div class="flex flex-col space-y-2">
+            <div
+              v-for="item in shopStore.cultivationMarketItems"
+              :key="item.itemId"
+              class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-2 cursor-pointer hover:bg-accent/5"
+              @click="
+                openBatchBuyModal(
+                  item.name,
+                  item.description,
+                  item.currency === 'spirit_stone' ? item.price : discounted(item.price),
+                  () => handleBuyMarketItem(item),
+                  () => canBuyMarketItem(item),
+                  count => handleBatchBuyMarketItem(item, count),
+                  () => getMaxBuyableMarket(item),
+                  item.itemId
+                )
+              "
+            >
+              <div>
+                <p class="text-sm">{{ item.name }}</p>
+                <p class="text-muted text-xs">{{ item.description }}</p>
+              </div>
+              <span class="text-xs text-accent whitespace-nowrap">{{ item.currency === 'spirit_stone' ? `${item.price}灵石` : `${discounted(item.price)}文` }}</span>
             </div>
           </div>
         </template>
@@ -1087,7 +1123,7 @@
   const scrollToCultivationMarket = async () => {
     if (route.query.market !== 'cultivation') return
     mobileTab.value = 'buy'
-    shopStore.currentShopId = null
+    shopStore.currentShopId = 'cultivation-market'
     await nextTick()
     cultivationMarketRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     showFloat('已定位到修仙市集', 'success')
