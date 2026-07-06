@@ -20,6 +20,14 @@
           <Sparkles :size="12" class="inline" />
           {{ spiritStoneCount }}灵石
         </span>
+        <button
+          class="time-speed-btn"
+          :title="`时间速度：${gameSpeedLabel}，点击切换 0.2/0.3/0.5/1/2/4/8 倍`"
+          @click="cycleSpeed"
+        >
+          <FastForward :size="12" class="inline" />
+          {{ gameSpeedLabel }}
+        </button>
       </div>
     </div>
 
@@ -71,13 +79,15 @@
   import { useGameStore, SEASON_NAMES, WEATHER_NAMES } from '@/stores/useGameStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
+  import { useGameClock } from '@/composables/useGameClock'
   import { DAY_START_HOUR, DAY_END_HOUR } from '@/data/timeConstants'
-  import { Zap, Heart, Clock, Coins, Sparkles } from 'lucide-vue-next'
+  import { Zap, Heart, Clock, Coins, Sparkles, FastForward } from 'lucide-vue-next'
 
   const gameStore = useGameStore()
   const playerStore = usePlayerStore()
   const inventoryStore = useInventoryStore()
   const spiritStoneCount = computed(() => inventoryStore.getItemCount('spirit_stone'))
+  const { gameSpeedLabel, cycleSpeed } = useGameClock()
 
   const staminaBarColor = computed(() => {
     const pct = playerStore.staminaPercent
@@ -130,4 +140,19 @@
   .stamina-critical {
     animation: staminaPulse 1s ease-in-out infinite;
   }
+
+  .time-speed-btn {
+    border: 1px solid rgba(212, 160, 23, 0.35);
+    border-radius: 2px;
+    padding: 1px 5px;
+    color: var(--color-accent, #d4a017);
+    background: rgba(212, 160, 23, 0.08);
+    line-height: 1.2;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .time-speed-btn:hover {
+    background: rgba(212, 160, 23, 0.18);
+  }
+
 </style>

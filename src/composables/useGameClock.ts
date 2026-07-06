@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useGameStore } from '@/stores/useGameStore'
 import { PASSOUT_HOUR, MIDNIGHT_HOUR } from '@/data/timeConstants'
 import { addLog } from './useGameLog'
@@ -11,7 +11,13 @@ const REAL_MS_PER_GAME_MINUTE = 700
 const TICK_MS = 200
 
 // === 模块级单例状态 ===
-const gameSpeed = ref(1)
+export const GAME_SPEED_OPTIONS = [0.2, 0.3, 0.5, 1, 2, 4, 8] as const
+const SPEED_STORAGE_KEY = 'taoyuan_game_speed'
+const readSavedSpeed = (): number => {
+  const raw = Number(localStorage.getItem(SPEED_STORAGE_KEY) || 1)
+  return GAME_SPEED_OPTIONS.includes(raw as any) ? raw : 1
+}
+const gameSpeed = ref(readSavedSpeed())
 const isPaused = ref(true)
 let timerId: ReturnType<typeof setInterval> | null = null
 /** 页面隐藏前时钟是否在运行（用于恢复） */
@@ -79,14 +85,20 @@ export const useGameClock = () => {
     isPaused.value = false
   }
 
+  const gameSpeedLabel = computed(() => `${gameSpeed.value}x`)
+
   /** 设置速度倍率 */
   const setSpeed = (speed: number) => {
-    gameSpeed.value = speed
+    const next = GAME_SPEED_OPTIONS.includes(speed as any) ? speed : 1
+    gameSpeed.value = next
+    localStorage.setItem(SPEED_STORAGE_KEY, String(next))
   }
 
-  /** 循环切换速度 1→2→3→1 */
+  /** 循环切换速度 0.2→0.3→0.5→1→2→4→8→0.2 */
   const cycleSpeed = () => {
-    gameSpeed.value = gameSpeed.value >= 3 ? 1 : gameSpeed.value + 1
+    const index = GAME_SPEED_OPTIONS.findIndex(s => s === gameSpeed.value)
+    const next = GAME_SPEED_OPTIONS[(index + 1) % GAME_SPEED_OPTIONS.length] ?? 1
+    setSpeed(next)
   }
 
   /** 切换暂停/恢复 */
@@ -96,6 +108,8 @@ export const useGameClock = () => {
 
   return {
     gameSpeed,
+    gameSpeedLabel,
+    gameSpeedOptions: GAME_SPEED_OPTIONS,
     isPaused,
     startClock,
     stopClock,
