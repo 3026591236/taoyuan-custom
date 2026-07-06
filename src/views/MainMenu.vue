@@ -186,6 +186,15 @@
               <p class="text-accent">v{{ pkg.version }}</p>
             </div>
             <div class="border border-accent/20 rounded-xs p-3">
+              <p class="text-muted text-xs mb-1">原作品</p>
+              <p class="text-xs">桃源乡 by <a href="https://github.com/setube/taoyuan" target="_blank" class="text-accent underline">setube</a></p>
+              <p class="text-muted text-[10px] mt-1">基于 CC BY-NC 4.0 协议演绎</p>
+            </div>
+            <div class="border border-accent/20 rounded-xs p-3">
+              <p class="text-muted text-xs mb-1">二开作者</p>
+              <p class="text-xs">我从种田开始修仙 · QQ: 3026591236</p>
+            </div>
+            <div class="border border-accent/20 rounded-xs p-3">
               <p class="text-muted text-xs mb-1">QQ 交流群</p>
               <a :href="aboutQqUrl" target="_blank" class="text-accent underline break-all">
                 {{ aboutQqText }}

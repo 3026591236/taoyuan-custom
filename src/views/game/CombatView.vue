@@ -135,7 +135,7 @@
             <div class="monster-pixel-card" :class="{ 'tower-monster': combatStore.isTowerCombat }">
               <div class="monster-aura"></div>
               <div class="kenney-sprite monster-sprite" :style="monsterSpriteStyle()"></div>
-              <div class="monster-pixel-body css-monster-fallback">
+              <div class="monster-pixel-body" :class="monsterSpriteClass">
                 <span class="monster-emoji">{{ combatStore.currentMonster.emoji }}</span>
                 <span class="monster-eye eye-l"></span>
                 <span class="monster-eye eye-r"></span>
@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-  import { defineComponent, h, onMounted, ref } from 'vue'
+  import { computed, defineComponent, h, onMounted, ref } from 'vue'
   import Divider from '@/components/game/Divider.vue'
   import { useCombatStore, type RealmZone } from '@/stores/useCombatStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
@@ -204,7 +204,13 @@
     return spriteStyle(baseCol + realmBonus, 0)
   }
 
+  const monsterSpriteClass = computed(() => {
+    const sp = combatStore.currentMonster?.sprite || ''
+    return sp ? `monster-sprite-${sp}` : ''
+  })
+
   const monsterSpriteStyle = () => {
+    if (combatStore.currentMonster?.sprite) return { display: 'none' }
     const name = combatStore.currentMonster?.name || ''
     if (combatStore.isTowerCombat) return spriteStyle(name.includes('首领') || name.includes('镇塔') ? 9 : 8, 1)
     if (name.includes('龙') || name.includes('蛟') || name.includes('王') || name.includes('boss')) return spriteStyle(11, 1)
@@ -344,6 +350,229 @@
   .claw-l { left: -7px; transform: rotate(10deg); } .claw-r { right: -7px; transform: rotate(-10deg); }
   .fighter-hit { animation: player-hit 0.28s ease; }
   @keyframes player-hit { 0%,100% { transform: translateX(0); } 45% { transform: translateX(5px); } }
+
+  /* === V1.3.6 Per-monster pixel art - Chinese palette === */
+
+  .monster-sprite-wolf .monster-pixel-body {
+    background: linear-gradient(90deg, #4a5258 0 28%, #5e686e 28% 70%, #3e464c 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.28), inset 3px 3px 0 rgba(255,255,255,.06), 0 -8px 0 #333b40;
+  }
+  .monster-sprite-wolf .monster-eye { background: #c8a45c; box-shadow: 0 0 4px #c8a45c; }
+  .monster-sprite-wolf .monster-claw { background: #a09880; }
+  .monster-sprite-wolf .monster-emoji { display: none; }
+  .monster-sprite-wolf .monster-aura { border-color: rgba(94,104,110,.4); box-shadow: 0 0 12px rgba(94,104,110,.2); }
+
+  .monster-sprite-treant .monster-pixel-body {
+    background: linear-gradient(90deg, #3a2c1a 0 28%, #504028 28% 70%, #2a1e0e 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.05), 0 -8px 0 #5a9e6f;
+  }
+  .monster-sprite-treant .monster-eye { background: #5a9e6f; box-shadow: 0 0 6px #5a9e6f; }
+  .monster-sprite-treant .monster-claw { background: #4a6830; }
+  .monster-sprite-treant .monster-emoji { display: none; }
+  .monster-sprite-treant .monster-aura { border-color: rgba(90,158,111,.35); box-shadow: 0 0 14px rgba(90,158,111,.2); }
+
+  .monster-sprite-fox .monster-pixel-body {
+    background: linear-gradient(90deg, #b87030 0 28%, #d08838 28% 70%, #a06028 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.22), inset 3px 3px 0 rgba(255,255,255,.08), 0 -8px 0 #f0e8d8;
+  }
+  .monster-sprite-fox .monster-eye { background: #c8a45c; box-shadow: 0 0 4px #c8a45c; }
+  .monster-sprite-fox .monster-claw { background: #f0e8d8; }
+  .monster-sprite-fox .monster-emoji { display: none; }
+  .monster-sprite-fox .monster-aura { border-color: rgba(208,136,56,.4); box-shadow: 0 0 14px rgba(208,136,56,.25); }
+
+  .monster-sprite-bear .monster-pixel-body {
+    background: linear-gradient(90deg, #3a2210 0 28%, #503018 28% 70%, #6a4020 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.05), 0 -8px 0 #28180a;
+  }
+  .monster-sprite-bear .monster-eye { background: #c8a45c; box-shadow: 0 0 3px #c8a45c; width: 5px; height: 5px; }
+  .monster-sprite-bear .monster-claw { background: #a09070; width: 10px; height: 16px; }
+  .monster-sprite-bear .monster-emoji { display: none; }
+  .monster-sprite-bear .monster-aura { border-color: rgba(80,48,24,.4); box-shadow: 0 0 12px rgba(80,48,24,.2); }
+
+  .monster-sprite-snake .monster-pixel-body {
+    background: linear-gradient(90deg, #3a5a38 0 28%, #5a7a50 28% 70%, #4a6a40 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.28), inset 3px 3px 0 rgba(255,255,255,.05), 0 -8px 0 #2a3a28;
+  }
+  .monster-sprite-snake .monster-eye { background: #c34043; box-shadow: 0 0 4px #c34043; width: 3px; height: 3px; }
+  .monster-sprite-snake .monster-claw { background: transparent; }
+  .monster-sprite-snake .monster-emoji { display: none; }
+  .monster-sprite-snake .monster-aura { border-color: rgba(90,122,80,.35); box-shadow: 0 0 12px rgba(90,122,80,.2); }
+
+  .monster-sprite-wisp .monster-pixel-body {
+    background: linear-gradient(90deg, #3a6880 0 28%, #4a88a0 28% 70%, #80b8c8 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.15), inset 3px 3px 0 rgba(255,255,255,.12), 0 -8px 0 #2a4a5a;
+    opacity: 0.85;
+  }
+  .monster-sprite-wisp .monster-eye { background: #e0f0f8; box-shadow: 0 0 8px #80b8c8; width: 3px; height: 3px; }
+  .monster-sprite-wisp .monster-claw { background: transparent; }
+  .monster-sprite-wisp .monster-emoji { display: none; }
+  .monster-sprite-wisp .monster-aura { border-color: rgba(74,136,160,.45); box-shadow: 0 0 18px rgba(74,136,160,.3); }
+
+  .monster-sprite-spider .monster-pixel-body {
+    background: linear-gradient(90deg, #282030 0 28%, #382840 28% 70%, #483850 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.32), inset 3px 3px 0 rgba(255,255,255,.04), 0 -8px 0 #1a1020;
+  }
+  .monster-sprite-spider .monster-eye { background: #c34043; box-shadow: 0 0 6px #c34043; width: 3px; height: 3px; }
+  .monster-sprite-spider .monster-claw { background: #504060; width: 6px; }
+  .monster-sprite-spider .monster-emoji { display: none; }
+  .monster-sprite-spider .monster-aura { border-color: rgba(72,56,80,.4); box-shadow: 0 0 14px rgba(72,56,80,.25); }
+
+  .monster-sprite-thunder_wolf .monster-pixel-body {
+    background: linear-gradient(90deg, #3a4860 0 28%, #4a5870 28% 70%, #5a6880 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 3px 3px 0 rgba(255,255,255,.07), 0 -8px 0 #2a3040;
+  }
+  .monster-sprite-thunder_wolf .monster-eye { background: #c8a45c; box-shadow: 0 0 8px #c8a45c, 0 0 16px rgba(200,164,92,.3); }
+  .monster-sprite-thunder_wolf .monster-claw { background: #a0a8b0; }
+  .monster-sprite-thunder_wolf .monster-emoji { display: none; }
+  .monster-sprite-thunder_wolf .monster-aura { border-color: rgba(200,164,92,.5); box-shadow: 0 0 20px rgba(200,164,92,.35); }
+
+  .monster-sprite-eagle .monster-pixel-body {
+    background: linear-gradient(90deg, #606868 0 28%, #788080 28% 70%, #a0a8a8 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 3px 3px 0 rgba(255,255,255,.08), 0 -8px 0 #404848;
+  }
+  .monster-sprite-eagle .monster-eye { background: #c8a45c; box-shadow: 0 0 5px #c8a45c; }
+  .monster-sprite-eagle .monster-claw { background: #907860; width: 6px; }
+  .monster-sprite-eagle .monster-emoji { display: none; }
+  .monster-sprite-eagle .monster-aura { border-color: rgba(120,128,128,.35); box-shadow: 0 0 14px rgba(120,128,128,.2); }
+
+  .monster-sprite-ghost .monster-pixel-body {
+    background: linear-gradient(90deg, #b8b8c0 0 28%, #d0d0d8 28% 70%, #e8e8f0 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.08), inset 3px 3px 0 rgba(255,255,255,.15), 0 -8px 0 #909098;
+    opacity: 0.7;
+  }
+  .monster-sprite-ghost .monster-eye { background: #c34043; box-shadow: 0 0 8px #c34043; width: 4px; height: 4px; }
+  .monster-sprite-ghost .monster-claw { background: transparent; }
+  .monster-sprite-ghost .monster-emoji { display: none; }
+  .monster-sprite-ghost .monster-aura { border-color: rgba(195,64,67,.3); box-shadow: 0 0 16px rgba(195,64,67,.2); }
+
+  .monster-sprite-demon_general .monster-pixel-body {
+    background: linear-gradient(90deg, #3a1a1a 0 28%, #5a2828 28% 70%, #401818 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.35), inset 3px 3px 0 rgba(255,255,255,.04), 0 -8px 0 #2a0e0e;
+  }
+  .monster-sprite-demon_general .monster-eye { background: #c34043; box-shadow: 0 0 6px #c34043; width: 5px; height: 5px; }
+  .monster-sprite-demon_general .monster-claw { background: #c8a45c; width: 10px; height: 18px; }
+  .monster-sprite-demon_general .monster-emoji { display: none; }
+  .monster-sprite-demon_general .monster-aura { border-color: rgba(195,64,67,.5); box-shadow: 0 0 20px rgba(195,64,67,.3); }
+
+  .monster-sprite-taotie .monster-pixel-body {
+    background: linear-gradient(90deg, #4a1818 0 28%, #6a2020 28% 70%, #8a2828 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.35), inset 3px 3px 0 rgba(255,255,255,.04), 0 -8px 0 #3a0e0e, 0 0 12px rgba(195,64,67,.2);
+  }
+  .monster-sprite-taotie .monster-eye { background: #c8a45c; box-shadow: 0 0 8px #c8a45c, 0 0 16px rgba(200,164,92,.3); width: 6px; height: 6px; }
+  .monster-sprite-taotie .monster-claw { background: #c8a45c; width: 12px; height: 20px; }
+  .monster-sprite-taotie .monster-emoji { display: none; }
+  .monster-sprite-taotie .monster-aura { border-color: rgba(200,164,92,.55); box-shadow: 0 0 24px rgba(200,164,92,.35); }
+
+  .monster-sprite-qiongqi .monster-pixel-body {
+    background: linear-gradient(90deg, #503818 0 28%, #704820 28% 70%, #905828 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.05), 0 -8px 0 #3a2810, 0 0 10px rgba(200,164,92,.15);
+  }
+  .monster-sprite-qiongqi .monster-eye { background: #c8a45c; box-shadow: 0 0 8px #c8a45c; width: 5px; height: 5px; }
+  .monster-sprite-qiongqi .monster-claw { background: #c8a45c; width: 11px; height: 18px; }
+  .monster-sprite-qiongqi .monster-emoji { display: none; }
+  .monster-sprite-qiongqi .monster-aura { border-color: rgba(200,164,92,.5); box-shadow: 0 0 22px rgba(200,164,92,.3); }
+
+  .monster-sprite-hundun .monster-pixel-body {
+    background: linear-gradient(90deg, #1a1a2a 0 28%, #2a2a3a 28% 70%, #3a3a4a 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.4), inset 3px 3px 0 rgba(255,255,255,.03), 0 -8px 0 #0e0e1a, 0 0 16px rgba(58,58,74,.3);
+  }
+  .monster-sprite-hundun .monster-eye { background: #8070a0; box-shadow: 0 0 10px #8070a0, 0 0 20px rgba(128,112,160,.3); width: 4px; height: 4px; }
+  .monster-sprite-hundun .monster-claw { background: #3a3a4a; width: 8px; }
+  .monster-sprite-hundun .monster-emoji { display: none; }
+  .monster-sprite-hundun .monster-aura { border-color: rgba(128,112,160,.5); box-shadow: 0 0 28px rgba(128,112,160,.35); }
+
+  .monster-sprite-tower_dragon .monster-pixel-body {
+    background: linear-gradient(90deg, #3a3828 0 28%, #5a5038 28% 70%, #7a6848 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.05), 0 -8px 0 #2a2818, 0 0 10px rgba(200,164,92,.2);
+  }
+  .monster-sprite-tower_dragon .monster-eye { background: #c8a45c; box-shadow: 0 0 8px #c8a45c; width: 5px; height: 5px; }
+  .monster-sprite-tower_dragon .monster-claw { background: #c8a45c; width: 10px; height: 18px; }
+  .monster-sprite-tower_dragon .monster-emoji { display: none; }
+  .monster-sprite-tower_dragon .monster-aura { border-color: rgba(200,164,92,.5); box-shadow: 0 0 22px rgba(200,164,92,.3); }
+
+  .monster-sprite-tower_mind_demon .monster-pixel-body {
+    background: linear-gradient(90deg, #3a1a30 0 28%, #5a2848 28% 70%, #401838 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.32), inset 3px 3px 0 rgba(255,255,255,.04), 0 -8px 0 #2a0e20;
+  }
+  .monster-sprite-tower_mind_demon .monster-eye { background: #c34043; box-shadow: 0 0 8px #c34043; width: 5px; height: 5px; }
+  .monster-sprite-tower_mind_demon .monster-claw { background: #806080; }
+  .monster-sprite-tower_mind_demon .monster-emoji { display: none; }
+  .monster-sprite-tower_mind_demon .monster-aura { border-color: rgba(195,64,67,.45); box-shadow: 0 0 18px rgba(195,64,67,.25); }
+
+  .monster-sprite-tower_guardian .monster-pixel-body {
+    background: linear-gradient(90deg, #4a3a20 0 28%, #6a5030 28% 70%, #504028 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.05), 0 -8px 0 #3a2a18;
+  }
+  .monster-sprite-tower_guardian .monster-eye { background: #c8a45c; box-shadow: 0 0 5px #c8a45c; width: 4px; height: 4px; }
+  .monster-sprite-tower_guardian .monster-claw { background: #a09060; width: 10px; height: 16px; }
+  .monster-sprite-tower_guardian .monster-emoji { display: none; }
+  .monster-sprite-tower_guardian .monster-aura { border-color: rgba(200,164,92,.4); box-shadow: 0 0 16px rgba(200,164,92,.2); }
+
+  .monster-sprite-tower_bird .monster-pixel-body {
+    background: linear-gradient(90deg, #5a5050 0 28%, #7a6868 28% 70%, #a09090 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.25), inset 3px 3px 0 rgba(255,255,255,.07), 0 -8px 0 #3a3030;
+  }
+  .monster-sprite-tower_bird .monster-eye { background: #c8a45c; box-shadow: 0 0 4px #c8a45c; }
+  .monster-sprite-tower_bird .monster-claw { background: #807060; width: 6px; }
+  .monster-sprite-tower_bird .monster-emoji { display: none; }
+  .monster-sprite-tower_bird .monster-aura { border-color: rgba(200,164,92,.35); box-shadow: 0 0 14px rgba(200,164,92,.2); }
+
+  .monster-sprite-tower_puppet .monster-pixel-body {
+    background: linear-gradient(90deg, #3a4050 0 28%, #4a5060 28% 70%, #5a6070 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.28), inset 3px 3px 0 rgba(255,255,255,.06), 0 -8px 0 #2a3038;
+  }
+  .monster-sprite-tower_puppet .monster-eye { background: #c8a45c; box-shadow: 0 0 6px #c8a45c; }
+  .monster-sprite-tower_puppet .monster-claw { background: #808890; }
+  .monster-sprite-tower_puppet .monster-emoji { display: none; }
+  .monster-sprite-tower_puppet .monster-aura { border-color: rgba(200,164,92,.4); box-shadow: 0 0 16px rgba(200,164,92,.2); }
+
+  .monster-sprite-tower_flame .monster-pixel-body {
+    background: linear-gradient(90deg, #5a2018 0 28%, #7a3020 28% 70%, #a04028 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.06), 0 -8px 0 #3a1810, 0 0 8px rgba(195,64,67,.15);
+  }
+  .monster-sprite-tower_flame .monster-eye { background: #c8a45c; box-shadow: 0 0 8px #c8a45c; }
+  .monster-sprite-tower_flame .monster-claw { background: #c34043; width: 8px; }
+  .monster-sprite-tower_flame .monster-emoji { display: none; }
+  .monster-sprite-tower_flame .monster-aura { border-color: rgba(195,64,67,.45); box-shadow: 0 0 18px rgba(195,64,67,.25); }
+
+  .monster-sprite-tower_shadow .monster-pixel-body {
+    background: linear-gradient(90deg, #282830 0 28%, #383840 28% 70%, #484850 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.35), inset 3px 3px 0 rgba(255,255,255,.03), 0 -8px 0 #1a1a20;
+    opacity: 0.8;
+  }
+  .monster-sprite-tower_shadow .monster-eye { background: #c34043; box-shadow: 0 0 6px #c34043; width: 3px; height: 3px; }
+  .monster-sprite-tower_shadow .monster-claw { background: #404048; }
+  .monster-sprite-tower_shadow .monster-emoji { display: none; }
+  .monster-sprite-tower_shadow .monster-aura { border-color: rgba(195,64,67,.3); box-shadow: 0 0 14px rgba(195,64,67,.2); }
+
+  .monster-sprite-tower_spirit .monster-pixel-body {
+    background: linear-gradient(90deg, #3a5060 0 28%, #4a6878 28% 70%, #6a8898 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.22), inset 3px 3px 0 rgba(255,255,255,.08), 0 -8px 0 #2a3840;
+    opacity: 0.75;
+  }
+  .monster-sprite-tower_spirit .monster-eye { background: #5a9e6f; box-shadow: 0 0 6px #5a9e6f; width: 3px; height: 3px; }
+  .monster-sprite-tower_spirit .monster-claw { background: transparent; }
+  .monster-sprite-tower_spirit .monster-emoji { display: none; }
+  .monster-sprite-tower_spirit .monster-aura { border-color: rgba(90,158,111,.35); box-shadow: 0 0 16px rgba(90,158,111,.2); }
+
+  .monster-sprite-tower_scorpion .monster-pixel-body {
+    background: linear-gradient(90deg, #4a3828 0 28%, #6a4838 28% 70%, #8a5848 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.3), inset 3px 3px 0 rgba(255,255,255,.05), 0 -8px 0 #3a2818;
+  }
+  .monster-sprite-tower_scorpion .monster-eye { background: #c34043; box-shadow: 0 0 4px #c34043; width: 3px; height: 3px; }
+  .monster-sprite-tower_scorpion .monster-claw { background: #c8a45c; width: 6px; }
+  .monster-sprite-tower_scorpion .monster-emoji { display: none; }
+  .monster-sprite-tower_scorpion .monster-aura { border-color: rgba(195,64,67,.35); box-shadow: 0 0 14px rgba(195,64,67,.2); }
+
+  .monster-sprite-tower_moon_wolf .monster-pixel-body {
+    background: linear-gradient(90deg, #3a3a50 0 28%, #4a4a60 28% 70%, #5a5a70 70%);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.28), inset 3px 3px 0 rgba(255,255,255,.06), 0 -8px 0 #2a2a38;
+  }
+  .monster-sprite-tower_moon_wolf .monster-eye { background: #c8a45c; box-shadow: 0 0 6px #c8a45c; }
+  .monster-sprite-tower_moon_wolf .monster-claw { background: #909098; }
+  .monster-sprite-tower_moon_wolf .monster-emoji { display: none; }
+  .monster-sprite-tower_moon_wolf .monster-aura { border-color: rgba(200,164,92,.4); box-shadow: 0 0 16px rgba(200,164,92,.2); }
+
   @media (max-width: 420px) { .battle-stage { grid-template-columns: 1fr 34px 1fr; gap: .35rem; padding-left: .4rem; padding-right: .4rem; } .battle-pixel-card, .monster-pixel-card { width: 74px; height: 112px; } .pixel-avatar { left: 17px; transform: scale(1.1); } .monster-pixel-body { left: 12px; transform: scale(.95); transform-origin: top center; } .battle-vs { font-size: 11px; } }
 
 

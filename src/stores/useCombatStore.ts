@@ -14,6 +14,7 @@ export interface Monster {
   id: string
   name: string
   emoji: string
+  sprite: string
   hp: number
   atk: number
   def: number
@@ -42,69 +43,69 @@ export const REALM_ZONES: RealmZone[] = [
     id: 'taoyuan_path', kind: 'trial', name: '桃源山径', emoji: '🌿', desc: '桃源乡外的灵雾山径，适合初入修行者磨炼。', minRealm: 0, cost: 10, staminaCost: 4,
     rewardHint: '修为、灵气、低阶材料',
     monsters: [
-      { id: 'spirit_wolf', name: '灵狼', emoji: '🐺', hp: 80, atk: 12, def: 3, exp: 24, aura: 8, drops: [{ itemId: 'spirit_stone', name: '灵石', qty: 2, chance: 0.75 }, { itemId: 'fox_fur', name: '狐皮', qty: 1, chance: 0.25 }] },
-      { id: 'tree_spirit', name: '树精', emoji: '🌳', hp: 120, atk: 8, def: 8, exp: 32, aura: 12, drops: [{ itemId: 'wood_spirit', name: '木灵珠', qty: 1, chance: 0.35 }, { itemId: 'spirit_stone', name: '灵石', qty: 3, chance: 0.65 }] }
+      { id: 'spirit_wolf', name: '灵狼', emoji: '🐺', sprite: 'wolf', hp: 80, atk: 12, def: 3, exp: 24, aura: 8, drops: [{ itemId: 'spirit_stone', name: '灵石', qty: 2, chance: 0.75 }, { itemId: 'fox_fur', name: '狐皮', qty: 1, chance: 0.25 }] },
+      { id: 'tree_spirit', name: '树精', emoji: '🌳', sprite: 'treant', hp: 120, atk: 8, def: 8, exp: 32, aura: 12, drops: [{ itemId: 'wood_spirit', name: '木灵珠', qty: 1, chance: 0.35 }, { itemId: 'spirit_stone', name: '灵石', qty: 3, chance: 0.65 }] }
     ]
   },
   {
     id: 'qingqiu_forest', kind: 'trial', name: '青丘旧林', emoji: '🦊', desc: '狐火长明的古林，偶有妖狐遗宝现世。', minRealm: 10, minRebirth: 1, cost: 24, staminaCost: 6,
     rewardHint: '狐皮、真灵秘录、法宝碎片',
     monsters: [
-      { id: 'spirit_fox', name: '青丘灵狐', emoji: '🦊', hp: 210, atk: 28, def: 10, exp: 70, aura: 24, drops: [{ itemId: 'fox_fur', name: '狐皮', qty: 2, chance: 0.55 }, { itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.18 }] },
-      { id: 'forest_king', name: '林中王者·灵熊', emoji: '🐻', hp: 280, atk: 30, def: 16, exp: 88, aura: 30, drops: [{ itemId: 'bear_gall', name: '熊胆', qty: 1, chance: 0.45 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 1, chance: 0.16 }] }
+      { id: 'spirit_fox', name: '青丘灵狐', emoji: '🦊', sprite: 'fox', hp: 210, atk: 28, def: 10, exp: 70, aura: 24, drops: [{ itemId: 'fox_fur', name: '狐皮', qty: 2, chance: 0.55 }, { itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.18 }] },
+      { id: 'forest_king', name: '林中王者·灵熊', emoji: '🐻', sprite: 'bear', hp: 280, atk: 30, def: 16, exp: 88, aura: 30, drops: [{ itemId: 'bear_gall', name: '熊胆', qty: 1, chance: 0.45 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 1, chance: 0.16 }] }
     ]
   },
   {
     id: 'yunmeng_marsh', kind: 'trial', name: '云梦泽', emoji: '🌫️', desc: '水泽迷雾缠绕，水行灵物与幽魂并存。', minRealm: 14, minRebirth: 3, cost: 38, staminaCost: 8,
     rewardHint: '魂晶、水泽材料、轮回材料',
     monsters: [
-      { id: 'marsh_spirit', name: '泽中水魄', emoji: '💧', hp: 380, atk: 44, def: 16, exp: 120, aura: 42, drops: [{ itemId: 'soul_crystal', name: '魂晶', qty: 1, chance: 0.45 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 1, chance: 0.16 }] },
-      { id: 'nether_spider', name: '冥蛛', emoji: '🕷️', hp: 420, atk: 48, def: 18, exp: 135, aura: 48, drops: [{ itemId: 'spider_silk', name: '蛛丝', qty: 2, chance: 0.5 }, { itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.22 }] }
+      { id: 'marsh_spirit', name: '泽中水魄', emoji: '💧', sprite: 'wisp', hp: 380, atk: 44, def: 16, exp: 120, aura: 42, drops: [{ itemId: 'soul_crystal', name: '魂晶', qty: 1, chance: 0.45 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 1, chance: 0.16 }] },
+      { id: 'nether_spider', name: '冥蛛', emoji: '🕷️', sprite: 'spider', hp: 420, atk: 48, def: 18, exp: 135, aura: 48, drops: [{ itemId: 'spider_silk', name: '蛛丝', qty: 2, chance: 0.5 }, { itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.22 }] }
     ]
   },
   {
     id: 'kunlun_border', kind: 'trial', name: '昆仑外境', emoji: '🏔️', desc: '昆仑外山，雷火交汇，非多次轮回者难以久留。', minRealm: 18, minRebirth: 8, cost: 55, staminaCost: 10,
     rewardHint: '雷精、风羽、装备升星材料',
     monsters: [
-      { id: 'thunder_wolf', name: '雷狼', emoji: '⚡', hp: 520, atk: 62, def: 22, exp: 180, aura: 65, drops: [{ itemId: 'thunder_essence', name: '雷精', qty: 1, chance: 0.42 }, { itemId: 'star_iron', name: '星陨铁', qty: 1, chance: 0.18 }] },
-      { id: 'storm_eagle', name: '风暴鹰', emoji: '🦅', hp: 470, atk: 72, def: 18, exp: 190, aura: 72, drops: [{ itemId: 'storm_feather', name: '风羽', qty: 1, chance: 0.4 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 2, chance: 0.18 }] }
+      { id: 'thunder_wolf', name: '雷狼', emoji: '⚡', sprite: 'thunder_wolf', hp: 520, atk: 62, def: 22, exp: 180, aura: 65, drops: [{ itemId: 'thunder_essence', name: '雷精', qty: 1, chance: 0.42 }, { itemId: 'star_iron', name: '星陨铁', qty: 1, chance: 0.18 }] },
+      { id: 'storm_eagle', name: '风暴鹰', emoji: '🦅', sprite: 'eagle', hp: 470, atk: 72, def: 18, exp: 190, aura: 72, drops: [{ itemId: 'storm_feather', name: '风羽', qty: 1, chance: 0.4 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 2, chance: 0.18 }] }
     ]
   },
   {
     id: 'spirit_forest', kind: 'realm', name: '灵兽森林', emoji: '🌲', desc: '灵气充沛的古老森林，低阶灵兽出没。', minRealm: 0, cost: 15, staminaCost: 5,
     rewardHint: '灵石、木灵珠、基础炼器材料',
     monsters: [
-      { id: 'venom_snake', name: '毒蛇', emoji: '🐍', hp: 90, atk: 18, def: 2, exp: 25, aura: 8, drops: [{ itemId: 'iron_ore', name: '铁矿石', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 3, chance: 0.7 }] },
-      { id: 'forest_king2', name: '林中王者·灵熊', emoji: '🐻', hp: 220, atk: 24, def: 10, exp: 60, aura: 20, drops: [{ itemId: 'bear_gall', name: '熊胆', qty: 1, chance: 0.5 }, { itemId: 'spirit_stone', name: '灵石', qty: 8, chance: 0.9 }] }
+      { id: 'venom_snake', name: '毒蛇', emoji: '🐍', sprite: 'snake', hp: 90, atk: 18, def: 2, exp: 25, aura: 8, drops: [{ itemId: 'iron_ore', name: '铁矿石', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 3, chance: 0.7 }] },
+      { id: 'forest_kion2', name: '林中王者·灵熊', emoji: '🐻', sprite: 'bear', hp: 220, atk: 24, def: 10, exp: 60, aura: 20, drops: [{ itemId: 'bear_gall', name: '熊胆', qty: 1, chance: 0.5 }, { itemId: 'spirit_stone', name: '灵石', qty: 8, chance: 0.9 }] }
     ]
   },
   {
     id: 'dark_cave', kind: 'realm', name: '幽冥洞窟', emoji: '🕳️', desc: '阴气森森的地下洞窟，鬼魅横行。', minRealm: 10, cost: 30, staminaCost: 7,
     rewardHint: '魂晶、冥核、炼器图纸',
     monsters: [
-      { id: 'ghost', name: '游魂', emoji: '👻', hp: 150, atk: 25, def: 5, exp: 50, aura: 15, drops: [{ itemId: 'soul_crystal', name: '魂晶', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 6, chance: 0.7 }] },
-      { id: 'cave_lord', name: '洞窟之主·冥将', emoji: '👹', hp: 400, atk: 40, def: 18, exp: 120, aura: 40, drops: [{ itemId: 'nether_core', name: '冥核', qty: 1, chance: 0.3 }, { itemId: 'forge_blueprint', name: '炼器图纸', qty: 1, chance: 0.2 }] }
+      { id: 'ghost', name: '游魂', emoji: '👻', sprite: 'ghost', hp: 150, atk: 25, def: 5, exp: 50, aura: 15, drops: [{ itemId: 'soul_crystal', name: '魂晶', qty: 1, chance: 0.4 }, { itemId: 'spirit_stone', name: '灵石', qty: 6, chance: 0.7 }] },
+      { id: 'cave_lord', name: '洞窟之主·冥将', emoji: '👹', sprite: 'demon_general', hp: 400, atk: 40, def: 18, exp: 120, aura: 40, drops: [{ itemId: 'nether_core', name: '冥核', qty: 1, chance: 0.3 }, { itemId: 'forge_blueprint', name: '炼器图纸', qty: 1, chance: 0.2 }] }
     ]
   },
   {
     id: 'taotie', kind: 'beast', name: '凶兽·饕餮', emoji: '🐲', desc: '吞噬灵气的上古凶兽，每日可挑战一次。', minRealm: 16, minRebirth: 1, cost: 60, staminaCost: 12, dailyLimit: 1,
     rewardHint: '真灵秘录、轮回尘、灵蕴',
     monsters: [
-      { id: 'taotie_boss', name: '饕餮', emoji: '🐲', hp: 900, atk: 78, def: 32, exp: 260, aura: 120, drops: [{ itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.75 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 1, chance: 0.45 }, { itemId: 'lingyun_jade', name: '灵蕴玉', qty: 1, chance: 0.18 }] }
+      { id: 'taotie_boss', name: '饕餮', emoji: '🐲', sprite: 'taotie', hp: 900, atk: 78, def: 32, exp: 260, aura: 120, drops: [{ itemId: 'true_spirit_record', name: '真灵秘录', qty: 1, chance: 0.75 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 1, chance: 0.45 }, { itemId: 'lingyun_jade', name: '灵蕴玉', qty: 1, chance: 0.18 }] }
     ]
   },
   {
     id: 'qiongqi', kind: 'beast', name: '凶兽·穷奇', emoji: '🦁', desc: '喜斗好杀的凶兽，适合中期转生者挑战。', minRealm: 20, minRebirth: 5, cost: 90, staminaCost: 15, dailyLimit: 1,
     rewardHint: '高级轮回材料、法宝碎片、星陨铁',
     monsters: [
-      { id: 'qiongqi_boss', name: '穷奇', emoji: '🦁', hp: 1500, atk: 110, def: 45, exp: 420, aura: 180, drops: [{ itemId: 'true_spirit_record', name: '真灵秘录', qty: 2, chance: 0.75 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 2, chance: 0.45 }, { itemId: 'star_iron', name: '星陨铁', qty: 1, chance: 0.35 }] }
+      { id: 'qiongqi_boss', name: '穷奇', emoji: '🦁', sprite: 'qiongqi', hp: 1500, atk: 110, def: 45, exp: 420, aura: 180, drops: [{ itemId: 'true_spirit_record', name: '真灵秘录', qty: 2, chance: 0.75 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 2, chance: 0.45 }, { itemId: 'star_iron', name: '星陨铁', qty: 1, chance: 0.35 }] }
     ]
   },
   {
     id: 'hundun', kind: 'beast', name: '凶兽·混沌', emoji: '🌑', desc: '混沌雾海中沉睡的凶兽，挑战失败也会损耗大量体力。', minRealm: 24, minRebirth: 10, cost: 140, staminaCost: 18, dailyLimit: 1,
     rewardHint: '灵蕴玉、轮回尘、装备升星核心',
     monsters: [
-      { id: 'hundun_boss', name: '混沌', emoji: '🌑', hp: 2400, atk: 150, def: 70, exp: 680, aura: 260, drops: [{ itemId: 'lingyun_jade', name: '灵蕴玉', qty: 1, chance: 0.55 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 2, chance: 0.55 }, { itemId: 'star_iron', name: '星陨铁', qty: 2, chance: 0.35 }] }
+      { id: 'hundun_boss', name: '混沌', emoji: '🌑', sprite: 'hundun', hp: 2400, atk: 150, def: 70, exp: 680, aura: 260, drops: [{ itemId: 'lingyun_jade', name: '灵蕴玉', qty: 1, chance: 0.55 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 2, chance: 0.55 }, { itemId: 'star_iron', name: '星陨铁', qty: 2, chance: 0.35 }] }
     ]
   }
 ]
@@ -199,10 +200,10 @@ export const useCombatStore = defineStore('combat', () => {
     const boss = tier % 10 === 0
     const elite = !boss && tier % 5 === 0
     const names = boss
-      ? [{ emoji: '🐉', name: '镇塔龙魂' }, { emoji: '👁️', name: '问道心魔' }, { emoji: '🗿', name: '古塔守将' }]
+      ? [{ emoji: '🐉', name: '镇塔龙魂', sprite: 'tower_dragon' }, { emoji: '👁️', name: '问道心魔', sprite: 'tower_mind_demon' }, { emoji: '🗿', name: '古塔守将', sprite: 'tower_guardian' }]
       : elite
-        ? [{ emoji: '🦅', name: '凌霄妖禽' }, { emoji: '⚡', name: '雷纹傀儡' }, { emoji: '🔥', name: '赤焰塔灵' }]
-        : [{ emoji: '👺', name: '塔中妖影' }, { emoji: '🧿', name: '巡塔灵魄' }, { emoji: '🦂', name: '玄砂毒蝎' }, { emoji: '🐺', name: '噬月灵狼' }]
+        ? [{ emoji: '🦅', name: '凌霄妖禽', sprite: 'tower_bird' }, { emoji: '⚡', name: '雷纹傀儡', sprite: 'tower_puppet' }, { emoji: '🔥', name: '赤焰塔灵', sprite: 'tower_flame' }]
+        : [{ emoji: '👺', name: '塔中妖影', sprite: 'tower_shadow' }, { emoji: '🧿', name: '巡塔灵魄', sprite: 'tower_spirit' }, { emoji: '🦂', name: '玄砂毒蝎', sprite: 'tower_scorpion' }, { emoji: '🐺', name: '噬月灵狼', sprite: 'tower_moon_wolf' }]
     const pick = names[(tier + Math.floor(Math.random() * names.length)) % names.length]!
     const scale = boss ? 1.9 : elite ? 1.35 : 1
     const realmBoost = Math.floor(tier / 10) * 18
@@ -210,6 +211,7 @@ export const useCombatStore = defineStore('combat', () => {
       id: `tower_${tier}`,
       name: `${pick.name}·${tier}层`,
       emoji: pick.emoji,
+      sprite: pick.sprite || '',
       hp: Math.floor((95 + tier * 34 + Math.pow(tier, 1.35) * 6) * scale),
       atk: Math.floor((14 + tier * 4.2 + realmBoost) * scale),
       def: Math.floor((4 + tier * 1.9 + Math.floor(tier / 6) * 3) * scale),
