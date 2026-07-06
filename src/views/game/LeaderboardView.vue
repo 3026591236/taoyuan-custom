@@ -27,6 +27,7 @@
       </div>
     </div>
 
+    <div v-if="myRankHint" class="border border-accent/15 rounded-xs p-2 text-xs text-accent/80 text-center">📈 {{ myRankHint }}</div>
     <button class="btn w-full justify-center" @click="loadLeaderboard">刷新排行</button>
   </div>
 </template>
@@ -34,6 +35,8 @@
 <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
   import Divider from '@/components/game/Divider.vue'
+  import { usePlayerStore } from '@/stores/usePlayerStore'
+  import { useCultivationStore } from '@/stores/useCultivationStore'
 
   const tabs = [
     { key: 'cultivation', label: '境界' },
@@ -71,6 +74,32 @@
       loading.value = false
     }
   }
+
+  const player = usePlayerStore()
+  const cultivation = useCultivationStore()
+
+  // 距离上一名提示
+  const myRankHint = computed(() => {
+    if (entries.value.length === 0) return ''
+    const myName = player.playerName
+    const myIdx = entries.value.findIndex((e: any) => e.playerName === myName)
+    if (myIdx < 0) {
+      // Not on board — show distance to last place
+      const last = entries.value[entries.value.length - 1]
+      if (!last) return ''
+      if (activeTab.value === 'power') return `距上榜还需战力 ${(last.combatPower || 0) - (cultivation.combatPower || 0) > 0 ? (last.combatPower || 0) - (cultivation.combatPower || 0) : 0}`
+      if (activeTab.value === 'money') return `距上榜还需铜钱 ${Math.max(0, (last.money || 0) - (player.money || 0))}`
+      if (activeTab.value === 'aura') return `距上榜还需灵气 ${Math.max(0, (last.aura || 0) - (cultivation.aura || 0))}`
+      return '努力上榜吧！'
+    }
+    if (myIdx === 0) return '🏆 你是榜首！'
+    const above = entries.value[myIdx - 1]
+    if (!above) return ''
+    if (activeTab.value === 'power') return `距上一名差战力 ${(above.combatPower || 0) - (cultivation.combatPower || 0)}`
+    if (activeTab.value === 'money') return `距上一名差铜钱 ${Math.max(0, (above.money || 0) - (player.money || 0))}`
+    if (activeTab.value === 'aura') return `距上一名差灵气 ${Math.max(0, (above.aura || 0) - (cultivation.aura || 0))}`
+    return `距上一名差${above.cultivation - (cultivation.cultivation || 0)}修为`
+  })
 
   onMounted(loadLeaderboard)
 </script>

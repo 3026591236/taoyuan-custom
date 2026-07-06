@@ -69,6 +69,13 @@
         </Button>
       </div>
     </div>
+    <div v-if="cultivation.unlocked" class="border border-accent/10 rounded-xs p-2 text-[10px] text-muted leading-relaxed">
+      <p class="text-accent mb-1">💡 功法推荐</p>
+      <p v-if="!cultivation.manuals.wood && !cultivation.manuals.thunder && !cultivation.manuals.void">初入仙途，建议先习「青木长生诀」提升修炼收益，市集可用灵石兑换秘籍。</p>
+      <p v-else-if="cultivation.manuals.wood && !cultivation.manuals.thunder && !cultivation.manuals.void">青木诀已入门，战力不足时考虑「九霄雷诀」，追求稳定突破则选「太虚归元功」。</p>
+      <p v-else-if="cultivation.manuals.thunder && !cultivation.manuals.void">雷诀主攻战力，搭配「太虚归元功」可补灵力与突破稳定性。</p>
+      <p v-else>三诀齐修，继续参悟升级即可。功法层数越高，加成越显著。</p>
+    </div>
 
     
     <!-- 挂机收益估算 -->
