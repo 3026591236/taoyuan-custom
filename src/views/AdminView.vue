@@ -604,7 +604,7 @@ async function sendGmMail() {
   if (!gmMail.to) { setMsg('请选择收件人', 'error'); return }
   if (!confirm(gmMail.to === 'all' ? '确定给全体玩家发送这封奖励邮件？' : '确定给该玩家发送这封奖励邮件？')) return
   try {
-    await api('/api/admin/mails', { method: 'POST', headers: headers(), body: JSON.stringify(gmMail) })
+    await api('/api/admin/mails', { method: 'POST', headers: headers(), body: JSON.stringify({ target: gmMail.to, title: gmMail.title, content: gmMail.content, rewards: gmMail.rewards }) })
     gmMail.title = '系统奖励'
     gmMail.content = ''
     gmMail.rewards.money = 0

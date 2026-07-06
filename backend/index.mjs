@@ -71,6 +71,32 @@ async function ensureSchema() {
     INDEX idx_chat_from_user (from_user_id, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
 
+
+  await pool.execute(`CREATE TABLE IF NOT EXISTS user_mails (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    legacy_mail_id VARCHAR(36) NULL,
+    title VARCHAR(120) NOT NULL,
+    content TEXT NULL,
+    rewards LONGTEXT NULL,
+    from_name VARCHAR(40) DEFAULT '系统',
+    claimed TINYINT(1) NOT NULL DEFAULT 0,
+    claimed_at DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_mails_user_time (user_id, created_at),
+    INDEX idx_user_mails_claimed (user_id, claimed),
+    UNIQUE KEY uk_user_mails_legacy_user (legacy_mail_id, user_id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`)
+
+  await pool.execute(`INSERT IGNORE INTO user_mails (id, user_id, legacy_mail_id, title, content, rewards, from_name, claimed, claimed_at, created_at)
+    SELECT UUID(), u.id, m.id, m.title, m.content, m.rewards, m.from_name,
+      CASE WHEN mc.id IS NULL THEN 0 ELSE 1 END,
+      CASE WHEN mc.id IS NULL THEN NULL ELSE m.created_at END,
+      m.created_at
+    FROM mails m
+    JOIN users u ON (m.target = 'all' OR m.target = u.id)
+    LEFT JOIN mail_claims mc ON mc.mail_id = m.id AND mc.user_id = u.id`)
+
   const [characterIdCols] = await pool.execute("SHOW COLUMNS FROM saves LIKE 'character_id'")
   if (!characterIdCols.length) await pool.execute("ALTER TABLE saves ADD COLUMN character_id VARCHAR(36) NULL AFTER user_id")
   const [playerNameCols] = await pool.execute("SHOW COLUMNS FROM saves LIKE 'player_name'")
@@ -448,7 +474,7 @@ app.get('/api/check-char-name', async (req, res) => {
 app.post('/api/characters', async (req, res) => {
   const conn = await pool.getConnection()
   try {
-    const user = await auth(req); if (!user) { conn.release(); return send(res, 401, { error: '请先登录' }) }
+    const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
     const name = normalizePlayerName(req.body.name)
     const gender = String(req.body.gender || 'male').slice(0, 20)
     const slot = Number.isFinite(Number(req.body.slot)) ? Number(req.body.slot) : 0
@@ -644,27 +670,38 @@ app.post('/api/checkin', async (req, res) => {
 app.get('/api/mails', async (req, res) => {
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
-    const [mails] = await pool.execute("SELECT * FROM mails WHERE target = 'all' OR target = ? ORDER BY created_at DESC", [user.id])
-    const [claimed] = await pool.execute('SELECT mail_id FROM mail_claims WHERE user_id = ?', [user.id])
-    const claimedSet = new Set(claimed.map(c => c.mail_id))
-    send(res, 200, { mails: mails.map(m => ({ id: m.id, title: m.title, content: m.content, rewards: safeJsonParse(m.rewards, {}), from: m.from_name, createdAt: m.created_at, claimed: claimedSet.has(m.id) })) })
-  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+    const [mails] = await pool.execute('SELECT * FROM user_mails WHERE user_id = ? ORDER BY created_at DESC', [user.id])
+    send(res, 200, { mails: mails.map(m => ({
+      id: m.id,
+      title: m.title,
+      content: m.content,
+      rewards: safeJsonParse(m.rewards, {}),
+      from: m.from_name,
+      createdAt: m.created_at,
+      claimed: !!m.claimed
+    })) })
+  } catch (e) { console.error('list user mails err', e); send(res, 500, { error: '服务器错误' }) }
 })
 
 app.post('/api/mails/:id/claim', async (req, res) => {
+  const conn = await pool.getConnection()
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
-    const [mailRows] = await pool.execute('SELECT * FROM mails WHERE id = ?', [req.params.id])
-    if (!mailRows.length) return send(res, 404, { error: '邮件不存在' })
+    await conn.beginTransaction()
+    const [mailRows] = await conn.execute('SELECT * FROM user_mails WHERE id = ? AND user_id = ? FOR UPDATE', [req.params.id, user.id])
+    if (!mailRows.length) { await conn.rollback(); return send(res, 404, { error: '邮件不存在' }) }
     const mail = mailRows[0]
-    if (mail.target !== 'all' && mail.target !== user.id) return send(res, 403, { error: '无法领取' })
-    const [exist] = await pool.execute('SELECT id FROM mail_claims WHERE mail_id = ? AND user_id = ?', [req.params.id, user.id])
-    if (exist.length) return send(res, 409, { error: '已领取' })
-    await pool.execute('INSERT INTO mail_claims (mail_id, user_id) VALUES (?, ?)', [req.params.id, user.id])
+    if (mail.claimed) { await conn.rollback(); return send(res, 409, { error: '已领取' }) }
+    await conn.execute('UPDATE user_mails SET claimed = 1, claimed_at = NOW() WHERE id = ? AND user_id = ?', [req.params.id, user.id])
     const rewards = safeJsonParse(mail.rewards, {})
-    await recordEconomyEvent(user, req, { eventType: 'mail_claim', amount: Number(rewards.money || 0), source: 'mail', detail: { mailId: mail.id, title: mail.title, rewards } })
+    await conn.commit()
+    await recordEconomyEvent(user, req, { eventType: 'mail_claim', amount: Number(rewards.money || 0), source: 'mail', detail: { mailId: mail.id, legacyMailId: mail.legacy_mail_id, title: mail.title, rewards } })
     send(res, 200, { ok: true, rewards })
-  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+  } catch (e) {
+    try { await conn.rollback() } catch {}
+    console.error('claim user mail err', e)
+    send(res, 500, { error: '服务器错误' })
+  } finally { conn.release() }
 })
 
 app.post('/api/economy-events', async (req, res) => {
@@ -1046,14 +1083,38 @@ app.get('/api/admin/economy-events', async (req, res) => {
 })
 
 app.post('/api/admin/mails', async (req, res) => {
+  const conn = await pool.getConnection()
   try {
     const admin = await requireAdmin(req, res); if (!admin) return
-    const { target, title, content, rewards } = req.body
-    if (!title) return send(res, 400, { error: '标题必填' })
-    const id = uuidv4()
-    await pool.execute('INSERT INTO mails (id, target, title, content, rewards, from_name) VALUES (?, ?, ?, ?, ?, ?)', [id, target || 'all', title, content || '', JSON.stringify(rewards || []), '系统'])
-    send(res, 200, { ok: true, id })
-  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+    const { title, content, rewards } = req.body
+    const target = req.body.target ?? req.body.to
+    const cleanTitle = String(title || '').trim()
+    if (!cleanTitle) return send(res, 400, { error: '标题必填' })
+    const rewardJson = JSON.stringify(rewards || {})
+    let users = []
+    if (!target || target === 'all') {
+      const [rows] = await conn.execute('SELECT id FROM users WHERE disabled = 0')
+      users = rows
+    } else {
+      const [rows] = await conn.execute('SELECT id FROM users WHERE id = ? AND disabled = 0 LIMIT 1', [target])
+      if (!rows.length) return send(res, 404, { error: '收件人不存在或已封禁' })
+      users = rows
+    }
+    if (!users.length) return send(res, 400, { error: '没有可发送的收件人' })
+    await conn.beginTransaction()
+    const ids = []
+    for (const u of users) {
+      const id = uuidv4()
+      ids.push(id)
+      await conn.execute('INSERT INTO user_mails (id, user_id, title, content, rewards, from_name) VALUES (?, ?, ?, ?, ?, ?)', [id, u.id, cleanTitle, content || '', rewardJson, '系统'])
+    }
+    await conn.commit()
+    send(res, 200, { ok: true, id: ids[0], ids, count: ids.length })
+  } catch (e) {
+    try { await conn.rollback() } catch {}
+    console.error('admin send user mails err', e)
+    send(res, 500, { error: '服务器错误' })
+  } finally { conn.release() }
 })
 
 const PORT = process.env.PORT || 3001
