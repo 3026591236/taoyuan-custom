@@ -242,6 +242,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: '2026-07-06', title: 'V1.2 全功能可玩性增强', content: '修行志扩展为全功能目标系统，新增钓鱼、挖矿、烹饪、收集、培育、功法、登塔、委托等长期与每日目标，并展示奖励内容，让每个玩法都有更明确的下一步。' },
     { date: '2026-07-06', title: 'V1.1.8 时间控制按钮优化', content: '时间倍率控制移回剩余时间条旁，改为减速和加速两个按钮，避免占用金钱与灵石显示区域。' },
     { date: '2026-07-06', title: 'V1.1.7 时间倍率控制', content: '顶部状态栏新增时间速度按钮，可在0.2、0.3、0.5、1、2、4、8倍之间切换，支持放慢节奏或快速推进一天。' },
     { date: '2026-07-06', title: 'V1.1.6 顶部灵石显示', content: '在顶部金钱位置旁新增灵石余额显示，进入修仙市集购买功法、纳物符、乾坤袋时可直接查看当前灵石数量。' },

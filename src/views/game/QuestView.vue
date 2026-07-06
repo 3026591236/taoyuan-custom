@@ -17,7 +17,7 @@
         </p>
         <span class="text-[10px] text-muted">已完成 {{ questStore.journeySummary.done }}/{{ questStore.journeySummary.total }} · 可领 {{ questStore.journeySummary.claimable }}</span>
       </div>
-      <p class="text-xs text-muted leading-relaxed mb-2">按“种田 → 地脉感应 → 灵田启蒙 → 修仙突破 → 外出磨砺”的路线推进，每完成一个目标都能领取小奖励。</p>
+      <p class="text-xs text-muted leading-relaxed mb-2">按“种田 → 钓鱼 → 挖矿 → 烹饪 → 委托 → 修仙 → 战斗试炼”的路线推进，每个系统都有阶段目标和每日小奖励。</p>
       <div class="flex flex-col space-y-1.5">
         <div
           v-for="task in visibleJourneyTasks"
@@ -32,6 +32,7 @@
                 <p class="text-xs text-accent truncate">{{ task.title }}</p>
               </div>
               <p class="text-[11px] text-muted leading-relaxed mt-1">{{ task.desc }}</p>
+              <p class="text-[10px] text-accent/90 mt-1">奖励：{{ journeyRewardText(task.reward) }}</p>
               <div class="mt-1 flex items-center gap-2">
                 <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10 overflow-hidden">
                   <div class="h-full bg-accent transition-all" :style="{ width: Math.min(100, Math.floor((task.progress / task.target) * 100)) + '%' }" />
@@ -376,6 +377,14 @@
     if (type === 'guide') return '主线'
     if (type === 'daily') return '每日'
     return day ? `七日·第${day}日` : '七日'
+  }
+
+  const journeyRewardText = (reward: { money?: number; aura?: number; attributeExp?: Record<string, number> }) => {
+    const parts: string[] = []
+    if (reward.money) parts.push(`${reward.money}文`)
+    if (reward.aura) parts.push(`灵气${reward.aura}`)
+    if (reward.attributeExp && Object.keys(reward.attributeExp).length > 0) parts.push('资质经验')
+    return parts.join('、') || '奖励'
   }
 
   const handleClaimJourney = (taskId: string) => {

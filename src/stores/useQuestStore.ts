@@ -57,6 +57,11 @@ export const useQuestStore = defineStore('quest', () => {
     | 'attributePower'
     | 'manualLevels'
     | 'towerFloor'
+    | 'fishCaught'
+    | 'recipesCooked'
+    | 'discoveredItems'
+    | 'breedingsDone'
+    | 'hybridsDiscovered'
 
   interface JourneyReward {
     money?: number
@@ -90,6 +95,9 @@ export const useQuestStore = defineStore('quest', () => {
     { id: 'daily_harvest_5', type: 'daily', title: '今日勤耕', desc: '累计收获5次作物，稳定积累地脉与资质。', metric: 'cropHarvest', target: 5, reward: { money: 260, attributeExp: { physique: 14 } } },
     { id: 'daily_commission_1', type: 'daily', title: '乡里委托', desc: '完成1个委托，让田庄和村落流动起来。', metric: 'completedCommissions', target: 1, reward: { money: 320, attributeExp: { perception: 14 } } },
     { id: 'daily_battle_3', type: 'daily', title: '磨砺身手', desc: '累计击败3只怪物，提升战斗资质。', metric: 'monsterKills', target: 3, reward: { money: 280, attributeExp: { strength: 16, agility: 16 } } },
+    { id: 'daily_fish_2', type: 'daily', title: '今日垂钓', desc: '钓到2条鱼，补上轻松休闲的每日收益。', metric: 'fishCaught', target: 2, reward: { money: 300, attributeExp: { agility: 14, perception: 10 } } },
+    { id: 'daily_mine_floor', type: 'daily', title: '今日探矿', desc: '矿洞最高层数推进1层，给挖矿一个明确小目标。', metric: 'mineFloor', target: 1, reward: { money: 360, attributeExp: { strength: 16, physique: 12 } } },
+    { id: 'daily_cook_1', type: 'daily', title: '今日开灶', desc: '制作1道料理，让烹饪成为每日强化的一环。', metric: 'recipesCooked', target: 1, reward: { money: 240, attributeExp: { perception: 14, physique: 10 } } },
     { id: 'seven_day_1', type: 'sevenDay', day: 1, title: '第一日：安身立田', desc: '收获3次作物，建立最初的田庄节奏。', metric: 'cropHarvest', target: 3, reward: { money: 360, attributeExp: { physique: 20 } } },
     { id: 'seven_day_2', type: 'sevenDay', day: 2, title: '第二日：感应地脉', desc: '累计40点地脉感应，理解种田与修仙的关系。', metric: 'earthPulse', target: 40, reward: { money: 380, attributeExp: { perception: 24 } } },
     { id: 'seven_day_3', type: 'sevenDay', day: 3, title: '第三日：灵田启蒙', desc: '完成灵田启蒙，普通农事开始转化灵气。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 160, attributeExp: { perception: 28 } } },
@@ -103,7 +111,17 @@ export const useQuestStore = defineStore('quest', () => {
     { id: 'v11_dungeon_floor_5', type: 'guide', title: '深层秘境：五层首通', desc: '登仙塔达到5层，完成第一个深层秘境首通目标。', metric: 'towerFloor', target: 5, reward: { aura: 360, money: 1000, attributeExp: { strength: 32, agility: 32 } } },
     { id: 'v11_social_help', type: 'guide', title: '玩家互动：仙盟互助', desc: '累计完成3个委托，解锁仙盟互助/寄售玩法的雏形奖励。', metric: 'completedCommissions', target: 3, reward: { aura: 180, money: 888, attributeExp: { perception: 24 } } },
     { id: 'v11_event_hunt', type: 'guide', title: '限时活动：妖潮来袭', desc: '累计击败20只怪物，领取限时讨伐活动奖励。', metric: 'monsterKills', target: 20, reward: { aura: 520, money: 1500, attributeExp: { strength: 40, agility: 40 } } },
-    { id: 'v11_return_bonus', type: 'guide', title: '回访福利：仙缘再临', desc: '进入游戏即可领取一次V1.1回访福利，让老玩家回来就有收获。', metric: 'cultivationUnlocked', target: 0, reward: { aura: 188, money: 666, attributeExp: { physique: 18, strength: 18, agility: 18, perception: 18 } } }
+    { id: 'v11_return_bonus', type: 'guide', title: '回访福利：仙缘再临', desc: '进入游戏即可领取一次V1.1回访福利，让老玩家回来就有收获。', metric: 'cultivationUnlocked', target: 0, reward: { aura: 188, money: 666, attributeExp: { physique: 18, strength: 18, agility: 18, perception: 18 } } },
+    { id: 'v12_farm_50', type: 'guide', title: '农事专精：五十收成', desc: '累计收获50次作物，田庄经营从新手进入稳定期。', metric: 'cropHarvest', target: 50, reward: { money: 1200, aura: 160, attributeExp: { physique: 36, perception: 20 } } },
+    { id: 'v12_fish_20', type: 'guide', title: '溪畔钓客：二十尾', desc: '累计钓到20条鱼，让钓鱼成为稳定赚钱和放松玩法。', metric: 'fishCaught', target: 20, reward: { money: 1100, attributeExp: { agility: 32, perception: 24 } } },
+    { id: 'v12_mine_10', type: 'guide', title: '矿洞远行：十层见光', desc: '矿洞推进到10层，形成装备、矿石与战力循环。', metric: 'mineFloor', target: 10, reward: { money: 1200, attributeExp: { strength: 36, physique: 24 } } },
+    { id: 'v12_cook_10', type: 'guide', title: '灶火初成：十道料理', desc: '累计制作10道料理，把食物增益接入种田、挖矿和战斗。', metric: 'recipesCooked', target: 10, reward: { money: 900, aura: 120, attributeExp: { physique: 26, perception: 26 } } },
+    { id: 'v12_collect_40', type: 'guide', title: '图鉴收藏：四十发现', desc: '发现40种物品，推动采集、钓鱼、挖矿、怪物掉落和商店探索。', metric: 'discoveredItems', target: 40, reward: { money: 1300, attributeExp: { perception: 42 } } },
+    { id: 'v12_breed_3', type: 'guide', title: '灵兽培育：三次配育', desc: '完成3次灵兽/动物培育，让养成线有明确阶段奖励。', metric: 'breedingsDone', target: 3, reward: { money: 1000, aura: 160, attributeExp: { physique: 24, perception: 24 } } },
+    { id: 'v12_hybrid_1', type: 'guide', title: '异种初现：发现杂交', desc: '发现1种杂交产物，鼓励尝试培育组合与收集。', metric: 'hybridsDiscovered', target: 1, reward: { money: 1500, aura: 220, attributeExp: { perception: 36, agility: 18 } } },
+    { id: 'v12_manual_6', type: 'guide', title: '功法精进：六层合参', desc: '功法总层数达到6层，形成修为、灵气、渡劫成功率的成长追求。', metric: 'manualLevels', target: 6, reward: { aura: 520, money: 1600, attributeExp: { perception: 38, physique: 26 } } },
+    { id: 'v12_tower_10', type: 'guide', title: '登仙试炼：十层留名', desc: '登仙塔达到10层，让战斗、装备、功法强度有更清晰的验证场。', metric: 'towerFloor', target: 10, reward: { aura: 620, money: 2000, attributeExp: { strength: 44, agility: 36 } } },
+    { id: 'v12_commission_10', type: 'guide', title: '桃源声望：十次委托', desc: '累计完成10个委托，推动NPC、订单、生产和市场循环。', metric: 'completedCommissions', target: 10, reward: { aura: 280, money: 1800, attributeExp: { perception: 36, physique: 24 } } },
   ]
 
   const getJourneyDayKey = (): string => {
@@ -127,6 +145,11 @@ export const useQuestStore = defineStore('quest', () => {
       case 'attributePower': return playerStore.attributePower
       case 'manualLevels': return Object.values(cultivationStore.manuals).reduce((sum, level) => sum + (Number(level) || 0), 0)
       case 'towerFloor': return useCombatStore().towerHighestFloor
+      case 'fishCaught': return achievementStore.stats.totalFishCaught
+      case 'recipesCooked': return achievementStore.stats.totalRecipesCooked
+      case 'discoveredItems': return achievementStore.discoveredItems.length
+      case 'breedingsDone': return achievementStore.stats.totalBreedingsDone
+      case 'hybridsDiscovered': return achievementStore.stats.totalHybridsDiscovered
       default: return 0
     }
   }
