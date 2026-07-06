@@ -487,6 +487,7 @@
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <p class="text-xs text-muted">{{ activeItemDef?.description }}</p>
+            <p v-if="activeItem && ITEM_USAGE_HINT[activeItem.itemId]" class="text-xs text-success mt-1">💡 {{ ITEM_USAGE_HINT[activeItem.itemId] }}</p>
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
@@ -1223,6 +1224,18 @@
   }
 
   // === 物品弹窗 ===
+
+
+  const ITEM_USAGE_HINT: Record<string, string> = {
+    spirit_stone: '修仙市集货币，购买功法与法器',
+    storage_talisman: '使用后永久扩展背包+1格',
+    cosmos_bag: '使用后永久扩展背包+4格',
+    wood_scripture: '使用后学习青木长生诀功法',
+    thunder_scripture: '使用后学习九霄雷诀功法',
+    void_scripture: '使用后学习太虚归元功功法',
+    soul_mending_pill: '使用后恢复元神伤势',
+    nirvana_soul_pill: '使用后恢复元神掉级',
+  }
 
   const activeItemKey = ref<string | null>(null)
 

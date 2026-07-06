@@ -125,7 +125,7 @@
               "
             >
               <div>
-                <p class="text-sm">{{ item.name }}</p>
+                <p class="text-sm">{{ item.name }} <span v-if="CULTIVATION_USAGE[item.itemId]" class="text-[10px] text-success">【{{ CULTIVATION_USAGE[item.itemId] }}】</span></p>
                 <p class="text-muted text-xs">{{ item.description }}</p>
               </div>
               <span class="text-xs text-accent whitespace-nowrap">{{ item.currency === 'spirit_stone' ? `${item.price}灵石` : `${discounted(item.price)}文` }}</span>
@@ -641,7 +641,7 @@
               "
             >
               <div>
-                <p class="text-sm">{{ item.name }}</p>
+                <p class="text-sm">{{ item.name }} <span v-if="CULTIVATION_USAGE[item.itemId]" class="text-[10px] text-success">【{{ CULTIVATION_USAGE[item.itemId] }}】</span></p>
                 <p class="text-muted text-xs">{{ item.description }}</p>
               </div>
               <span class="text-xs text-accent whitespace-nowrap">{{ item.currency === 'spirit_stone' ? `${item.price}灵石` : `${discounted(item.price)}文` }}</span>
@@ -1410,6 +1410,16 @@
   }
 
   // === 折扣系统 ===
+
+  const CULTIVATION_USAGE: Record<string, string> = {
+    storage_talisman: '扩背包+1',
+    cosmos_bag: '扩背包+4',
+    wood_scripture: '功法·长生诀',
+    thunder_scripture: '功法·雷诀',
+    void_scripture: '功法·归元功',
+    soul_mending_pill: '疗元神伤势',
+    nirvana_soul_pill: '复元神掉级',
+  }
 
   const hasDiscount = computed(() => walletStore.getShopDiscount() > 0 || inventoryStore.getRingEffectValue('shop_discount') > 0)
   const discountPercent = computed(() => {

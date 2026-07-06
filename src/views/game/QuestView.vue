@@ -29,6 +29,7 @@
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1.5">
                 <span class="text-[10px] px-1 border border-accent/20 rounded-xs text-muted">{{ journeyTypeName(task.type, task.day) }}</span>
+                <span v-if="JOURNEY_LOCATION_HINTS[task.metric]" class="text-[10px] text-accent/70">{{ JOURNEY_LOCATION_HINTS[task.metric] }}</span>
                 <p class="text-xs text-accent truncate">{{ task.title }}</p>
               </div>
               <p class="text-[11px] text-muted leading-relaxed mt-1">{{ task.desc }}</p>
@@ -370,8 +371,30 @@
   // === 修行志 ===
 
   const visibleJourneyTasks = computed(() => {
-    return questStore.journeyTasks.filter(task => task.type === 'guide' || task.done || !task.claimed).slice(0, 10)
+    return questStore.journeyTasks.filter(task => task.type === 'guide' || task.done || !task.claimed).slice(0, 15)
   })
+
+
+  const JOURNEY_LOCATION_HINTS: Record<string, string> = {
+    cropHarvest: '→ 农场',
+    earthPulse: '→ 农场',
+    fieldTier: '→ 修仙',
+    cultivationUnlocked: '→ 修仙',
+    realmIndex: '→ 修仙',
+    moneyEarned: '→ 商店/委托',
+    monsterKills: '→ 战斗',
+    mineFloor: '→ 矿洞',
+    completedCommissions: '→ 委托',
+    craftedPills: '→ 加工/炼丹',
+    attributePower: '→ 多种行为',
+    manualLevels: '→ 修仙·功法',
+    towerFloor: '→ 战斗·登仙塔',
+    fishCaught: '→ 钓鱼',
+    recipesCooked: '→ 烹饪',
+    discoveredItems: '→ 采集/商店',
+    breedingsDone: '→ 灵兽培育',
+    hybridsDiscovered: '→ 灵兽培育',
+  }
 
   const journeyTypeName = (type: string, day?: number) => {
     if (type === 'guide') return '主线'

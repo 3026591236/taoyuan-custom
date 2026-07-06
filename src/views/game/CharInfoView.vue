@@ -381,6 +381,15 @@
           <span class="text-xs text-muted">{{ child.name }}</span>
           <span class="text-xs">{{ CHILD_STAGE_NAMES[child.stage] }}</span>
         </div>
+
+      <!-- 成长诊断 -->
+      <div v-if="growthDiagnosis.length" class="mt-2 pt-2 border-t border-accent/10">
+        <p class="text-xs text-accent mb-1">成长诊断</p>
+        <div class="flex flex-col space-y-0.5">
+          <p v-for="(tip, i) in growthDiagnosis" :key="i" class="text-[11px] text-muted">{{ tip }}</p>
+        </div>
+      </div>
+
       </div>
     </div>
   </div>
@@ -425,6 +434,21 @@
     agility: '挑战强敌成长，提升减伤',
     perception: '优质收获与红尘历练成长'
   }
+
+  const growthDiagnosis = computed(() => {
+    const tips: string[] = []
+    if (cultivationStore.unlocked && cultivationStore.canBreakthrough) tips.push('⚡ 可突破！前往修仙')
+    if (playerStore.stamina <= 5) tips.push('💤 体力不足，可休息或吃食物')
+    if (inventoryStore.getItemCount('spirit_stone') < 5 && cultivationStore.unlocked) tips.push('💎 灵石不足，建议红尘历练')
+    if (playerStore.attributeCombatPower < 20) tips.push('⚔️ 战力偏低，升级功法/装备')
+    if (inventoryStore.items.length >= inventoryStore.capacity - 3) tips.push('🎒 背包将满，可购买纳物符')
+    const manuals = Object.values(cultivationStore.manuals).reduce((s,l)=>s+(Number(l)||0),0)
+    if (cultivationStore.unlocked && manuals < 2) tips.push('📖 功法层数低，去修仙市集购买秘籍')
+    if (!cultivationStore.unlocked) tips.push('🌱 未启蒙灵田，多种田触发地脉感应')
+    if (tips.length === 0) tips.push('✨ 全面发展，继续探索各系统')
+    return tips.slice(0, 4)
+  })
+
   const attributeList = computed(() =>
     (Object.keys(ATTRIBUTE_NAMES) as AttributeKey[]).map(key => {
       const attr = playerStore.attributes[key]
