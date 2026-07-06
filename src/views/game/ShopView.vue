@@ -116,10 +116,11 @@
                   item.description,
                   item.currency === 'spirit_stone' ? item.price : discounted(item.price),
                   () => handleBuyMarketItem(item),
-                  () => canBuyMarketItem(item),
+                  () => canBuyMarketItem(item, buyQuantity),
                   count => handleBatchBuyMarketItem(item, count),
                   () => getMaxBuyableMarket(item),
-                  item.itemId
+                  item.itemId,
+                  item.currency ?? 'money'
                 )
               "
             >
@@ -360,10 +361,11 @@
                   item.description,
                   item.currency === 'spirit_stone' ? item.price : discounted(item.price),
                   () => handleBuyMarketItem(item),
-                  () => canBuyMarketItem(item),
+                  () => canBuyMarketItem(item, buyQuantity),
                   count => handleBatchBuyMarketItem(item, count),
                   () => getMaxBuyableMarket(item),
-                  item.itemId
+                  item.itemId,
+                  item.currency ?? 'money'
                 )
               "
             >
@@ -562,10 +564,11 @@
                   item.description,
                   item.currency === 'spirit_stone' ? item.price : discounted(item.price),
                   () => handleBuyMarketItem(item),
-                  () => canBuyMarketItem(item),
+                  () => canBuyMarketItem(item, buyQuantity),
                   count => handleBatchBuyMarketItem(item, count),
                   () => getMaxBuyableMarket(item),
-                  item.itemId
+                  item.itemId,
+                  item.currency ?? 'money'
                 )
               "
             >
@@ -629,10 +632,11 @@
                   item.description,
                   item.currency === 'spirit_stone' ? item.price : discounted(item.price),
                   () => handleBuyMarketItem(item),
-                  () => canBuyMarketItem(item),
+                  () => canBuyMarketItem(item, buyQuantity),
                   count => handleBatchBuyMarketItem(item, count),
                   () => getMaxBuyableMarket(item),
-                  item.itemId
+                  item.itemId,
+                  item.currency ?? 'money'
                 )
               "
             >
@@ -899,7 +903,7 @@
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <div class="flex items-center justify-between">
               <span class="text-xs text-muted">{{ buyModalData.batchBuy ? '单价' : '价格' }}</span>
-              <span class="text-xs text-accent">{{ buyModalData.price }}文</span>
+              <span class="text-xs text-accent">{{ formatBuyPrice(buyModalData.price, buyModalData.currency) }}</span>
             </div>
             <div v-if="buyModalData.itemId" class="flex items-center justify-between mt-0.5">
               <span class="text-xs text-muted">持有</span>
@@ -938,7 +942,7 @@
             </div>
             <div class="flex items-center justify-between mt-1.5">
               <span class="text-xs text-muted">总价</span>
-              <span class="text-xs text-accent">{{ buyTotalPrice }}文</span>
+              <span class="text-xs text-accent">{{ formatBuyPrice(buyTotalPrice, buyModalData.currency) }}</span>
             </div>
           </div>
 
@@ -1202,6 +1206,7 @@
     extraLines?: string[]
     buttonText?: string
     itemId?: string
+    currency?: 'money' | 'spirit_stone'
     batchBuy?: {
       onBuy: (count: number) => void
       maxCount: () => number
@@ -1248,6 +1253,9 @@
     return buyModalData.value.price * buyQuantity.value
   })
 
+  const formatBuyPrice = (price: number, currency: 'money' | 'spirit_stone' = 'money') =>
+    currency === 'spirit_stone' ? `${price}灵石` : `${price}文`
+
   const maxBuyQuantity = computed(() => {
     if (!buyModalData.value?.batchBuy) return 1
     return Math.max(1, buyModalData.value.batchBuy.maxCount())
@@ -1281,9 +1289,10 @@
     canBuy: () => boolean,
     extraLines?: string[],
     buttonText?: string,
-    itemId?: string
+    itemId?: string,
+    currency: 'money' | 'spirit_stone' = 'money'
   ) => {
-    shopModal.value = { type: 'buy', name, description, price, onBuy, canBuy, extraLines, buttonText, itemId }
+    shopModal.value = { type: 'buy', name, description, price, onBuy, canBuy, extraLines, buttonText, itemId, currency }
   }
 
   const openBatchBuyModal = (
@@ -1294,7 +1303,8 @@
     canBuy: () => boolean,
     batchOnBuy: (count: number) => void,
     batchMaxCount: () => number,
-    itemId?: string
+    itemId?: string,
+    currency: 'money' | 'spirit_stone' = 'money'
   ) => {
     buyQuantity.value = 1
     shopModal.value = {
@@ -1305,7 +1315,8 @@
       onBuy: onBuySingle,
       canBuy,
       batchBuy: { onBuy: batchOnBuy, maxCount: batchMaxCount },
-      itemId
+      itemId,
+      currency
     }
   }
 
@@ -1583,9 +1594,12 @@
     }
   }
 
-  const canBuyMarketItem = (item: ShopItemEntry) => item.currency === 'spirit_stone'
-    ? inventoryStore.getItemCount('spirit_stone') >= item.price
-    : playerStore.money >= discounted(item.price)
+  const canBuyMarketItem = (item: ShopItemEntry, countRef: { value: number } | number = 1) => {
+    const count = typeof countRef === 'number' ? countRef : countRef.value
+    const unit = item.currency === 'spirit_stone' ? item.price : discounted(item.price)
+    const owned = item.currency === 'spirit_stone' ? inventoryStore.getItemCount('spirit_stone') : playerStore.money
+    return owned >= unit * Math.max(1, count)
+  }
   const getMaxBuyableMarket = (item: ShopItemEntry): number => {
     const unit = item.currency === 'spirit_stone' ? item.price : discounted(item.price)
     const owned = item.currency === 'spirit_stone' ? inventoryStore.getItemCount('spirit_stone') : playerStore.money

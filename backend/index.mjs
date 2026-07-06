@@ -242,6 +242,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: '2026-07-06', title: 'V1.1.5 灵石购买修复', content: '修复修仙市集灵石商品购买弹窗仍显示铜钱、批量购买校验异常的问题；灵石商品现在显示灵石单价与总价，并按灵石余额购买。' },
     { date: '2026-07-06', title: 'V1.1.4 修仙市集商品修复', content: '修复修仙市集入口只停留在普通商圈的问题，现在进入后会打开独立修仙市集，直接展示灵石、丹药、纳物符、乾坤袋与功法秘籍。' },
     { date: '2026-07-06', title: 'V1.1.3 修仙市集入口', content: '新增地图「修仙之途 → 修仙市集」按钮，点击后直接进入商店并定位到修仙市集，方便购买功法秘籍、纳物符和乾坤袋。' },
     { date: '2026-07-06', title: 'V1.1.2 限时活动入口', content: '新增独立「限时活动」页面和地图按钮，妖潮来袭可查看进度、前往秘境讨伐并直接领取活动奖励，活动说明同步写入新手教程。' },
