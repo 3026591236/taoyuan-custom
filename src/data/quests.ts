@@ -99,6 +99,10 @@ interface SpecialOrderTemplate {
   npcId: string
   /** 难度梯度: 1=第7天(简单), 2=第14天(普通), 3=第21天(困难), 4=第28天(极难) */
   tier: number
+  /** 订单分类标签 */
+  orderTag?: string
+  /** 自定义描述 */
+  description?: string
 }
 
 /** 按梯度分层的特殊订单模板 */
@@ -307,6 +311,78 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ['winter'],
     npcId: 'chen_bo',
     tier: 4
+  },
+
+  // === 内容纵深 V1.3：宗门灵植订单，把种田、修仙、秘境材料串起来 ===
+  {
+    name: '宗门灵膳备料',
+    targetItemId: 'spirit_rice',
+    targetItemName: '蕴灵稻',
+    quantity: 8,
+    days: 7,
+    moneyReward: 900,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 6 },
+      { itemId: 'seed_dew_grass', quantity: 3 }
+    ],
+    seasons: ['spring', 'summer'],
+    npcId: 'lin_lao',
+    tier: 1,
+    orderTag: '宗门灵植',
+    description: '宗门膳房需要蕴灵稻熬制灵粥，交付后可换取灵石与凝露草种子。'
+  },
+  {
+    name: '丹房凝露单',
+    targetItemId: 'dew_grass',
+    targetItemName: '凝露草',
+    quantity: 10,
+    days: 7,
+    moneyReward: 1200,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 8 },
+      { itemId: 'wood_spirit', quantity: 1 }
+    ],
+    seasons: ['spring', 'autumn'],
+    npcId: 'lin_lao',
+    tier: 2,
+    orderTag: '宗门灵植',
+    description: '丹房炼回灵丹缺少凝露草，完成后可获得灵石和青丘旧林常见的木灵珠。'
+  },
+  {
+    name: '筑基丹主材',
+    targetItemId: 'vermilion_fruit',
+    targetItemName: '朱果',
+    quantity: 6,
+    days: 7,
+    moneyReward: 2400,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 14 },
+      { itemId: 'soul_crystal', quantity: 1 },
+      { itemId: 'seed_spirit_rice', quantity: 4 }
+    ],
+    seasons: ['summer', 'autumn'],
+    npcId: 'lin_lao',
+    tier: 3,
+    orderTag: '宗门灵植',
+    description: '宗门要开炉炼筑基丹，急需朱果压住丹火，奖励会补给秘境材料。'
+  },
+  {
+    name: '四时灵植供奉',
+    targetItemId: 'snow_lotus',
+    targetItemName: '雪莲',
+    quantity: 5,
+    days: 7,
+    moneyReward: 3600,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 22 },
+      { itemId: 'thunder_essence', quantity: 1 },
+      { itemId: 'seed_vermilion_fruit', quantity: 3 }
+    ],
+    seasons: ['winter'],
+    npcId: 'lin_lao',
+    tier: 4,
+    orderTag: '宗门灵植',
+    description: '冬日供奉需要雪莲镇住灵脉，完成后可获得高阶灵石奖励和雷精。'
   }
 ]
 
@@ -331,7 +407,8 @@ export const generateSpecialOrder = (season: Season, tier: number): QuestInstanc
     npcId: template.npcId,
     npcName,
     tierLabel,
-    description: `${npcName}急需${template.quantity}个${template.targetItemName}。`,
+    orderTag: template.orderTag,
+    description: template.description ?? `${npcName}急需${template.quantity}个${template.targetItemName}。`,
     targetItemId: template.targetItemId,
     targetItemName: template.targetItemName,
     targetQuantity: template.quantity,

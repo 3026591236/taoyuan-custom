@@ -43,6 +43,8 @@ export interface QuestInstance {
   itemReward?: { itemId: string; quantity: number }[]
   /** 难度标签（特殊订单） */
   tierLabel?: string
+  /** 订单分类标签（如宗门灵植） */
+  orderTag?: string
 }
 
 // ============================================================

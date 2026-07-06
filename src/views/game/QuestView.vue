@@ -262,6 +262,9 @@
           <template v-if="questModal.type === 'special' && questStore.specialOrder">
             <p class="text-accent text-sm mb-2">
               特殊订单
+              <span v-if="questStore.specialOrder.orderTag" class="text-[10px] text-accent border border-accent/30 rounded-xs px-1 ml-1">
+                {{ questStore.specialOrder.orderTag }}
+              </span>
               <span v-if="questStore.specialOrder.tierLabel" class="text-[10px] text-muted border border-accent/20 rounded-xs px-1 ml-1">
                 {{ questStore.specialOrder.tierLabel }}
               </span>
@@ -298,7 +301,7 @@
           <!-- 进行中任务详情 -->
           <template v-if="questModal.type === 'active' && selectedActiveQuest">
             <p class="text-accent text-sm mb-2">
-              {{ selectedActiveQuest.type === 'special_order' ? '特殊订单' : '委托' }}
+              {{ selectedActiveQuest.orderTag || (selectedActiveQuest.type === 'special_order' ? '特殊订单' : '委托') }}
             </p>
             <p class="text-xs leading-relaxed mb-2">{{ selectedActiveQuest.description }}</p>
             <div class="border border-accent/10 rounded-xs p-2 mb-2">

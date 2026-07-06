@@ -290,10 +290,17 @@ export const useQuestStore = defineStore('quest', () => {
       }
       inventoryStore.removeItem(quest.targetItemId, quest.targetQuantity)
     } else {
-      // 钓鱼/挖矿/采集/特殊订单类：检查收集进度或背包数量
-      const effectiveProgress = Math.max(quest.collectedQuantity, inventoryStore.getItemCount(quest.targetItemId))
+      // 钓鱼/挖矿/采集类按收集进度完成；特殊订单需要真实提交背包物品
+      const bagCount = inventoryStore.getItemCount(quest.targetItemId)
+      const effectiveProgress = Math.max(quest.collectedQuantity, bagCount)
       if (effectiveProgress < quest.targetQuantity) {
         return { success: false, message: `${quest.targetItemName}收集进度不足（${effectiveProgress}/${quest.targetQuantity}）。` }
+      }
+      if (quest.type === 'special_order') {
+        if (bagCount < quest.targetQuantity) {
+          return { success: false, message: `背包中${quest.targetItemName}不足，特殊订单需要实际交付物品。` }
+        }
+        inventoryStore.removeItem(quest.targetItemId, quest.targetQuantity)
       }
     }
 
@@ -314,7 +321,7 @@ export const useQuestStore = defineStore('quest', () => {
     // 从活跃列表移除
     activeQuests.value.splice(idx, 1)
 
-    let message = `完成了${quest.npcName}的委托！获得${quest.moneyReward}文，${quest.npcName}好感+${quest.friendshipReward}。`
+    let message = `完成了${quest.orderTag ? quest.orderTag : quest.npcName + '的委托'}！获得${quest.moneyReward}文，${quest.npcName}好感+${quest.friendshipReward}。`
     if (quest.itemReward && quest.itemReward.length > 0) {
       const itemNames = quest.itemReward.map(i => `${i.quantity}个物品`).join('、')
       message += ` 额外获得${itemNames}。`
