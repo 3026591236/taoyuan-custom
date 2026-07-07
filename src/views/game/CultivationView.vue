@@ -176,19 +176,22 @@
         <p class="text-[10px]">当前灵根：<span class="text-accent">{{ cultivation.spiritRootName }}</span>（下一转：{{ cultivation.spiritRoot === 'celestial' ? '[已达天灵根]' : nextSpiritRootName }}）</p>
         <p class="text-[10px]">下一转效果：洞府/法宝/元神/丹药效果保留，境界与灵田重置</p>
       </div>
+      <div v-if="cultivation.unlocked" class="border border-accent/10 rounded-xs p-2 mb-3 text-[10px] text-muted space-y-1">
+        <p class="text-accent">本次转生所需</p>
+        <p v-for="mat in cultivation.rebirthMaterials" :key="mat.itemId" :class="rebirthMatCount(mat.itemId) >= mat.quantity ? 'text-success' : 'text-caution'">· {{ mat.name }} {{ rebirthMatCount(mat.itemId) }}/{{ mat.quantity }}</p>
+        <p>· 灵气 {{ cultivation.aura.toLocaleString() }}/{{ cultivation.rebirthCost.aura.toLocaleString() }}</p>
+        <p>· 铜钱 {{ cultivation.rebirthCost.money.toLocaleString() }}文</p>
+      </div>
       <div v-if="cultivation.canRebirth" class="space-y-2 mb-3">
-        <div class="text-xs text-success">✅ 你已达到大乘初期，修为圆满，可进行转生！</div>
+        <div class="text-xs text-success">✅ 境界、灵气、铜钱与轮回材料均已备齐，可进行转生！</div>
         <div class="text-[10px] text-muted space-y-1">
-          <p>· 需要轮回丹 ×1</p>
-          <p>· 消耗灵气 {{ cultivation.rebirthCost.aura.toLocaleString() }}</p>
-          <p>· 消耗铜钱 {{ cultivation.rebirthCost.money.toLocaleString() }}</p>
           <p class="text-caution">⚠️ 转生后将重置境界至凡人、灵田至黄阶、灵兽羁绊归零</p>
         </div>
         <Button class="w-full justify-center !bg-red-700 hover:!bg-red-600 !text-white" @click="confirmRebirth">踏入轮回（第{{ cultivation.rebirthCount + 1 }}转）</Button>
       </div>
       <div v-else class="text-xs text-muted">
         <span v-if="!cultivation.unlocked">启蒙灵田后可查看转生条件。</span>
-        <span v-else>需达到「大乘初期」且修为满后方可转生。当前境界：{{ cultivation.realmName }}</span>
+        <span v-else>需达到「大乘初期」、备齐轮回丹与轮回材料后方可转生。当前境界：{{ cultivation.realmName }}</span>
       </div>
 
       <!-- 已解锁功能 -->
@@ -236,6 +239,7 @@
             <p>· 灵田：<span class="text-caution">{{ cultivation.fieldTierName }}</span> → <span class="text-success">黄阶灵田</span></p>
             <p>· 灵兽羁绊：归零（灵兽保留）</p>
             <p class="text-success">· 保留：洞府/法宝/元神/丹药效果/30%灵气</p>
+            <p>· 消耗：{{ cultivation.rebirthMaterials.map(m => `${m.name}×${m.quantity}`).join('、') }}</p>
             <p class="text-caution mt-2">此操作不可逆！确认要踏入{{ cultivation.rebirthCount + 1 }}转吗？</p>
           </div>
           <div class="grid grid-cols-2 gap-3">
@@ -268,10 +272,12 @@ import { sfxThunder, sfxLevelUp, sfxHurt } from '@/composables/useAudio'
 import { addLog } from '@/composables/useGameLog'
 import Divider from '@/components/game/Divider.vue'
 import Button from '@/components/game/Button.vue'
+import { useInventoryStore } from '@/stores/useInventoryStore'
 import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANUALS, CULTIVATION_LESSONS, CULTIVATION_PATHS } from '@/stores/useCultivationStore'
 import type { ArtifactKey, CultivationManualKey } from '@/stores/useCultivationStore'
 
 const cultivation = useCultivationStore()
+const inventory = useInventoryStore()
   // === 挂机收益估算 ===
   const idleAuraPerMin = computed(() => {
     if (!cultivation.unlocked) return 0
@@ -283,6 +289,7 @@ const cultivation = useCultivationStore()
   })
 
 const cultivationPaths = CULTIVATION_PATHS
+const rebirthMatCount = (itemId: string) => inventory.getItemCount(itemId)
 const cultivationLessons = CULTIVATION_LESSONS
 const spiritMeals = SPIRIT_MEAL_RECIPES
 const fieldTierName = (idx: number) => FIELD_TIERS[idx] ?? '更高阶灵田'

@@ -182,6 +182,8 @@ export interface SpiritStoneExchangeRecipe {
   desc: string
 }
 
+export interface RebirthMaterialCost { itemId: string; name: string; quantity: number }
+
 export const SPIRIT_STONE_EXCHANGES: SpiritStoneExchangeRecipe[] = [
   { id: 'wood_spirit', name: '木灵珠折灵', itemId: 'wood_spirit', itemName: '木灵珠', quantity: 1, spiritStones: 3, desc: '将多余木行灵珠折换为灵石。' },
   { id: 'soul_crystal', name: '魂晶折灵', itemId: 'soul_crystal', itemName: '魂晶', quantity: 1, spiritStones: 5, desc: '阴魂晶核可析出较多灵石。' },
@@ -190,7 +192,9 @@ export const SPIRIT_STONE_EXCHANGES: SpiritStoneExchangeRecipe[] = [
   { id: 'forge_blueprint', name: '炼器图纸折灵', itemId: 'forge_blueprint', itemName: '炼器图纸', quantity: 1, spiritStones: 10, desc: '暂未用于淬炼的古法残图，可先折成灵石，后续再扩展词条玩法。' },
   { id: 'artifact_shard', name: '法宝碎片折灵', itemId: 'artifact_shard', itemName: '法宝碎片', quantity: 1, spiritStones: 12, desc: '碎片中的残余灵蕴可重炼为灵石。' },
   { id: 'star_iron', name: '星陨铁折灵', itemId: 'star_iron', itemName: '星陨铁', quantity: 1, spiritStones: 15, desc: '天外奇铁蕴含浓厚灵力。' },
-  { id: 'lingyun_jade', name: '灵蕴玉折灵', itemId: 'lingyun_jade', itemName: '灵蕴玉', quantity: 1, spiritStones: 20, desc: '转生材料价值较高，慎重折换。' }
+  { id: 'true_spirit_record', name: '真灵秘录折灵', itemId: 'true_spirit_record', itemName: '真灵秘录', quantity: 1, spiritStones: 16, desc: '二转后会用于轮回凭证，前期多余时才建议折灵。' },
+  { id: 'reincarnation_dust', name: '轮回尘折灵', itemId: 'reincarnation_dust', itemName: '轮回尘', quantity: 1, spiritStones: 18, desc: '二转后会用于稳定轮回，前期多余时才建议折灵。' },
+  { id: 'lingyun_jade', name: '灵蕴玉折灵', itemId: 'lingyun_jade', itemName: '灵蕴玉', quantity: 1, spiritStones: 20, desc: '高转轮回材料价值较高，慎重折换。' }
 ]
 
 const REAL_DAILY_ACCUMULATION_CAP = 7
@@ -978,6 +982,11 @@ export const useCultivationStore = defineStore('cultivation', () => {
       showFloat('背包中没有这种丹药。', 'danger')
       return false
     }
+    if (pillId === 'rebirth_pill') {
+      showFloat('轮回丹是转生凭证，请在修行页「轮回殿」使用。', 'accent')
+      addLog('轮回丹不可直接服用，需要在轮回殿配合灵气、铜钱与轮回材料完成转生。')
+      return false
+    }
     inventory.removeItem(pillId, 1)
     const player = usePlayerStore()
     if (pillId === 'mana_recovery_pill') {
@@ -1314,18 +1323,44 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const trainYuanShen = cultivateYuanShen
 
   const rebirthCost = computed(() => ({ aura: 100000 * (rebirthCount.value + 1), money: 50000 * (rebirthCount.value + 1) }))
-  const canRebirth = computed(() => realmIndex.value >= 20 && aura.value >= rebirthCost.value.aura && usePlayerStore().money >= rebirthCost.value.money)
+  const rebirthMaterials = computed<RebirthMaterialCost[]>(() => {
+    const nextTurn = rebirthCount.value + 1
+    const costs: RebirthMaterialCost[] = [{ itemId: 'rebirth_pill', name: '轮回丹', quantity: 1 }]
+    const trueSpirit = Math.max(0, nextTurn - 1)
+    const dust = Math.max(0, Math.floor(nextTurn / 2))
+    const jade = Math.max(0, Math.floor((nextTurn - 1) / 3))
+    if (trueSpirit > 0) costs.push({ itemId: 'true_spirit_record', name: '真灵秘录', quantity: trueSpirit })
+    if (dust > 0) costs.push({ itemId: 'reincarnation_dust', name: '轮回尘', quantity: dust })
+    if (jade > 0) costs.push({ itemId: 'lingyun_jade', name: '灵蕴玉', quantity: jade })
+    return costs
+  })
+  const hasRebirthMaterials = computed(() => {
+    const inventory = useInventoryStore()
+    return rebirthMaterials.value.every(m => inventory.getItemCount(m.itemId) >= m.quantity)
+  })
+  const canRebirth = computed(() => realmIndex.value >= 20 && aura.value >= rebirthCost.value.aura && usePlayerStore().money >= rebirthCost.value.money && hasRebirthMaterials.value)
   const rebirth = () => {
-    if (!canRebirth.value) { showFloat('转生条件不足。', 'danger'); return false }
+    if (realmIndex.value < 20) { showFloat('需达到大乘初期后方可转生。', 'danger'); return false }
+    if (aura.value < rebirthCost.value.aura) { showFloat(`灵气不足，需要${rebirthCost.value.aura}。`, 'danger'); return false }
     const player = usePlayerStore()
+    if (player.money < rebirthCost.value.money) { showFloat(`铜钱不足，需要${rebirthCost.value.money}文。`, 'danger'); return false }
+    const inventory = useInventoryStore()
+    const missing = rebirthMaterials.value.find(m => inventory.getItemCount(m.itemId) < m.quantity)
+    if (missing) { showFloat(`转生材料不足：${missing.name}×${missing.quantity}。`, 'danger'); return false }
+    const consumedJade = rebirthMaterials.value.find(m => m.itemId === 'lingyun_jade')?.quantity || 0
+    for (const m of rebirthMaterials.value) inventory.removeItem(m.itemId, m.quantity)
     aura.value -= rebirthCost.value.aura
     player.spendMoney(rebirthCost.value.money)
     rebirthCount.value++
-    rebirthBonus.value += 0.1
+    rebirthBonus.value += 10
+    lingYun.value += 1 + consumedJade
     realmIndex.value = 0
     cultivation.value = 0
+    beastBond.value = 0
+    fieldTier.value = Math.min(fieldTier.value, 1)
     mana.value = maxMana.value
-    showFloat('转生完成', 'success')
+    addLog(`你以轮回丹为引，消耗轮回材料踏入第${rebirthCount.value}转。灵气产量+10%，灵蕴+${1 + consumedJade}。`)
+    showFloat(`第${rebirthCount.value}转完成`, 'success')
     return true
   }
 
@@ -1373,6 +1408,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     talismanCooldown.value = (data as any).talismanCooldown ?? {}
     rebirthCount.value = (data as any).rebirthCount ?? 0
     rebirthBonus.value = (data as any).rebirthBonus ?? 0
+    if (rebirthBonus.value > 0 && rebirthBonus.value < 1) rebirthBonus.value = Math.round(rebirthBonus.value * 100)
     lingYun.value = (data as any).lingYun ?? 0
     rebirthUnlocked.value = (data as any).rebirthUnlocked ?? {}
     beast.value = (data as any).beast ?? null
@@ -1387,5 +1423,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     manuals.value = { wood: 0, thunder: 0, void: 0, ...((data as any).manuals ?? {}) }
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, daoGear, daoGearPower, daoGearTribulationBonus, daoGearLevel, canForgeDaoGear, forgeDaoGear, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, talismanPower, talismanTribulationBonus, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, useTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, daoGear, daoGearPower, daoGearTribulationBonus, daoGearLevel, canForgeDaoGear, forgeDaoGear, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, talismanPower, talismanTribulationBonus, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, useTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirthMaterials, hasRebirthMaterials, rebirth, serialize, deserialize }
 })

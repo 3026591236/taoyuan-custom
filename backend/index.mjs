@@ -283,6 +283,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-07", title: "V1.4.9 转生材料闭环", content: "轮回殿转生现在会真实消耗轮回丹，并从二转起逐步接入真灵秘录、轮回尘、灵蕴玉；轮回丹不可再在背包空服用，凶兽与红尘材料正式进入长期转生循环。" },
     { date: "2026-07-07", title: "V1.4.8 修仙地图按钮响应优化", content: "优化地图页修仙之途区域按钮：先关闭地图再跳转，加入防连点锁，并空闲预加载修仙页面资源，降低首次点击卡顿。" },
     { date: "2026-07-06", title: "V1.4.7 法宝边界说明统一", content: "统一修仙装备、本命法宝、农具法宝化三套成长说明，修正本命法宝主动威能等未实装表述，让角色页、修行页和教程口径一致。" },
     { date: "2026-07-06", title: "V1.4.6 制符闭环与星陨铁口径", content: "制符页接入符阵战力、渡劫稳定和愈符体力恢复，符宗获得额外收益；星陨铁说明改为当前订单/折灵材料，装备升星标注为后续系统。" },

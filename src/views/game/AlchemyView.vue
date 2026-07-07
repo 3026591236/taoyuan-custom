@@ -75,7 +75,7 @@ const pillRecipes: Array<{ id: PillId; name: string; desc: string; materialText:
   { id: 'nirvana_soul_pill', name: '涅魂丹', desc: '清除元神伤势，元神等级+1', materialText: '雷精×2、龙葵×2、神曲×12、魂晶×3', aura: 1200, mana: 140, category: '元神', realmRequired: 16 },
   { id: 'dragon_face_pill', name: '龙颜丹', desc: '体/精+20%', materialText: '龙葵×3、锁阳×20、沉香×20', aura: 700, mana: 90, category: '属性', realmRequired: 15 },
   { id: 'spirit_mending_pill', name: '补灵丹', desc: '灵力上限+20', materialText: '白芷×25、玉竹×25、紫菀×25', aura: 550, mana: 55, category: '属性', realmRequired: 11 },
-  { id: 'rebirth_pill', name: '轮回丹', desc: '转生所需，服用可踏入轮回重塑修行', materialText: '龙葵×10、神曲×15、紫菀×15、锁阳×10', aura: 3000, mana: 200, category: '特殊', realmRequired: 20 },
+  { id: 'rebirth_pill', name: '轮回丹', desc: '转生凭证，不可直接服用；需在轮回殿配合轮回材料完成转生', materialText: '龙葵×10、神曲×15、紫菀×15、锁阳×10', aura: 3000, mana: 200, category: '特殊', realmRequired: 20 },
   { id: 'snow_lotus_pill', name: '雪莲清心丹', desc: '顿悟+20、心魔-8', materialText: '冰魄雪莲×3、凝露草×2', aura: 200, mana: 30, category: '修炼', realmRequired: 10 },
   { id: 'ganoderma_pill', name: '灵芝培元丹', desc: '修为+15%、灵气+300', materialText: '紫韵灵芝×3、蕴灵稻×5、凝露草×2', aura: 400, mana: 60, category: '修炼', realmRequired: 14 },
   { id: 'ice_soul_pill', name: '冰魄护魂丹', desc: '灵力回满、心魔-15、顿悟+10', materialText: '冰魄雪莲×5、紫韵灵芝×3、魂晶×2', aura: 800, mana: 100, category: '元神', realmRequired: 18 },
