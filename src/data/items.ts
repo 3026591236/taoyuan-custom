@@ -173,7 +173,7 @@ const MISC_ITEMS: ItemDef[] = [
   { id: 'reincarnation_dust', name: '轮回尘', category: 'material', description: '轮回缝隙中飘落的尘砂，可辅助炼制轮回丹。', sellPrice: 960, edible: false },
   { id: 'lingyun_jade', name: '灵蕴玉', category: 'material', description: '镇压凶兽后凝出的灵玉，可提升转生后的灵蕴底蕴。', sellPrice: 1200, edible: false },
   { id: 'artifact_shard', name: '法宝碎片', category: 'material', description: '破碎法宝残片，可用于灵剑淬炼、本命法宝蕴养，也可在洞府折灵。', sellPrice: 520, edible: false },
-  { id: 'star_iron', name: '星陨铁', category: 'ore', description: '自天外坠落的奇铁，是装备升星的雏形材料。', sellPrice: 760, edible: false },
+  { id: 'star_iron', name: '星陨铁', category: 'ore', description: '自天外坠落的奇铁，可用于高阶订单或在洞府折灵，后续可扩展为装备升星材料。', sellPrice: 760, edible: false },
   { id: 'wood', name: '木材', category: 'material', description: '建造和制作的基础材料。', sellPrice: 5, edible: false },
   { id: 'bamboo', name: '竹子', category: 'material', description: '竹林中采集的翠竹。', sellPrice: 10, edible: false },
   { id: 'herb', name: '草药', category: 'material', description: '山间野生的草药。', sellPrice: 15, edible: false },

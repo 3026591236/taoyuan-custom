@@ -200,7 +200,7 @@
           <span :class="cultivation.rebirthCount >= 5 ? 'text-success' : 'text-muted/50'">✅ 5转·灵兽</span>
           <span :class="cultivation.rebirthCount >= 8 ? 'text-success' : 'text-muted/50'">🔒 8转·元神秘境</span>
           <span :class="cultivation.rebirthCount >= 10 ? 'text-success' : 'text-muted/50'">🔒 10转·秘境二层</span>
-          <span :class="cultivation.rebirthCount >= 15 ? 'text-success' : 'text-muted/50'">🔒 15转·装备升星</span>
+          <span :class="cultivation.rebirthCount >= 15 ? 'text-success' : 'text-muted/50'">🔒 15转·装备升星（后续）</span>
           <span :class="cultivation.rebirthCount >= 20 ? 'text-success' : 'text-muted/50'">🏆 20转·转生称号</span>
         </div>
       </div>

@@ -80,7 +80,7 @@ export const REALM_ZONES: RealmZone[] = [
   },
   {
     id: 'kunlun_border', kind: 'trial', name: '昆仑外境', emoji: '🏔️', desc: '昆仑外山，雷火交汇，非多次轮回者难以久留。', minRealm: 18, minRebirth: 8, cost: 55, staminaCost: 10,
-    rewardHint: '雷精、风羽、装备升星材料',
+    rewardHint: '雷精、风羽、星陨铁',
     monsters: [
       { id: 'thunder_wolf', name: '雷狼', emoji: '⚡', sprite: 'thunder_wolf', hp: 520, atk: 62, def: 22, exp: 180, aura: 65, drops: [{ itemId: 'thunder_essence', name: '雷精', qty: 1, chance: 0.42 }, { itemId: 'star_iron', name: '星陨铁', qty: 1, chance: 0.18 }] },
       { id: 'storm_eagle', name: '风暴鹰', emoji: '🦅', sprite: 'eagle', hp: 470, atk: 72, def: 18, exp: 190, aura: 72, drops: [{ itemId: 'storm_feather', name: '风羽', qty: 1, chance: 0.4 }, { itemId: 'artifact_shard', name: '法宝碎片', qty: 2, chance: 0.18 }] }
@@ -118,7 +118,7 @@ export const REALM_ZONES: RealmZone[] = [
   },
   {
     id: 'hundun', kind: 'beast', name: '凶兽·混沌', emoji: '🌑', desc: '混沌雾海中沉睡的凶兽，挑战失败也会损耗大量体力。', minRealm: 24, minRebirth: 10, cost: 140, staminaCost: 18, dailyLimit: 1,
-    rewardHint: '灵蕴玉、轮回尘、装备升星核心',
+    rewardHint: '灵蕴玉、轮回尘、星陨铁',
     monsters: [
       { id: 'hundun_boss', name: '混沌', emoji: '🌑', sprite: 'hundun', hp: 2400, atk: 150, def: 70, exp: 680, aura: 260, drops: [{ itemId: 'lingyun_jade', name: '灵蕴玉', qty: 1, chance: 0.55 }, { itemId: 'reincarnation_dust', name: '轮回尘', qty: 2, chance: 0.55 }, { itemId: 'star_iron', name: '星陨铁', qty: 2, chance: 0.35 }] }
     ]
