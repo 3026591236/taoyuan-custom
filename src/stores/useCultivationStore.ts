@@ -174,6 +174,7 @@ export const SPIRIT_STONE_EXCHANGES: SpiritStoneExchangeRecipe[] = [
   { id: 'soul_crystal', name: '魂晶折灵', itemId: 'soul_crystal', itemName: '魂晶', quantity: 1, spiritStones: 5, desc: '阴魂晶核可析出较多灵石。' },
   { id: 'thunder_essence', name: '雷精折灵', itemId: 'thunder_essence', itemName: '雷精', quantity: 1, spiritStones: 8, desc: '雷力精粹折成稳定灵石。' },
   { id: 'nether_core', name: '冥核折灵', itemId: 'nether_core', itemName: '冥核', quantity: 1, spiritStones: 10, desc: '高阶冥核可换较多灵石。' },
+  { id: 'forge_blueprint', name: '炼器图纸折灵', itemId: 'forge_blueprint', itemName: '炼器图纸', quantity: 1, spiritStones: 10, desc: '暂未用于淬炼的古法残图，可先折成灵石，后续再扩展词条玩法。' },
   { id: 'artifact_shard', name: '法宝碎片折灵', itemId: 'artifact_shard', itemName: '法宝碎片', quantity: 1, spiritStones: 12, desc: '碎片中的残余灵蕴可重炼为灵石。' },
   { id: 'star_iron', name: '星陨铁折灵', itemId: 'star_iron', itemName: '星陨铁', quantity: 1, spiritStones: 15, desc: '天外奇铁蕴含浓厚灵力。' },
   { id: 'lingyun_jade', name: '灵蕴玉折灵', itemId: 'lingyun_jade', itemName: '灵蕴玉', quantity: 1, spiritStones: 20, desc: '转生材料价值较高，慎重折换。' }

@@ -283,6 +283,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-06", title: "V1.4.5 玩法说明与死料清理", content: "修正高级玩法、法宝碎片、炼器图纸等旧说明；炼器图纸加入洞府灵石坊折灵，避免幽冥洞窟掉落成为暂无用途的死材料。" },
     { date: "2026-07-06", title: "V1.4.4 炼器与修仙装备贯通", content: "炼器页改为角色页修仙装备的淬炼入口，直接淬炼灵剑、法衣、云靴、护符；材料产出、炼器成长、角色战力与渡劫准备形成统一闭环。" },
     { date: "2026-07-06", title: "V1.4.3 修仙装备整合", content: "修仙装备栏改为更直观的灵剑、法衣、云靴、护符，和农场/矿洞装备区分；旧护道装备等级自动迁移，并为后续炼器页贯通打底。" },
     { date: "2026-07-06", title: "V1.4.2 渡劫准备与修仙装备", content: "角色页新增独立修仙装备：灵剑、法衣、云靴、护符，可消耗秘境材料与灵石淬炼，提升战力和渡劫稳定；渡劫成功公告升级为全服滚动弹窗，文字完整滚完后自动消失。" },
