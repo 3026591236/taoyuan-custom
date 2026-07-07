@@ -281,8 +281,10 @@ const defaultConfig = {
   registrationEnabled: true, maintenanceMode: false, announcementIntervalHours: 24,
   aboutQqText: '718630139', aboutQqUrl: 'https://qm.qq.com/q/2BVaTTwDkI',
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
+  iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-07", title: "V1.5.1 客户端下载入口", content: "首页新增 iOS 与安卓客户端下载按钮，后台可分别配置下载链接；链接留空时自动隐藏对应按钮。" },
     { date: "2026-07-07", title: "V1.5.0 灵兽陪练与协战", content: "灵兽页新增每日陪练与羁绊阶段，战斗胜利触发灵兽协战收益，让灵狐、仙鹤、青鸾分别接入灵气、修为、灵力/雷精循环。" },
     { date: "2026-07-07", title: "V1.4.9 转生材料闭环", content: "轮回殿转生现在会真实消耗轮回丹，并从二转起逐步接入真灵秘录、轮回尘、灵蕴玉；轮回丹不可再在背包空服用，凶兽与红尘材料正式进入长期转生循环。" },
     { date: "2026-07-07", title: "V1.4.8 修仙地图按钮响应优化", content: "优化地图页修仙之途区域按钮：先关闭地图再跳转，加入防连点锁，并空闲预加载修仙页面资源，降低首次点击卡顿。" },
@@ -1038,6 +1040,7 @@ app.put('/api/admin/config', async (req, res) => {
       announcementIntervalHours: Math.max(0, Math.min(720, Number(body.announcementIntervalHours ?? cfg.announcementIntervalHours) || 24)),
       aboutQqText: String(body.aboutQqText ?? cfg.aboutQqText).slice(0, 80), aboutQqUrl: String(body.aboutQqUrl ?? cfg.aboutQqUrl).slice(0, 500),
       aboutGithubUrl: String(body.aboutGithubUrl ?? cfg.aboutGithubUrl).slice(0, 500), aboutTapTapUrl: String(body.aboutTapTapUrl ?? cfg.aboutTapTapUrl).slice(0, 500),
+      iosDownloadUrl: String(body.iosDownloadUrl ?? cfg.iosDownloadUrl ?? '').slice(0, 1000), androidDownloadUrl: String(body.androidDownloadUrl ?? cfg.androidDownloadUrl ?? '').slice(0, 1000),
       sponsorAlipayImageUrl: String(body.sponsorAlipayImageUrl ?? cfg.sponsorAlipayImageUrl).slice(0, 1000), sponsorWechatImageUrl: String(body.sponsorWechatImageUrl ?? cfg.sponsorWechatImageUrl).slice(0, 1000),
       sponsorAfdianUrl: String(body.sponsorAfdianUrl ?? cfg.sponsorAfdianUrl).slice(0, 500),
       registrationEnabled: Boolean(body.registrationEnabled), maintenanceMode: Boolean(body.maintenanceMode),

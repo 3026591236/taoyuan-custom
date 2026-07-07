@@ -70,6 +70,21 @@
       <div v-if="accountUser && accountCharacters.length >= 3" class="text-xs text-muted text-center border border-accent/10 rounded-xs px-3 py-2">当前账号已拥有 3 个角色，已达到上限。</div>
       <Button class="text-center justify-center py-2" :icon="BookOpen" @click.stop="router.push('/tutorial')">新手教程</Button>
 
+      <div v-if="iosDownloadUrl || androidDownloadUrl" class="game-panel p-3 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-accent text-sm">客户端下载</p>
+          <p class="text-[10px] text-muted">手机端推荐安装客户端游玩</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <a v-if="iosDownloadUrl" :href="iosDownloadUrl" target="_blank" rel="noopener" class="btn justify-center py-2 text-sm" @click.stop>
+            <Smartphone :size="15" /> iOS 下载
+          </a>
+          <a v-if="androidDownloadUrl" :href="androidDownloadUrl" target="_blank" rel="noopener" class="btn justify-center py-2 text-sm" @click.stop>
+            <Smartphone :size="15" /> 安卓下载
+          </a>
+        </div>
+      </div>
+
       <!-- 关于 -->
       <Button class="text-center justify-center text-muted" :icon="Info" @click="showAbout = true">关于游戏</Button>
       <div class="grid grid-cols-3 gap-2">
@@ -426,7 +441,7 @@
 </template>
 
 <script setup lang="ts">
-  import { Play, ArrowLeft, Info, ShieldCheck, X, UserRound, BookOpen, Lightbulb, Bug, MessageSquare } from 'lucide-vue-next'
+  import { Play, ArrowLeft, Info, ShieldCheck, X, UserRound, BookOpen, Lightbulb, Bug, MessageSquare, Smartphone } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import { ref, computed, onMounted } from 'vue'
@@ -478,7 +493,7 @@
   const accountUsername = ref('')
   const accountPassword = ref('')
   const accountUser = ref<any>(null)
-  const serverConfig = ref<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], registrationEnabled: true, maintenanceMode: false })
+  const serverConfig = ref<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], registrationEnabled: true, maintenanceMode: false, iosDownloadUrl: '', androidDownloadUrl: '' })
   const aboutQqText = computed(() => serverConfig.value?.aboutQqText || (pkg as any).qq || 'QQ 交流群')
   const aboutQqUrl = computed(() => serverConfig.value?.aboutQqUrl || 'https://qm.qq.com/q/2BVaTTwDkI')
   const aboutGithubUrl = computed(() => serverConfig.value?.aboutGithubUrl || `https://github.com/${pkg.author}/${pkg.name}`)
@@ -486,6 +501,8 @@
   const sponsorAlipayImageUrl = computed(() => serverConfig.value?.sponsorAlipayImageUrl || alipayImg)
   const sponsorWechatImageUrl = computed(() => serverConfig.value?.sponsorWechatImageUrl || wechatImg)
   const sponsorAfdianUrl = computed(() => serverConfig.value?.sponsorAfdianUrl || `https://afdian.com/a/${pkg.author}`)
+  const iosDownloadUrl = computed(() => String(serverConfig.value?.iosDownloadUrl || '').trim())
+  const androidDownloadUrl = computed(() => String(serverConfig.value?.androidDownloadUrl || '').trim())
   const accountSaves = ref<any[]>([])
   const accountCharacters = ref<any[]>([])
   const showAnnouncement = ref(false)

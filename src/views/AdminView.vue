@@ -75,6 +75,17 @@
             <input v-model="config.aboutGithubUrl" class="input" placeholder="https://github.com/..." />
             <label class="block text-sm">TapTap 地址</label>
             <input v-model="config.aboutTapTapUrl" class="input" placeholder="https://www.taptap.cn/app/..." />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-sm">iOS 客户端下载链接</label>
+                <input v-model="config.iosDownloadUrl" class="input" placeholder="https://.../ios 或 App Store 链接" />
+              </div>
+              <div>
+                <label class="block text-sm">安卓客户端下载链接</label>
+                <input v-model="config.androidDownloadUrl" class="input" placeholder="https://.../apk 或应用商店链接" />
+              </div>
+            </div>
+            <p class="text-[10px] text-muted">下载链接留空时，首页不会显示对应平台按钮。</p>
             <label class="block text-sm">支付宝赞助二维码图片地址</label>
             <input v-model="config.sponsorAlipayImageUrl" class="input" placeholder="留空使用默认图片，或填写 https://..." />
             <label class="block text-sm">微信赞助二维码图片地址</label>
@@ -335,7 +346,7 @@ const adminTabs = [
 ] as const
 const message = ref('')
 const messageType = ref<'ok' | 'error'>('ok')
-const config = reactive<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], aboutQqText: '', aboutQqUrl: '', aboutGithubUrl: '', aboutTapTapUrl: '', sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: '', registrationEnabled: true, maintenanceMode: false })
+const config = reactive<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], aboutQqText: '', aboutQqUrl: '', aboutGithubUrl: '', aboutTapTapUrl: '', sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: '', iosDownloadUrl: '', androidDownloadUrl: '', registrationEnabled: true, maintenanceMode: false })
 const overview = reactive<any>({ stats: { userCount: 0, saveCount: 0, sessionCount: 0 }, users: [] })
 const economyEvents = ref<any[]>([])
 const ledgerKeyword = ref('')
