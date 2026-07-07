@@ -187,11 +187,11 @@
     </div>
 
 
-    <!-- 修仙护道装备：独立于农场/矿洞装备 -->
+    <!-- 修仙装备：独立于农场/矿洞装备 -->
     <div v-if="cultivationStore.unlocked" class="border border-accent/20 rounded-xs p-2 mb-3 bg-panel/30">
       <div class="flex items-center justify-between mb-1.5">
-        <p class="text-xs text-accent">修仙护道装备</p>
-        <span class="text-[10px] text-muted">独立于农场装备 · 渡劫/战力</span>
+        <p class="text-xs text-accent">修仙装备</p>
+        <span class="text-[10px] text-muted">灵剑 / 法衣 / 云靴 / 护符</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-1.5">
         <div v-for="gear in daoGearList" :key="gear.id" class="border border-accent/10 rounded-xs p-2 space-y-1">
@@ -205,7 +205,7 @@
           <button class="btn w-full justify-center text-xs" :disabled="!gear.canForge" @click="handleForgeDaoGear(gear.id)">{{ gear.level >= gear.maxLevel ? '已圆满' : gear.level > 0 ? '继续淬炼' : '凝练' }}</button>
         </div>
       </div>
-      <p class="text-[10px] text-muted mt-1.5">当前护道装备总战力 +{{ cultivationStore.daoGearPower }}，渡劫稳定 +{{ Math.round(cultivationStore.daoGearTribulationBonus * 100) }}%。</p>
+      <p class="text-[10px] text-muted mt-1.5">当前修仙装备总战力 +{{ cultivationStore.daoGearPower }}，渡劫稳定 +{{ Math.round(cultivationStore.daoGearTribulationBonus * 100) }}%。</p>
     </div>
 
     <!-- 装备选择弹窗 -->

@@ -13,8 +13,8 @@ export type CaveSlotType = 'alchemy' | 'farm' | 'meditation' | 'herbgarden' | 's
 export type CultivationManualKey = 'wood' | 'thunder' | 'void'
 export type CultivationLessonId = 'morning_breath' | 'circulate_qi' | 'thunder_contemplation'
 export type CultivationPathId = 'balanced' | 'sword' | 'alchemy' | 'thunder'
-export type DaoGearSlot = 'weapon' | 'robe' | 'talisman'
-export type DaoGearId = 'spirit_sword' | 'spirit_robe' | 'thunder_talisman'
+export type DaoGearSlot = 'sword' | 'robe' | 'boots' | 'amulet'
+export type DaoGearId = 'immortal_sword' | 'dharma_robe' | 'cloud_boots' | 'tribulation_amulet'
 export interface DaoGearDef {
   id: DaoGearId
   slot: DaoGearSlot
@@ -35,9 +35,10 @@ export interface CultivationPath {
   bonusDesc: string
 }
 export const DAO_GEAR: DaoGearDef[] = [
-  { id: 'spirit_sword', slot: 'weapon', name: '护道法器', desc: '独立于农具武器的修仙法器，强化秘境与登塔战力。', material: { itemId: 'artifact_shard', name: '法宝碎片', quantity: 2 }, spiritStoneCost: 12, powerPerLevel: 520, tribulationPerLevel: 0.006, maxLevel: 9 },
-  { id: 'spirit_robe', slot: 'robe', name: '灵纹法衣', desc: '以魂晶与灵纹护住经脉，渡劫失败时也更稳。', material: { itemId: 'soul_crystal', name: '魂晶', quantity: 2 }, spiritStoneCost: 10, powerPerLevel: 360, tribulationPerLevel: 0.01, maxLevel: 9 },
-  { id: 'thunder_talisman', slot: 'talisman', name: '避劫雷符', desc: '以雷精书写避劫符纹，专门提高跨境渡劫稳定性。', material: { itemId: 'thunder_essence', name: '雷精', quantity: 1 }, spiritStoneCost: 16, powerPerLevel: 280, tribulationPerLevel: 0.018, maxLevel: 9 }
+  { id: 'immortal_sword', slot: 'sword', name: '灵剑', desc: '修士御敌护道的本命外兵，独立于农场/矿洞武器，强化秘境与登塔战力。', material: { itemId: 'artifact_shard', name: '法宝碎片', quantity: 2 }, spiritStoneCost: 12, powerPerLevel: 520, tribulationPerLevel: 0.006, maxLevel: 9 },
+  { id: 'dharma_robe', slot: 'robe', name: '法衣', desc: '以魂晶和灵纹织就的护身法衣，稳固经脉、承受劫雷余波。', material: { itemId: 'soul_crystal', name: '魂晶', quantity: 2 }, spiritStoneCost: 10, powerPerLevel: 360, tribulationPerLevel: 0.01, maxLevel: 9 },
+  { id: 'cloud_boots', slot: 'boots', name: '云靴', desc: '踏云追风的修仙靴履，提升身法与秘境周旋能力。', material: { itemId: 'storm_feather', name: '风羽', quantity: 1 }, spiritStoneCost: 14, powerPerLevel: 320, tribulationPerLevel: 0.008, maxLevel: 9 },
+  { id: 'tribulation_amulet', slot: 'amulet', name: '护符', desc: '以雷精书写避劫符纹的护身符，专门提高跨境渡劫稳定性。', material: { itemId: 'thunder_essence', name: '雷精', quantity: 1 }, spiritStoneCost: 16, powerPerLevel: 280, tribulationPerLevel: 0.018, maxLevel: 9 }
 ]
 export const CULTIVATION_PATHS: CultivationPath[] = [
   { id: 'balanced', name: '清修', title: '清静守一', desc: '守中不偏，重视稳定吐纳与心境平衡。', focus: '稳修', bonusDesc: '打坐、闭关与压制心魔更稳定' },
@@ -292,7 +293,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const earthPulse = ref(0)
   const totalAuraHarvested = ref(0)
   const alchemyUnlocked = ref(false)
-  const daoGear = ref<Record<DaoGearId, number>>({ spirit_sword: 0, spirit_robe: 0, thunder_talisman: 0 })
+  const daoGear = ref<Record<DaoGearId, number>>({ immortal_sword: 0, dharma_robe: 0, cloud_boots: 0, tribulation_amulet: 0 })
   const lastAlchemyQuality = ref<{ pillId: PillId; quality: AlchemyQuality; label: string; bonusText: string } | null>(null)
   const spiritMealLastDaily = ref<Record<SpiritMealId, string>>({ plain_spirit_porridge: '', dew_rice_soup: '', vermilion_elixir_soup: '', three_treasure_spirit_meal: '' })
   const artifacts = ref<Record<ArtifactKey, boolean>>({ glimmerHoe: false, spiritKettle: false, spiritRain: false })
@@ -1298,7 +1299,15 @@ export const useCultivationStore = defineStore('cultivation', () => {
     earthPulse.value = data.earthPulse ?? (data.unlocked ? 100 : 0)
     totalAuraHarvested.value = data.totalAuraHarvested ?? 0
     alchemyUnlocked.value = (data as any).alchemyUnlocked ?? false
-    daoGear.value = { spirit_sword: 0, spirit_robe: 0, thunder_talisman: 0, ...((data as any).daoGear ?? {}) }
+    {
+      const oldGear = ((data as any).daoGear ?? {}) as Record<string, number>
+      daoGear.value = {
+        immortal_sword: Math.max(Number(oldGear.immortal_sword || 0), Number(oldGear.spirit_sword || 0)),
+        dharma_robe: Math.max(Number(oldGear.dharma_robe || 0), Number(oldGear.spirit_robe || 0)),
+        cloud_boots: Number(oldGear.cloud_boots || 0),
+        tribulation_amulet: Math.max(Number(oldGear.tribulation_amulet || 0), Number(oldGear.thunder_talisman || 0))
+      }
+    }
     insight.value = (data as any).insight ?? 0
     heartDemon.value = (data as any).heartDemon ?? 0
     spiritMealLastDaily.value = { plain_spirit_porridge: '', dew_rice_soup: '', vermilion_elixir_soup: '', three_treasure_spirit_meal: '', ...((data as any).spiritMealLastDaily ?? {}) }

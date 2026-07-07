@@ -3,7 +3,10 @@
     <Divider title label="🔨 炼器" />
 
     <div v-if="!cultivationStore.unlocked" class="text-xs text-muted text-center py-4">需先启蒙修仙</div>
-    <div v-else class="space-y-2">
+    <div v-else class="border border-accent/20 rounded-xs p-3 bg-panel/30 text-xs text-muted leading-relaxed">
+      修仙装备已在角色页统一展示为「灵剑 / 法衣 / 云靴 / 护符」。炼器页保留旧飞剑、护甲、灵符、法印、灵珠、阵盘的炼制入口，后续会逐步把炼器产物并入角色页修仙装备栏，避免农场装备与修仙装备混用。
+    </div>
+    <div v-if="cultivationStore.unlocked" class="space-y-2">
       <div v-for="recipe in FORGE_RECIPES" :key="recipe.id" class="border border-accent/15 rounded-xs p-3 space-y-2">
         <div class="flex items-center justify-between">
           <div>
