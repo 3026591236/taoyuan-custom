@@ -3,33 +3,50 @@
     <Divider title label="🔨 炼器" />
 
     <div v-if="!cultivationStore.unlocked" class="text-xs text-muted text-center py-4">需先启蒙修仙</div>
-    <div v-else class="border border-accent/20 rounded-xs p-3 bg-panel/30 text-xs text-muted leading-relaxed">
-      修仙装备已在角色页统一展示为「灵剑 / 法衣 / 云靴 / 护符」。炼器页保留旧飞剑、护甲、灵符、法印、灵珠、阵盘的炼制入口，后续会逐步把炼器产物并入角色页修仙装备栏，避免农场装备与修仙装备混用。
-    </div>
-    <div v-if="cultivationStore.unlocked" class="space-y-2">
-      <div v-for="recipe in FORGE_RECIPES" :key="recipe.id" class="border border-accent/15 rounded-xs p-3 space-y-2">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-accent font-bold">{{ recipe.name }}</span>
-            <span class="text-[10px] ml-1" :class="qualityColor(recipe.quality)">{{ qualityLabel(recipe.quality) }}</span>
-          </div>
-          <div class="text-[10px] text-muted">{{ recipe.slot }}</div>
-        </div>
-        <div class="text-[10px] text-muted">效果：{{ recipe.effectDesc }}</div>
-        <div class="text-[10px]">
-          <span class="text-muted">材料：</span>
-          <span v-for="(m, i) in recipe.materials" :key="i" class="mr-2" :class="hasMaterial(m) ? 'text-accent' : 'text-danger'">
-            {{ m.name }}×{{ m.qty }}
-          </span>
-          <span :class="hasSpiritStones(recipe.spiritStones) ? 'text-accent' : 'text-danger'" class="ml-2">灵石×{{ recipe.spiritStones }}</span>
-        </div>
-        <button class="btn w-full justify-center text-xs" @click="forge(recipe)" :disabled="!canForge(recipe)">
-          🔨 炼制
-        </button>
+    <template v-else>
+      <div class="border border-accent/20 rounded-xs p-3 bg-panel/30 text-xs text-muted leading-relaxed space-y-1">
+        <p class="text-accent text-sm">修仙装备淬炼</p>
+        <p>炼器页现在直接服务角色页的「灵剑 / 法衣 / 云靴 / 护符」。这里负责消耗秘境材料与灵石进行淬炼；角色页负责总览战力、渡劫稳定和农场装备区分。</p>
       </div>
-    </div>
 
-    <!-- 炼器动画遮罩 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="gear in gearCards" :key="gear.id" class="border border-accent/15 rounded-xs p-3 space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-lg">{{ gear.icon }}</span>
+                <span class="text-accent font-bold">{{ gear.name }}</span>
+                <span class="text-[10px] text-muted">{{ gear.slotName }}</span>
+              </div>
+              <p class="text-[10px] text-muted leading-relaxed mt-1">{{ gear.desc }}</p>
+            </div>
+            <span class="text-xs" :class="gear.level > 0 ? 'text-success' : 'text-muted'">{{ gear.level > 0 ? `${gear.level}阶` : '未凝练' }}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1 text-[10px]">
+            <div class="stat-chip">战力 +{{ gear.power }}</div>
+            <div class="stat-chip">渡劫 +{{ gear.tribulation }}%</div>
+          </div>
+
+          <div class="text-[10px] leading-relaxed">
+            <span class="text-muted">材料：</span>
+            <span :class="gear.hasMaterial ? 'text-accent' : 'text-danger'">{{ gear.material.name }}×{{ gear.material.quantity }}（{{ gear.materialOwned }}）</span>
+            <span class="mx-1 text-muted">/</span>
+            <span :class="gear.hasSpiritStone ? 'text-accent' : 'text-danger'">灵石×{{ gear.spiritStoneCost }}（{{ spiritStoneCount }}）</span>
+          </div>
+
+          <button class="btn w-full justify-center text-xs" :disabled="!gear.canForge || forging" @click="forgeGear(gear.id)">
+            {{ gear.level >= gear.maxLevel ? '已淬炼圆满' : gear.level > 0 ? '继续淬炼' : '凝练成器' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="border border-accent/15 rounded-xs p-3 text-[10px] text-muted leading-relaxed">
+        <p class="text-accent text-xs mb-1">材料路线</p>
+        <p>法宝碎片来自青丘旧林、凶兽、登仙塔和秘境抉择；魂晶来自幽冥洞窟/登仙塔；风羽来自昆仑外境；雷精来自昆仑外境、宗门订单和雷云观想相关循环。多余修仙材料可在洞府折灵换灵石。</p>
+      </div>
+    </template>
+
     <Transition name="panel-fade">
       <div v-if="forging" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
         <div class="text-center">
@@ -39,116 +56,75 @@
         </div>
       </div>
     </Transition>
-
-    <!-- 法宝栏 -->
-    <Divider title label="法宝装备" />
-    <div class="grid grid-cols-3 gap-2">
-      <div v-for="(slot, key) in ARTIFACT_SLOTS" :key="key" class="border border-accent/15 rounded-xs p-2 text-center">
-        <div class="text-[10px] text-muted">{{ slot }}</div>
-        <div v-if="(cultivationStore.artifacts as any)?.[key]" class="text-lg mt-1" :class="qualityColor((cultivationStore.artifacts as any)[key].quality)">
-          {{ (cultivationStore.artifacts as any)[key].emoji }}
-        </div>
-        <div v-else class="text-lg mt-1 text-muted">—</div>
-        <div v-if="(cultivationStore.artifacts as any)?.[key]" class="text-[10px]" :class="qualityColor((cultivationStore.artifacts as any)[key].quality)">
-          {{ (cultivationStore.artifacts as any)[key].name }}
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { computed, ref } from 'vue'
   import Divider from '@/components/game/Divider.vue'
+  import { DAO_GEAR, type DaoGearId } from '@/stores/useCultivationStore'
   import { useCultivationStore } from '@/stores/useCultivationStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
-  import { addLog, showFloat } from '@/composables/useGameLog'
 
   const cultivationStore = useCultivationStore()
   const inv = useInventoryStore()
-
   const forging = ref(false)
   const forgeStage = ref('')
 
-  type Quality = 'common' | 'spirit' | 'immortal' | 'divine' | 'saint'
-  const ARTIFACT_SLOTS: Record<string, string> = {
-    sword: '🗡️飞剑', armor: '🛡️护甲', talisman: '📜灵符',
-    seal: '🔮法印', orb: '💠灵珠', array: '⭕阵盘'
-  }
+  const slotIcons: Record<string, string> = { sword: '🗡️', robe: '🥋', boots: '👢', amulet: '📿' }
+  const slotNames: Record<string, string> = { sword: '灵剑', robe: '法衣', boots: '云靴', amulet: '护符' }
+  const spiritStoneCount = computed(() => inv.getItemCount('spirit_stone'))
 
-  const FORGE_RECIPES = [
-    { id: 'iron_sword', name: '玄铁剑', emoji: '🗡️', slot: 'sword', quality: 'common' as Quality, spiritStones: 10, materials: [{ itemId: 'iron_ore', name: '铁矿石', qty: 3 }], effectDesc: '攻击+8', atk: 8, def: 0, aura: 0, cultivation: 0 },
-    { id: 'spirit_sword', name: '灵光剑', emoji: '🗡️', slot: 'sword', quality: 'spirit' as Quality, spiritStones: 30, materials: [{ itemId: 'iron_ore', name: '铁矿石', qty: 5 }, { itemId: 'spirit_stone', name: '灵石', qty: 10 }], effectDesc: '攻击+20', atk: 20, def: 0, aura: 5, cultivation: 0 },
-    { id: 'iron_armor', name: '玄铁甲', emoji: '🛡️', slot: 'armor', quality: 'common' as Quality, spiritStones: 15, materials: [{ itemId: 'iron_ore', name: '铁矿石', qty: 5 }], effectDesc: '防御+10', atk: 0, def: 10, aura: 0, cultivation: 0 },
-    { id: 'spirit_armor', name: '灵光甲', emoji: '🛡️', slot: 'armor', quality: 'spirit' as Quality, spiritStones: 35, materials: [{ itemId: 'iron_ore', name: '铁矿石', qty: 8 }, { itemId: 'spirit_stone', name: '灵石', qty: 12 }], effectDesc: '防御+22 灵气+3', atk: 0, def: 22, aura: 3, cultivation: 0 },
-    { id: 'spirit_talisman', name: '聚灵符', emoji: '📜', slot: 'talisman', quality: 'common' as Quality, spiritStones: 8, materials: [{ itemId: 'spirit_stone', name: '灵石', qty: 5 }], effectDesc: '灵气+10', atk: 0, def: 0, aura: 10, cultivation: 0 },
-    { id: 'aura_orb', name: '灵珠', emoji: '💠', slot: 'orb', quality: 'spirit' as Quality, spiritStones: 20, materials: [{ itemId: 'spirit_stone', name: '灵石', qty: 15 }], effectDesc: '灵气+15 修为+5', atk: 0, def: 0, aura: 15, cultivation: 5 },
-    { id: 'thunder_seal', name: '雷印', emoji: '🔮', slot: 'seal', quality: 'immortal' as Quality, spiritStones: 50, materials: [{ itemId: 'thunder_essence', name: '雷精', qty: 2 }, { itemId: 'spirit_stone', name: '灵石', qty: 20 }], effectDesc: '攻击+35 防御+15', atk: 35, def: 15, aura: 0, cultivation: 0 },
-    { id: 'array_disk', name: '五行阵盘', emoji: '⭕', slot: 'array', quality: 'immortal' as Quality, spiritStones: 60, materials: [{ itemId: 'nether_core', name: '冥核', qty: 1 }, { itemId: 'thunder_essence', name: '雷精', qty: 1 }, { itemId: 'spirit_stone', name: '灵石', qty: 25 }], effectDesc: '全属性+20', atk: 20, def: 20, aura: 20, cultivation: 20 },
-  ]
-
-  const qualityColor = (q: string) => ({ common: 'text-gray-300', spirit: 'text-green-400', immortal: 'text-blue-400', divine: 'text-purple-400', saint: 'text-yellow-400' }[q] || '')
-  const qualityLabel = (q: string) => ({ common: '凡品', spirit: '灵品', immortal: '仙品', divine: '神品', saint: '圣品' }[q] || '')
-
-  const hasMaterial = (m: { itemId: string; qty: number }) => ((inv.items as any)[m.itemId] || 0) >= m.qty
-  const hasSpiritStones = (n: number) => ((inv.items as any)['spirit_stone'] || 0) >= n
-
-  const canForge = (recipe: typeof FORGE_RECIPES[0]) => {
-    if (!recipe.materials.every(m => hasMaterial(m))) return false
-    if (!hasSpiritStones(recipe.spiritStones)) return false
-    return true
-  }
-
-  const forge = async (recipe: typeof FORGE_RECIPES[0]) => {
-    if (!canForge(recipe)) return
-    // Consume materials
-    for (const m of recipe.materials) inv.removeItem(m.itemId, m.qty) as any
-    inv.removeItem('spirit_stone', recipe.spiritStones)
-
-    // Forge animation
-    forging.value = true
-    forgeStage.value = '🔥 点火...'
-    await new Promise(r => setTimeout(r, 800))
-    forgeStage.value = '🔨 锻打...'
-    await new Promise(r => setTimeout(r, 800))
-    forgeStage.value = '✨ 成型...'
-    await new Promise(r => setTimeout(r, 600))
-
-    // Determine quality (spirit root bonus)
-    let quality = recipe.quality
-    const c = cultivationStore
-    if (c.spiritRoot !== 'mixed' && Math.random() < 0.3) {
-      const qOrder: Quality[] = ['common', 'spirit', 'immortal', 'divine', 'saint']
-      const idx = qOrder.indexOf(quality)
-      if (idx < qOrder.length - 1) quality = qOrder[idx + 1] as Quality
+  const gearCards = computed(() => DAO_GEAR.map(gear => {
+    const level = cultivationStore.daoGearLevel(gear.id)
+    const materialOwned = inv.getItemCount(gear.material.itemId)
+    const hasMaterial = materialOwned >= gear.material.quantity
+    const hasSpiritStone = spiritStoneCount.value >= gear.spiritStoneCost
+    return {
+      ...gear,
+      icon: slotIcons[gear.slot] ?? '✨',
+      slotName: slotNames[gear.slot] ?? gear.slot,
+      level,
+      materialOwned,
+      hasMaterial,
+      hasSpiritStone,
+      canForge: cultivationStore.canForgeDaoGear(gear.id),
+      power: level * gear.powerPerLevel,
+      tribulation: Math.round(level * gear.tribulationPerLevel * 100)
     }
+  }))
 
-    // Create artifact
-    const artifact = { id: recipe.id + '_' + Date.now(), name: quality === recipe.quality ? recipe.name : recipe.name.replace(/^(玄铁|灵光|聚灵|五行)/, qualityLabel(quality)), emoji: recipe.emoji, slot: recipe.slot, quality, atk: recipe.atk * (quality !== recipe.quality ? 1.3 : 1), def: recipe.def * (quality !== recipe.quality ? 1.3 : 1), aura: recipe.aura * (quality !== recipe.quality ? 1.3 : 1), cultivation: recipe.cultivation * (quality !== recipe.quality ? 1.3 : 1) }
-
-    if (!c.artifacts) c.artifacts = {} as any
-    ;(c.artifacts as any)[recipe.slot] = artifact
-
-    forgeStage.value = quality !== recipe.quality ? `🌟 品质提升！${qualityLabel(quality)}！` : `✅ 炼制成功！`
-    await new Promise(r => setTimeout(r, 1000))
+  const forgeGear = async (id: DaoGearId) => {
+    const gear = DAO_GEAR.find(g => g.id === id)
+    if (!gear || !cultivationStore.canForgeDaoGear(id)) return
+    forging.value = true
+    forgeStage.value = '🔥 引火温炉...'
+    await new Promise(r => setTimeout(r, 520))
+    forgeStage.value = `🔨 淬炼${gear.name}...`
+    await new Promise(r => setTimeout(r, 620))
+    forgeStage.value = '✨ 灵纹入器...'
+    await new Promise(r => setTimeout(r, 520))
+    cultivationStore.forgeDaoGear(id)
+    forgeStage.value = `✅ ${gear.name}淬炼完成！`
+    await new Promise(r => setTimeout(r, 700))
     forging.value = false
-
-    addLog(`炼制出 ${qualityLabel(quality)}${artifact.name}！`)
-    showFloat(`炼制成功：${artifact.name}`, 'success')
   }
 </script>
 
 <style scoped>
-  .forge-anvil {
-    animation: anvil-bounce 0.4s ease infinite alternate;
+  .stat-chip {
+    border: 1px solid rgba(200, 164, 92, 0.16);
+    background: rgba(200, 164, 92, 0.06);
+    border-radius: 2px;
+    padding: 0.25rem 0.35rem;
+    color: rgb(var(--color-muted));
   }
+  .forge-anvil { animation: anvil-bounce 0.4s ease infinite alternate; }
   @keyframes anvil-bounce {
     0% { transform: translateY(0) rotate(-5deg); }
     100% { transform: translateY(-15px) rotate(5deg); }
   }
-  .forge-fire {
-    animation: fire-glow 0.3s ease infinite alternate;
-  }
+  .forge-fire { animation: fire-glow 0.3s ease infinite alternate; }
   @keyframes fire-glow {
     0% { transform: scale(1); filter: brightness(1); }
     100% { transform: scale(1.2); filter: brightness(1.5); }
