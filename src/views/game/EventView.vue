@@ -3,9 +3,9 @@
     <div class="flex items-center justify-between gap-2">
       <div>
         <h1 class="text-accent text-xl">活动中心</h1>
-        <p class="text-xs text-muted mt-1">每日活跃、连续满勤、七日豪礼与全服讨伐已整合，先把每天上线后的目标串起来。</p>
+        <p class="text-xs text-muted mt-1">每日活跃、连续满勤、周修行令、七日豪礼与全服讨伐已整合，先把每天上线后的目标串起来。</p>
       </div>
-      <span class="text-xs px-2 py-1 border border-accent/30 rounded-xs text-accent">V1.6.2 连续满勤</span>
+      <span class="text-xs px-2 py-1 border border-accent/30 rounded-xs text-accent">V1.6.3 周修行令</span>
     </div>
 
     <section class="game-panel space-y-3">
@@ -72,6 +72,41 @@
           <p class="text-[10px] text-muted mt-2">{{ rewardText(gift.reward) }}</p>
           <button class="mini-btn mt-2" :disabled="!gift.unlocked || gift.claimed" @click="claimStreak(gift.day)">
             {{ gift.claimed ? '已领' : gift.unlocked ? '领取' : '未达成' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="game-panel space-y-3">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="text-accent text-lg">周修行令</h2>
+          <p class="text-xs text-muted leading-relaxed mt-1">每7个游戏日重置一次，用周目标把秘境、烹饪、博物馆、公会、瀚海、育种和钓鱼串起来。</p>
+        </div>
+        <div class="text-right">
+          <p class="text-2xl text-accent font-bold">{{ retention.weeklyDoneCount }}</p>
+          <p class="text-[10px] text-muted">/{{ retention.weeklyTasks.length }} 周令完成</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="task in retention.weeklyTasks" :key="task.id" class="reward-card" :class="task.claimed ? 'claimed' : task.done ? 'ready' : ''">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-sm text-accent">{{ task.title }}</p>
+              <p class="text-[10px] text-muted mt-1 leading-relaxed">{{ task.desc }}</p>
+            </div>
+            <span>{{ task.claimed ? '✅' : task.done ? '🎁' : '📜' }}</span>
+          </div>
+          <div class="mt-2 h-2 bg-bg border border-accent/20 rounded-xs overflow-hidden">
+            <div class="h-full bg-accent transition-all" :style="{ width: Math.min(100, Math.floor((task.progress / Math.max(1, task.target)) * 100)) + '%' }" />
+          </div>
+          <div class="flex justify-between text-[10px] text-muted mt-1">
+            <span>{{ task.progress }}/{{ task.target }}</span>
+            <span>{{ rewardText(task.reward) }}</span>
+          </div>
+          <button class="mini-btn mt-2" :disabled="!task.done || task.claimed" @click="claimWeekly(task.id)">
+            {{ task.claimed ? '已领' : task.done ? '领取' : '进行中' }}
           </button>
         </div>
       </div>
@@ -193,6 +228,7 @@ function handleClaim(res: { success: boolean; message: string }) {
 function claimActivity(score: number) { handleClaim(retention.claimActivityBox(score)) }
 function claimSeven(day: number) { handleClaim(retention.claimSevenDayGift(day)) }
 function claimStreak(day: number) { handleClaim(retention.claimStreakGift(day)) }
+function claimWeekly(taskId: string) { handleClaim(retention.claimWeeklyTask(taskId)) }
 function claimYaochao(score: number) { handleClaim(retention.claimYaochaoReward(score)) }
 function goCombat() { router.push('/game/combat') }
 function goQuest() { router.push('/game/quest') }

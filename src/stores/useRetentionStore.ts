@@ -5,6 +5,10 @@ import { useGameStore } from './useGameStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
 import { useCultivationStore } from './useCultivationStore'
+import { useAchievementStore } from './useAchievementStore'
+import { useMuseumStore } from './useMuseumStore'
+import { useGuildStore } from './useGuildStore'
+import { useHanhaiStore } from './useHanhaiStore'
 import type { AttributeKey } from './usePlayerStore'
 
 type RetentionReward = {
@@ -36,6 +40,17 @@ type StreakGift = {
   reward: RetentionReward
 }
 
+type WeeklyMetric = 'dailyClaimed' | 'monsterKills' | 'recipesCooked' | 'museumDonations' | 'guildContribution' | 'hanhaiTradePoints' | 'breedingsDone' | 'fishCaught'
+
+type WeeklyTask = {
+  id: string
+  title: string
+  desc: string
+  metric: WeeklyMetric
+  target: number
+  reward: RetentionReward
+}
+
 const ACTIVITY_BOXES: ActivityBox[] = [
   { score: 20, title: '晨耕小匣', desc: '完成一两件日课就能领取。', reward: { money: 260, spiritStone: 1 } },
   { score: 40, title: '修行补给', desc: '补上灵气与根骨沉淀。', reward: { money: 420, aura: 80, attributeExp: { physique: 12 } } },
@@ -60,6 +75,17 @@ const STREAK_GIFTS: StreakGift[] = [
   { day: 7, title: '七日满勤：仙缘不断', desc: '连续7天满勤大奖，给长期回访一个明确周目标。', reward: { money: 5200, aura: 900, spiritStone: 28, items: [{ itemId: 'phoenix_plume', name: '凤羽', quantity: 1 }, { itemId: 'demon_core', name: '妖丹', quantity: 1 }, { itemId: 'cold_jade', name: '寒髓玉', quantity: 1 }], attributeExp: { physique: 40, strength: 40, agility: 40, perception: 40 } } }
 ]
 
+const WEEKLY_TASKS: WeeklyTask[] = [
+  { id: 'weekly_daily_20', title: '周令·勤修二十课', desc: '本周领取20个每日目标奖励。', metric: 'dailyClaimed', target: 20, reward: { money: 2600, aura: 360, spiritStone: 8, attributeExp: { perception: 28 } } },
+  { id: 'weekly_battle_30', title: '周令·秘境三十战', desc: '本周击败30只怪物，带动秘境、登塔与公会目标。', metric: 'monsterKills', target: 30, reward: { money: 3200, aura: 520, spiritStone: 12, items: [{ itemId: 'demon_core', name: '妖丹', quantity: 1 }], attributeExp: { strength: 36, agility: 28 } } },
+  { id: 'weekly_cook_8', title: '周令·灶火八味', desc: '本周制作8道料理，让食物增益进入日常循环。', metric: 'recipesCooked', target: 8, reward: { money: 2200, aura: 240, spiritStone: 6, items: [{ itemId: 'immortal_dew', name: '仙露', quantity: 1 }], attributeExp: { physique: 28, perception: 28 } } },
+  { id: 'weekly_museum_3', title: '周令·博物三藏', desc: '本周捐赠3件藏品，让挖矿、钓鱼、采集都有收藏目标。', metric: 'museumDonations', target: 3, reward: { money: 2800, spiritStone: 10, items: [{ itemId: 'jade_slip', name: '玉简', quantity: 1 }], attributeExp: { perception: 42 } } },
+  { id: 'weekly_guild_80', title: '周令·公会声望', desc: '本周获得80点公会贡献，推动怪物掉落回收。', metric: 'guildContribution', target: 80, reward: { money: 3000, aura: 400, spiritStone: 10, items: [{ itemId: 'spirit_ink', name: '灵墨', quantity: 2 }], attributeExp: { strength: 28, perception: 28 } } },
+  { id: 'weekly_hanhai_160', title: '周令·瀚海商誉', desc: '本周获得160点瀚海商誉，鼓励经营商路与兑换。', metric: 'hanhaiTradePoints', target: 160, reward: { money: 3600, aura: 420, spiritStone: 12, items: [{ itemId: 'cloud_silk', name: '云纹丝', quantity: 2 }], attributeExp: { agility: 30, perception: 30 } } },
+  { id: 'weekly_breed_4', title: '周令·育种四试', desc: '本周完成4次育种或配育，推动品系收集。', metric: 'breedingsDone', target: 4, reward: { money: 2600, aura: 320, spiritStone: 8, items: [{ itemId: 'moonlight_jade', name: '月华玉', quantity: 1 }], attributeExp: { physique: 28, perception: 28 } } },
+  { id: 'weekly_fish_20', title: '周令·溪畔二十尾', desc: '本周钓到20条鱼，补足休闲玩法收益。', metric: 'fishCaught', target: 20, reward: { money: 2400, spiritStone: 8, items: [{ itemId: 'cold_jade', name: '寒髓玉', quantity: 1 }], attributeExp: { agility: 32, perception: 24 } } }
+]
+
 const YAOCHAO_REWARDS: ActivityBox[] = [
   { score: 5, title: '个人讨伐·初阵', desc: '击败5只怪物。', reward: { money: 500, spiritStone: 3, attributeExp: { strength: 12 } } },
   { score: 15, title: '个人讨伐·破阵', desc: '击败15只怪物。', reward: { money: 1100, aura: 120, spiritStone: 6, attributeExp: { strength: 18, agility: 18 } } },
@@ -74,12 +100,19 @@ export const useRetentionStore = defineStore('retention', () => {
   const fullActivityStreak = ref(0)
   const lastFullActivityDayKey = ref('')
   const streakClaimed = ref<number[]>([])
+  const weeklyClaimed = ref<string[]>([])
+  const weeklyBaselineKey = ref('')
+  const weeklyBaselines = ref<Partial<Record<WeeklyMetric, number>>>({})
 
   const gameStore = useGameStore()
   const questStore = useQuestStore()
   const playerStore = usePlayerStore()
   const inventoryStore = useInventoryStore()
   const cultivationStore = useCultivationStore()
+  const achievementStore = useAchievementStore()
+  const museumStore = useMuseumStore()
+  const guildStore = useGuildStore()
+  const hanhaiStore = useHanhaiStore()
 
   const dayKey = computed(() => `${gameStore.year}-${gameStore.season}-${gameStore.day}`)
   const seasonOrder: Record<string, number> = { spring: 0, summer: 1, autumn: 2, fall: 2, winter: 3 }
@@ -87,6 +120,8 @@ export const useRetentionStore = defineStore('retention', () => {
     const [year, season, day] = key.split('-')
     return (Number(year || 1) - 1) * 112 + (seasonOrder[season || 'spring'] || 0) * 28 + Number(day || 1)
   }
+
+  const weekKey = computed(() => `Y${Math.floor((parseDayKey(dayKey.value) - 1) / 112) + 1}-W${Math.floor(((parseDayKey(dayKey.value) - 1) % 112) / 7) + 1}`)
 
   const installDayIndex = computed(() => {
     if (!firstSeenDayKey.value) firstSeenDayKey.value = dayKey.value
@@ -122,6 +157,41 @@ export const useRetentionStore = defineStore('retention', () => {
     claimed: streakClaimed.value.includes(gift.day)
   })))
   const claimableStreakCount = computed(() => streakGifts.value.filter(g => g.unlocked && !g.claimed).length)
+
+  const getWeeklyRawProgress = (metric: WeeklyMetric): number => {
+    switch (metric) {
+      case 'dailyClaimed': return questStore.journeyTasks.filter(t => t.type === 'daily' && t.claimed).length
+      case 'monsterKills': return achievementStore.stats.totalMonstersKilled
+      case 'recipesCooked': return achievementStore.stats.totalRecipesCooked
+      case 'museumDonations': return museumStore.donatedCount
+      case 'guildContribution': return guildStore.contributionPoints
+      case 'hanhaiTradePoints': return hanhaiStore.tradePoints
+      case 'breedingsDone': return achievementStore.stats.totalBreedingsDone
+      case 'fishCaught': return achievementStore.stats.totalFishCaught
+      default: return 0
+    }
+  }
+
+  const ensureWeeklyState = () => {
+    if (weeklyBaselineKey.value !== weekKey.value) {
+      weeklyBaselineKey.value = weekKey.value
+      weeklyClaimed.value = []
+      weeklyBaselines.value = {}
+      WEEKLY_TASKS.forEach(task => { weeklyBaselines.value[task.metric] = getWeeklyRawProgress(task.metric) })
+    }
+  }
+
+  const weeklyTasks = computed(() => {
+    ensureWeeklyState()
+    return WEEKLY_TASKS.map(task => {
+      const baseline = weeklyBaselines.value[task.metric] ?? getWeeklyRawProgress(task.metric)
+      const progress = Math.max(0, getWeeklyRawProgress(task.metric) - baseline)
+      const claimed = weeklyClaimed.value.includes(task.id)
+      return { ...task, progress, done: progress >= task.target, claimed }
+    })
+  })
+  const weeklyDoneCount = computed(() => weeklyTasks.value.filter(t => t.done).length)
+  const claimableWeeklyCount = computed(() => weeklyTasks.value.filter(t => t.done && !t.claimed).length)
 
   const yaochaoTask = computed(() => questStore.journeyTasks.find(t => t.id === 'v11_event_hunt'))
   const yaochaoPersonalKills = computed(() => yaochaoTask.value?.progress || 0)
@@ -189,6 +259,16 @@ export const useRetentionStore = defineStore('retention', () => {
     return { success: true, message: `领取「${gift.title}」：${lines.join('、')}。` }
   }
 
+  function claimWeeklyTask(taskId: string) {
+    const task = weeklyTasks.value.find(t => t.id === taskId)
+    if (!task) return { success: false, message: '周修行令不存在。' }
+    if (!task.done) return { success: false, message: '本周进度还不够。' }
+    if (task.claimed) return { success: false, message: '这项周修行令已经领取过。' }
+    const lines = applyReward(task.reward)
+    weeklyClaimed.value.push(task.id)
+    return { success: true, message: `领取「${task.title}」：${lines.join('、')}。` }
+  }
+
   function claimYaochaoReward(score: number) {
     const reward = yaochaoRewards.value.find(r => r.score === score)
     if (!reward) return { success: false, message: '妖潮奖励不存在。' }
@@ -200,7 +280,7 @@ export const useRetentionStore = defineStore('retention', () => {
     return { success: true, message: `领取「${reward.title}」：${lines.join('、')}。` }
   }
 
-  const retentionBadge = computed(() => claimableActivityCount.value + claimableSevenDayCount.value + claimableStreakCount.value + claimableYaochaoCount.value)
+  const retentionBadge = computed(() => claimableActivityCount.value + claimableSevenDayCount.value + claimableStreakCount.value + claimableWeeklyCount.value + claimableYaochaoCount.value)
 
   const serialize = () => ({
     activityClaimed: activityClaimed.value,
@@ -209,7 +289,10 @@ export const useRetentionStore = defineStore('retention', () => {
     worldBossClaimed: worldBossClaimed.value,
     fullActivityStreak: fullActivityStreak.value,
     lastFullActivityDayKey: lastFullActivityDayKey.value,
-    streakClaimed: streakClaimed.value
+    streakClaimed: streakClaimed.value,
+    weeklyClaimed: weeklyClaimed.value,
+    weeklyBaselineKey: weeklyBaselineKey.value,
+    weeklyBaselines: weeklyBaselines.value
   })
 
   const deserialize = (data: any) => {
@@ -220,10 +303,14 @@ export const useRetentionStore = defineStore('retention', () => {
     fullActivityStreak.value = Number(data?.fullActivityStreak || 0)
     lastFullActivityDayKey.value = data?.lastFullActivityDayKey || ''
     streakClaimed.value = Array.isArray(data?.streakClaimed) ? data.streakClaimed : []
+    weeklyClaimed.value = Array.isArray(data?.weeklyClaimed) ? data.weeklyClaimed : []
+    weeklyBaselineKey.value = data?.weeklyBaselineKey || ''
+    weeklyBaselines.value = data?.weeklyBaselines || {}
   }
 
   return {
     dayKey,
+    weekKey,
     installDayIndex,
     dailyTasks,
     dailyDoneCount,
@@ -233,17 +320,21 @@ export const useRetentionStore = defineStore('retention', () => {
     sevenDayGifts,
     visibleFullActivityStreak,
     streakGifts,
+    weeklyTasks,
+    weeklyDoneCount,
     yaochaoTask,
     yaochaoPersonalKills,
     yaochaoRewards,
     claimableActivityCount,
     claimableSevenDayCount,
     claimableStreakCount,
+    claimableWeeklyCount,
     claimableYaochaoCount,
     retentionBadge,
     claimActivityBox,
     claimSevenDayGift,
     claimStreakGift,
+    claimWeeklyTask,
     claimYaochaoReward,
     serialize,
     deserialize
