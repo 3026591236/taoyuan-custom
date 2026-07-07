@@ -247,14 +247,15 @@
     </Teleport>
 
     <!-- ===== 农具法宝化 ===== -->
-    <Divider title label="✨ 农具法宝化" />
+    <Divider title label="✨ 农具法宝化（生产）" />
+    <p class="text-[10px] text-muted leading-relaxed mb-2">这里不是本命法宝，也不是修仙装备，而是把锄头、水壶、灵雨诀等生产工具升华，主要强化灵植收获、灵气炼化和种田修仙收益。</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
       <div v-for="artifact in artifacts" :key="artifact.key" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs">
         <p class="text-accent text-sm mb-1">{{ artifact.name }}</p>
         <p class="text-muted leading-relaxed min-h-[2.5rem]">{{ artifact.desc }}</p>
         <p class="text-[10px] text-muted my-2">消耗：灵气 {{ artifact.aura }} / 铜钱 {{ artifact.money }}</p>
         <Button class="w-full justify-center" :disabled="cultivation.artifacts[artifact.key]" @click="cultivation.unlockArtifact(artifact.key)">
-          {{ cultivation.artifacts[artifact.key] ? '已法宝化' : '法宝化' }}
+          {{ cultivation.artifacts[artifact.key] ? '已升华' : '生产升华' }}
         </Button>
       </div>
     </div>

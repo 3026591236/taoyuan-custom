@@ -124,7 +124,7 @@
             <span class="text-xs" :class="cultivationStore.alchemyUnlocked ? 'text-accent' : 'text-muted/40'">{{ cultivationStore.alchemyUnlocked ? '已安置' : '未安置' }}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-xs text-muted">法宝</span>
+            <span class="text-xs text-muted">农具法宝化</span>
             <span class="text-xs text-accent">{{ equippedArtifactCount }}/3</span>
           </div>
         </div>
@@ -206,6 +206,7 @@
         </div>
       </div>
       <p class="text-[10px] text-muted mt-1.5">当前修仙装备总战力 +{{ cultivationStore.daoGearPower }}，渡劫稳定 +{{ Math.round(cultivationStore.daoGearTribulationBonus * 100) }}%。</p>
+      <p class="text-[10px] text-muted mt-1 leading-relaxed">三类成长边界：修仙装备由炼器淬炼，偏战斗/渡劫；本命法宝是单件核心法宝，偏长期战力；农具法宝化只强化生产与灵气循环。</p>
     </div>
 
     <!-- 装备选择弹窗 -->

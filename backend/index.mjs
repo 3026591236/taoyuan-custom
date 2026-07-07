@@ -283,6 +283,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-06", title: "V1.4.7 法宝边界说明统一", content: "统一修仙装备、本命法宝、农具法宝化三套成长说明，修正本命法宝主动威能等未实装表述，让角色页、修行页和教程口径一致。" },
     { date: "2026-07-06", title: "V1.4.6 制符闭环与星陨铁口径", content: "制符页接入符阵战力、渡劫稳定和愈符体力恢复，符宗获得额外收益；星陨铁说明改为当前订单/折灵材料，装备升星标注为后续系统。" },
     { date: "2026-07-06", title: "V1.4.5 玩法说明与死料清理", content: "修正高级玩法、法宝碎片、炼器图纸等旧说明；炼器图纸加入洞府灵石坊折灵，避免幽冥洞窟掉落成为暂无用途的死材料。" },
     { date: "2026-07-06", title: "V1.4.4 炼器与修仙装备贯通", content: "炼器页改为角色页修仙装备的淬炼入口，直接淬炼灵剑、法衣、云靴、护符；材料产出、炼器成长、角色战力与渡劫准备形成统一闭环。" },
