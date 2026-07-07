@@ -186,6 +186,28 @@
       </div>
     </div>
 
+
+    <!-- 修仙护道装备：独立于农场/矿洞装备 -->
+    <div v-if="cultivationStore.unlocked" class="border border-accent/20 rounded-xs p-2 mb-3 bg-panel/30">
+      <div class="flex items-center justify-between mb-1.5">
+        <p class="text-xs text-accent">修仙护道装备</p>
+        <span class="text-[10px] text-muted">独立于农场装备 · 渡劫/战力</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-1.5">
+        <div v-for="gear in daoGearList" :key="gear.id" class="border border-accent/10 rounded-xs p-2 space-y-1">
+          <div class="flex items-center justify-between gap-1">
+            <p class="text-xs text-accent truncate">{{ gear.name }}</p>
+            <span class="text-[10px]" :class="gear.level > 0 ? 'text-success' : 'text-muted'">{{ gear.level > 0 ? `${gear.level}阶` : '未凝练' }}</span>
+          </div>
+          <p class="text-[10px] text-muted leading-relaxed">{{ gear.desc }}</p>
+          <p class="text-[10px] text-muted">战力 +{{ gear.power }} · 渡劫 +{{ gear.tribulation }}%</p>
+          <p class="text-[10px] text-muted">淬炼：{{ gear.material.name }}×{{ gear.material.quantity }} / 灵石×{{ gear.spiritStoneCost }}</p>
+          <button class="btn w-full justify-center text-xs" :disabled="!gear.canForge" @click="handleForgeDaoGear(gear.id)">{{ gear.level >= gear.maxLevel ? '已圆满' : gear.level > 0 ? '继续淬炼' : '凝练' }}</button>
+        </div>
+      </div>
+      <p class="text-[10px] text-muted mt-1.5">当前护道装备总战力 +{{ cultivationStore.daoGearPower }}，渡劫稳定 +{{ Math.round(cultivationStore.daoGearTribulationBonus * 100) }}%。</p>
+    </div>
+
     <!-- 装备选择弹窗 -->
     <Transition name="panel-fade">
       <div v-if="activeSlot" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" @click.self="activeSlot = null">
@@ -404,7 +426,7 @@
   import { ATTRIBUTE_NAMES, usePlayerStore, type AttributeKey } from '@/stores/usePlayerStore'
   import { useSkillStore } from '@/stores/useSkillStore'
   import { useWalletStore } from '@/stores/useWalletStore'
-  import { useCultivationStore } from '@/stores/useCultivationStore'
+  import { useCultivationStore, DAO_GEAR, type DaoGearId } from '@/stores/useCultivationStore'
   import { TOOL_NAMES, TIER_NAMES, getNpcById } from '@/data'
   import { getWeaponById, getEnchantmentById, getWeaponDisplayName } from '@/data/weapons'
   import { getRingById } from '@/data/rings'
@@ -477,6 +499,19 @@
   const handleBreakthrough = () => {
     if (!cultivationStore.canBreakthrough) return
     cultivationStore.breakthrough()
+  }
+  const daoGearList = computed(() => DAO_GEAR.map(gear => {
+    const level = cultivationStore.daoGearLevel(gear.id)
+    return {
+      ...gear,
+      level,
+      power: level * gear.powerPerLevel,
+      tribulation: Math.round(level * gear.tribulationPerLevel * 100),
+      canForge: cultivationStore.canForgeDaoGear(gear.id)
+    }
+  }))
+  const handleForgeDaoGear = (id: DaoGearId) => {
+    cultivationStore.forgeDaoGear(id)
   }
 
   // === 装备槽位 ===

@@ -13,6 +13,19 @@ export type CaveSlotType = 'alchemy' | 'farm' | 'meditation' | 'herbgarden' | 's
 export type CultivationManualKey = 'wood' | 'thunder' | 'void'
 export type CultivationLessonId = 'morning_breath' | 'circulate_qi' | 'thunder_contemplation'
 export type CultivationPathId = 'balanced' | 'sword' | 'alchemy' | 'thunder'
+export type DaoGearSlot = 'weapon' | 'robe' | 'talisman'
+export type DaoGearId = 'spirit_sword' | 'spirit_robe' | 'thunder_talisman'
+export interface DaoGearDef {
+  id: DaoGearId
+  slot: DaoGearSlot
+  name: string
+  desc: string
+  material: { itemId: string; name: string; quantity: number }
+  spiritStoneCost: number
+  powerPerLevel: number
+  tribulationPerLevel: number
+  maxLevel: number
+}
 export interface CultivationPath {
   id: CultivationPathId
   name: string
@@ -21,6 +34,11 @@ export interface CultivationPath {
   focus: string
   bonusDesc: string
 }
+export const DAO_GEAR: DaoGearDef[] = [
+  { id: 'spirit_sword', slot: 'weapon', name: '护道法器', desc: '独立于农具武器的修仙法器，强化秘境与登塔战力。', material: { itemId: 'artifact_shard', name: '法宝碎片', quantity: 2 }, spiritStoneCost: 12, powerPerLevel: 520, tribulationPerLevel: 0.006, maxLevel: 9 },
+  { id: 'spirit_robe', slot: 'robe', name: '灵纹法衣', desc: '以魂晶与灵纹护住经脉，渡劫失败时也更稳。', material: { itemId: 'soul_crystal', name: '魂晶', quantity: 2 }, spiritStoneCost: 10, powerPerLevel: 360, tribulationPerLevel: 0.01, maxLevel: 9 },
+  { id: 'thunder_talisman', slot: 'talisman', name: '避劫雷符', desc: '以雷精书写避劫符纹，专门提高跨境渡劫稳定性。', material: { itemId: 'thunder_essence', name: '雷精', quantity: 1 }, spiritStoneCost: 16, powerPerLevel: 280, tribulationPerLevel: 0.018, maxLevel: 9 }
+]
 export const CULTIVATION_PATHS: CultivationPath[] = [
   { id: 'balanced', name: '清修', title: '清静守一', desc: '守中不偏，重视稳定吐纳与心境平衡。', focus: '稳修', bonusDesc: '打坐、闭关与压制心魔更稳定' },
   { id: 'sword', name: '剑修', title: '剑心通明', desc: '以战养道，重视锋芒、战力和秘境历练。', focus: '战斗', bonusDesc: '战力、周天运转收益更高' },
@@ -274,6 +292,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const earthPulse = ref(0)
   const totalAuraHarvested = ref(0)
   const alchemyUnlocked = ref(false)
+  const daoGear = ref<Record<DaoGearId, number>>({ spirit_sword: 0, spirit_robe: 0, thunder_talisman: 0 })
   const lastAlchemyQuality = ref<{ pillId: PillId; quality: AlchemyQuality; label: string; bonusText: string } | null>(null)
   const spiritMealLastDaily = ref<Record<SpiritMealId, string>>({ plain_spirit_porridge: '', dew_rice_soup: '', vermilion_elixir_soup: '', three_treasure_spirit_meal: '' })
   const artifacts = ref<Record<ArtifactKey, boolean>>({ glimmerHoe: false, spiritKettle: false, spiritRain: false })
@@ -359,7 +378,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const sectSkillPower = sectSkills.value.reduce((sum, lv, idx) => sum + lv * (220 + idx * 120), 0)
     const sectIdentityPower = sect.value === 'sword' ? sectSkillPower * 0.35 : sect.value === 'talisman' ? sectSkillPower * 0.18 + (sectRank.value || 0) * 260 : sect.value === 'alchemy' ? (sectRank.value || 0) * 180 : 0
     const pathPower = cultivationPath.value === 'sword' ? (manuals.value.thunder * 180 + realmIndex.value * 55) : cultivationPath.value === 'thunder' ? (insight.value * 10 + manuals.value.thunder * 150) : cultivationPath.value === 'alchemy' ? (fieldTier.value * 160 + manuals.value.wood * 120) : Math.max(0, 100 - heartDemon.value) * 4
-    const systemPower = fieldTier.value * 120 + caveTier.value * 180 + yuanShenLevel.value * 260 + destinedArtifactLevel.value * 360 + beastBond.value * 12 + sectContribution.value * 0.2 + (sectMerit.value || 0) * 0.6 + sectSkillPower + sectIdentityPower + pathPower + manualPower
+    const systemPower = fieldTier.value * 120 + caveTier.value * 180 + yuanShenLevel.value * 260 + destinedArtifactLevel.value * 360 + daoGearPower.value + beastBond.value * 12 + sectContribution.value * 0.2 + (sectMerit.value || 0) * 0.6 + sectSkillPower + sectIdentityPower + pathPower + manualPower
     return Math.max(0, Math.floor(realmPower + cultivationPower + bodyPower + weaponPower + ringPower + artifactPower + oldArtifactPower + systemPower))
   })
   const maxCultivation = computed(() => realm.value.maxCultivation)
@@ -377,11 +396,12 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const fieldBonus = Math.min(0.08, fieldTier.value * 0.015)
     const pillBonus = Math.min(0.12, foundationPillBlessing.value / 30000)
     const manualBonus = Math.min(0.12, manuals.value.thunder * 0.01 + manuals.value.void * 0.008)
+    const gearBonus = daoGearTribulationBonus.value
     const insightBonus = Math.min(0.1, insight.value * 0.0012)
     const pathBonus = cultivationPath.value === 'thunder' ? 0.05 : cultivationPath.value === 'balanced' ? 0.025 : 0
     const injuryPenalty = Math.min(0.22, yuanShenInjury.value * 0.05)
     const demonPenalty = Math.min(0.2, heartDemon.value * 0.002)
-    return Math.max(0.35, Math.min(0.95, base - realmPenalty + yuanShenBonusRate + fieldBonus + pillBonus + manualBonus + insightBonus + pathBonus - injuryPenalty - demonPenalty))
+    return Math.max(0.35, Math.min(0.95, base - realmPenalty + yuanShenBonusRate + fieldBonus + pillBonus + manualBonus + gearBonus + insightBonus + pathBonus - injuryPenalty - demonPenalty))
   })
   const tribulationSuccessPercent = computed(() => Math.round(tribulationSuccessRate.value * 100))
   const canBreakthrough = computed(() => cultivation.value >= maxCultivation.value && aura.value >= breakthroughAuraCost.value)
@@ -395,6 +415,41 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const beastData = computed(() => beast.value ? BEAST_DATA[beast.value] : null)
   const beastName = computed(() => beastData.value?.name ?? '无')
   const beastEmoji = computed(() => beastData.value?.emoji ?? '')
+  const daoGearPower = computed(() => DAO_GEAR.reduce((sum, gear) => sum + (daoGear.value[gear.id] || 0) * gear.powerPerLevel, 0))
+  const daoGearTribulationBonus = computed(() => Math.min(0.16, DAO_GEAR.reduce((sum, gear) => sum + (daoGear.value[gear.id] || 0) * gear.tribulationPerLevel, 0)))
+  const daoGearLevel = (id: DaoGearId) => daoGear.value[id] || 0
+  const canForgeDaoGear = (id: DaoGearId) => {
+    const gear = DAO_GEAR.find(g => g.id === id)
+    if (!gear) return false
+    if ((daoGear.value[gear.id] || 0) >= gear.maxLevel) return false
+    const inventory = useInventoryStore()
+    return inventory.getItemCount(gear.material.itemId) >= gear.material.quantity && inventory.getItemCount('spirit_stone') >= gear.spiritStoneCost
+  }
+  const forgeDaoGear = (id: DaoGearId) => {
+    const gear = DAO_GEAR.find(g => g.id === id)
+    if (!gear) return false
+    const current = daoGear.value[gear.id] || 0
+    if (current >= gear.maxLevel) {
+      showFloat(`${gear.name}已淬炼圆满。`, 'danger')
+      return false
+    }
+    const inventory = useInventoryStore()
+    if (inventory.getItemCount(gear.material.itemId) < gear.material.quantity) {
+      showFloat(`${gear.material.name}不足，需要${gear.material.quantity}个。`, 'danger')
+      return false
+    }
+    if (inventory.getItemCount('spirit_stone') < gear.spiritStoneCost) {
+      showFloat(`灵石不足，需要${gear.spiritStoneCost}枚。`, 'danger')
+      return false
+    }
+    inventory.removeItem(gear.material.itemId, gear.material.quantity)
+    inventory.removeItem('spirit_stone', gear.spiritStoneCost)
+    daoGear.value = { ...daoGear.value, [gear.id]: current + 1 }
+    addLog(`你消耗${gear.material.name}×${gear.material.quantity}、灵石×${gear.spiritStoneCost}，将${gear.name}淬炼至${current + 1}阶。`)
+    showFloat(`${gear.name}+1`, 'accent')
+    return true
+  }
+
   const beastLevel = computed(() => Math.floor(beastBond.value / 100) + 1)
 
   const unlock = () => {
@@ -534,10 +589,10 @@ export const useCultivationStore = defineStore('cultivation', () => {
     try {
       const token = localStorage.getItem('account_token')
       if (token) {
-        fetch('/api/breakthrough-announce', {
+        if (major) fetch('/api/breakthrough-announce', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ playerName: player.playerName, from: old, to: realmName.value })
+          body: JSON.stringify({ playerName: player.playerName, from: old, to: realmName.value, realmIndex: realmIndex.value })
         }).catch(() => {})
       }
     } catch {}
@@ -1230,7 +1285,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
-  const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, earthPulse: earthPulse.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, insight: insight.value, heartDemon: heartDemon.value, cultivationPath: cultivationPath.value, lessonDailyKey: lessonDailyKey.value, lessonDailyDone: lessonDailyDone.value, spiritMealLastDaily: spiritMealLastDaily.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, herbGardenLevel: herbGardenLevel.value, herbLastDaily: herbLastDaily.value, herbs: herbs.value, spiritArrayLevel: spiritArrayLevel.value, spiritArrayLastDaily: spiritArrayLastDaily.value, elements: elements.value, yuanShenLevel: yuanShenLevel.value, yuanShenExp: yuanShenExp.value, yuanShenInjury: yuanShenInjury.value, destinedArtifact: destinedArtifact.value, destinedArtifactLevel: destinedArtifactLevel.value, talismans: talismans.value, talismanCooldown: talismanCooldown.value, rebirthCount: rebirthCount.value, rebirthBonus: rebirthBonus.value, lingYun: lingYun.value, rebirthUnlocked: rebirthUnlocked.value, beast: beast.value, beastBond: beastBond.value, sect: sect.value, sectSkills: sectSkills.value, sectContribution: sectContribution.value, sectRank: sectRank.value, sectMerit: sectMerit.value, sectDailyKey: sectDailyKey.value, sectDailyDone: sectDailyDone.value, manuals: manuals.value })
+  const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, earthPulse: earthPulse.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, daoGear: daoGear.value, insight: insight.value, heartDemon: heartDemon.value, cultivationPath: cultivationPath.value, lessonDailyKey: lessonDailyKey.value, lessonDailyDone: lessonDailyDone.value, spiritMealLastDaily: spiritMealLastDaily.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, herbGardenLevel: herbGardenLevel.value, herbLastDaily: herbLastDaily.value, herbs: herbs.value, spiritArrayLevel: spiritArrayLevel.value, spiritArrayLastDaily: spiritArrayLastDaily.value, elements: elements.value, yuanShenLevel: yuanShenLevel.value, yuanShenExp: yuanShenExp.value, yuanShenInjury: yuanShenInjury.value, destinedArtifact: destinedArtifact.value, destinedArtifactLevel: destinedArtifactLevel.value, talismans: talismans.value, talismanCooldown: talismanCooldown.value, rebirthCount: rebirthCount.value, rebirthBonus: rebirthBonus.value, lingYun: lingYun.value, rebirthUnlocked: rebirthUnlocked.value, beast: beast.value, beastBond: beastBond.value, sect: sect.value, sectSkills: sectSkills.value, sectContribution: sectContribution.value, sectRank: sectRank.value, sectMerit: sectMerit.value, sectDailyKey: sectDailyKey.value, sectDailyDone: sectDailyDone.value, manuals: manuals.value })
   const deserialize = (data?: Partial<ReturnType<typeof serialize>>) => {
     if (!data) return
     unlocked.value = data.unlocked ?? false
@@ -1243,6 +1298,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     earthPulse.value = data.earthPulse ?? (data.unlocked ? 100 : 0)
     totalAuraHarvested.value = data.totalAuraHarvested ?? 0
     alchemyUnlocked.value = (data as any).alchemyUnlocked ?? false
+    daoGear.value = { spirit_sword: 0, spirit_robe: 0, thunder_talisman: 0, ...((data as any).daoGear ?? {}) }
     insight.value = (data as any).insight ?? 0
     heartDemon.value = (data as any).heartDemon ?? 0
     spiritMealLastDaily.value = { plain_spirit_porridge: '', dew_rice_soup: '', vermilion_elixir_soup: '', three_treasure_spirit_meal: '', ...((data as any).spiritMealLastDaily ?? {}) }
@@ -1279,5 +1335,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     manuals.value = { wood: 0, thunder: 0, void: 0, ...((data as any).manuals ?? {}) }
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, daoGear, daoGearPower, daoGearTribulationBonus, daoGearLevel, canForgeDaoGear, forgeDaoGear, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirth, serialize, deserialize }
 })

@@ -91,11 +91,11 @@
       </div>
     </Transition>
 
-    <!-- 世界公告飘字 -->
+    <!-- 世界公告滚动弹窗 -->
     <Transition name="panel-fade">
-      <div v-if="worldAnnouncement" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none" style="animation: float-up 4s ease-out forwards">
-        <div class="bg-accent/90 text-bg px-4 py-2 rounded-xs text-sm font-bold whitespace-nowrap shadow-lg">
-          {{ worldAnnouncement }}
+      <div v-if="worldAnnouncement" class="world-announcement-marquee fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none">
+        <div class="world-announcement-box">
+          <span :style="worldAnnouncementStyle">{{ worldAnnouncement }}</span>
         </div>
       </div>
     </Transition>
@@ -672,6 +672,9 @@
 
   // 世界公告
   const worldAnnouncement = ref('')
+  const worldAnnouncementStyle = ref<Record<string, string>>({})
+  const lastWorldAnnouncementKey = ref('')
+  let worldAnnouncementHideTimer: number | null = null
   let worldAnnouncementTimer: number | null = null
   const checkWorldAnnouncements = async () => {
     try {
@@ -679,8 +682,14 @@
       if (data.announcements && data.announcements.length > 0) {
         const latest = data.announcements[0]
         if (latest && latest.message) {
+          const key = `${latest.id || ''}-${latest.time || ''}-${latest.message}`
+          if (key === lastWorldAnnouncementKey.value) return
+          lastWorldAnnouncementKey.value = key
+          const duration = Math.max(7000, Math.min(18000, String(latest.message).length * 320 + 3600))
           worldAnnouncement.value = latest.message
-          setTimeout(() => { worldAnnouncement.value = '' }, 4000)
+          worldAnnouncementStyle.value = { animationDuration: `${duration}ms` }
+          if (worldAnnouncementHideTimer != null) window.clearTimeout(worldAnnouncementHideTimer)
+          worldAnnouncementHideTimer = window.setTimeout(() => { worldAnnouncement.value = '' }, duration + 500)
         }
       }
     } catch {}
@@ -701,7 +710,7 @@
   }
   onMounted(() => {
     checkWorldAnnouncements()
-    worldAnnouncementTimer = window.setInterval(checkWorldAnnouncements, 60000)
+    worldAnnouncementTimer = window.setInterval(checkWorldAnnouncements, 15000)
     preloadCommonPanels()
   })
 
@@ -939,6 +948,7 @@
     stopAccountAutoSave()
     stopOnlineStaminaRegen()
     if (worldAnnouncementTimer != null) window.clearInterval(worldAnnouncementTimer)
+    if (worldAnnouncementHideTimer != null) window.clearTimeout(worldAnnouncementHideTimer)
     void autoSaveCurrent()
   })
 
@@ -1267,7 +1277,32 @@
   }
 </script>
 
+
 <style scoped>
+.world-announcement-box {
+  width: min(86vw, 680px);
+  overflow: hidden;
+  border: 1px solid rgba(200, 164, 92, 0.55);
+  background: rgba(26, 26, 26, 0.96);
+  color: #c8a45c;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  padding: 8px 12px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.world-announcement-box span {
+  display: inline-block;
+  min-width: 100%;
+  padding-left: 100%;
+  animation-name: world-marquee;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes world-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
   /* 移动端地图按钮 */
   .mobile-map-btn,
   .mobile-setting-btn {

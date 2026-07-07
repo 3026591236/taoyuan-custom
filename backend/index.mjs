@@ -283,6 +283,7 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-06", title: "V1.4.2 渡劫准备与护道装备", content: "角色页新增独立修仙护道装备：护道法器、灵纹法衣、避劫雷符，可消耗秘境材料与灵石淬炼，提升战力和渡劫稳定；渡劫成功公告升级为全服滚动弹窗，文字完整滚完后自动消失。" },
     { date: "2026-07-06", title: "V1.4.1 炼丹品相", content: "炼丹新增普通/上品/极品品相判定：上品附带丹香收益，极品额外成丹并获得更强收益；丹宗、丹修流派和洞府炼丹位会提高高品概率。" },
     { date: "2026-07-06", title: "V1.4.0 秘境抉择", content: "秘境探索和挑战凶兽胜利后有概率触发秘境抉择：古修遗府、灵脉泉眼、妖兽巢穴提供二选一奖励，让玩家按突破、材料、灵植或稳妥恢复目标做取舍。" },
     { date: "2026-07-06", title: "V1.3.9 宗门差异深化", content: "三宗特性接入实战循环：剑宗提升战斗攻击，丹宗提高额外成丹与灵植灵气收益，符宗提升防御/气血并强化闭关净化心魔；宗门页新增实战加成展示。" },
@@ -916,9 +917,9 @@ app.get('/api/tower-leaderboard', async (req, res) => {
 app.post('/api/breakthrough-announce', async (req, res) => {
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
-    const { playerName, from, to } = req.body
+    const { playerName, from, to, realmIndex } = req.body
     if (!playerName || !to) return send(res, 400, { error: '参数不完整' })
-    const msg = `✨ ${playerName} 从「${from || '凡人'}」突破至「${to}」！`
+    const msg = `⚡ 全服公告：${playerName} 渡劫成功，自「${from || '凡人'}」踏入「${to}」！天雷散尽，道号留名。`
     await pool.execute('INSERT INTO world_announcements (message, type) VALUES (?, ?)', [msg, 'breakthrough'])
     await pool.execute('DELETE FROM world_announcements WHERE id NOT IN (SELECT id FROM (SELECT id FROM world_announcements ORDER BY created_at DESC LIMIT 20) t)')
     await pool.execute('INSERT INTO leaderboard (user_id, username, player_name, realm_name) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE realm_name=VALUES(realm_name)', [user.id, user.username, playerName, to])
@@ -928,7 +929,7 @@ app.post('/api/breakthrough-announce', async (req, res) => {
 
 app.get('/api/world-announcements', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT message, type, created_at as time FROM world_announcements ORDER BY created_at DESC LIMIT 10')
+    const [rows] = await pool.execute('SELECT id, message, type, created_at as time FROM world_announcements ORDER BY created_at DESC LIMIT 10')
     send(res, 200, { announcements: rows })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
