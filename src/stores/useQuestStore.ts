@@ -14,6 +14,9 @@ import { useAnimalStore } from './useAnimalStore'
 import { useCultivationStore } from './useCultivationStore'
 import { useGameStore } from './useGameStore'
 import { useCombatStore } from './useCombatStore'
+import { useMuseumStore } from './useMuseumStore'
+import { useGuildStore } from './useGuildStore'
+import { useHanhaiStore } from './useHanhaiStore'
 import type { AttributeKey } from './usePlayerStore'
 
 export const useQuestStore = defineStore('quest', () => {
@@ -62,6 +65,13 @@ export const useQuestStore = defineStore('quest', () => {
     | 'discoveredItems'
     | 'breedingsDone'
     | 'hybridsDiscovered'
+    | 'forageItems'
+    | 'museumDonations'
+    | 'guildGoalsCompleted'
+    | 'guildContribution'
+    | 'hanhaiUnlocked'
+    | 'hanhaiTradePoints'
+    | 'hanhaiTradeLevel'
 
   interface JourneyReward {
     money?: number
@@ -98,6 +108,8 @@ export const useQuestStore = defineStore('quest', () => {
     { id: 'daily_fish_2', type: 'daily', title: '今日垂钓', desc: '钓到2条鱼，补上轻松休闲的每日收益。', metric: 'fishCaught', target: 2, reward: { money: 300, attributeExp: { agility: 14, perception: 10 } } },
     { id: 'daily_mine_floor', type: 'daily', title: '今日探矿', desc: '矿洞最高层数推进1层，给挖矿一个明确小目标。', metric: 'mineFloor', target: 1, reward: { money: 360, attributeExp: { strength: 16, physique: 12 } } },
     { id: 'daily_cook_1', type: 'daily', title: '今日开灶', desc: '制作1道料理，让烹饪成为每日强化的一环。', metric: 'recipesCooked', target: 1, reward: { money: 240, attributeExp: { perception: 14, physique: 10 } } },
+    { id: 'daily_forage_3', type: 'daily', title: '今日采集', desc: '在竹林或野外获得3件新采集物，补充料理、炼丹和委托材料。', metric: 'forageItems', target: 3, reward: { money: 260, attributeExp: { agility: 10, perception: 16 } } },
+    { id: 'daily_guild_1', type: 'daily', title: '今日公会', desc: '完成1档公会怪物目标或获取贡献，让战斗掉落有长期回收点。', metric: 'guildContribution', target: 8, reward: { money: 300, aura: 60, attributeExp: { strength: 14, perception: 10 } } },
     { id: 'seven_day_1', type: 'sevenDay', day: 1, title: '第一日：安身立田', desc: '收获3次作物，建立最初的田庄节奏。', metric: 'cropHarvest', target: 3, reward: { money: 360, attributeExp: { physique: 20 } } },
     { id: 'seven_day_2', type: 'sevenDay', day: 2, title: '第二日：感应地脉', desc: '累计40点地脉感应，理解种田与修仙的关系。', metric: 'earthPulse', target: 40, reward: { money: 380, attributeExp: { perception: 24 } } },
     { id: 'seven_day_3', type: 'sevenDay', day: 3, title: '第三日：灵田启蒙', desc: '完成灵田启蒙，普通农事开始转化灵气。', metric: 'cultivationUnlocked', target: 1, reward: { aura: 160, attributeExp: { perception: 28 } } },
@@ -122,6 +134,15 @@ export const useQuestStore = defineStore('quest', () => {
     { id: 'v12_manual_6', type: 'guide', title: '功法精进：六层合参', desc: '功法总层数达到6层，形成修为、灵气、渡劫成功率的成长追求。', metric: 'manualLevels', target: 6, reward: { aura: 520, money: 1600, attributeExp: { perception: 38, physique: 26 } } },
     { id: 'v12_tower_10', type: 'guide', title: '登仙试炼：十层留名', desc: '登仙塔达到10层，让战斗、装备、功法强度有更清晰的验证场。', metric: 'towerFloor', target: 10, reward: { aura: 620, money: 2000, attributeExp: { strength: 44, agility: 36 } } },
     { id: 'v12_commission_10', type: 'guide', title: '桃源声望：十次委托', desc: '累计完成10个委托，推动NPC、订单、生产和市场循环。', metric: 'completedCommissions', target: 10, reward: { aura: 280, money: 1800, attributeExp: { perception: 36, physique: 24 } } },
+    { id: 'v160_forage_25', type: 'guide', title: '竹林行脚：二十五件采集', desc: '通过竹林采集、友好动物或野外事件累计发现25种物品，把采集接入烹饪、炼丹和委托循环。', metric: 'forageItems', target: 25, reward: { money: 900, aura: 120, attributeExp: { agility: 24, perception: 34 } } },
+    { id: 'v160_museum_5', type: 'guide', title: '博物开卷：五件捐赠', desc: '向博物馆捐赠5件藏品，解锁阶段奖励并推动图鉴收集。', metric: 'museumDonations', target: 5, reward: { money: 1200, attributeExp: { perception: 42 } } },
+    { id: 'v160_museum_15', type: 'guide', title: '博物成册：十五件捐赠', desc: '累计捐赠15件藏品，让钓鱼、挖矿、采集和怪物掉落都有收藏目标。', metric: 'museumDonations', target: 15, reward: { money: 2600, aura: 280, attributeExp: { perception: 56 } } },
+    { id: 'v160_guild_goal_3', type: 'guide', title: '公会猎令：三档目标', desc: '完成3档怪物讨伐目标，换取贡献并打开公会商店成长线。', metric: 'guildGoalsCompleted', target: 3, reward: { money: 1800, aura: 260, attributeExp: { strength: 42, agility: 28 } } },
+    { id: 'v160_guild_contribution_120', type: 'guide', title: '公会贡献：百二十点', desc: '累计120点公会贡献，体验捐献、讨伐和兑换形成的长期循环。', metric: 'guildContribution', target: 120, reward: { money: 2200, aura: 320, attributeExp: { strength: 36, perception: 36 } } },
+    { id: 'v160_hanhai_unlock', type: 'guide', title: '瀚海初航：解锁商路', desc: '解锁瀚海玩法，开启贸易、藏宝图和海市兑换。', metric: 'hanhaiUnlocked', target: 1, reward: { money: 1600, aura: 180, attributeExp: { perception: 36, agility: 20 } } },
+    { id: 'v160_hanhai_trade_80', type: 'guide', title: '瀚海贸易：八十商誉', desc: '通过瀚海寄售获得80点商誉，让多余物产进入更高阶兑换。', metric: 'hanhaiTradePoints', target: 80, reward: { money: 2400, aura: 260, attributeExp: { perception: 44 } } },
+    { id: 'v160_breed_8', type: 'guide', title: '育种熟手：八次配育', desc: '累计完成8次配育，持续推进作物杂交与动物养成目标。', metric: 'breedingsDone', target: 8, reward: { money: 1800, aura: 220, attributeExp: { physique: 32, perception: 38 } } },
+    { id: 'v160_hybrid_3', type: 'guide', title: '异种谱系：三种杂交', desc: '发现3种杂交产物，形成育种图鉴和高价值作物追求。', metric: 'hybridsDiscovered', target: 3, reward: { money: 3200, aura: 420, attributeExp: { perception: 62, agility: 24 } } },
   ]
 
   const getJourneyDayKey = (): string => {
@@ -150,6 +171,13 @@ export const useQuestStore = defineStore('quest', () => {
       case 'discoveredItems': return achievementStore.discoveredItems.length
       case 'breedingsDone': return achievementStore.stats.totalBreedingsDone
       case 'hybridsDiscovered': return achievementStore.stats.totalHybridsDiscovered
+      case 'forageItems': return achievementStore.discoveredItems.length
+      case 'museumDonations': return useMuseumStore().donatedCount
+      case 'guildGoalsCompleted': return useGuildStore().completedGoalCount
+      case 'guildContribution': return useGuildStore().contributionPoints
+      case 'hanhaiUnlocked': return useHanhaiStore().unlocked ? 1 : 0
+      case 'hanhaiTradePoints': return useHanhaiStore().tradePoints
+      case 'hanhaiTradeLevel': return useHanhaiStore().tradeShopLevel
       default: return 0
     }
   }

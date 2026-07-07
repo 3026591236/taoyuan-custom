@@ -405,7 +405,14 @@ const getItemName = (id: string): string => {
     recipesCooked: '→ 烹饪',
     discoveredItems: '→ 采集/商店',
     breedingsDone: '→ 灵兽培育',
-    hybridsDiscovered: '→ 灵兽培育',
+    hybridsDiscovered: '→ 育种',
+    forageItems: '→ 竹林/采集',
+    museumDonations: '→ 博物馆',
+    guildGoalsCompleted: '→ 公会',
+    guildContribution: '→ 公会',
+    hanhaiUnlocked: '→ 瀚海',
+    hanhaiTradePoints: '→ 瀚海贸易',
+    hanhaiTradeLevel: '→ 瀚海贸易',
   }
 
   const journeyTypeName = (type: string, day?: number) => {
