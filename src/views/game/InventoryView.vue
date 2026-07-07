@@ -1235,6 +1235,14 @@
     void_scripture: '使用后学习太虚归元功功法',
     soul_mending_pill: '使用后恢复元神伤势',
     nirvana_soul_pill: '使用后恢复元神掉级',
+    moonlight_jade: '法衣/护魂丹药材料，可在洞府折灵',
+    sunfire_crystal: '灵剑淬炼和火系丹引材料，可折灵',
+    mystic_iron: '炼器通用材料，可从幽冥洞窟或矿洞深层获得',
+    cold_jade: '护符/清心丹材料，云梦泽和寒潭奇遇产出',
+    phoenix_plume: '云靴、法衣和高阶订单材料，风暴鹰/穷奇产出',
+    dragon_scale: '高阶护符、法衣与轮回准备材料，凶兽掉落',
+    void_dust: '元神与洞府阵法材料，混沌/登仙塔高层产出',
+    demon_core: '秘境首领和凶兽材料，可炼器或折灵',
   }
 
   const activeItemKey = ref<string | null>(null)

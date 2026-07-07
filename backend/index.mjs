@@ -284,6 +284,7 @@ const defaultConfig = {
   iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-07", title: "V1.6.1 修仙物品与获取路径", content: "新增月华玉、日炎晶、玄铁、寒髓玉、凤羽、龙鳞、太虚尘、仙露、灵骨、妖丹、玉简、灵墨、云纹丝等修仙材料，并接入秘境/凶兽掉落、洞府折灵、背包来源说明和新手教程速查。" },
     { date: "2026-07-07", title: "V1.6.0 玩法补全目标", content: "修行志新增玩法补全目标，把竹林采集、博物馆捐赠、公会猎令、瀚海贸易、育种杂交等系统接入长期成长奖励，让冷门玩法也有明确阶段目标与回报。" },
     { date: "2026-07-07", title: "V1.5.9 稀有材料获取教程", content: "新手教程新增「稀有材料获取速查」，集中说明雷精、风羽、魂晶、法宝碎片、星陨铁、灵石等材料的主要获取途径和用途，方便玩家查找雷精等关键材料。" },
     { date: "2026-07-07", title: "V1.5.8 温室地块显示修复", content: "修复温室弹窗内地块显示错位/叠层异常：温室地块现在使用独立相对定位与裁切容器，像素地块、作物图标和空地状态会正确限制在各自格子内。" },

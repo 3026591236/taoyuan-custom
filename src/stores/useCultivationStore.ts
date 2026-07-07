@@ -194,7 +194,15 @@ export const SPIRIT_STONE_EXCHANGES: SpiritStoneExchangeRecipe[] = [
   { id: 'star_iron', name: '星陨铁折灵', itemId: 'star_iron', itemName: '星陨铁', quantity: 1, spiritStones: 15, desc: '天外奇铁蕴含浓厚灵力。' },
   { id: 'true_spirit_record', name: '真灵秘录折灵', itemId: 'true_spirit_record', itemName: '真灵秘录', quantity: 1, spiritStones: 16, desc: '二转后会用于轮回凭证，前期多余时才建议折灵。' },
   { id: 'reincarnation_dust', name: '轮回尘折灵', itemId: 'reincarnation_dust', itemName: '轮回尘', quantity: 1, spiritStones: 18, desc: '二转后会用于稳定轮回，前期多余时才建议折灵。' },
-  { id: 'lingyun_jade', name: '灵蕴玉折灵', itemId: 'lingyun_jade', itemName: '灵蕴玉', quantity: 1, spiritStones: 20, desc: '高转轮回材料价值较高，慎重折换。' }
+  { id: 'lingyun_jade', name: '灵蕴玉折灵', itemId: 'lingyun_jade', itemName: '灵蕴玉', quantity: 1, spiritStones: 20, desc: '高转轮回材料价值较高，慎重折换。' },
+  { id: 'moonlight_jade', name: '月华玉折灵', itemId: 'moonlight_jade', itemName: '月华玉', quantity: 1, spiritStones: 9, desc: '月华灵玉可折成稳定灵石。' },
+  { id: 'sunfire_crystal', name: '日炎晶折灵', itemId: 'sunfire_crystal', itemName: '日炎晶', quantity: 1, spiritStones: 10, desc: '日火晶核可析出浓烈灵力。' },
+  { id: 'mystic_iron', name: '玄铁折灵', itemId: 'mystic_iron', itemName: '玄铁', quantity: 1, spiritStones: 8, desc: '多余玄铁可先折灵，炼器前请留足库存。' },
+  { id: 'cold_jade', name: '寒髓玉折灵', itemId: 'cold_jade', itemName: '寒髓玉', quantity: 1, spiritStones: 11, desc: '寒髓玉适合护符/丹药，也能换取灵石。' },
+  { id: 'phoenix_plume', name: '凤羽折灵', itemId: 'phoenix_plume', itemName: '凤羽', quantity: 1, spiritStones: 14, desc: '赤金凤羽灵性充足，建议富余后再折灵。' },
+  { id: 'dragon_scale', name: '龙鳞折灵', itemId: 'dragon_scale', itemName: '龙鳞', quantity: 1, spiritStones: 18, desc: '龙脉鳞片价值很高，高阶淬炼前慎重折换。' },
+  { id: 'void_dust', name: '太虚尘折灵', itemId: 'void_dust', itemName: '太虚尘', quantity: 1, spiritStones: 22, desc: '太虚裂隙材料珍贵，可换大量灵石。' },
+  { id: 'demon_core', name: '妖丹折灵', itemId: 'demon_core', itemName: '妖丹', quantity: 1, spiritStones: 16, desc: '妖丹可用于炼器或丹引，富余时折灵。' }
 ]
 
 const REAL_DAILY_ACCUMULATION_CAP = 7
