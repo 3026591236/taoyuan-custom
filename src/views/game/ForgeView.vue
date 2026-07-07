@@ -38,6 +38,16 @@
           <button class="btn w-full justify-center text-xs" :disabled="!gear.canForge || forging" @click="forgeGear(gear.id)">
             {{ gear.level >= gear.maxLevel ? '已淬炼圆满' : gear.level > 0 ? '继续淬炼' : '凝练成器' }}
           </button>
+
+          <div class="border border-accent/10 rounded-xs p-2 text-[10px] space-y-1">
+            <p class="text-accent">词条洗练</p>
+            <p v-if="affixFor(gear.slot)" class="text-muted">
+              当前：{{ affixFor(gear.slot)?.name }} Lv.{{ affixFor(gear.slot)?.level }} · {{ affixFor(gear.slot)?.desc }}
+            </p>
+            <p v-else class="text-muted">暂无词条，可消耗灵石洗练出随机方向。</p>
+            <button class="btn w-full justify-center text-xs" :disabled="spiritStoneCount < 12" @click="rerollAffix(gear.slot)">洗练词条（灵石×12）</button>
+          </div>
+
         </div>
       </div>
 
@@ -65,15 +75,20 @@
   import { DAO_GEAR, type DaoGearId } from '@/stores/useCultivationStore'
   import { useCultivationStore } from '@/stores/useCultivationStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
+  import { useLongTermStore } from '@/stores/useLongTermStore'
+  import { addLog, showFloat } from '@/composables/useGameLog'
 
   const cultivationStore = useCultivationStore()
   const inv = useInventoryStore()
+  const longTerm = useLongTermStore()
   const forging = ref(false)
   const forgeStage = ref('')
 
   const slotIcons: Record<string, string> = { sword: '🗡️', robe: '🥋', boots: '👢', amulet: '📿' }
   const slotNames: Record<string, string> = { sword: '灵剑', robe: '法衣', boots: '云靴', amulet: '护符' }
   const spiritStoneCount = computed(() => inv.getItemCount('spirit_stone'))
+
+  const affixFor = (slot: string) => longTerm.gearAffixes[slot]?.[0]
 
   const gearCards = computed(() => DAO_GEAR.map(gear => {
     const level = cultivationStore.daoGearLevel(gear.id)
@@ -93,6 +108,12 @@
       tribulation: Math.round(level * gear.tribulationPerLevel * 100)
     }
   }))
+
+  const rerollAffix = (slot: string) => {
+    const res = longTerm.rerollGearAffix(slot)
+    addLog(res.message)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+  }
 
   const forgeGear = async (id: DaoGearId) => {
     const gear = DAO_GEAR.find(g => g.id === id)

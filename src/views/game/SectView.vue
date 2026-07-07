@@ -43,6 +43,23 @@
         <div class="text-[10px] text-caution mt-1">实战加成：{{ sectBonusText }}</div>
       </div>
 
+
+      <div class="border border-accent/20 rounded-xs p-3 space-y-2">
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-accent">宗门公共建设</p>
+          <span class="text-[10px] text-muted">{{ longTerm.sectBuildBonusText }}</span>
+        </div>
+        <div class="h-2 bg-bg border border-accent/20 rounded-xs overflow-hidden">
+          <div class="h-full bg-accent" :style="{ width: Math.min(100, Math.floor((longTerm.sectBuildExp / Math.max(1, longTerm.sectBuildNeed)) * 100)) + '%' }" />
+        </div>
+        <div class="text-[10px] text-muted">建设度 {{ longTerm.sectBuildExp }}/{{ longTerm.sectBuildNeed }} · 本月贡献 {{ longTerm.sectBuildContributed }}</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <button class="btn justify-center text-xs" @click="contributeBuild('money')">捐铜钱1200</button>
+          <button class="btn justify-center text-xs" @click="contributeBuild('spirit')">捐灵石8</button>
+          <button class="btn justify-center text-xs" @click="contributeBuild('material')">捐灵墨1</button>
+        </div>
+      </div>
+
       <div class="border border-accent/20 rounded-xs p-3 space-y-2">
         <div class="flex items-center justify-between">
           <p class="text-xs text-accent">宗门专属委派</p>
@@ -123,11 +140,13 @@
   import { useCultivationStore } from '@/stores/useCultivationStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { useGameStore } from '@/stores/useGameStore'
+  import { useLongTermStore } from '@/stores/useLongTermStore'
   import { addLog, showFloat } from '@/composables/useGameLog'
 
   const cultivationStore = useCultivationStore()
   const inventoryStore = useInventoryStore()
   const gameStore = useGameStore()
+  const longTerm = useLongTermStore()
 
   type SectId = 'sword' | 'alchemy' | 'talisman'
 
@@ -249,6 +268,12 @@
     cultivationStore.sectDailyDone = []
     addLog(`加入${SECTS.find(s => s.id === id)?.name}！获得入门贡献80。`)
     showFloat(`拜入${SECTS.find(s => s.id === id)?.name}`, 'success')
+  }
+
+  const contributeBuild = (kind: 'money' | 'spirit' | 'material') => {
+    const res = longTerm.contributeSectBuild(kind)
+    addLog(res.message)
+    showFloat(res.message, res.success ? 'success' : 'danger')
   }
 
   const finishDaily = (task: typeof DAILY_TASKS[number]) => {

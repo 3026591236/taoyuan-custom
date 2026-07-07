@@ -3,9 +3,9 @@
     <div class="flex items-center justify-between gap-2">
       <div>
         <h1 class="text-accent text-xl">活动中心</h1>
-        <p class="text-xs text-muted mt-1">每日活跃、连续满勤、周修行令、七日豪礼与全服讨伐已整合，先把每天上线后的目标串起来。</p>
+        <p class="text-xs text-muted mt-1">每日活跃、连续满勤、周修行令、月度修行令、奇遇回流与全服讨伐已整合，先把每天上线后的目标串起来。</p>
       </div>
-      <span class="text-xs px-2 py-1 border border-accent/30 rounded-xs text-accent">V1.6.3 周修行令</span>
+      <span class="text-xs px-2 py-1 border border-accent/30 rounded-xs text-accent">V1.6.4 全量留存玩法</span>
     </div>
 
     <section class="game-panel space-y-3">
@@ -112,6 +112,56 @@
       </div>
     </section>
 
+
+
+    <section class="game-panel space-y-3">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="text-accent text-lg">月度修行令</h2>
+          <p class="text-xs text-muted leading-relaxed mt-1">在周修行令之上增加月目标，把每日、镇魔、宗门建设和奇遇串成更长周期。</p>
+        </div>
+        <div class="text-right"><p class="text-2xl">🎫</p><p class="text-[10px] text-muted">{{ longTerm.monthKeyNow }}</p></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="task in longTerm.seasonTasks" :key="task.id" class="reward-card" :class="task.claimed ? 'claimed' : task.done ? 'ready' : ''">
+          <p class="text-sm text-accent">{{ task.title }}</p>
+          <p class="text-[10px] text-muted mt-1">{{ task.desc }}</p>
+          <div class="mt-2 h-2 bg-bg border border-accent/20 rounded-xs overflow-hidden"><div class="h-full bg-accent" :style="{ width: Math.min(100, Math.floor((task.progress / Math.max(1, task.target)) * 100)) + '%' }" /></div>
+          <div class="flex justify-between text-[10px] text-muted mt-1"><span>{{ task.progress }}/{{ task.target }}</span><span>{{ longTerm.rewardText(task.reward) }}</span></div>
+          <button class="mini-btn mt-2" :disabled="!task.done || task.claimed" @click="claimSeason(task.id)">{{ task.claimed ? '已领' : task.done ? '领取' : '进行中' }}</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-panel space-y-3">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="text-accent text-lg">闭关归来</h2>
+          <p class="text-xs text-muted leading-relaxed mt-1">离线多日后回归，可领取一次闭关归来礼包，降低流失后的回坑成本。</p>
+        </div>
+        <div class="text-right"><p class="text-2xl">🌙</p><p class="text-[10px] text-muted">离线 {{ longTerm.daysAway }} 日</p></div>
+      </div>
+      <button class="btn justify-center w-full" :disabled="!longTerm.canClaimReturnGift" @click="claimReturnGift">{{ longTerm.canClaimReturnGift ? '领取闭关归来礼包' : '暂未触发回流礼包' }}</button>
+    </section>
+
+    <section class="game-panel space-y-3">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="text-accent text-lg">奇遇链</h2>
+          <p class="text-xs text-muted leading-relaxed mt-1">每次进入活动中心都会看到当前奇遇，做出选择后推进到下一段故事，并计入月度修行令。</p>
+        </div>
+        <div class="text-4xl">🧭</div>
+      </div>
+      <div v-if="longTerm.currentAdventure" class="reward-card ready">
+        <p class="text-sm text-accent">{{ longTerm.currentAdventure.title }}</p>
+        <p class="text-xs text-muted mt-1 leading-relaxed">{{ longTerm.currentAdventure.desc }}</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+          <button v-for="choice in longTerm.currentAdventure.choices" :key="choice.id" class="mini-btn" @click="finishAdventure(choice.id)">{{ choice.label }} · {{ longTerm.rewardText(choice.reward) }}</button>
+        </div>
+      </div>
+    </section>
+
+
     <section class="game-panel space-y-3">
       <div class="flex items-start justify-between gap-3">
         <div>
@@ -173,6 +223,16 @@
         </div>
       </div>
 
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div v-for="tier in longTerm.worldBossTiers" :key="tier.score" class="reward-card" :class="tier.claimed ? 'claimed' : tier.done ? 'ready' : ''">
+          <p class="text-sm text-accent">{{ tier.title }}</p>
+          <p class="text-[10px] text-muted mt-1">{{ tier.desc }}</p>
+          <p class="text-[10px] text-muted mt-2">{{ longTerm.rewardText(tier.reward) }}</p>
+          <button class="mini-btn mt-2" :disabled="!tier.done || tier.claimed" @click="claimWorldBoss(tier.score)">{{ tier.claimed ? '已领' : tier.done ? '领取' : '贡献不足' }}</button>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         <button class="btn justify-center" @click="goCombat">前往秘境讨伐</button>
         <button class="btn justify-center" @click="loadWorldBoss">刷新全服进度</button>
@@ -184,7 +244,8 @@
       <ul class="text-xs text-muted list-disc list-inside space-y-1 leading-relaxed">
         <li>每日活跃度基于修行志每日目标，活跃宝箱每天按游戏日刷新。</li>
         <li>七日豪礼按当前存档的游戏日推进，新老存档都会从首次进入新版活动中心开始计算。</li>
-        <li>全服镇魔第一版先聚合线上存档进度，个人奖励按本地讨伐进度发放；后续可继续扩展为实时世界Boss和全服结算邮件。</li>
+        <li>全服镇魔现在包含个人贡献档位，可继续扩展为后台定时结算与全服邮件。</li>
+        <li>月度修行令、闭关归来和奇遇链均保存到本地/云存档，旧存档自动兼容。</li>
       </ul>
     </section>
   </div>
@@ -194,11 +255,13 @@
 import { computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRetentionStore } from '@/stores/useRetentionStore'
+import { useLongTermStore } from '@/stores/useLongTermStore'
 import { useSaveStore } from '@/stores/useSaveStore'
 import { addLog, showFloat } from '@/composables/useGameLog'
 
 const router = useRouter()
 const retention = useRetentionStore()
+const longTerm = useLongTermStore()
 const saveStore = useSaveStore()
 
 const worldBoss = reactive({ progress: 0, target: 300, participants: 0, statusText: '统计中' })
@@ -225,11 +288,15 @@ function handleClaim(res: { success: boolean; message: string }) {
   if (res.success) persist()
 }
 
-function claimActivity(score: number) { handleClaim(retention.claimActivityBox(score)) }
+function claimActivity(score: number) { const res = retention.claimActivityBox(score); if (res.success) longTerm.recordDailyClaim(); handleClaim(res) }
 function claimSeven(day: number) { handleClaim(retention.claimSevenDayGift(day)) }
 function claimStreak(day: number) { handleClaim(retention.claimStreakGift(day)) }
 function claimWeekly(taskId: string) { handleClaim(retention.claimWeeklyTask(taskId)) }
-function claimYaochao(score: number) { handleClaim(retention.claimYaochaoReward(score)) }
+function claimYaochao(score: number) { const res = retention.claimYaochaoReward(score); if (res.success) longTerm.recordCombatContribution(score); handleClaim(res) }
+function claimWorldBoss(score: number) { handleClaim(longTerm.claimWorldBossTier(score)) }
+function claimSeason(id: string) { handleClaim(longTerm.claimSeasonTask(id)) }
+function claimReturnGift() { handleClaim(longTerm.claimReturnGift()) }
+function finishAdventure(choiceId: string) { handleClaim(longTerm.finishAdventure(choiceId)) }
 function goCombat() { router.push('/game/combat') }
 function goQuest() { router.push('/game/quest') }
 
