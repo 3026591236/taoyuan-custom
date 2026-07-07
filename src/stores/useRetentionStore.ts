@@ -11,6 +11,7 @@ type RetentionReward = {
   money?: number
   aura?: number
   spiritStone?: number
+  items?: { itemId: string; name: string; quantity: number }[]
   attributeExp?: Partial<Record<AttributeKey, number>>
 }
 
@@ -22,6 +23,13 @@ type ActivityBox = {
 }
 
 type SevenDayGift = {
+  day: number
+  title: string
+  desc: string
+  reward: RetentionReward
+}
+
+type StreakGift = {
   day: number
   title: string
   desc: string
@@ -46,6 +54,12 @@ const SEVEN_DAY_GIFTS: SevenDayGift[] = [
   { day: 7, title: '第7日：桃源仙缘', desc: '七日留存大奖，给新玩家一个明确阶段终点。', reward: { money: 2888, aura: 520, spiritStone: 20, attributeExp: { physique: 36, strength: 36, agility: 36, perception: 36 } } }
 ]
 
+const STREAK_GIFTS: StreakGift[] = [
+  { day: 3, title: '三日满勤：灵田回响', desc: '连续3天达到100活跃，奖励稳定修行补给。', reward: { money: 1800, aura: 320, spiritStone: 8, items: [{ itemId: 'moonlight_jade', name: '月华玉', quantity: 1 }], attributeExp: { perception: 24 } } },
+  { day: 5, title: '五日满勤：宗门加持', desc: '连续5天满勤，补给炼器与公会成长材料。', reward: { money: 3200, aura: 520, spiritStone: 15, items: [{ itemId: 'mystic_iron', name: '玄铁', quantity: 2 }, { itemId: 'spirit_ink', name: '灵墨', quantity: 2 }], attributeExp: { strength: 26, physique: 26 } } },
+  { day: 7, title: '七日满勤：仙缘不断', desc: '连续7天满勤大奖，给长期回访一个明确周目标。', reward: { money: 5200, aura: 900, spiritStone: 28, items: [{ itemId: 'phoenix_plume', name: '凤羽', quantity: 1 }, { itemId: 'demon_core', name: '妖丹', quantity: 1 }, { itemId: 'cold_jade', name: '寒髓玉', quantity: 1 }], attributeExp: { physique: 40, strength: 40, agility: 40, perception: 40 } } }
+]
+
 const YAOCHAO_REWARDS: ActivityBox[] = [
   { score: 5, title: '个人讨伐·初阵', desc: '击败5只怪物。', reward: { money: 500, spiritStone: 3, attributeExp: { strength: 12 } } },
   { score: 15, title: '个人讨伐·破阵', desc: '击败15只怪物。', reward: { money: 1100, aura: 120, spiritStone: 6, attributeExp: { strength: 18, agility: 18 } } },
@@ -57,6 +71,9 @@ export const useRetentionStore = defineStore('retention', () => {
   const sevenDayClaimed = ref<number[]>([])
   const firstSeenDayKey = ref('')
   const worldBossClaimed = ref<string[]>([])
+  const fullActivityStreak = ref(0)
+  const lastFullActivityDayKey = ref('')
+  const streakClaimed = ref<number[]>([])
 
   const gameStore = useGameStore()
   const questStore = useQuestStore()
@@ -65,15 +82,15 @@ export const useRetentionStore = defineStore('retention', () => {
   const cultivationStore = useCultivationStore()
 
   const dayKey = computed(() => `${gameStore.year}-${gameStore.season}-${gameStore.day}`)
+  const seasonOrder: Record<string, number> = { spring: 0, summer: 1, autumn: 2, fall: 2, winter: 3 }
+  const parseDayKey = (key: string) => {
+    const [year, season, day] = key.split('-')
+    return (Number(year || 1) - 1) * 112 + (seasonOrder[season || 'spring'] || 0) * 28 + Number(day || 1)
+  }
 
   const installDayIndex = computed(() => {
     if (!firstSeenDayKey.value) firstSeenDayKey.value = dayKey.value
-    const seasonOrder: Record<string, number> = { spring: 0, summer: 1, fall: 2, winter: 3 }
-    const parse = (key: string) => {
-      const [year, season, day] = key.split('-')
-      return (Number(year || 1) - 1) * 112 + (seasonOrder[season || 'spring'] || 0) * 28 + Number(day || 1)
-    }
-    return Math.max(1, Math.min(7, parse(dayKey.value) - parse(firstSeenDayKey.value) + 1))
+    return Math.max(1, Math.min(7, parseDayKey(dayKey.value) - parseDayKey(firstSeenDayKey.value) + 1))
   })
 
   const dailyTasks = computed(() => questStore.journeyTasks.filter(t => t.type === 'daily'))
@@ -94,6 +111,18 @@ export const useRetentionStore = defineStore('retention', () => {
   })))
   const claimableSevenDayCount = computed(() => sevenDayGifts.value.filter(g => g.unlocked && !g.claimed).length)
 
+  const visibleFullActivityStreak = computed(() => {
+    if (!lastFullActivityDayKey.value) return 0
+    const diff = parseDayKey(dayKey.value) - parseDayKey(lastFullActivityDayKey.value)
+    return diff <= 1 ? fullActivityStreak.value : 0
+  })
+  const streakGifts = computed(() => STREAK_GIFTS.map(gift => ({
+    ...gift,
+    unlocked: visibleFullActivityStreak.value >= gift.day,
+    claimed: streakClaimed.value.includes(gift.day)
+  })))
+  const claimableStreakCount = computed(() => streakGifts.value.filter(g => g.unlocked && !g.claimed).length)
+
   const yaochaoTask = computed(() => questStore.journeyTasks.find(t => t.id === 'v11_event_hunt'))
   const yaochaoPersonalKills = computed(() => yaochaoTask.value?.progress || 0)
   const yaochaoRewards = computed(() => YAOCHAO_REWARDS.map(r => ({
@@ -108,8 +137,24 @@ export const useRetentionStore = defineStore('retention', () => {
     if (reward.money) { playerStore.earnMoney(reward.money); lines.push(`铜钱 +${reward.money}`) }
     if (reward.aura) { cultivationStore.aura += reward.aura; lines.push(`灵气 +${reward.aura}`) }
     if (reward.spiritStone) { inventoryStore.addItem('spirit_stone', reward.spiritStone); lines.push(`灵石 ×${reward.spiritStone}`) }
+    if (reward.items) {
+      reward.items.forEach(item => inventoryStore.addItem(item.itemId, item.quantity))
+      lines.push(...reward.items.map(item => `${item.name} ×${item.quantity}`))
+    }
     if (reward.attributeExp) { playerStore.addAttributeExpBatch(reward.attributeExp); lines.push('资质经验 +' + Object.values(reward.attributeExp).reduce((a, b) => a + (b || 0), 0)) }
     return lines
+  }
+
+  function markFullActivityStreak() {
+    if (lastFullActivityDayKey.value === dayKey.value) return
+    const diff = lastFullActivityDayKey.value ? parseDayKey(dayKey.value) - parseDayKey(lastFullActivityDayKey.value) : 0
+    if (diff === 1) {
+      fullActivityStreak.value += 1
+    } else {
+      fullActivityStreak.value = 1
+      streakClaimed.value = []
+    }
+    lastFullActivityDayKey.value = dayKey.value
   }
 
   function claimActivityBox(score: number) {
@@ -120,6 +165,7 @@ export const useRetentionStore = defineStore('retention', () => {
     if (activityClaimed.value.includes(key)) return { success: false, message: '今天已经领取过这个宝箱。' }
     const lines = applyReward(box.reward)
     activityClaimed.value.push(key)
+    if (box.score >= 100) markFullActivityStreak()
     return { success: true, message: `领取「${box.title}」：${lines.join('、')}。` }
   }
 
@@ -130,6 +176,16 @@ export const useRetentionStore = defineStore('retention', () => {
     if (sevenDayClaimed.value.includes(day)) return { success: false, message: '这份七日豪礼已经领取过。' }
     const lines = applyReward(gift.reward)
     sevenDayClaimed.value.push(day)
+    return { success: true, message: `领取「${gift.title}」：${lines.join('、')}。` }
+  }
+
+  function claimStreakGift(day: number) {
+    const gift = streakGifts.value.find(g => g.day === day)
+    if (!gift) return { success: false, message: '连续满勤奖励不存在。' }
+    if (!gift.unlocked) return { success: false, message: '连续满勤天数还不够。' }
+    if (streakClaimed.value.includes(day)) return { success: false, message: '这档连续满勤奖励已经领取过。' }
+    const lines = applyReward(gift.reward)
+    streakClaimed.value.push(day)
     return { success: true, message: `领取「${gift.title}」：${lines.join('、')}。` }
   }
 
@@ -144,13 +200,16 @@ export const useRetentionStore = defineStore('retention', () => {
     return { success: true, message: `领取「${reward.title}」：${lines.join('、')}。` }
   }
 
-  const retentionBadge = computed(() => claimableActivityCount.value + claimableSevenDayCount.value + claimableYaochaoCount.value)
+  const retentionBadge = computed(() => claimableActivityCount.value + claimableSevenDayCount.value + claimableStreakCount.value + claimableYaochaoCount.value)
 
   const serialize = () => ({
     activityClaimed: activityClaimed.value,
     sevenDayClaimed: sevenDayClaimed.value,
     firstSeenDayKey: firstSeenDayKey.value,
-    worldBossClaimed: worldBossClaimed.value
+    worldBossClaimed: worldBossClaimed.value,
+    fullActivityStreak: fullActivityStreak.value,
+    lastFullActivityDayKey: lastFullActivityDayKey.value,
+    streakClaimed: streakClaimed.value
   })
 
   const deserialize = (data: any) => {
@@ -158,6 +217,9 @@ export const useRetentionStore = defineStore('retention', () => {
     sevenDayClaimed.value = Array.isArray(data?.sevenDayClaimed) ? data.sevenDayClaimed : []
     firstSeenDayKey.value = data?.firstSeenDayKey || ''
     worldBossClaimed.value = Array.isArray(data?.worldBossClaimed) ? data.worldBossClaimed : []
+    fullActivityStreak.value = Number(data?.fullActivityStreak || 0)
+    lastFullActivityDayKey.value = data?.lastFullActivityDayKey || ''
+    streakClaimed.value = Array.isArray(data?.streakClaimed) ? data.streakClaimed : []
   }
 
   return {
@@ -169,15 +231,19 @@ export const useRetentionStore = defineStore('retention', () => {
     activityScore,
     activityBoxes,
     sevenDayGifts,
+    visibleFullActivityStreak,
+    streakGifts,
     yaochaoTask,
     yaochaoPersonalKills,
     yaochaoRewards,
     claimableActivityCount,
     claimableSevenDayCount,
+    claimableStreakCount,
     claimableYaochaoCount,
     retentionBadge,
     claimActivityBox,
     claimSevenDayGift,
+    claimStreakGift,
     claimYaochaoReward,
     serialize,
     deserialize

@@ -3,9 +3,9 @@
     <div class="flex items-center justify-between gap-2">
       <div>
         <h1 class="text-accent text-xl">活动中心</h1>
-        <p class="text-xs text-muted mt-1">每日活跃、七日豪礼与妖潮讨伐已整合，先把每天上线后的目标串起来。</p>
+        <p class="text-xs text-muted mt-1">每日活跃、连续满勤、七日豪礼与全服讨伐已整合，先把每天上线后的目标串起来。</p>
       </div>
-      <span class="text-xs px-2 py-1 border border-accent/30 rounded-xs text-accent">V1.5.2 留存三件套</span>
+      <span class="text-xs px-2 py-1 border border-accent/30 rounded-xs text-accent">V1.6.2 连续满勤</span>
     </div>
 
     <section class="game-panel space-y-3">
@@ -56,6 +56,30 @@
     <section class="game-panel space-y-3">
       <div class="flex items-start justify-between gap-3">
         <div>
+          <h2 class="text-accent text-lg">连续满勤</h2>
+          <p class="text-xs text-muted leading-relaxed mt-1">每天领取100活跃宝箱后计入连续满勤。连续3/5/7天可领取额外修仙材料，给回访玩家一个明确周目标。</p>
+        </div>
+        <div class="text-right">
+          <p class="text-2xl text-accent font-bold">{{ retention.visibleFullActivityStreak }}</p>
+          <p class="text-[10px] text-muted">连续满勤天</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div v-for="gift in retention.streakGifts" :key="gift.day" class="reward-card" :class="gift.claimed ? 'claimed' : gift.unlocked ? 'ready' : ''">
+          <p class="text-sm text-accent">连续{{ gift.day }}天</p>
+          <p class="text-xs font-bold mt-1">{{ gift.title.replace(/^.*：/, '') }}</p>
+          <p class="text-[10px] text-muted mt-1 leading-relaxed">{{ gift.desc }}</p>
+          <p class="text-[10px] text-muted mt-2">{{ rewardText(gift.reward) }}</p>
+          <button class="mini-btn mt-2" :disabled="!gift.unlocked || gift.claimed" @click="claimStreak(gift.day)">
+            {{ gift.claimed ? '已领' : gift.unlocked ? '领取' : '未达成' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-panel space-y-3">
+      <div class="flex items-start justify-between gap-3">
+        <div>
           <h2 class="text-accent text-lg">七日豪礼</h2>
           <p class="text-xs text-muted leading-relaxed mt-1">新角色前七个游戏日逐步解锁，给新手一个明确的第7日目标。</p>
         </div>
@@ -80,8 +104,8 @@
     <section class="event-hero game-panel space-y-3">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <p class="text-lg text-accent font-bold">世界妖潮</p>
-          <p class="text-sm text-muted leading-relaxed mt-1">山外妖潮躁动，全服玩家的秘境/登塔进度会汇入讨伐进度。个人击败怪物也有每日阶段奖励。</p>
+          <p class="text-lg text-accent font-bold">全服镇魔</p>
+          <p class="text-sm text-muted leading-relaxed mt-1">山外妖魔躁动，全服玩家的秘境/登塔进度会汇入讨伐进度。个人击败怪物也有每日阶段奖励。</p>
         </div>
         <div class="text-4xl">🐺</div>
       </div>
@@ -125,7 +149,7 @@
       <ul class="text-xs text-muted list-disc list-inside space-y-1 leading-relaxed">
         <li>每日活跃度基于修行志每日目标，活跃宝箱每天按游戏日刷新。</li>
         <li>七日豪礼按当前存档的游戏日推进，新老存档都会从首次进入新版活动中心开始计算。</li>
-        <li>世界妖潮第一版先聚合线上存档进度，个人奖励按本地讨伐进度发放；后续可继续扩展为实时世界Boss和全服结算邮件。</li>
+        <li>全服镇魔第一版先聚合线上存档进度，个人奖励按本地讨伐进度发放；后续可继续扩展为实时世界Boss和全服结算邮件。</li>
       </ul>
     </section>
   </div>
@@ -150,6 +174,7 @@ function rewardText(reward: any): string {
   if (reward.money) parts.push(`铜钱+${reward.money}`)
   if (reward.aura) parts.push(`灵气+${reward.aura}`)
   if (reward.spiritStone) parts.push(`灵石×${reward.spiritStone}`)
+  if (reward.items) parts.push(...reward.items.map((item: any) => `${item.name || item.itemId}×${item.quantity}`))
   if (reward.attributeExp) parts.push('资质经验+' + Object.values(reward.attributeExp).reduce((a: number, b: any) => a + (Number(b) || 0), 0))
   return parts.join(' / ')
 }
@@ -167,6 +192,7 @@ function handleClaim(res: { success: boolean; message: string }) {
 
 function claimActivity(score: number) { handleClaim(retention.claimActivityBox(score)) }
 function claimSeven(day: number) { handleClaim(retention.claimSevenDayGift(day)) }
+function claimStreak(day: number) { handleClaim(retention.claimStreakGift(day)) }
 function claimYaochao(score: number) { handleClaim(retention.claimYaochaoReward(score)) }
 function goCombat() { router.push('/game/combat') }
 function goQuest() { router.push('/game/quest') }
