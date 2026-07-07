@@ -284,6 +284,13 @@ const defaultConfig = {
   iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-07", title: "V1.5.9 稀有材料获取教程", content: "新手教程新增「稀有材料获取速查」，集中说明雷精、风羽、魂晶、法宝碎片、星陨铁、灵石等材料的主要获取途径和用途，方便玩家查找雷精等关键材料。" },
+    { date: "2026-07-07", title: "V1.5.8 温室地块显示修复", content: "修复温室弹窗内地块显示错位/叠层异常：温室地块现在使用独立相对定位与裁切容器，像素地块、作物图标和空地状态会正确限制在各自格子内。" },
+    { date: "2026-07-07", title: "V1.5.7 设施温室显示修复", content: "修复设施页温室开启后显示信息过少的问题：已开放状态现在会显示地块数、已种数量、可收获数量，并提供「前往温室」入口；同时补强温室播种、一键收获与升级扣材料校验，避免体力不足或扣除异常时造成作物/材料损失。" },
+    { date: "2026-07-07", title: "V1.5.6 灵兽喂食扣除修复", content: "修复仙鹤等灵兽喂食时可连续点击增加羁绊但不扣除材料的问题：喂食现在必须确认蕴灵稻/凝露草/朱果实际扣除成功后才增加羁绊，并兼容旧存档异常品质物品扣除。" },
+    { date: "2026-07-07", title: "V1.5.5 设置页首页按钮", content: "设置弹窗底部新增「首页」按钮，点击后关闭设置并返回游戏首页/主菜单，方便玩家从游戏内快速回到角色入口。" },
+    { date: "2026-07-07", title: "V1.5.4 战力排行榜修复", content: "修复排行榜战力与角色页战力不一致的问题：服务端战力公式补齐功法、宗门技能、修仙装备、符阵、本命法宝、灵兽羁绊、武器/戒指与战斗技能等加成，避免部分玩家排行战力偏低。" },
+    { date: "2026-07-07", title: "V1.5.3 地图按钮响应修复", content: "修复移动端修仙地图中部分按钮偶发点击无反应的问题：所有地图入口统一加入导航锁，签到和系统邮件也改为先关闭地图再执行，避免遮罩/过渡层遮挡反馈。" },
     { date: "2026-07-07", title: "V1.5.1 客户端下载入口", content: "首页新增 iOS 与安卓客户端下载按钮，后台可分别配置下载链接；链接留空时自动隐藏对应按钮。" },
     { date: "2026-07-07", title: "V1.5.0 灵兽陪练与协战", content: "灵兽页新增每日陪练与羁绊阶段，战斗胜利触发灵兽协战收益，让灵狐、仙鹤、青鸾分别接入灵气、修为、灵力/雷精循环。" },
     { date: "2026-07-07", title: "V1.4.9 转生材料闭环", content: "轮回殿转生现在会真实消耗轮回丹，并从二转起逐步接入真灵秘录、轮回尘、灵蕴玉；轮回丹不可再在背包空服用，凶兽与红尘材料正式进入长期转生循环。" },
@@ -758,23 +765,71 @@ app.get("/api/check-char-name", async (req, res) => {
 })
 
 
-function calcCombatPowerFromSave(p = {}, cu = {}) {
+function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}) {
+  const num = v => Number(v || 0) || 0
   const artifacts = cu.artifacts || {}
   let artifactPower = 0
   for (const v of Object.values(artifacts)) {
-    if (v && typeof v === 'object') artifactPower += Math.floor(Number(v.atk || 0) * 12 + Number(v.def || 0) * 10 + Number(v.aura || 0) * 4 + Number(v.cultivation || 0) * 6)
+    if (v && typeof v === 'object') artifactPower += Math.floor(num(v.atk) * 12 + num(v.def) * 10 + num(v.aura) * 4 + num(v.cultivation) * 6)
   }
   const oldArtifactPower = ['glimmerHoe', 'spiritKettle', 'spiritRain'].filter(k => artifacts[k] === true).length * 80
-  const realmIndex = Number(cu.realmIndex ?? cu.realm ?? 0) || 0
-  const rebirthCount = Number(cu.rebirthCount || 0) || 0
-  const cultivation = Number(cu.cultivation || 0) || 0
-  const aura = Number(cu.aura || 0) || 0
-  const mana = Number(cu.mana || 0) || 0
+  const realmIndex = num(cu.realmIndex ?? cu.realm)
+  const rebirthCount = num(cu.rebirthCount)
+  const cultivation = num(cu.cultivation)
+  const aura = num(cu.aura)
+  const mana = num(cu.mana)
   const attrs = p.attributes || {}
-  const attrPower = Number(p.attributePower || 0) || Object.values(attrs).reduce((sum, v) => sum + Number(v?.level || 0), 0)
-  const hp = Number(p.maxHp || p.baseMaxHp || 100) || 100
-  const systemPower = (Number(cu.fieldTier || 0) || 0) * 120 + (Number(cu.caveTier || 0) || 0) * 180 + (Number(cu.yuanShenLevel || 0) || 0) * 260 + (Number(cu.destinedArtifactLevel || 0) || 0) * 360 + (Number(cu.beastBond || 0) || 0) * 12 + Math.floor((Number(cu.sectContribution || 0) || 0) * 0.2)
-  return Math.max(0, Math.floor(realmIndex * 1000 + rebirthCount * 50000 + cultivation * 1.2 + aura * 0.25 + mana * 2 + attrPower * 6 + hp * 1.5 + artifactPower + oldArtifactPower + systemPower))
+  const attrLevel = k => num(attrs?.[k]?.level || 1)
+  const attrPower = num(p.attributePower) || ['physique', 'strength', 'agility', 'perception'].reduce((sum, k) => sum + attrLevel(k), 0)
+  const attributeMaxHpBonus = (attrLevel('physique') - 1) * 10
+  const combatSkill = Array.isArray(sk.skills) ? (sk.skills.find(x => x?.type === 'combat') || {}) : {}
+  const combatLevel = num(combatSkill.level)
+  const hp = num(p.baseMaxHp || 100) + combatLevel * 5 + attributeMaxHpBonus + (combatSkill.perk5 === 'fighter' ? 25 : 0) + (combatSkill.perk10 === 'warrior' ? 40 : 0)
+
+  // 排行榜服务端镜像前端 useCultivationStore.combatPower。不能依赖前端 computed 字段，需从存档原始字段重算。
+  const weaponDefs = { wooden_stick: 5, copper_sword: 12, iron_blade: 18, war_hammer: 24, steel_sword: 28, silver_spear: 36, demon_slayer: 48, dragon_blade: 60 }
+  const enchantBonus = { sharp: 4, fierce: 8, spirit: 12, legendary: 18 }
+  const equippedWeapon = Array.isArray(inv.ownedWeapons) ? inv.ownedWeapons[num(inv.equippedWeaponIndex)] : null
+  const weaponPower = Math.max(0, (weaponDefs[equippedWeapon?.defId] ?? (equippedWeapon ? 5 : 5)) + (enchantBonus[equippedWeapon?.enchantmentId] || 0)) * 16
+
+  const ringEffectMap = {
+    quartz_ring: { attack_bonus: 3 }, jade_guard_ring: { defense_bonus: 0.08 }, blood_jade_ring: { max_hp_bonus: 30 }, tiger_eye_ring: { attack_bonus: 5 }, obsidian_guard_ring: { defense_bonus: 0.12 }, dragon_scale_ring: { defense_bonus: 0.18, max_hp_bonus: 50 }, phoenix_blood_ring: { attack_bonus: 8, max_hp_bonus: 40 }, immortal_jade_ring: { attack_bonus: 12, defense_bonus: 0.20, max_hp_bonus: 80 }
+  }
+  const ringEffect = type => {
+    let total = 0
+    for (const idx of [inv.equippedRingSlot1, inv.equippedRingSlot2]) {
+      const ring = Array.isArray(inv.ownedRings) ? inv.ownedRings[num(idx)] : null
+      if (ring?.defId && ringEffectMap[ring.defId]?.[type]) total += ringEffectMap[ring.defId][type]
+      if (ring?.id && ringEffectMap[ring.id]?.[type]) total += ringEffectMap[ring.id][type]
+    }
+    return total
+  }
+  const ringPower = Math.floor(ringEffect('attack_bonus') * 120 + ringEffect('defense_bonus') * 100 + ringEffect('max_hp_bonus') * 3)
+
+  const manuals = cu.manuals || {}
+  const manualPower = num(manuals.wood) * 180 + num(manuals.thunder) * 320 + num(manuals.void) * 420
+  const daoGearLevels = cu.daoGear || {}
+  const daoGearPower = num(daoGearLevels.immortal_sword) * 520 + num(daoGearLevels.dharma_robe) * 420 + num(daoGearLevels.cloud_boots) * 360 + num(daoGearLevels.tribulation_amulet) * 300
+  const talismanCounts = cu.talismans || {}
+  const talismanPower = num(talismanCounts.fire_talisman) * 180 + num(talismanCounts.thunder_talisman) * 260
+  const sectSkills = Array.isArray(cu.sectSkills) ? cu.sectSkills : []
+  const sectSkillPower = sectSkills.reduce((sum, lv, idx) => sum + num(lv) * (220 + idx * 120), 0)
+  const sectRank = num(cu.sectRank)
+  const sectIdentityPower = cu.sect === 'sword' ? sectSkillPower * 0.35 : cu.sect === 'talisman' ? sectSkillPower * 0.18 + sectRank * 260 : cu.sect === 'alchemy' ? sectRank * 180 : 0
+  const path = cu.cultivationPath || 'balanced'
+  const pathPower = path === 'sword'
+    ? num(manuals.thunder) * 180 + realmIndex * 55
+    : path === 'thunder'
+      ? num(cu.insight) * 10 + num(manuals.thunder) * 150
+      : path === 'alchemy'
+        ? num(cu.fieldTier) * 160 + num(manuals.wood) * 120
+        : Math.max(0, 100 - num(cu.heartDemon)) * 4
+
+  const realmPower = realmIndex * 1000 + rebirthCount * 50000
+  const cultivationPower = Math.floor(cultivation * 1.2 + aura * 0.25 + mana * 2)
+  const bodyPower = Math.floor(attrPower * 6 + hp * 1.5 + combatLevel * 180)
+  const systemPower = num(cu.fieldTier) * 120 + num(cu.caveTier) * 180 + num(cu.yuanShenLevel) * 260 + num(cu.destinedArtifactLevel) * 360 + daoGearPower + talismanPower + num(cu.beastBond) * 12 + num(cu.sectContribution) * 0.2 + num(cu.sectMerit) * 0.6 + sectSkillPower + sectIdentityPower + pathPower + manualPower
+  return Math.max(0, Math.floor(realmPower + cultivationPower + bodyPower + weaponPower + ringPower + artifactPower + oldArtifactPower + systemPower))
 }
 
 // --- 玩家反馈 ---
@@ -855,7 +910,7 @@ app.get('/api/leaderboard', async (req, res) => {
         realmIndex: Number(cu.realmIndex ?? cu.realm ?? 0) || 0,
         rebirthCount: Number(cu.rebirthCount || 0) || 0,
         cultivation: Number(cu.cultivation ?? r.cached_cultivation ?? 0) || 0,
-        combatPower: calcCombatPowerFromSave(p, cu),
+        combatPower: calcCombatPowerFromSave(p, cu, (d && (d.inventory || d.inventoryStore || (d.stores && d.stores.inventory))) || {}, (d && (d.skill || d.skillStore || (d.stores && d.stores.skill))) || {}),
         aura: Number(cu.aura ?? r.cached_aura ?? 0) || 0,
         money: Number(p.money ?? meta.money ?? r.cached_money ?? 0) || 0,
         year: Number(g.year ?? meta.year ?? r.cached_year ?? 1) || 1,
@@ -923,6 +978,39 @@ app.get('/api/tower-leaderboard', async (req, res) => {
     send(res, 200, { leaderboard: entries.slice(0, limit) })
   } catch (e) { console.error('tower leaderboard err', e); send(res, 500, { error: '服务器错误' }) }
 })
+
+// --- 活动：世界妖潮（聚合线上存档进度） ---
+app.get('/api/events/world-boss', async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`SELECT user_id, player_name, data_json, updated_at FROM saves WHERE data_json IS NOT NULL AND data_json <> '' ORDER BY updated_at DESC LIMIT 500`)
+    let progress = 0
+    let participants = 0
+    const seen = new Set()
+    for (const r of rows) {
+      let d = null
+      try { d = typeof r.data_json === 'string' ? JSON.parse(r.data_json) : r.data_json } catch {}
+      if (!d) continue
+      const quest = d.quest || d.questStore || (d.stores && d.stores.quest) || {}
+      const combat = d.combat || d.combatStore || (d.stores && d.stores.combat) || {}
+      const claimed = Array.isArray(quest.journeyClaimed) ? quest.journeyClaimed : []
+      const tower = Number(combat.towerHighestFloor || 0) || 0
+      let kills = 0
+      // v11_event_hunt 的真实进度在前端由累计战斗指标计算，旧存档不一定持久化明细；这里用登塔层数与领取状态估算全服贡献。
+      if (claimed.includes('v11_event_hunt')) kills = Math.max(kills, 20)
+      kills = Math.max(kills, tower * 2)
+      const userKey = r.user_id || r.player_name || String(Math.random())
+      if (kills > 0 && !seen.has(userKey)) {
+        seen.add(userKey)
+        participants++
+        progress += Math.min(80, kills)
+      }
+    }
+    const target = 300
+    const statusText = progress >= target ? '已镇压' : progress >= target * 0.6 ? '决战中' : '进行中'
+    send(res, 200, { eventId: 'yaochao-v152', title: '世界妖潮', progress, target, participants, percent: Math.min(100, Math.floor(progress / target * 100)), statusText })
+  } catch (e) { console.error('world boss err', e); send(res, 500, { error: '服务器错误' }) }
+})
+
 // --- 突破公告 ---
 app.post('/api/breakthrough-announce', async (req, res) => {
   try {

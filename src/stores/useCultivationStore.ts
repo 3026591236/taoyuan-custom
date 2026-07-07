@@ -1178,14 +1178,22 @@ export const useCultivationStore = defineStore('cultivation', () => {
     if (!beast.value) { showFloat('你还没有灵兽伙伴。', 'danger'); return false }
     const data = BEAST_DATA[beast.value]
     const inventory = useInventoryStore()
-    if (inventory.getItemCount(data.feedCrop) < data.feedQty) {
-      showFloat(`${data.name}需要${data.feedCrop === 'dew_grass' ? '凝露草' : data.feedCrop === 'spirit_rice' ? '蕴灵稻' : '朱果'}×${data.feedQty}。`, 'danger')
+    const feedName = data.feedCrop === 'dew_grass' ? '凝露草' : data.feedCrop === 'spirit_rice' ? '蕴灵稻' : '朱果'
+    const beforeCount = inventory.getItemCount(data.feedCrop)
+    if (beforeCount < data.feedQty) {
+      showFloat(`${data.name}需要${feedName}×${data.feedQty}。`, 'danger')
       return false
     }
-    inventory.removeItem(data.feedCrop, data.feedQty)
+    const removed = inventory.removeItem(data.feedCrop, data.feedQty)
+    const afterCount = inventory.getItemCount(data.feedCrop)
+    if (!removed || beforeCount - afterCount < data.feedQty) {
+      showFloat(`${feedName}扣除失败，请整理背包后重试。`, 'danger')
+      addLog(`喂食${data.name}失败：${feedName}未正确扣除，未增加羁绊。`)
+      return false
+    }
     beastBond.value += 25
-    addLog(`你喂食${data.emoji}${data.name}，羁绊加深。当前羁绊：${beastBond.value}`)
-    showFloat(`羁绊+25`, 'success')
+    addLog(`你喂食${data.emoji}${data.name}，消耗${feedName}×${data.feedQty}，羁绊加深。当前羁绊：${beastBond.value}`)
+    showFloat(`${feedName}-${data.feedQty} 羁绊+25`, 'success')
     return true
   }
 

@@ -30,6 +30,7 @@ import { useTutorialStore } from './useTutorialStore'
 import { useHiddenNpcStore } from './useHiddenNpcStore'
 import { useCultivationStore } from './useCultivationStore'
 import { useCombatStore } from './useCombatStore'
+import { useRetentionStore } from './useRetentionStore'
 
 const SAVE_KEY_PREFIX = 'taoyuanxiang_save_'
 const MAX_SLOTS = 3
@@ -151,6 +152,7 @@ export const useSaveStore = defineStore('save', () => {
       const hiddenNpcStore = useHiddenNpcStore()
       const cultivationStore = useCultivationStore()
       const combatStore = useCombatStore()
+      const retentionStore = useRetentionStore()
 
       const data = {
         game: gameStore.serialize(),
@@ -181,6 +183,7 @@ export const useSaveStore = defineStore('save', () => {
         hiddenNpc: hiddenNpcStore.serialize(),
         cultivation: cultivationStore.serialize(),
         combat: combatStore.serialize(),
+        retention: retentionStore.serialize(),
         savedAt: new Date().toISOString()
       }
       localStorage.setItem(`${SAVE_KEY_PREFIX}${slot}`, encrypt(JSON.stringify(data)))
@@ -233,6 +236,7 @@ export const useSaveStore = defineStore('save', () => {
       const hiddenNpcStore = useHiddenNpcStore()
       const cultivationStore = useCultivationStore()
       const combatStore = useCombatStore()
+      const retentionStore = useRetentionStore()
 
       gameStore.deserialize(data.game)
       playerStore.deserialize(data.player)
@@ -262,6 +266,7 @@ export const useSaveStore = defineStore('save', () => {
       if (data.hiddenNpc) hiddenNpcStore.deserialize(data.hiddenNpc)
       if (data.cultivation) cultivationStore.deserialize(data.cultivation)
       if (data.combat) combatStore.deserialize(data.combat)
+      if (data.retention) retentionStore.deserialize(data.retention)
       activeSlot.value = slot
       return true
     } catch {

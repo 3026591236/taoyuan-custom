@@ -107,8 +107,27 @@
           <span class="text-xs text-accent whitespace-nowrap">{{ GREENHOUSE_UNLOCK_COST }}文</span>
         </div>
       </div>
-      <div v-else>
-        <p class="text-xs text-success">温室已开放。可在农场面板中切换至温室进行种植。</p>
+      <div v-else class="space-y-2">
+        <p class="text-xs text-success">温室已开放，可在农场面板中种植四季作物。</p>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="border border-accent/10 rounded-xs py-1">
+            <p class="text-[10px] text-muted">地块</p>
+            <p class="text-xs text-accent">{{ farmStore.greenhousePlots.length }}</p>
+          </div>
+          <div class="border border-accent/10 rounded-xs py-1">
+            <p class="text-[10px] text-muted">已种</p>
+            <p class="text-xs text-accent">{{ greenhousePlantedCount }}</p>
+          </div>
+          <div class="border border-accent/10 rounded-xs py-1">
+            <p class="text-[10px] text-muted">可收</p>
+            <p class="text-xs" :class="greenhouseHarvestableCount > 0 ? 'text-success' : 'text-muted'">
+              {{ greenhouseHarvestableCount }}
+            </p>
+          </div>
+        </div>
+        <Button class="w-full justify-center" :icon="Leaf" :icon-size="12" @click="goGreenhouse">
+          前往温室
+        </Button>
       </div>
     </div>
 
@@ -609,6 +628,7 @@
 
 <script setup lang="ts">
   import { computed, ref } from 'vue'
+  import { useRouter } from 'vue-router'
   import {
     ArrowDown,
     ArrowDown01,
@@ -627,6 +647,7 @@
     X
   } from 'lucide-vue-next'
   import { useHomeStore } from '@/stores/useHomeStore'
+  import { useFarmStore } from '@/stores/useFarmStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useProcessingStore } from '@/stores/useProcessingStore'
@@ -639,7 +660,9 @@
   import { addLog } from '@/composables/useGameLog'
   import Button from '@/components/game/Button.vue'
 
+  const router = useRouter()
   const homeStore = useHomeStore()
+  const farmStore = useFarmStore()
   const inventoryStore = useInventoryStore()
   const playerStore = usePlayerStore()
   const warehouseStore = useWarehouseStore()
@@ -701,6 +724,18 @@
     if (playerStore.money < GREENHOUSE_UNLOCK_COST) return false
     return GREENHOUSE_MATERIAL_COST.every(mat => getCombinedItemCount(mat.itemId) >= mat.quantity)
   })
+
+  const greenhousePlantedCount = computed(() =>
+    farmStore.greenhousePlots.filter(plot => plot.state === 'planted' || plot.state === 'growing' || plot.state === 'harvestable').length
+  )
+
+  const greenhouseHarvestableCount = computed(() =>
+    farmStore.greenhousePlots.filter(plot => plot.state === 'harvestable').length
+  )
+
+  const goGreenhouse = () => {
+    void router.push({ name: 'farm' })
+  }
 
   const handleUnlockFromModal = () => {
     if (homeStore.unlockGreenhouse()) {

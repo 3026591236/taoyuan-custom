@@ -874,7 +874,7 @@
             <button
               v-for="plot in farmStore.greenhousePlots"
               :key="plot.id"
-              class="aspect-square border border-accent/20 rounded-xs flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-accent/60 hover:bg-panel/80 leading-tight"
+              class="aspect-square relative overflow-hidden border border-accent/20 rounded-xs flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-accent/60 hover:bg-panel/80 leading-tight"
               :class="getPlotDisplay(plot).color"
               :title="getPlotTooltip(plot)"
               @click="activeGhPlotId = plot.id"
@@ -2019,14 +2019,19 @@
     if (activeGhPlotId.value === null) return
     const crop = getCropById(cropId)
     if (!crop) return
-    if (!inventoryStore.removeItem(crop.seedId)) {
+    if (!inventoryStore.hasItem(crop.seedId)) {
       addLog('背包中没有该种子了。')
+      return
+    }
+    if (!inventoryStore.removeItem(crop.seedId)) {
+      addLog('种子扣除失败，请整理背包后重试。')
       return
     }
     if (farmStore.greenhousePlantCrop(activeGhPlotId.value, cropId)) {
       addLog(`在温室中播种了${crop.name}。`)
     } else {
       inventoryStore.addItem(crop.seedId)
+      addLog('温室地块状态异常，种子已返还。')
     }
     activeGhPlotId.value = null
   }
@@ -2084,14 +2089,21 @@
 
   const doGhBatchHarvest = () => {
     const skillStore = useSkillStore()
-    const results = farmStore.greenhouseBatchHarvest()
-    if (results.length === 0) return
+    const harvestablePlots = farmStore.greenhousePlots.filter(p => p.state === 'harvestable')
+    if (harvestablePlots.length === 0) return
     let harvested = 0
     let seedsReturned = 0
     let totalBonusMoney = 0
-    for (const { cropId, genetics } of results) {
+    for (const plot of harvestablePlots) {
       if (!playerStore.consumeStamina(1)) break
+      const result = farmStore.greenhouseHarvestPlot(plot.id)
+      if (!result.cropId) {
+        // 极端情况下地块状态被别的操作改变：退回刚扣的体力，避免玩家亏损。
+        playerStore.restoreStamina(1)
+        continue
+      }
       harvested++
+      const { cropId, genetics } = result
       let quality = skillStore.rollCropQualityWithBonus(0)
       quality = applyCropBlessing(quality)
       const yieldDouble = genetics && Math.random() < (genetics.yield / 100) * 0.3
@@ -2125,6 +2137,9 @@
       let msg = `在温室一键收获了${harvested}株作物。(-${harvested}体力)`
       if (totalBonusMoney > 0) msg += ` 甜度加成+${totalBonusMoney}文`
       addLog(msg)
+      if (harvested < harvestablePlots.length) addLog('体力不足，剩余成熟作物已保留在温室中。')
+    } else {
+      addLog('体力不足，无法收获温室作物。')
     }
     if (seedsReturned > 0) {
       addLog(`${seedsReturned}颗育种种子已回收到种子箱。`)
@@ -2159,9 +2174,16 @@
     for (const plot of targets) {
       if (!inventoryStore.hasItem(crop.seedId)) break
       if (!playerStore.consumeStamina(1)) break
-      inventoryStore.removeItem(crop.seedId)
-      farmStore.greenhousePlantCrop(plot.id, cropId)
-      planted++
+      if (!inventoryStore.removeItem(crop.seedId)) {
+        playerStore.restoreStamina(1)
+        break
+      }
+      if (farmStore.greenhousePlantCrop(plot.id, cropId)) {
+        planted++
+      } else {
+        inventoryStore.addItem(crop.seedId)
+        playerStore.restoreStamina(1)
+      }
     }
     if (planted > 0) {
       sfxPlant()
@@ -2186,8 +2208,15 @@
       addLog('铜钱不足，无法升级温室。')
       return
     }
+    const removedMaterials: { itemId: string; quantity: number }[] = []
     for (const mat of upgrade.materialCost) {
-      inventoryStore.removeItem(mat.itemId, mat.quantity)
+      if (!inventoryStore.removeItem(mat.itemId, mat.quantity)) {
+        for (const removed of removedMaterials) inventoryStore.addItem(removed.itemId, removed.quantity)
+        playerStore.earnMoney(upgrade.cost)
+        addLog('温室升级材料扣除失败，铜钱与已扣材料已返还。')
+        return
+      }
+      removedMaterials.push({ itemId: mat.itemId, quantity: mat.quantity })
     }
     farmStore.upgradeGreenhouse(upgrade.plotCount)
     addLog(`温室已升级至${upgrade.name}！（${upgrade.plotCount}个地块）`)
@@ -2234,6 +2263,14 @@
   .spirit-tier-4 { background-image: linear-gradient(90deg, rgba(245, 198, 92, 0.20) 1px, transparent 1px), linear-gradient(0deg, rgba(191, 119, 255, 0.16) 1px, transparent 1px); box-shadow: inset 0 0 0 1px rgba(245, 198, 92, 0.55), inset 0 0 16px rgba(245, 198, 92, 0.22); }
 
   .pixel-soil-lines { position: absolute; inset: auto 2px 2px 2px; height: 8px; background: repeating-linear-gradient(90deg, rgba(0,0,0,.22) 0 4px, transparent 4px 8px); opacity: .55; }
+
+  .greenhouse-scene {
+    position: absolute;
+    inset: 1px;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
   .pixel-empty-icon { opacity: .65; z-index: 1; }
   .pixel-crop { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 1px; transform: translateY(1px); text-shadow: 1px 1px 0 rgba(0,0,0,.45); }
   .pixel-crop-sprout { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 13px; line-height: 1; }

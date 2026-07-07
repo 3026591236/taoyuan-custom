@@ -1,5 +1,17 @@
-<script setup>
+<script>
+	export default {
+		onLaunch: function() {
+			console.log('App Launch')
+		},
+		onShow: function() {
+			console.log('App Show')
+		},
+		onHide: function() {
+			console.log('App Hide')
+		}
+	}
 </script>
+
 <style>
-page { background: #0d1117; color: #e6edf3; }
+	/*每个页面公共css */
 </style>

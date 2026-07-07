@@ -14,7 +14,7 @@
         <div class="map-area">
           <p class="map-area-title">田庄</p>
           <div class="map-area-grid">
-            <button v-for="t in farmGroup" :key="t.key" class="map-loc" :class="{ 'map-loc-active': current === t.key }" @click="go(t.key)">
+            <button v-for="t in farmGroup" :key="t.key" class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === t.key }" @click="go(t.key)">
               <component :is="t.getIcon ? t.getIcon() : t.icon" :size="18" />
               <span>{{ t.label }}</span>
             </button>
@@ -32,6 +32,7 @@
                 v-for="t in villageGroup"
                 :key="t.key"
                 class="map-loc"
+                :disabled="navBusy"
                 :class="{ 'map-loc-active': current === t.key }"
                 @click="go(t.key)"
               >
@@ -47,6 +48,7 @@
                 v-for="t in wildGroup"
                 :key="t.key"
                 class="map-loc"
+                :disabled="navBusy"
                 :class="{ 'map-loc-active': current === t.key }"
                 @click="go(t.key)"
               >
@@ -67,6 +69,7 @@
               v-for="t in craftGroup"
               :key="t.key"
               class="map-loc"
+              :disabled="navBusy"
               :class="{ 'map-loc-active': current === t.key }"
               @click="go(t.key)"
             >
@@ -156,17 +159,18 @@
               v-for="t in personalGroup"
               :key="t.key"
               class="map-loc"
+              :disabled="navBusy"
               :class="{ 'map-loc-active': current === t.key }"
               @click="go(t.key)"
             >
               <component :is="t.getIcon ? t.getIcon() : t.icon" :size="18" />
               <span>{{ t.label }}</span>
             </button>
-            <button class="map-loc daily-checkin-loc" :disabled="checkinBusy || checkinChecked" @click="handleCheckin">
+            <button class="map-loc daily-checkin-loc" :disabled="navBusy || checkinBusy || checkinChecked" @click="handleCheckin">
               <Gift :size="18" />
               <span>{{ checkinChecked ? '已签到' : '每日签到' }}</span>
             </button>
-            <button class="map-loc" @click="handleOpenMail">
+            <button class="map-loc" :disabled="navBusy" @click="handleOpenMail">
               <div style="position:relative;display:inline-flex">
                 <Mail :size="18" />
                 <span v-if="unclaimedMailCount" class="mail-dot">{{ unclaimedMailCount > 99 ? '99+' : unclaimedMailCount }}</span>
@@ -224,10 +228,10 @@
   }
 
   const handleCheckin = () => {
-    emit('checkin')
+    afterCloseNavigate(() => emit('checkin'))
   }
   const handleOpenMail = () => {
-    emit('openMail')
+    afterCloseNavigate(() => emit('openMail'))
   }
   const handleSpecial = (event: 'openLeaderboard' | 'openCombat' | 'openForge' | 'openSect') => {
     afterCloseNavigate(() => {

@@ -392,10 +392,15 @@
             </div>
           </template>
 
-        <!-- 存档管理（全局底部） -->
-        <Button :icon="FolderOpen" :icon-size="12" class="py-1 px-3 w-full justify-center mt-3" @click="showSaveManager = true">
-          存档管理
-        </Button>
+        <!-- 全局底部操作 -->
+        <div class="grid grid-cols-2 gap-2 mt-3">
+          <Button :icon="Home" :icon-size="12" class="py-1 px-3 w-full justify-center" @click="goHome">
+            首页
+          </Button>
+          <Button :icon="FolderOpen" :icon-size="12" class="py-1 px-3 w-full justify-center" @click="showSaveManager = true">
+            存档管理
+          </Button>
+        </div>
       </div>
     </div>
   </Transition>
@@ -417,6 +422,7 @@
     Headphones,
     HeadphoneOff,
     FolderOpen,
+    Home,
     Minus,
     Plus,
     ArrowUpLeft,
@@ -484,8 +490,16 @@
     { key: 'qmsgShowReverse', label: '弹出方向逆反' }
   ]
 
+  import { useRouter } from 'vue-router'
+
   defineProps<{ open: boolean }>()
-  defineEmits<{ close: [] }>()
+  const emit = defineEmits<{ close: [] }>()
+  const router = useRouter()
+
+  const goHome = () => {
+    emit('close')
+    void router.push('/')
+  }
 
   const activeTab = ref<SettingsTab>('general')
   const { sfxEnabled, bgmEnabled, toggleSfx, toggleBgm } = useAudio()

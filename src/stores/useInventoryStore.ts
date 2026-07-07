@@ -229,7 +229,20 @@ export const useInventoryStore = defineStore('inventory', () => {
         }
       }
     }
-    return true
+    // 兼容旧存档/异常品质：getItemCount 不指定品质会统计所有品质，扣除也必须能覆盖所有同 itemId 槽位。
+    if (quality === undefined && remaining > 0) {
+      for (let i = items.value.length - 1; i >= 0 && remaining > 0; i--) {
+        const slot = items.value[i]!
+        if (slot.itemId !== itemId) continue
+        const take = Math.min(remaining, slot.quantity)
+        slot.quantity -= take
+        remaining -= take
+        if (slot.quantity <= 0) {
+          items.value.splice(i, 1)
+        }
+      }
+    }
+    return remaining <= 0
   }
 
   /** 查询物品数量 */

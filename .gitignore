@@ -3,3 +3,11 @@ dist/
 *.log
 .DS_Store
 .github/
+
+# uni-app generated packaging/cache/signing artifacts
+uni-client/unpackage/cache/
+uni-client/unpackage/res/icons/
+*.p12
+*.mobileprovision
+certdata
+certdataios
