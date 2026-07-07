@@ -200,6 +200,7 @@
         <div class="event-stat"><span>全服贡献</span><b>{{ worldBoss.progress }}/{{ worldBoss.target }}</b></div>
         <div class="event-stat"><span>参与人数</span><b>{{ worldBoss.participants }}</b></div>
         <div class="event-stat"><span>个人讨伐</span><b>{{ retention.yaochaoPersonalKills }}</b></div>
+        <div class="event-stat"><span>本期战报</span><b>{{ worldBoss.cycleKey }}</b></div>
       </div>
 
       <div class="space-y-1">
@@ -224,6 +225,26 @@
       </div>
 
 
+
+      <div class="reward-card ready space-y-2">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-sm text-accent">镇魔周期战报</p>
+            <p class="text-[10px] text-muted mt-1">本期按个人镇魔贡献生成镇魔司邮件奖励。邮件只发放一次，奖励需到邮箱领取。</p>
+          </div>
+          <span class="text-xs text-muted">{{ worldBoss.cycleKey }}</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-muted">
+          <span>评级：{{ cyclePreview.tier }}</span>
+          <span>铜钱：{{ cyclePreview.rewards.money }}</span>
+          <span>灵石：{{ cyclePreview.rewards.spiritStone }}</span>
+          <span>灵气：{{ cyclePreview.rewards.aura }}</span>
+        </div>
+        <button class="mini-btn" :disabled="cycleClaiming || retention.yaochaoPersonalKills <= 0" @click="claimWorldBossCycle">
+          {{ cycleClaiming ? '结算中...' : retention.yaochaoPersonalKills > 0 ? '领取本期结算邮件' : '暂无贡献' }}
+        </button>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
         <div v-for="tier in longTerm.worldBossTiers" :key="tier.score" class="reward-card" :class="tier.claimed ? 'claimed' : tier.done ? 'ready' : ''">
           <p class="text-sm text-accent">{{ tier.title }}</p>
@@ -244,7 +265,7 @@
       <ul class="text-xs text-muted list-disc list-inside space-y-1 leading-relaxed">
         <li>每日活跃度基于修行志每日目标，活跃宝箱每天按游戏日刷新。</li>
         <li>七日豪礼按当前存档的游戏日推进，新老存档都会从首次进入新版活动中心开始计算。</li>
-        <li>全服镇魔现在包含个人贡献档位，可继续扩展为后台定时结算与全服邮件。</li>
+        <li>全服镇魔现在包含个人贡献档位与周期战报，可按本期贡献发放镇魔司邮件奖励。</li>
         <li>月度修行令、闭关归来和奇遇链均保存到本地/云存档，旧存档自动兼容。</li>
       </ul>
     </section>
@@ -252,7 +273,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRetentionStore } from '@/stores/useRetentionStore'
 import { useLongTermStore } from '@/stores/useLongTermStore'
@@ -264,7 +285,8 @@ const retention = useRetentionStore()
 const longTerm = useLongTermStore()
 const saveStore = useSaveStore()
 
-const worldBoss = reactive({ progress: 0, target: 300, participants: 0, statusText: '统计中' })
+const worldBoss = reactive({ progress: 0, target: 300, participants: 0, statusText: '统计中', cycleKey: '本周' })
+const cycleClaiming = ref(false)
 const worldBossPercent = computed(() => Math.min(100, Math.floor((worldBoss.progress / Math.max(1, worldBoss.target)) * 100)))
 
 function rewardText(reward: any): string {
@@ -293,6 +315,43 @@ function claimSeven(day: number) { handleClaim(retention.claimSevenDayGift(day))
 function claimStreak(day: number) { handleClaim(retention.claimStreakGift(day)) }
 function claimWeekly(taskId: string) { handleClaim(retention.claimWeeklyTask(taskId)) }
 function claimYaochao(score: number) { const res = retention.claimYaochaoReward(score); if (res.success) longTerm.recordCombatContribution(score); handleClaim(res) }
+
+const cyclePreview = computed(() => {
+  const score = retention.yaochaoPersonalKills
+  const globalBonus = worldBoss.progress >= worldBoss.target ? 1.25 : worldBoss.progress >= worldBoss.target * 0.6 ? 1.1 : 1
+  const base = score >= 120
+    ? { tier: '镇魔功臣', money: 6800, spiritStone: 36, aura: 1200 }
+    : score >= 60
+      ? { tier: '伏魔主力', money: 3600, spiritStone: 20, aura: 640 }
+      : score >= 20
+        ? { tier: '镇魔先锋', money: 1800, spiritStone: 10, aura: 280 }
+        : { tier: '参与奖', money: 800, spiritStone: 4, aura: 120 }
+  return { tier: base.tier, rewards: { money: Math.floor(base.money * globalBonus), spiritStone: Math.floor(base.spiritStone * globalBonus), aura: Math.floor(base.aura * globalBonus) } }
+})
+
+async function claimWorldBossCycle() {
+  if (cycleClaiming.value) return
+  cycleClaiming.value = true
+  try {
+    const playerName = saveStore.getSlots().find(s => s.slot === saveStore.activeSlot)?.playerName || ''
+    const res = await fetch('/api/events/world-boss/claim-cycle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerName, personalScore: retention.yaochaoPersonalKills, globalProgress: worldBoss.progress, globalTarget: worldBoss.target, participants: worldBoss.participants })
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || '结算失败')
+    addLog(`镇魔司已发放结算邮件：${data.tier}`)
+    showFloat('镇魔结算邮件已发放，请到邮箱领取', 'success')
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '结算失败'
+    addLog(msg)
+    showFloat(msg, 'danger')
+  } finally {
+    cycleClaiming.value = false
+  }
+}
+
 function claimWorldBoss(score: number) { handleClaim(longTerm.claimWorldBossTier(score)) }
 function claimSeason(id: string) { handleClaim(longTerm.claimSeasonTask(id)) }
 function claimReturnGift() { handleClaim(longTerm.claimReturnGift()) }
@@ -309,11 +368,13 @@ async function loadWorldBoss() {
     worldBoss.target = Number(data.target || 300)
     worldBoss.participants = Number(data.participants || 0)
     worldBoss.statusText = data.statusText || (worldBoss.progress >= worldBoss.target ? '已镇压' : '进行中')
+    worldBoss.cycleKey = data.cycleKey || data.eventId || '本周'
   } catch {
     worldBoss.statusText = '本地进行中'
     worldBoss.progress = retention.yaochaoPersonalKills
     worldBoss.target = 30
     worldBoss.participants = 1
+    worldBoss.cycleKey = '本地' 
   }
 }
 

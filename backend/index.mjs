@@ -284,6 +284,7 @@ const defaultConfig = {
   iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-08", title: "V1.6.5 镇魔周期结算", content: "全服镇魔新增周期战报与邮件结算：活动中心可查看本期贡献、参与人数和结算评级，并按个人贡献发放镇魔司邮件奖励，避免奖励只停留在本地档位。" },
     { date: "2026-07-08", title: "V1.6.4 全量留存玩法", content: "新增全服镇魔个人贡献奖励、宗门公共建设、装备词条洗练、闭关归来礼包、奇遇链与月度修行令，全部接入现有活动/门派/炼器入口与存档。" },
     { date: "2026-07-07", title: "V1.6.3 周修行令", content: "活动中心新增周修行令，每7个游戏日重置一次，把秘境战斗、烹饪、博物馆捐赠、公会贡献、瀚海商誉、育种和钓鱼串成周目标，奖励灵石、灵气、资质经验和修仙材料。" },
     { date: "2026-07-07", title: "V1.6.2 连续满勤与周目标", content: "活动中心新增连续满勤奖励：玩家每天做到100活跃并领取满勤宝箱后累计连续天数，连续3/5/7天可领取额外灵石、灵气、资质经验和修仙材料；同时将活动展示口径从世界妖潮调整为全服镇魔，避免和已取消玩法混淆。" },
@@ -984,6 +985,35 @@ app.get('/api/tower-leaderboard', async (req, res) => {
   } catch (e) { console.error('tower leaderboard err', e); send(res, 500, { error: '服务器错误' }) }
 })
 
+
+function getWorldBossCycleKey(date = new Date()) {
+  const start = new Date(Date.UTC(2026, 0, 1))
+  const now = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+  const days = Math.max(0, Math.floor((now - start) / 86400000))
+  return `wb-${date.getUTCFullYear()}-${Math.floor(days / 7) + 1}`
+}
+function worldBossCycleReward(score, globalProgress = 0) {
+  const personal = Math.max(0, Number(score || 0) || 0)
+  const globalBonus = globalProgress >= 300 ? 1.25 : globalProgress >= 180 ? 1.1 : 1
+  const tier = personal >= 120 ? '镇魔功臣' : personal >= 60 ? '伏魔主力' : personal >= 20 ? '镇魔先锋' : '参与奖'
+  const base = personal >= 120
+    ? { money: 6800, spiritStone: 36, aura: 1200, items: [{ itemId: 'soul_crystal', quantity: 2 }, { itemId: 'thunder_essence', quantity: 1 }] }
+    : personal >= 60
+      ? { money: 3600, spiritStone: 20, aura: 640, items: [{ itemId: 'demon_core', quantity: 1 }] }
+      : personal >= 20
+        ? { money: 1800, spiritStone: 10, aura: 280, items: [] }
+        : { money: 800, spiritStone: 4, aura: 120, items: [] }
+  return {
+    tier,
+    rewards: {
+      money: Math.floor(base.money * globalBonus),
+      spiritStone: Math.floor(base.spiritStone * globalBonus),
+      aura: Math.floor(base.aura * globalBonus),
+      items: base.items
+    }
+  }
+}
+
 // --- 活动：世界妖潮（聚合线上存档进度） ---
 app.get('/api/events/world-boss', async (req, res) => {
   try {
@@ -1014,6 +1044,33 @@ app.get('/api/events/world-boss', async (req, res) => {
     const statusText = progress >= target ? '已镇压' : progress >= target * 0.6 ? '决战中' : '进行中'
     send(res, 200, { eventId: 'yaochao-v152', title: '世界妖潮', progress, target, participants, percent: Math.min(100, Math.floor(progress / target * 100)), statusText })
   } catch (e) { console.error('world boss err', e); send(res, 500, { error: '服务器错误' }) }
+})
+
+
+app.post('/api/events/world-boss/claim-cycle', async (req, res) => {
+  const conn = await pool.getConnection()
+  try {
+    const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
+    const { playerName, personalScore, globalProgress, globalTarget, participants } = req.body || {}
+    const cycleKey = getWorldBossCycleKey()
+    const score = Math.max(0, Math.floor(Number(personalScore || 0) || 0))
+    if (score <= 0) return send(res, 400, { error: '本期暂无镇魔贡献' })
+    const legacyId = `world-boss-cycle:${cycleKey}`
+    await conn.beginTransaction()
+    const [exists] = await conn.execute('SELECT id FROM user_mails WHERE user_id = ? AND legacy_mail_id = ? LIMIT 1 FOR UPDATE', [user.id, legacyId])
+    if (exists.length) { await conn.rollback(); return send(res, 409, { error: '本期结算邮件已发放，请前往邮箱领取' }) }
+    const calc = worldBossCycleReward(score, Number(globalProgress || 0) || 0)
+    const title = `全服镇魔战报 · ${cycleKey}`
+    const content = `本期全服镇魔结算完成。道友${String(playerName || user.username || '').slice(0, 20) || '无名'}个人贡献 ${score}，评级「${calc.tier}」。全服贡献 ${Number(globalProgress || 0) || 0}/${Number(globalTarget || 300) || 300}，参与人数 ${Number(participants || 0) || 0}。奖励已随信附上。`
+    const id = uuidv4()
+    await conn.execute('INSERT INTO user_mails (id, user_id, legacy_mail_id, title, content, rewards, from_name) VALUES (?, ?, ?, ?, ?, ?, ?)', [id, user.id, legacyId, title, content, JSON.stringify(calc.rewards), '镇魔司'])
+    await conn.commit()
+    send(res, 200, { ok: true, mailId: id, cycleKey, tier: calc.tier, rewards: calc.rewards, title, content })
+  } catch (e) {
+    try { await conn.rollback() } catch {}
+    console.error('world boss cycle claim err', e)
+    send(res, 500, { error: '服务器错误' })
+  } finally { conn.release() }
 })
 
 // --- 突破公告 ---
