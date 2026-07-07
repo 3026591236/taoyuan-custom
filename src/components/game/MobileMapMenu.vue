@@ -84,61 +84,62 @@
           <div class="map-area-grid">
             <button
               class="map-loc"
+              :disabled="navBusy"
               :class="{ 'map-loc-active': current === 'cultivation' }"
               @click="go('cultivation')"
             >
               <Sparkles :size="18" />
               <span>修行</span>
             </button>
-            <button class="map-loc" @click="goCultivationMarket">
+            <button class="map-loc" :disabled="navBusy" @click="goCultivationMarket">
               <Store :size="18" />
               <span>市集</span>
             </button>
-            <button class="map-loc" :class="{ 'map-loc-active': current === 'alchemy' }" @click="go('alchemy')">
+            <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'alchemy' }" @click="go('alchemy')">
               <FlaskConical :size="18" />
               <span>炼丹</span>
             </button>
-            <button class="map-loc" :class="{ 'map-loc-active': current === 'cave' }" @click="go('cave')">
+            <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'cave' }" @click="go('cave')">
               <Mountain :size="18" />
               <span>洞府</span>
             </button>
-            <button class="map-loc" :class="{ 'map-loc-active': current === 'destined-artifact' }" @click="go('destined-artifact')">
+            <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'destined-artifact' }" @click="go('destined-artifact')">
               <Sword :size="18" />
               <span>法宝</span>
             </button>
-            <button class="map-loc" :class="{ 'map-loc-active': current === 'talisman' }" @click="go('talisman')">
+            <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'talisman' }" @click="go('talisman')">
               <ScrollText :size="18" />
               <span>制符</span>
             </button>
-            <button class="map-loc" :class="{ 'map-loc-active': current === 'yuan-shen' }" @click="go('yuan-shen')">
+            <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'yuan-shen' }" @click="go('yuan-shen')">
               <CircleDot :size="18" />
               <span>元神</span>
             </button>
-            <button class="map-loc" :class="{ 'map-loc-active': current === 'divine-beast' }" @click="go('divine-beast')">
+            <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'divine-beast' }" @click="go('divine-beast')">
               <PawPrint :size="18" />
               <span>灵兽</span>
             </button>
-            <button class="map-loc" @click="handleSpecial('openCombat')">
+            <button class="map-loc" :disabled="navBusy" @click="handleSpecial('openCombat')">
               <Flame :size="18" />
               <span>秘境</span>
             </button>
-            <button class="map-loc" :class="{ 'map-loc-active': current === 'events' }" @click="go('events' as PanelKey)">
+            <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'events' }" @click="go('events' as PanelKey)">
               <CalendarDays :size="18" />
               <span>活动</span>
             </button>
-            <button class="map-loc" @click="handleSpecial('openSect')">
+            <button class="map-loc" :disabled="navBusy" @click="handleSpecial('openSect')">
               <Swords :size="18" />
               <span>门派</span>
             </button>
-            <button class="map-loc" @click="handleSpecial('openForge')">
+            <button class="map-loc" :disabled="navBusy" @click="handleSpecial('openForge')">
               <Cog :size="18" />
               <span>炼器</span>
             </button>
-            <button class="map-loc" @click="handleSpecial('openLeaderboard')">
+            <button class="map-loc" :disabled="navBusy" @click="handleSpecial('openLeaderboard')">
               <Trophy :size="18" />
               <span>排行</span>
             </button>
-            <button class="map-loc" @click="go('chat' as PanelKey)">
+            <button class="map-loc" :disabled="navBusy" @click="go('chat' as PanelKey)">
               <MessageCircle :size="18" />
               <span>聊天</span>
             </button>
@@ -180,14 +181,15 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
+  import { computed, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { X, Gift, Mail, Trophy, Swords, Sparkles, Flame, Cog, Store, FlaskConical, Mountain, Sword, ScrollText, CircleDot, PawPrint, CalendarDays, MessageCircle } from 'lucide-vue-next'
   import { TABS, navigateToPanel } from '@/composables/useNavigation'
   import type { PanelKey } from '@/composables/useNavigation'
 
-  defineProps<{ open: boolean; current: string; checkinChecked?: boolean; checkinBusy?: boolean; unclaimedMailCount?: number }>()
+  const props = defineProps<{ open: boolean; current: string; checkinChecked?: boolean; checkinBusy?: boolean; unclaimedMailCount?: number }>()
   const router = useRouter()
+  const navBusy = ref(false)
   const emit = defineEmits<{ close: []; checkin: []; openMail: []; openLeaderboard: []; openCombat: []; openForge: []; openSect: [] }>()
 
   const tabMap = computed(() => {
@@ -204,13 +206,21 @@
   const craftGroup = computed(() => pick(['cooking', 'workshop', 'upgrade']))
   const personalGroup = computed(() => pick(['charinfo', 'inventory', 'skills', 'achievement', 'wallet', 'quest']))
 
-  const go = (key: PanelKey) => {
-    navigateToPanel(key)
+  const afterCloseNavigate = (fn: () => void) => {
+    if (navBusy.value) return
+    navBusy.value = true
     emit('close')
+    const run = () => {
+      try { fn() } finally { window.setTimeout(() => { navBusy.value = false }, 350) }
+    }
+    window.requestAnimationFrame(() => window.setTimeout(run, 0))
+  }
+
+  const go = (key: PanelKey) => {
+    afterCloseNavigate(() => navigateToPanel(key))
   }
   const goCultivationMarket = () => {
-    router.push({ path: '/game/shop', query: { market: 'cultivation' } })
-    emit('close')
+    afterCloseNavigate(() => { void router.push({ path: '/game/shop', query: { market: 'cultivation' } }) })
   }
 
   const handleCheckin = () => {
@@ -220,12 +230,40 @@
     emit('openMail')
   }
   const handleSpecial = (event: 'openLeaderboard' | 'openCombat' | 'openForge' | 'openSect') => {
-    if (event === 'openLeaderboard') emit('openLeaderboard')
-    else if (event === 'openCombat') emit('openCombat')
-    else if (event === 'openForge') emit('openForge')
-    else emit('openSect')
-    emit('close')
+    afterCloseNavigate(() => {
+      if (event === 'openLeaderboard') emit('openLeaderboard')
+      else if (event === 'openCombat') emit('openCombat')
+      else if (event === 'openForge') emit('openForge')
+      else emit('openSect')
+    })
   }
+
+  const preloadCultivationPages = () => {
+    const load = () => {
+      void Promise.allSettled([
+        import('@/views/game/CultivationView.vue'),
+        import('@/views/game/AlchemyView.vue'),
+        import('@/views/game/CaveView.vue'),
+        import('@/views/game/DestinedArtifactView.vue'),
+        import('@/views/game/TalismanView.vue'),
+        import('@/views/game/YuanShenView.vue'),
+        import('@/views/game/DivineBeastView.vue'),
+        import('@/views/game/CombatView.vue'),
+        import('@/views/game/ForgeView.vue'),
+        import('@/views/game/SectView.vue'),
+        import('@/views/game/LeaderboardView.vue'),
+        import('@/views/game/EventView.vue')
+      ])
+    }
+    const idle = (globalThis as any).requestIdleCallback as undefined | ((cb: () => void, opts?: { timeout?: number }) => number)
+    if (idle) idle(load, { timeout: 900 })
+    else globalThis.setTimeout(load, 120)
+  }
+
+  watch(() => props.open, (open) => {
+    navBusy.value = false
+    if (open) preloadCultivationPages()
+  })
 </script>
 
 <style scoped>
@@ -264,6 +302,8 @@
     border: 1px solid rgba(200, 164, 92, 0.2);
     border-radius: 2px;
     cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     transition:
       background-color 0.15s,
       border-color 0.15s,
@@ -284,6 +324,7 @@
   .daily-checkin-loc {
     color: var(--color-accent);
   }
+  .map-loc:disabled,
   .daily-checkin-loc:disabled {
     opacity: 0.55;
     cursor: not-allowed;
