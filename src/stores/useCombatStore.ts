@@ -176,7 +176,7 @@ export const useCombatStore = defineStore('combat', () => {
     const c = useCultivationStore()
     const p = usePlayerStore()
     const base = 12 + (c.realmIndex || 0) * 9 + Math.floor((c.cultivation || 0) / 45) + (c.rebirthCount || 0) * 18
-    const beastBonus = c.beast === 'crane' ? Math.floor(base * 0.2) : 0
+    const beastBonus = c.beast === 'crane' ? Math.floor(base * (0.12 + Math.min(0.18, (c.beastBond || 0) / 3000))) : 0
     const artifactBonus = (c.destinedArtifactLevel || 0) * 8
     return Math.floor((base + beastBonus + artifactBonus + p.attributeAttackBonus) * (1 + (c.sectCombatAttackBonusRate || 0)))
   })
@@ -184,7 +184,7 @@ export const useCombatStore = defineStore('combat', () => {
   const playerDef = computed(() => {
     const c = useCultivationStore()
     const p = usePlayerStore()
-    return Math.floor((6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus) * (1 + (c.sectCombatDefenseBonusRate || 0)))
+    return Math.floor((6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus + (c.beast === 'phoenix' ? Math.floor(4 + (c.beastBond || 0) / 80) : 0)) * (1 + (c.sectCombatDefenseBonusRate || 0)))
   })
 
   const playerMaxHp = computed(() => {
@@ -337,6 +337,30 @@ export const useCombatStore = defineStore('combat', () => {
     const aura = Math.floor(m.aura * rebirthBoost * fateBoost)
     c.cultivation = (c.cultivation || 0) + exp
     c.aura = (c.aura || 0) + aura
+    if (c.beast) {
+      const bond = c.beastBond || 0
+      const beastLv = Math.floor(bond / 100) + 1
+      const bondGain = zone?.kind === 'beast' || isTowerCombat.value ? 4 : 2
+      c.beastBond = bond + bondGain
+      if (c.beast === 'fox') {
+        const extraAura = Math.floor(aura * 0.12 + beastLv * 4)
+        c.aura = (c.aura || 0) + extraAura
+        addLog(`${c.beastEmoji}${c.beastName}嗅得灵脉余韵，协战羁绊+${bondGain}，灵气+${extraAura}。`)
+      } else if (c.beast === 'crane') {
+        const extraCultivation = Math.floor(exp * 0.1 + beastLv * 8)
+        c.cultivation = (c.cultivation || 0) + extraCultivation
+        addLog(`${c.beastEmoji}${c.beastName}引你调息回气，协战羁绊+${bondGain}，修为+${extraCultivation}。`)
+      } else if (c.beast === 'phoenix') {
+        const manaGain = Math.min(c.maxMana - (c.mana || 0), 6 + beastLv)
+        c.mana = Math.min(c.maxMana, (c.mana || 0) + manaGain)
+        if ((zone?.kind === 'beast' || isTowerCombat.value) && Math.random() < 0.12) {
+          useInventoryStore().addItem('thunder_essence', 1)
+          addLog(`${c.beastEmoji}${c.beastName}振羽引雷，协战羁绊+${bondGain}，灵力+${manaGain}，雷精×1。`)
+        } else {
+          addLog(`${c.beastEmoji}${c.beastName}以青焰护体，协战羁绊+${bondGain}，灵力+${manaGain}。`)
+        }
+      }
+    }
     useAchievementStore().recordMonsterKill()
     const p = usePlayerStore()
     const attributeUps = p.addAttributeExpBatch({

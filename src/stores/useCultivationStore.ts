@@ -323,6 +323,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   // V0.3 灵兽
   const beast = ref<BeastId | null>(null)
   const beastBond = ref(0)
+  const beastTrainingDailyKey = ref('')
   const herbGardenLevel = ref(0)
   const herbLastDaily = ref()
   const herbs = ref<Record<string, number>>({})
@@ -480,6 +481,20 @@ export const useCultivationStore = defineStore('cultivation', () => {
   }
 
   const beastLevel = computed(() => Math.floor(beastBond.value / 100) + 1)
+  const beastStage = computed(() => {
+    if (!beast.value) return '未结契'
+    if (beastBond.value >= 500) return '灵契'
+    if (beastBond.value >= 300) return '同心'
+    if (beastBond.value >= 100) return '亲近'
+    return '初识'
+  })
+  const beastAssistDesc = computed(() => {
+    if (beast.value === 'fox') return `协战：战斗胜利额外感应灵气，羁绊越高收益越多。`
+    if (beast.value === 'crane') return `协战：战斗胜利额外沉淀修为，并强化战斗攻击。`
+    if (beast.value === 'phoenix') return `协战：战斗胜利温养灵力，凶兽战有概率带回雷精。`
+    return '尚未结契灵兽。'
+  })
+  const beastDailyAvailable = computed(() => !!beast.value && beastTrainingDailyKey.value !== todayKey())
 
   const unlock = () => {
     if (unlocked.value) return false
@@ -1174,6 +1189,37 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
+  const trainBeastDaily = () => {
+    if (!beast.value) { showFloat('你还没有灵兽伙伴。', 'danger'); return false }
+    if (!beastDailyAvailable.value) { showFloat('今日已陪练过灵兽。', 'danger'); return false }
+    const player = usePlayerStore()
+    if (!player.consumeStamina(8)) { showFloat('体力不足，陪练需要8点体力。', 'danger'); return false }
+    if (mana.value < 12) { showFloat('灵力不足，陪练需要12点灵力。', 'danger'); return false }
+    mana.value -= 12
+    const level = beastLevel.value
+    const bondGain = 18 + Math.min(30, level * 2)
+    beastBond.value += bondGain
+    beastTrainingDailyKey.value = todayKey()
+    if (beast.value === 'fox') {
+      const gain = 45 + level * 6
+      aura.value += gain
+      addLog(`你陪${beastEmoji.value}${beastName.value}巡游灵田，羁绊+${bondGain}，灵气+${gain}。`)
+      showFloat(`羁绊+${bondGain} 灵气+${gain}`, 'success')
+    } else if (beast.value === 'crane') {
+      const gain = 90 + level * 10
+      cultivation.value = Math.min(maxCultivation.value, cultivation.value + gain)
+      addLog(`你随${beastEmoji.value}${beastName.value}演练身法，羁绊+${bondGain}，修为+${gain}。`)
+      showFloat(`羁绊+${bondGain} 修为+${gain}`, 'success')
+    } else {
+      const gain = 18 + level * 2
+      mana.value = Math.min(maxMana.value, mana.value + gain)
+      insight.value += 2
+      addLog(`你与${beastEmoji.value}${beastName.value}引火温神，羁绊+${bondGain}，灵力+${gain}，顿悟+2。`)
+      showFloat(`羁绊+${bondGain} 顿悟+2`, 'success')
+    }
+    return true
+  }
+
   const todayKey = () => new Date().toISOString().slice(0, 10)
   const parseDay = (key?: string) => {
     if (!key) return null
@@ -1364,7 +1410,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
-  const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, earthPulse: earthPulse.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, daoGear: daoGear.value, insight: insight.value, heartDemon: heartDemon.value, cultivationPath: cultivationPath.value, lessonDailyKey: lessonDailyKey.value, lessonDailyDone: lessonDailyDone.value, spiritMealLastDaily: spiritMealLastDaily.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, herbGardenLevel: herbGardenLevel.value, herbLastDaily: herbLastDaily.value, herbs: herbs.value, spiritArrayLevel: spiritArrayLevel.value, spiritArrayLastDaily: spiritArrayLastDaily.value, elements: elements.value, yuanShenLevel: yuanShenLevel.value, yuanShenExp: yuanShenExp.value, yuanShenInjury: yuanShenInjury.value, destinedArtifact: destinedArtifact.value, destinedArtifactLevel: destinedArtifactLevel.value, talismans: talismans.value, talismanCooldown: talismanCooldown.value, rebirthCount: rebirthCount.value, rebirthBonus: rebirthBonus.value, lingYun: lingYun.value, rebirthUnlocked: rebirthUnlocked.value, beast: beast.value, beastBond: beastBond.value, sect: sect.value, sectSkills: sectSkills.value, sectContribution: sectContribution.value, sectRank: sectRank.value, sectMerit: sectMerit.value, sectDailyKey: sectDailyKey.value, sectDailyDone: sectDailyDone.value, manuals: manuals.value })
+  const serialize = () => ({ unlocked: unlocked.value, realmIndex: realmIndex.value, cultivation: cultivation.value, aura: aura.value, mana: mana.value, spiritRoot: spiritRoot.value, fieldTier: fieldTier.value, earthPulse: earthPulse.value, totalAuraHarvested: totalAuraHarvested.value, alchemyUnlocked: alchemyUnlocked.value, daoGear: daoGear.value, insight: insight.value, heartDemon: heartDemon.value, cultivationPath: cultivationPath.value, lessonDailyKey: lessonDailyKey.value, lessonDailyDone: lessonDailyDone.value, spiritMealLastDaily: spiritMealLastDaily.value, artifacts: artifacts.value, foundationPillBlessing: foundationPillBlessing.value, caveTier: caveTier.value, caveSlots: caveSlots.value, herbGardenLevel: herbGardenLevel.value, herbLastDaily: herbLastDaily.value, herbs: herbs.value, spiritArrayLevel: spiritArrayLevel.value, spiritArrayLastDaily: spiritArrayLastDaily.value, elements: elements.value, yuanShenLevel: yuanShenLevel.value, yuanShenExp: yuanShenExp.value, yuanShenInjury: yuanShenInjury.value, destinedArtifact: destinedArtifact.value, destinedArtifactLevel: destinedArtifactLevel.value, talismans: talismans.value, talismanCooldown: talismanCooldown.value, rebirthCount: rebirthCount.value, rebirthBonus: rebirthBonus.value, lingYun: lingYun.value, rebirthUnlocked: rebirthUnlocked.value, beast: beast.value, beastBond: beastBond.value, beastTrainingDailyKey: beastTrainingDailyKey.value, sect: sect.value, sectSkills: sectSkills.value, sectContribution: sectContribution.value, sectRank: sectRank.value, sectMerit: sectMerit.value, sectDailyKey: sectDailyKey.value, sectDailyDone: sectDailyDone.value, manuals: manuals.value })
   const deserialize = (data?: Partial<ReturnType<typeof serialize>>) => {
     if (!data) return
     unlocked.value = data.unlocked ?? false
@@ -1413,6 +1459,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     rebirthUnlocked.value = (data as any).rebirthUnlocked ?? {}
     beast.value = (data as any).beast ?? null
     beastBond.value = (data as any).beastBond ?? 0
+    beastTrainingDailyKey.value = (data as any).beastTrainingDailyKey ?? ''
     sect.value = (data as any).sect ?? null
     sectSkills.value = (data as any).sectSkills ?? [0, 0, 0]
     sectContribution.value = (data as any).sectContribution ?? 0
@@ -1423,5 +1470,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     manuals.value = { wood: 0, thunder: 0, void: 0, ...((data as any).manuals ?? {}) }
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, daoGear, daoGearPower, daoGearTribulationBonus, daoGearLevel, canForgeDaoGear, forgeDaoGear, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, talismanPower, talismanTribulationBonus, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, useTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirthMaterials, hasRebirthMaterials, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, daoGear, daoGearPower, daoGearTribulationBonus, daoGearLevel, canForgeDaoGear, forgeDaoGear, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, talismanPower, talismanTribulationBonus, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, beastStage, beastAssistDesc, beastDailyAvailable, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, trainBeastDaily, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, useTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirthMaterials, hasRebirthMaterials, rebirth, serialize, deserialize }
 })

@@ -15,6 +15,7 @@
           </div>
           <p class="text-xs text-muted">{{ cultivation.beastData?.desc }}</p>
           <p class="text-xs text-success mt-0.5">{{ cultivation.beastData?.bonusDesc }}</p>
+          <p class="text-[10px] text-accent mt-0.5">阶段：{{ cultivation.beastStage }} · {{ cultivation.beastAssistDesc }}</p>
           <div class="mt-1 flex items-center space-x-2">
             <span class="text-[10px] text-muted shrink-0">羁绊</span>
             <div class="flex-1 h-1 bg-bg rounded-xs border border-accent/10">
@@ -24,10 +25,19 @@
           </div>
         </div>
       </div>
-      <Button class="w-full justify-between" :disabled="beastFeedCount < (cultivation.beastData?.feedQty ?? 99)" @click="cultivation.feedBeast">
-        <span>喂食{{ cultivation.beastName }}</span>
-        <span class="text-muted text-xs">{{ beastFeedItemName }} {{ beastFeedCount }}/{{ cultivation.beastData?.feedQty }}</span>
-      </Button>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <Button class="w-full justify-between" :disabled="beastFeedCount < (cultivation.beastData?.feedQty ?? 99)" @click="cultivation.feedBeast">
+          <span>喂食{{ cultivation.beastName }}</span>
+          <span class="text-muted text-xs">{{ beastFeedItemName }} {{ beastFeedCount }}/{{ cultivation.beastData?.feedQty }}</span>
+        </Button>
+        <Button class="w-full justify-between" :disabled="!cultivation.beastDailyAvailable" @click="cultivation.trainBeastDaily">
+          <span>每日陪练</span>
+          <span class="text-muted text-xs">体力8 / 灵力12</span>
+        </Button>
+      </div>
+      <div class="border border-accent/10 rounded-xs p-2 text-[10px] text-muted leading-relaxed">
+        羁绊阶段：初识 0 · 亲近 100 · 同心 300 · 灵契 500。战斗胜利会触发协战并小幅增加羁绊，凶兽与登仙塔收益更高。
+      </div>
     </div>
   </div>
 </template>
