@@ -766,6 +766,9 @@ export const handleEndDay = () => {
   }
 
   // 宠物每日更新
+  const dispatchResult = animalStore.dailyPetDispatchUpdate()
+  if (dispatchResult.message) addLog(dispatchResult.message)
+
   const petResult = animalStore.dailyPetUpdate()
   if (petResult.item) {
     const petName = animalStore.pet?.name ?? '宠物'

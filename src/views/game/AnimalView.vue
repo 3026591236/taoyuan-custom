@@ -46,6 +46,18 @@
           <span class="text-[10px] text-muted">{{ animalStore.pet.friendship }}/1000</span>
         </div>
         <p v-if="animalStore.pet.friendship >= 800" class="text-xs text-success mt-1">好感度很高，每天有机会叼回采集物！</p>
+        <div class="mt-2 border border-accent/10 rounded-xs p-2">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-accent">宠物派遣</span>
+            <span class="text-[10px] text-muted">{{ animalStore.pet.dispatch ? `外出中·${animalStore.pet.dispatch.daysLeft}天` : '空闲' }}</span>
+          </div>
+          <div class="grid grid-cols-3 gap-1">
+            <Button class="py-0 px-1 justify-center" :disabled="!!animalStore.pet.dispatch || animalStore.pet.friendship < 300" @click="handlePetDispatch('forage')">寻物</Button>
+            <Button class="py-0 px-1 justify-center" :disabled="!!animalStore.pet.dispatch || animalStore.pet.friendship < 300" @click="handlePetDispatch('guard')">护院</Button>
+            <Button class="py-0 px-1 justify-center" :disabled="!!animalStore.pet.dispatch || animalStore.pet.friendship < 300" @click="handlePetDispatch('treasure')">寻宝</Button>
+          </div>
+          <p class="text-[10px] text-muted mt-1">好感300解锁，派遣完成会带回采集物、铜钱或修仙材料。</p>
+        </div>
       </template>
       <div v-else class="flex flex-col items-center justify-center py-6 text-muted">
         <Home :size="32" class="mb-2" />
@@ -138,6 +150,8 @@
                 </template>
                 <template v-else>
                   <span class="text-xs text-accent">{{ animal.name }}</span>
+                  <span class="text-[10px] text-success">{{ animalStore.getBloodlineName(animal.bloodline) }}</span>
+                  <span class="text-[10px] text-muted">{{ animalStore.getTraitName(animal.trait) }}</span>
                   <button class="text-muted hover:text-accent" @click="startRename(animal.id, animal.name)">
                     <Pencil :size="10" />
                   </button>
@@ -149,6 +163,9 @@
                 </Button>
                 <Button class="py-0 px-1" :icon="Hand" :disabled="animal.wasPetted" @click="handlePetAnimal(animal.id)">
                   {{ animal.wasPetted ? '已摸' : '抚摸' }}
+                </Button>
+                <Button class="py-0 px-1" :disabled="animal.friendship < 500 || (animal.dispatchCooldown ?? 0) > 0" @click="handleAnimalDispatch(animal.id)">
+                  派遣
                 </Button>
                 <Button class="py-0 px-1" :icon="Coins" @click="sellTarget = { id: animal.id, name: animal.name, type: animal.type }">
                   出售
@@ -173,6 +190,7 @@
                 </div>
                 <span class="text-[10px] text-muted w-6">{{ getMoodText(animal.mood) }}</span>
               </div>
+              <p v-if="(animal.dispatchCooldown ?? 0) > 0" class="text-[10px] text-muted">派遣休整：{{ animal.dispatchCooldown }}天</p>
               <div v-if="animal.hunger > 0" class="flex items-center space-x-1">
                 <span class="text-[10px] text-muted w-6">饥饿</span>
                 <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
@@ -334,6 +352,18 @@
         </p>
         <p class="text-xs text-muted mt-1">拥有马匹可减少30%旅行时间。</p>
       </template>
+    </div>
+
+    <!-- 血脉概况 -->
+    <div class="mb-4 border border-accent/20 rounded-xs p-3">
+      <h3 class="text-accent text-sm mb-2">牧场血脉</h3>
+      <div class="grid grid-cols-4 gap-2 text-center">
+        <div class="border border-accent/10 rounded-xs p-2"><p class="text-[10px] text-muted">凡血</p><p class="text-xs">{{ animalStore.bloodlineSummary.normal }}</p></div>
+        <div class="border border-accent/10 rounded-xs p-2"><p class="text-[10px] text-muted">灵脉</p><p class="text-xs text-success">{{ animalStore.bloodlineSummary.spirit }}</p></div>
+        <div class="border border-accent/10 rounded-xs p-2"><p class="text-[10px] text-muted">异种</p><p class="text-xs text-accent">{{ animalStore.bloodlineSummary.rare }}</p></div>
+        <div class="border border-accent/10 rounded-xs p-2"><p class="text-[10px] text-muted">上古</p><p class="text-xs text-warning">{{ animalStore.bloodlineSummary.ancient }}</p></div>
+      </div>
+      <p class="text-[10px] text-muted mt-2 leading-relaxed">新购与孵化动物会获得血脉和天赋；高血脉提高额外产出概率，孵化会参考同类高好感动物遗传。好感500后可派遣带回灵石和铜钱。</p>
     </div>
 
     <!-- 饲养管理 -->
@@ -907,6 +937,21 @@
       if (tr.passedOut) handleEndDay()
     } else {
       addLog('今天已经抚摸过了。')
+    }
+  }
+
+  const handlePetDispatch = (type: 'forage' | 'guard' | 'treasure') => {
+    const result = animalStore.startPetDispatch(type)
+    addLog(result.message)
+  }
+
+  const handleAnimalDispatch = (animalId: string) => {
+    const result = animalStore.dispatchAnimal(animalId)
+    addLog(result.message)
+    if (result.success) {
+      const tr = gameStore.advanceTime(1)
+      if (tr.message) addLog(tr.message)
+      if (tr.passedOut) handleEndDay()
     }
   }
 

@@ -35,8 +35,16 @@
           <span class="text-muted text-xs">体力8 / 灵力12</span>
         </Button>
       </div>
-      <div class="border border-accent/10 rounded-xs p-2 text-[10px] text-muted leading-relaxed">
-        羁绊阶段：初识 0 · 亲近 100 · 同心 300 · 灵契 500。战斗胜利会触发协战并小幅增加羁绊，凶兽与登仙塔收益更高。
+      <div class="border border-accent/10 rounded-xs p-2 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-accent">灵兽任务：{{ cultivation.beastExpeditionName }}</span>
+          <span v-if="cultivation.beastExpedition" class="text-[10px] text-muted">剩余{{ cultivation.beastExpedition.daysLeft }}天</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <Button class="w-full justify-center" :disabled="cultivation.beastBond < 300 || !!cultivation.beastExpedition" @click="cultivation.startBeastExpedition('guard')">守卫洞府</Button>
+          <Button class="w-full justify-center" :disabled="cultivation.beastBond < 300 || !!cultivation.beastExpedition" @click="cultivation.startBeastExpedition('expedition')">灵兽远征</Button>
+        </div>
+        <p class="text-[10px] text-muted leading-relaxed">羁绊阶段：初识 0 · 亲近 100 · 同心 300 · 灵契 500。达到同心后可派遣守卫洞府或外出远征，带回灵气、灵石和修仙材料。</p>
       </div>
     </div>
   </div>

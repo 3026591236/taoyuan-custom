@@ -43,6 +43,9 @@ export interface AnimalDef {
   friendship: { min: number; max: number }
 }
 
+export type AnimalBloodline = 'normal' | 'spirit' | 'rare' | 'ancient'
+export type AnimalTrait = 'hardy' | 'fertile' | 'treasure' | 'guardian'
+
 export interface Animal {
   id: string
   type: AnimalType
@@ -61,6 +64,17 @@ export interface Animal {
   sick: boolean
   /** 连续生病天数，达到上限时死亡 */
   sickDays: number
+  /** 血脉品阶：V1.7.2 牧场血脉 */
+  bloodline?: AnimalBloodline
+  /** 先天天赋：V1.7.2 牧场血脉 */
+  trait?: AnimalTrait
+  /** 派遣冷却剩余天数 */
+  dispatchCooldown?: number
+}
+
+export interface PetDispatchState {
+  type: 'forage' | 'guard' | 'treasure'
+  daysLeft: number
 }
 
 export type FruitTreeType =
@@ -104,6 +118,8 @@ export interface PetState {
   name: string
   friendship: number
   wasPetted: boolean
+  /** 宠物派遣状态：V1.7.2 */
+  dispatch?: PetDispatchState | null
 }
 
 export interface IncubationState {

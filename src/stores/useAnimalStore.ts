@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { AnimalBuildingType, AnimalType, Animal, Quality, PetState, PetType, IncubationState } from '@/types'
+import type { AnimalBuildingType, AnimalType, Animal, Quality, PetState, PetType, IncubationState, AnimalBloodline, AnimalTrait } from '@/types'
 import {
   ANIMAL_BUILDINGS,
   ANIMAL_DEFS,
@@ -9,7 +9,8 @@ import {
   INCUBATION_MAP,
   PREMIUM_FEED_ID,
   NOURISHING_FEED_ID,
-  VITALITY_FEED_ID
+  VITALITY_FEED_ID,
+  getItemById
 } from '@/data'
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
@@ -40,6 +41,11 @@ export const useAnimalStore = defineStore('animal', () => {
 
   /** 已安装自动抚摸机的建筑类型 */
   const autoPetterBuildings = ref<AnimalBuildingType[]>([])
+  const BLOODLINE_NAMES: Record<AnimalBloodline, string> = { normal: '凡血', spirit: '灵脉', rare: '异种', ancient: '上古' }
+  const TRAIT_NAMES: Record<AnimalTrait, string> = { hardy: '健壮', fertile: '丰产', treasure: '寻宝', guardian: '护院' }
+  const BLOODLINE_PRODUCT_BONUS: Record<AnimalBloodline, number> = { normal: 0, spirit: 0.15, rare: 0.28, ancient: 0.45 }
+  const PET_DISPATCH_NAMES: Record<NonNullable<PetState['dispatch']>['type'], string> = { forage: '山林寻物', guard: '看家护院', treasure: '秘径寻宝' }
+
 
   const coopBuilt = computed(() => buildings.value.find(b => b.type === 'coop')?.built ?? false)
   const barnBuilt = computed(() => buildings.value.find(b => b.type === 'barn')?.built ?? false)
@@ -64,6 +70,40 @@ export const useAnimalStore = defineStore('animal', () => {
 
   /** 是否拥有马 */
   const hasHorse = computed(() => getHorse.value !== null)
+
+  const rollBloodline = (parent?: Animal): { bloodline: AnimalBloodline; trait: AnimalTrait } => {
+    const parentBloodline = parent?.bloodline ?? 'normal'
+    const r = Math.random()
+    let bloodline: AnimalBloodline = 'normal'
+    if (parentBloodline === 'ancient') bloodline = r < 0.55 ? 'ancient' : r < 0.85 ? 'rare' : 'spirit'
+    else if (parentBloodline === 'rare') bloodline = r < 0.22 ? 'ancient' : r < 0.62 ? 'rare' : r < 0.9 ? 'spirit' : 'normal'
+    else if (parentBloodline === 'spirit') bloodline = r < 0.08 ? 'ancient' : r < 0.28 ? 'rare' : r < 0.72 ? 'spirit' : 'normal'
+    else bloodline = r < 0.04 ? 'ancient' : r < 0.14 ? 'rare' : r < 0.38 ? 'spirit' : 'normal'
+    const traits: AnimalTrait[] = ['hardy', 'fertile', 'treasure', 'guardian']
+    const trait = parent?.trait && Math.random() < 0.35 ? parent.trait : traits[Math.floor(Math.random() * traits.length)]!
+    return { bloodline, trait }
+  }
+
+  const createAnimal = (animalType: AnimalType, name: string, mood = 128, parent?: Animal): Animal => {
+    const extra = rollBloodline(parent)
+    return {
+      id: `${animalType}_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      type: animalType,
+      name,
+      friendship: 0,
+      mood,
+      daysOwned: 0,
+      daysSinceProduct: 0,
+      wasFed: false,
+      fedWith: null,
+      wasPetted: false,
+      hunger: 0,
+      sick: false,
+      sickDays: 0,
+      dispatchCooldown: 0,
+      ...extra
+    }
+  }
 
   /** 建造畜舍 */
   const buildBuilding = (type: AnimalBuildingType): boolean => {
@@ -135,21 +175,7 @@ export const useAnimalStore = defineStore('animal', () => {
     // 检查铜钱
     if (!playerStore.spendMoney(def.cost)) return false
 
-    animals.value.push({
-      id: `${animalType}_${Date.now()}`,
-      type: animalType,
-      name: customName || def.name,
-      friendship: 0,
-      mood: 128,
-      daysOwned: 0,
-      daysSinceProduct: 0,
-      wasFed: false,
-      fedWith: null,
-      wasPetted: false,
-      hunger: 0,
-      sick: false,
-      sickDays: 0
-    })
+    animals.value.push(createAnimal(animalType, customName || def.name, 128))
     return true
   }
 
@@ -279,21 +305,8 @@ export const useAnimalStore = defineStore('animal', () => {
 
       const count = animals.value.filter(a => a.type === animalType).length
       const name = `${def?.name ?? '动物'}${count + 1}`
-      animals.value.push({
-        id: `${animalType}_${Date.now()}`,
-        type: animalType,
-        name,
-        friendship: 0,
-        mood: 200,
-        daysOwned: 0,
-        daysSinceProduct: 0,
-        wasFed: false,
-        fedWith: null,
-        wasPetted: false,
-        hunger: 0,
-        sick: false,
-        sickDays: 0
-      })
+      const parent = animals.value.filter(a => a.type === animalType).sort((a, b) => b.friendship - a.friendship)[0]
+      animals.value.push(createAnimal(animalType, name, 200, parent))
       incubating.value = null
       return { hatched: { type: animalType, name } }
     }
@@ -351,21 +364,8 @@ export const useAnimalStore = defineStore('animal', () => {
 
       const count = animals.value.filter(a => a.type === animalType).length
       const name = `${def?.name ?? '动物'}${count + 1}`
-      animals.value.push({
-        id: `${animalType}_${Date.now()}`,
-        type: animalType,
-        name,
-        friendship: 0,
-        mood: 200,
-        daysOwned: 0,
-        daysSinceProduct: 0,
-        wasFed: false,
-        fedWith: null,
-        wasPetted: false,
-        hunger: 0,
-        sick: false,
-        sickDays: 0
-      })
+      const parent = animals.value.filter(a => a.type === animalType).sort((a, b) => b.friendship - a.friendship)[0]
+      animals.value.push(createAnimal(animalType, name, 200, parent))
       barnIncubating.value = null
       return { hatched: { type: animalType, name } }
     }
@@ -609,6 +609,10 @@ export const useAnimalStore = defineStore('animal', () => {
             if (idx2 < qualityOrder2.length - 1) quality = qualityOrder2[idx2 + 1]!
           }
           products.push({ itemId: def.productId, quality })
+          const bloodline = animal.bloodline ?? 'normal'
+          if ((animal.trait === 'fertile' || Math.random() < BLOODLINE_PRODUCT_BONUS[bloodline]) && bloodline !== 'normal') {
+            products.push({ itemId: def.productId, quality })
+          }
           animal.daysSinceProduct = 0
 
           // 草甸田庄：40%概率额外产出1件
@@ -627,6 +631,7 @@ export const useAnimalStore = defineStore('animal', () => {
       animal.wasFed = false
       animal.fedWith = null
       animal.wasPetted = false
+      animal.dispatchCooldown = Math.max(0, (animal.dispatchCooldown ?? 0) - 1)
     }
 
     // 移除死亡的动物（饿死或病死）
@@ -690,6 +695,62 @@ export const useAnimalStore = defineStore('animal', () => {
       }
     }
     return { healedCount, noMedicineCount }
+  }
+
+  const getBloodlineName = (bloodline?: AnimalBloodline): string => BLOODLINE_NAMES[bloodline ?? 'normal']
+  const getTraitName = (trait?: AnimalTrait): string => trait ? TRAIT_NAMES[trait] : '未觉醒'
+  const bloodlineSummary = computed(() => {
+    const counts: Record<AnimalBloodline, number> = { normal: 0, spirit: 0, rare: 0, ancient: 0 }
+    for (const animal of animals.value) counts[animal.bloodline ?? 'normal']++
+    return counts
+  })
+
+  const startPetDispatch = (type: NonNullable<PetState['dispatch']>['type']): { success: boolean; message: string } => {
+    if (!pet.value) return { success: false, message: '还没有宠物。' }
+    if (pet.value.dispatch) return { success: false, message: '宠物正在外出派遣。' }
+    if (pet.value.friendship < 300) return { success: false, message: '宠物好感达到300后才能派遣。' }
+    pet.value.dispatch = { type, daysLeft: type === 'treasure' ? 2 : 1 }
+    return { success: true, message: `${pet.value.name}出发执行「${PET_DISPATCH_NAMES[type]}」了。` }
+  }
+
+  const dailyPetDispatchUpdate = (): { message?: string } => {
+    if (!pet.value?.dispatch) return {}
+    pet.value.dispatch.daysLeft--
+    if (pet.value.dispatch.daysLeft > 0) return {}
+    const mission = pet.value.dispatch.type
+    pet.value.dispatch = null
+    const inventoryStore = useInventoryStore()
+    const playerStore = usePlayerStore()
+    if (mission === 'forage') {
+      const item = Math.random() < 0.5 ? 'wild_berry' : Math.random() < 0.75 ? 'bamboo_shoot' : 'wild_mushroom'
+      const qty = pet.value.friendship >= 800 ? 3 : 2
+      inventoryStore.addItem(item, qty)
+      return { message: `${pet.value.name}从山林叼回了${getItemById(item)?.name ?? item}×${qty}。` }
+    }
+    if (mission === 'guard') {
+      playerStore.earnMoney(300 + Math.floor(pet.value.friendship / 5))
+      return { message: `${pet.value.name}看家护院，帮牧场减少损耗，获得一些报酬。` }
+    }
+    const reward = Math.random() < 0.45 ? 'spirit_stone' : Math.random() < 0.75 ? 'soul_crystal' : 'jade_slip'
+    const qty = reward === 'spirit_stone' ? 6 : 1
+    inventoryStore.addItem(reward, qty)
+    return { message: `${pet.value.name}循着秘径找到了${getItemById(reward)?.name ?? reward}×${qty}。` }
+  }
+
+  const dispatchAnimal = (animalId: string): { success: boolean; message: string } => {
+    const animal = animals.value.find(a => a.id === animalId)
+    if (!animal) return { success: false, message: '没有找到这只动物。' }
+    if ((animal.dispatchCooldown ?? 0) > 0) return { success: false, message: '这只动物刚完成派遣，还需要休整。' }
+    if (animal.friendship < 500) return { success: false, message: '动物好感达到500后才能参与牧场派遣。' }
+    animal.dispatchCooldown = animal.trait === 'hardy' ? 1 : 2
+    const inventoryStore = useInventoryStore()
+    const playerStore = usePlayerStore()
+    const bloodline = animal.bloodline ?? 'normal'
+    const stone = bloodline === 'ancient' ? 8 : bloodline === 'rare' ? 5 : bloodline === 'spirit' ? 3 : 1
+    if (animal.trait === 'treasure' || bloodline !== 'normal') inventoryStore.addItem('spirit_stone', stone)
+    playerStore.earnMoney(120 + animal.friendship / 4)
+    const extra = animal.trait === 'guardian' ? '，并提升了牧场护院声望' : ''
+    return { success: true, message: `${animal.name}完成一次牧场派遣，带回灵石×${stone}和一些铜钱${extra}。` }
   }
 
   /** 根据友好度决定产品品质 */
@@ -763,12 +824,15 @@ export const useAnimalStore = defineStore('animal', () => {
         hunger: a.hunger ?? 0,
         sick: a.sick ?? false,
         sickDays: a.sickDays ?? 0,
-        fedWith: a.fedWith ?? null
+        fedWith: a.fedWith ?? null,
+        bloodline: a.bloodline ?? 'normal',
+        trait: a.trait ?? undefined,
+        dispatchCooldown: a.dispatchCooldown ?? 0
       }))
     }
     incubating.value = data.incubating ?? null
     barnIncubating.value = data.barnIncubating ?? null
-    pet.value = data.pet ?? null
+    pet.value = data.pet ? { ...data.pet, dispatch: data.pet.dispatch ?? null } : null
     grazedToday.value = data.grazedToday ?? false
     autoPetterBuildings.value = data.autoPetterBuildings ?? []
   }
@@ -808,6 +872,12 @@ export const useAnimalStore = defineStore('animal', () => {
     grazeAnimals,
     dailyUpdate,
     getAnimalProductQuality,
+    getBloodlineName,
+    getTraitName,
+    bloodlineSummary,
+    startPetDispatch,
+    dailyPetDispatchUpdate,
+    dispatchAnimal,
     renameAnimal,
     autoPetterBuildings,
     hasAutoPetter,
