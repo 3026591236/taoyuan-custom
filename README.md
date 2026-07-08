@@ -1,200 +1,190 @@
-# 我从种田开始修仙
+# 我从种田开始修仙（桃源乡自主更新版）
 
-> 基于 [桃源乡](https://github.com/setube/taoyuan) 扩展的像素田园修仙游戏。当前版本把账号角色、数据库存档、种田到修仙的成长衔接、红尘历练和后台运营功能整合到同一套前后端部署中。
+一个以“种田经营 → 生活社交 → 修仙成长 → 长期留存”为核心循环的 Web 修仙经营游戏。当前仓库包含前端源码、后端 API、GitHub Pages/静态构建产物 `docs/`，可本地运行，也可部署到 Linux 服务器。
 
-## 在线地址
+- 线上示例：<https://taoyuan.9l1.cn/>
+- 后端默认端口：`3001`
+- 前端构建目录：`docs/`
+- 推荐部署目录：
+  - 源码：`/opt/taoyuan-src`
+  - 前端：`/opt/taoyuan-frontend`
+  - 后端：`/opt/taoyuan-backend`
 
-- 游戏入口：`http://129.204.252.190:8084/`
-- 前端通过 nginx 提供静态文件，`/api/` 反向代理到后端。
+## 功能概览
 
-## 当前定位
+- 种田、牧场、鱼塘、加工、烹饪、采矿、钓鱼、竹林采集
+- NPC、结婚、子女、家族传承、每日委托
+- 修行、灵田、洞府、炼丹、制符、法宝、元神、转生
+- 红尘历练、挑战凶兽、秘境探索、登仙塔赛季挑战
+- 宗门、公会、瀚海商路、拍卖/商圈、排行榜
+- 活动中心、周/月修行令、闭关归来、全服镇魔、博物馆名望
+- 后台管理：配置、公告、用户、邮件等
 
-《我从种田开始修仙》不是单纯把“农场”和“修仙”并排放在一起，而是强调：
+## 环境要求
 
-1. 先从翻土、播种、浇水、收获开始经营田庄。
-2. 作物收获逐步积累「地脉感应」。
-3. 地脉感应达到 100 后启蒙灵田。
-4. 普通作物开始转化少量灵气，灵植成为炼丹与突破材料。
-5. 继续进入炼丹、突破、洞府、法宝、元神、转生、红尘历练和挑战凶兽。
+推荐：
 
-## 主要功能
+- Ubuntu 22.04/24.04 或 Debian 12
+- Node.js 22+
+- npm 10+
+- MySQL 8 / MariaDB 10.6+
+- Nginx
+- PM2
+- 2GB+ 内存（构建时建议有 swap）
 
-### 账号与角色
+## 一键安装（推荐）
 
-- 注册/登录账号。
-- 数据库存储正式角色和进度。
-- 每个账号最多 3 个角色。
-- 角色名全服唯一。
-- 首页显示账号角色列表，每个角色可直接「继续游戏」。
-- 浏览器 localStorage 只作为运行缓存，不再作为玩家可见的正式存档概念。
+脚本位于：`scripts/install.sh`
 
-### 种田经营
-
-- 多季节作物、播种、浇水、收获、出货。
-- 普通作物、高阶作物、灵植、温室、育种、品质、巨型作物等系统。
-- 温室收获已接入修仙收益，能触发地脉感应或灵气获取。
-
-### 从种田开始修仙
-
-- 新增「地脉感应」过渡机制。
-- 未启蒙前，收获作物积累地脉感应。
-- 地脉感应满后，花费铜钱整理地脉并启蒙灵田。
-- 启蒙后，普通作物给少量灵气，灵植给更多灵气并作为炼丹材料。
-- 推荐路线：种田收获 -> 地脉感应 100 -> 启蒙灵田 -> 种灵植 -> 炼丹突破。
-
-### 修仙系统
-
-- 境界成长：凡人、炼气、筑基、金丹、元婴、化神、渡劫、大乘、真仙、玄仙等。
-- 灵田、灵气、灵力、修为、突破失败与保底。
-- 炼丹配方、药材、百草园、聚灵阵。
-- 洞府、灵兽、本命法宝、符箓、元神。
-- 农具法宝化：流光锄、引灵壶、灵雨诀。
-- 转生/轮回：转生后解锁更长线玩法和增益。
-
-### 战斗与中后期
-
-- 红尘历练。
-- 挑战凶兽。
-- 秘境探索。
-- 转生材料、凶兽材料、灵蕴、轮回丹等中后期资源闭环。
-- 排行榜和突破全服公告。
-
-### 运营后台
-
-- 管理员后台。
-- 配置公告和更新记录。
-- 玩家管理、封号/解封、重置密码。
-- GM 邮件和奖励领取。
-- 每日签到。
-
-## 架构
-
-前后端分离部署：
-
-- 前端：Vue 3 + Vite + Pinia，构建产物输出到 `docs/`。
-- 后端：Express 5 + MySQL。
-- 进程管理：pm2。
-- Web 服务：nginx，监听 8084。
-- API 代理：`/api/` -> `http://127.0.0.1:3001`。
-
-```text
-浏览器
-  -> nginx:8084
-      -> 静态文件：/opt/taoyuan-frontend
-      -> /api/* -> Express:3001 -> MySQL
-```
-
-## 项目结构
-
-```text
-├── src/                    # 前端 Vue 源码
-│   ├── views/              # 页面组件
-│   ├── views/game/         # 游戏内功能页
-│   ├── stores/             # Pinia 状态管理
-│   ├── composables/        # 组合式函数
-│   ├── components/         # 通用组件
-│   ├── data/               # 作物、物品、任务等数据配置
-│   └── assets/             # 前端资源，例如首页像素图
-├── backend/                # 后端 Express 源码
-│   ├── index.mjs           # 后端主文件和 API 路由
-│   ├── package.json        # 后端依赖
-│   └── schema.sql          # MySQL 建表语句
-├── docs/                   # Vite 构建产物，随源码一起提交
-├── install.sh              # 一键安装脚本
-├── package.json            # 前端依赖和构建脚本
-└── README.md
-```
-
-## 数据库
-
-核心表：
-
-| 表名 | 用途 |
-|------|------|
-| users | 用户账号 |
-| sessions | 登录会话 |
-| characters | 账号角色，角色名全服唯一 |
-| saves | 角色进度，包含加密 raw 和明文 data_json |
-| checkins | 签到记录 |
-| mails | 系统邮件 |
-| mail_claims | 邮件领取记录 |
-| config | 公告、更新记录等配置 |
-| leaderboard | 排行榜缓存/兼容表 |
-| world_announcements | 世界公告 |
-| breakthrough_log | 突破记录 |
-
-存档设计：
-
-- `saves.raw`：加密完整存档，用于继续游戏。
-- `saves.data_json`：后端可读结构化数据，用于排行榜和统计。
-- `saves.character_id`：绑定具体角色。
-- `characters.name`：全服唯一角色名。
-
-## 常用 API
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/auth/register` | 注册 |
-| POST | `/api/auth/login` | 登录 |
-| GET | `/api/me` | 当前用户信息 |
-| GET | `/api/characters` | 当前账号角色列表 |
-| POST | `/api/characters` | 创建角色 |
-| GET | `/api/check-char-name` | 检查角色名唯一性 |
-| GET/PUT | `/api/saves/:slot` | 读取/写入角色存档 |
-| GET | `/api/leaderboard` | 排行榜 |
-| GET | `/api/config` | 前台配置和更新记录 |
-| POST | `/api/breakthrough-announce` | 突破公告 |
-| GET | `/api/world-announcements` | 世界公告 |
-| GET/POST | `/api/checkin` | 签到 |
-| GET | `/api/mails` | 邮件列表 |
-| POST | `/api/mails/:id/claim` | 领取邮件 |
-| GET | `/api/admin/overview` | 后台总览 |
-| GET | `/api/admin/users` | 用户列表 |
-| POST | `/api/admin/mails` | 发送 GM 邮件 |
-| GET/POST | `/api/admin/config` | 后台配置 |
-
-## 手动部署
-
-### 1. 安装依赖
+### 默认安装
 
 ```bash
+git clone https://github.com/3026591236/taoyuan-custom.git /opt/taoyuan-src
 cd /opt/taoyuan-src
-npm install
-
-cd /opt/taoyuan-src/backend
-npm install
+sudo bash scripts/install.sh
 ```
 
-### 2. 构建前端
+默认会：
+
+- 安装系统依赖、Node.js、PM2、Nginx、MySQL
+- 安装前后端 npm 依赖
+- 创建数据库和数据库账号
+- 构建前端到 `docs/`
+- 同步前端到 `/opt/taoyuan-frontend`
+- 同步后端到 `/opt/taoyuan-backend`
+- 使用 PM2 启动 `taoyuan-api`
+
+如果没有传入 `DB_PASSWORD`，脚本会自动生成数据库密码，并只在安装时显示一次。
+
+### 指定域名、目录和数据库密码
+
+```bash
+DOMAIN=game.example.com \
+DB_PASSWORD='请换成强密码' \
+APP_DIR=/opt/taoyuan-src \
+WEB_DIR=/opt/taoyuan-frontend \
+API_DIR=/opt/taoyuan-backend \
+WRITE_NGINX=1 \
+sudo -E bash scripts/install.sh
+```
+
+常用环境变量：
+
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `APP_DIR` | `/opt/taoyuan-src` | 源码目录 |
+| `WEB_DIR` | `/opt/taoyuan-frontend` | 前端部署目录 |
+| `API_DIR` | `/opt/taoyuan-backend` | 后端部署目录 |
+| `DB_NAME` | `taoyuan` | 数据库名 |
+| `DB_USER` | `taoyuan` | 数据库用户 |
+| `DB_PASSWORD` | 自动生成 | 数据库密码 |
+| `API_PORT` | `3001` | 后端端口 |
+| `PM2_NAME` | `taoyuan-api` | PM2 进程名 |
+| `DOMAIN` | `_` | Nginx server_name |
+| `WRITE_NGINX` | `0` | 是否自动写入 Nginx 配置 |
+
+> 注意：脚本不会写死 GitHub Token，也不会保存任何私密凭据到仓库。
+
+## 手动安装
+
+### 1. 获取源码
+
+```bash
+git clone https://github.com/3026591236/taoyuan-custom.git /opt/taoyuan-src
+cd /opt/taoyuan-src
+```
+
+### 2. 安装依赖
+
+```bash
+npm install
+cd backend
+npm install
+cd ..
+```
+
+### 3. 初始化数据库
+
+```sql
+CREATE DATABASE IF NOT EXISTS taoyuan DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'taoyuan'@'localhost' IDENTIFIED BY '请换成强密码';
+GRANT ALL PRIVILEGES ON taoyuan.* TO 'taoyuan'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+后端启动时会自动创建/补齐所需表结构。核心表包括：
+
+- `users`
+- `characters`
+- `saves`
+- `config`
+- `world_announcements`
+- `mails`
+- `checkins`
+- `breakthrough_log`
+
+### 4. 构建前端
 
 ```bash
 cd /opt/taoyuan-src
 npm run build
 ```
 
-构建输出目录是 `docs/`。
+输出目录：`docs/`
 
-### 3. 部署前端
+### 5. 部署前端
 
 ```bash
-sudo rm -rf /opt/taoyuan-frontend/*
-sudo cp -a /opt/taoyuan-src/docs/. /opt/taoyuan-frontend/
-sudo chown -R www-data:www-data /opt/taoyuan-frontend
+sudo mkdir -p /opt/taoyuan-frontend/downloads
+sudo rsync -a --delete --exclude downloads /opt/taoyuan-src/docs/ /opt/taoyuan-frontend/
 ```
 
-### 4. 部署后端
+`downloads/` 通常存放客户端安装包，更新前端时建议保留。
+
+### 6. 部署后端
 
 ```bash
+sudo mkdir -p /opt/taoyuan-backend
 sudo cp /opt/taoyuan-src/backend/index.mjs /opt/taoyuan-backend/index.mjs
-pm2 restart taoyuan-api
+sudo cp /opt/taoyuan-src/backend/package.json /opt/taoyuan-backend/package.json
+cd /opt/taoyuan-backend
+npm install --omit=dev
 ```
 
-### 5. nginx 示例
+可选 `.env`：
+
+```bash
+cat > /opt/taoyuan-backend/.env <<'EOF'
+TAOYUAN_DB_HOST=localhost
+TAOYUAN_DB_NAME=taoyuan
+TAOYUAN_DB_USER=taoyuan
+TAOYUAN_DB_PASSWORD=请换成强密码
+PORT=3001
+EOF
+chmod 600 /opt/taoyuan-backend/.env
+```
+
+### 7. 使用 PM2 启动后端
+
+```bash
+cd /opt/taoyuan-backend
+pm2 start index.mjs --name taoyuan-api --update-env
+pm2 save
+pm2 status
+```
+
+检查：
+
+```bash
+curl http://127.0.0.1:3001/api/config
+```
+
+### 8. Nginx 配置示例
 
 ```nginx
 server {
-    listen 8084;
-    server_name _;
+    listen 80;
+    server_name game.example.com;
     root /opt/taoyuan-frontend;
     index index.html;
 
@@ -211,38 +201,145 @@ server {
         add_header Cache-Control no-cache;
     }
 
-    location ~* \.(js|css|png|jpg|jpeg|svg|woff2|ico)$ {
+    location ~* \.(js|css|png|jpg|jpeg|gif|svg|webp|woff2|ico)$ {
         expires 30d;
         add_header Cache-Control public;
     }
 }
 ```
 
-## 更新流程
+启用：
 
-每次更新必须执行完整流程：
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
-1. 修改前备份源码、部署目录和数据库。
-2. 修改源码。
-3. 更新新手教程/玩法说明。
-4. 写入游戏内「更新记录」。
-5. 执行 `npm run build`。
-6. 部署 `docs/` 到 `/opt/taoyuan-frontend`。
-7. 必要时同步并重启后端。
-8. 验证首页、关键 API、构建产物关键字。
-9. 提交并推送 GitHub。
+HTTPS 可使用 certbot：
 
-GitHub 推送要求：
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d game.example.com
+```
 
-- 源码必须提交。
-- `docs/` 构建产物必须提交。
-- README、后端、前端、构建产物保持一致。
-- 当前仓库：`https://github.com/3026591236/taoyuan-custom.git`
+## 本地开发
 
-## 开发注意
+前端开发：
 
-- 不要把浏览器 localStorage 当正式存档；正式数据以 MySQL 为准。
-- 继续游戏必须读取 `saves.raw`，排行榜和统计读取 `saves.data_json`。
-- 旧的 `src/**/*.js` 缓存文件可能干扰 Vite/TypeScript，当前已清理，源码以 `.ts/.vue` 为准。
-- 每次玩法更新都要同步新手教程和更新记录。
-- 构建时 `useGameStore` 仍有较大 chunk 警告，后续如果继续优化卡顿，可进一步拆分 store 或 manual chunks。
+```bash
+npm install
+npm run dev
+```
+
+后端开发：
+
+```bash
+cd backend
+npm install
+node index.mjs
+```
+
+生产构建：
+
+```bash
+npm run build
+```
+
+类型检查：
+
+```bash
+npx vue-tsc -b --noEmit
+node --check backend/index.mjs
+```
+
+## 更新已有服务器
+
+推荐流程：
+
+```bash
+cd /opt/taoyuan-src
+git pull --ff-only
+npm install
+npm run build
+rsync -a --delete --exclude downloads docs/ /opt/taoyuan-frontend/
+cp backend/index.mjs /opt/taoyuan-backend/index.mjs
+cd /opt/taoyuan-backend
+npm install --omit=dev
+pm2 restart taoyuan-api --update-env
+```
+
+验证：
+
+```bash
+curl -I https://你的域名/
+curl https://你的域名/api/config
+pm2 status
+```
+
+## 备份建议
+
+更新前建议备份：
+
+```bash
+TS=$(date +%Y%m%d-%H%M%S)
+B=/home/ubuntu/taoyuan-backups/before-$TS
+mkdir -p "$B"
+rsync -a /opt/taoyuan-src/ "$B/src/"
+rsync -a /opt/taoyuan-backend/ "$B/backend/"
+rsync -a /opt/taoyuan-frontend/ "$B/frontend/"
+mysqldump -u taoyuan -p --single-transaction --default-character-set=utf8mb4 taoyuan > "$B/taoyuan.sql"
+```
+
+## 常见问题
+
+### 1. `npm run build` 内存不够
+
+增加 swap 或换更高内存服务器。2GB 内存机器建议配置 swap。
+
+### 2. `/api/config` 访问失败
+
+检查：
+
+```bash
+pm2 logs taoyuan-api
+pm2 status
+curl http://127.0.0.1:3001/api/config
+```
+
+### 3. 前端刷新 404
+
+Nginx 需要：
+
+```nginx
+try_files $uri $uri/ /index.html;
+```
+
+### 4. 更新后下载包不见了
+
+部署前端时要保留 `downloads/`：
+
+```bash
+rsync -a --delete --exclude downloads docs/ /opt/taoyuan-frontend/
+```
+
+### 5. 数据库乱码
+
+数据库、表和连接都应使用 `utf8mb4`。更新 `config.updateLogs` 时建议用参数化 SQL，不要手拼 SQL 字符串。
+
+## 开发与提交约定
+
+- 源码和 `docs/` 构建产物都提交到 GitHub。
+- 每次版本更新必须写游戏内 `updateLogs`。
+- 后续版本默认不再强制补 `TutorialView.vue`，除非特别需要。
+- 不要提交数据库密码、GitHub Token、服务器密码等敏感信息。
+- 部署前先跑：
+
+```bash
+node --check backend/index.mjs
+npx vue-tsc -b --noEmit
+npm run build
+```
+
+## License
+
+本仓库为自用游戏项目，请按仓库实际授权和素材来源要求使用。
