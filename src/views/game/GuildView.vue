@@ -18,6 +18,7 @@
       <Button class="flex-1 justify-center" :class="{ '!bg-accent !text-bg': tab === 'goals' }" @click="tab = 'goals'">讨伐</Button>
       <Button class="flex-1 justify-center" :class="{ '!bg-accent !text-bg': tab === 'donate' }" @click="tab = 'donate'">捐献</Button>
       <Button class="flex-1 justify-center" :class="{ '!bg-accent !text-bg': tab === 'shop' }" @click="tab = 'shop'">商店</Button>
+      <Button class="flex-1 justify-center" :class="{ '!bg-accent !text-bg': tab === 'weekly' }" @click="tab = 'weekly'">周常</Button>
       <Button class="flex-1 justify-center" :class="{ '!bg-accent !text-bg': tab === 'bestiary' }" @click="tab = 'bestiary'">图鉴</Button>
     </div>
 
@@ -420,6 +421,22 @@
       </div>
     </Transition>
 
+
+    <!-- 公会周常远征 -->
+    <div v-if="tab === 'weekly'" class="flex flex-col space-y-2">
+      <div v-for="task in guildStore.weeklyExpeditions" :key="task.id" class="border border-accent/20 rounded-xs px-3 py-2">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-accent">{{ task.name }}</span>
+          <span class="text-[10px] text-muted">{{ task.progress }}/{{ task.target }}</span>
+        </div>
+        <p class="text-[10px] text-muted mb-2">{{ task.desc }}</p>
+        <Button class="w-full justify-center" :disabled="!task.done || task.claimed" @click="handleClaimWeekly(task.id)">
+          {{ task.claimed ? '已领取' : '领取奖励' }}
+        </Button>
+      </div>
+      <p class="text-[10px] text-muted">每7个游戏日重置，奖励贡献点、公会经验和灵石。</p>
+    </div>
+
     <!-- 怪物图鉴 -->
     <div v-if="tab === 'bestiary'">
       <div v-if="guildStore.encounteredMonsters.length === 0" class="flex flex-col items-center justify-center py-8 space-y-3">
@@ -558,9 +575,9 @@
   import { MONSTER_DROP_SHOES, BOSS_DROP_SHOES, getShoeById } from '@/data/shoes'
   import type { MonsterDef, GuildShopItemDef, MonsterGoalDef } from '@/types'
   import { getItemById } from '@/data/items'
-  import { addLog } from '@/composables/useGameLog'
+  import { addLog, showFloat } from '@/composables/useGameLog'
 
-  type Tab = 'goals' | 'shop' | 'bestiary' | 'donate'
+  type Tab = 'goals' | 'shop' | 'weekly' | 'bestiary' | 'donate'
 
   const guildStore = useGuildStore()
   const playerStore = usePlayerStore()
@@ -657,7 +674,9 @@
     donateQuantity.value = Math.max(1, Math.min(donateModalItem.value.count, val))
   }
 
-  const executeDonate = () => {
+  const handleClaimWeekly = (id: string) => { const r = guildStore.claimWeeklyExpedition(id); addLog(r.message); showFloat(r.message, r.success ? 'success' : 'danger') }
+
+const executeDonate = () => {
     if (!donateModalItem.value) return
     const result = guildStore.donateItem(donateModalItem.value.itemId, donateQuantity.value)
     if (result.success) {

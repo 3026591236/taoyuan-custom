@@ -39,6 +39,12 @@ export const useGuildStore = defineStore('guild', () => {
 
   /** 永久总购买数追踪：{ itemId: 累计已购次数 } */
   const totalPurchases = ref<Record<string, number>>({})
+  const weeklyExpeditionClaimed = ref<string[]>([])
+  const WEEKLY_EXPEDITIONS = [
+    { id: 'raid', name: '公会周常·秘境讨伐', desc: '本周累计击杀20只怪物。', target: 20, rewardPoints: 90 },
+    { id: 'donate', name: '公会周常·物资筹备', desc: '公会等级达到2或贡献点达到300。', target: 1, rewardPoints: 70 },
+    { id: 'escort', name: '公会周常·护送协作', desc: '贡献点达到500后领取护送协作奖励。', target: 1, rewardPoints: 120 }
+  ]
 
   /** 记录击杀 */
   const recordKill = (monsterId: string) => {
@@ -129,6 +135,7 @@ export const useGuildStore = defineStore('guild', () => {
     const week = getCurrentWeek()
     if (week !== lastResetWeek.value) {
       weeklyPurchases.value = {}
+      weeklyExpeditionClaimed.value = []
       lastResetWeek.value = week
     }
   }
@@ -184,6 +191,31 @@ export const useGuildStore = defineStore('guild', () => {
   /** 获取公会等级被动HP加成 */
   const getGuildHpBonus = (): number => {
     return guildLevel.value * GUILD_BONUS_PER_LEVEL.maxHp
+  }
+
+  const weeklyExpeditions = computed(() => {
+    ensureWeeklyReset()
+    const totalKills = Object.values(monsterKills.value).reduce((s, n) => s + (Number(n) || 0), 0)
+    return WEEKLY_EXPEDITIONS.map(e => {
+      const progress = e.id === 'raid' ? totalKills : e.id === 'donate' ? (guildLevel.value >= 2 || contributionPoints.value >= 300 ? 1 : 0) : (contributionPoints.value >= 500 ? 1 : 0)
+      return { ...e, progress, done: progress >= e.target, claimed: weeklyExpeditionClaimed.value.includes(e.id) }
+    })
+  })
+
+  const claimWeeklyExpedition = (id: string): { success: boolean; message: string } => {
+    ensureWeeklyReset()
+    const task = weeklyExpeditions.value.find(t => t.id === id)
+    if (!task) return { success: false, message: '周常不存在。' }
+    if (!task.done) return { success: false, message: '周常目标尚未完成。' }
+    if (task.claimed) return { success: false, message: '本周已领取。' }
+    const inventory = useInventoryStore()
+    contributionPoints.value += task.rewardPoints
+    guildExp.value += Math.floor(task.rewardPoints * 0.8)
+    inventory.addItem('spirit_stone', Math.max(3, Math.floor(task.rewardPoints / 20)))
+    weeklyExpeditionClaimed.value.push(id)
+    checkLevelUp()
+    addLog(`完成${task.name}，贡献点+${task.rewardPoints}。`)
+    return { success: true, message: `${task.name}奖励已领取。` }
   }
 
   // ==================== 商店 ====================
@@ -298,7 +330,8 @@ export const useGuildStore = defineStore('guild', () => {
     lastResetDay: lastResetDay.value,
     weeklyPurchases: { ...weeklyPurchases.value },
     lastResetWeek: lastResetWeek.value,
-    totalPurchases: { ...totalPurchases.value }
+    totalPurchases: { ...totalPurchases.value },
+    weeklyExpeditionClaimed: [...weeklyExpeditionClaimed.value]
   })
 
   /** 反序列化 */
@@ -311,6 +344,7 @@ export const useGuildStore = defineStore('guild', () => {
     weeklyPurchases.value = ((data as Record<string, unknown>).weeklyPurchases as Record<string, number>) ?? {}
     lastResetWeek.value = ((data as Record<string, unknown>).lastResetWeek as number) ?? -1
     totalPurchases.value = ((data as Record<string, unknown>).totalPurchases as Record<string, number>) ?? {}
+    weeklyExpeditionClaimed.value = ((data as Record<string, unknown>).weeklyExpeditionClaimed as string[]) ?? []
 
     // 旧存档迁移：如果没有贡献点字段但有已领取的讨伐目标，补发贡献点（不补经验，经验只来自捐献）
     const isOldSave = !('contributionPoints' in data)
@@ -354,6 +388,8 @@ export const useGuildStore = defineStore('guild', () => {
     getGuildHpBonus,
     isShopItemUnlocked,
     buyShopItem,
+    weeklyExpeditions,
+    claimWeeklyExpedition,
     serialize,
     deserialize
   }

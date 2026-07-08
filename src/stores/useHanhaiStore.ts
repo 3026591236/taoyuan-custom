@@ -38,6 +38,11 @@ import { getCombinedItemCount, removeCombinedItem } from '@/composables/useCombi
 import { addLog } from '@/composables/useGameLog'
 import type { TexasSetup, TexasTierId, BuckshotSetup, HanhaiShopItemDef, TradeSlot, Quality } from '@/types'
 
+type CaravanRouteId = 'short' | 'long' | 'forbidden'
+type CaravanRisk = '风暴' | '劫修' | '灵兽袭击' | '价格暴涨'
+interface CaravanRoute { id: CaravanRouteId; name: string; desc: string; days: number; cost: number; risk: number; rewardPoints: number; rewardMoney: number; rare?: string }
+interface CaravanRun { routeId: CaravanRouteId; daysLeft: number; protected: boolean; risk: CaravanRisk; rewardPoints: number; rewardMoney: number; rare?: string }
+
 export const useHanhaiStore = defineStore('hanhai', () => {
   /** 是否已解锁瀚海 */
   const unlocked = ref(false)
@@ -60,10 +65,26 @@ export const useHanhaiStore = defineStore('hanhai', () => {
   /** 积分兑换购买记录 { itemId: count }（总限购） */
   const totalExchangePurchases = ref<Record<string, number>>({})
 
+  // === V1.7.3 商队路线/护送契约 ===
+  const caravanRuns = ref<CaravanRun[]>([])
+  const escortContractsDoneKey = ref('')
+  const escortContractsDone = ref<string[]>([])
+  const CARAVAN_ROUTES: CaravanRoute[] = [
+    { id: 'short', name: '绿洲短商路', desc: '低风险短途路线，适合稳定积累商誉。', days: 1, cost: 1200, risk: 0.18, rewardPoints: 40, rewardMoney: 1600, rare: 'hanhai_spice' },
+    { id: 'long', name: '沙海远商路', desc: '穿越沙海的远途路线，收益更高但可能遭遇风暴与劫修。', days: 2, cost: 3200, risk: 0.32, rewardPoints: 110, rewardMoney: 4200, rare: 'hanhai_turquoise' },
+    { id: 'forbidden', name: '禁地秘商路', desc: '传闻通往古遗迹的高危路线，可能带回修仙材料。', days: 3, cost: 6200, risk: 0.48, rewardPoints: 220, rewardMoney: 7600, rare: 'soul_crystal' }
+  ]
+  const RISK_POOL: CaravanRisk[] = ['风暴', '劫修', '灵兽袭击', '价格暴涨']
+
   /** 当前店铺升级配置 */
   const tradeShopConfig = computed(() => TRADE_SHOP_UPGRADES.find(u => u.level === tradeShopLevel.value) ?? TRADE_SHOP_UPGRADES[0]!)
   /** 下一级店铺升级配置 */
   const nextTradeShopUpgrade = computed(() => TRADE_SHOP_UPGRADES.find(u => u.level === tradeShopLevel.value + 1))
+  const activeCaravanCount = computed(() => caravanRuns.value.length)
+  const maxCaravanRuns = computed(() => 1 + Math.floor((tradeShopLevel.value - 1) / 2))
+  const escortKey = () => { const g = useGameStore(); return `${g.year}-${g.season}-${g.day}` }
+  const resetEscortIfNeeded = () => { const k = escortKey(); if (escortContractsDoneKey.value !== k) { escortContractsDoneKey.value = k; escortContractsDone.value = [] } }
+  const caravanRoutes = computed(() => CARAVAN_ROUTES)
 
   const canBet = computed(() => casinoBetsToday.value < MAX_DAILY_BETS)
   const betsRemaining = computed(() => MAX_DAILY_BETS - casinoBetsToday.value)
@@ -396,6 +417,70 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     return { completed }
   }
 
+  const startCaravanRoute = (routeId: CaravanRouteId, protect = false): { success: boolean; message: string } => {
+    if (!unlocked.value) return { success: false, message: '需要先开通瀚海商路。' }
+    const route = CARAVAN_ROUTES.find(r => r.id === routeId)
+    if (!route) return { success: false, message: '商队路线不存在。' }
+    if (caravanRuns.value.length >= maxCaravanRuns.value) return { success: false, message: '当前商队队列已满。' }
+    const player = usePlayerStore()
+    const inventory = useInventoryStore()
+    let cost = route.cost
+    if (protect) {
+      if (inventory.getItemCount('spirit_stone') < 5) return { success: false, message: '护送契约需要灵石×5。' }
+      cost += 600
+    }
+    if (!player.spendMoney(cost)) return { success: false, message: `铜钱不足，需要${cost}文。` }
+    if (protect) inventory.removeItem('spirit_stone', 5)
+    const risk = RISK_POOL[Math.floor(Math.random() * RISK_POOL.length)]!
+    caravanRuns.value.push({ routeId, daysLeft: route.days, protected: protect, risk, rewardPoints: route.rewardPoints, rewardMoney: route.rewardMoney, rare: route.rare })
+    addLog(`瀚海商队启程：${route.name}${protect ? '，已签护送契约' : ''}。`)
+    return { success: true, message: `${route.name}已启程，${route.days}天后归来。` }
+  }
+
+  const finishEscortContract = (id: 'escort' | 'scout' | 'guard'): { success: boolean; message: string } => {
+    resetEscortIfNeeded()
+    if (escortContractsDone.value.includes(id)) return { success: false, message: '今天已完成该护送契约。' }
+    const player = usePlayerStore()
+    const inventory = useInventoryStore()
+    const costs = { escort: 8, scout: 6, guard: 10 } as const
+    if (!player.consumeStamina(costs[id])) return { success: false, message: `体力不足，需要${costs[id]}点。` }
+    let points = id === 'escort' ? 55 : id === 'scout' ? 35 : 75
+    let money = id === 'escort' ? 900 : id === 'scout' ? 500 : 1200
+    if (id === 'guard') inventory.addItem('spirit_stone', 3)
+    if (id === 'scout' && Math.random() < 0.35) inventory.addItem('hanhai_map', 1)
+    tradePoints.value += points
+    player.earnMoney(money)
+    escortContractsDone.value.push(id)
+    addLog(`完成瀚海护送契约，商誉+${points}，铜钱+${money}。`)
+    return { success: true, message: `契约完成：商誉+${points}，铜钱+${money}。` }
+  }
+
+  const dailyCaravanUpdate = (): string[] => {
+    const messages: string[] = []
+    const inventory = useInventoryStore()
+    const player = usePlayerStore()
+    const remaining: CaravanRun[] = []
+    for (const run of caravanRuns.value) {
+      run.daysLeft--
+      if (run.daysLeft > 0) { remaining.push(run); continue }
+      const route = CARAVAN_ROUTES.find(r => r.id === run.routeId)
+      const failChance = Math.max(0.05, (route?.risk ?? 0.2) - (run.protected ? 0.22 : 0))
+      if (Math.random() < failChance) {
+        const points = Math.floor(run.rewardPoints * 0.35)
+        tradePoints.value += points
+        messages.push(`${route?.name ?? '商队'}遭遇${run.risk}，只保住部分货物，商誉+${points}。`)
+      } else {
+        tradePoints.value += run.rewardPoints
+        player.earnMoney(run.rewardMoney)
+        if (run.rare) inventory.addItem(run.rare, run.rare === 'spirit_stone' ? 5 : 1)
+        messages.push(`${route?.name ?? '商队'}顺利归来，商誉+${run.rewardPoints}，铜钱+${run.rewardMoney}${run.rare ? `，带回${getItemById(run.rare)?.name ?? run.rare}` : ''}。`)
+      }
+    }
+    caravanRuns.value = remaining
+    for (const m of messages) addLog(m)
+    return messages
+  }
+
   /** 升级通商店铺 */
   const upgradeTradeShop = (): { success: boolean; message: string } => {
     const next = nextTradeShopUpgrade.value
@@ -509,7 +594,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     tradeShopLevel: tradeShopLevel.value,
     tradeSlots: tradeSlots.value,
     weeklyExchangePurchases: weeklyExchangePurchases.value,
-    totalExchangePurchases: totalExchangePurchases.value
+    totalExchangePurchases: totalExchangePurchases.value,
+    caravanRuns: caravanRuns.value,
+    escortContractsDoneKey: escortContractsDoneKey.value,
+    escortContractsDone: escortContractsDone.value
   })
 
   const deserialize = (data: any) => {
@@ -521,6 +609,9 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     tradeSlots.value = data.tradeSlots ?? []
     weeklyExchangePurchases.value = data.weeklyExchangePurchases ?? {}
     totalExchangePurchases.value = data.totalExchangePurchases ?? {}
+    caravanRuns.value = data.caravanRuns ?? []
+    escortContractsDoneKey.value = data.escortContractsDoneKey ?? ''
+    escortContractsDone.value = data.escortContractsDone ?? []
     // 反序列化后刷新轮换商品
     if (unlocked.value) {
       refreshRotatingStock()
@@ -542,6 +633,10 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     totalExchangePurchases,
     tradeShopConfig,
     nextTradeShopUpgrade,
+    caravanRoutes,
+    caravanRuns,
+    activeCaravanCount,
+    maxCaravanRuns,
     // 方法
     unlockHanhai,
     getWeeklyRemaining,
@@ -559,6 +654,9 @@ export const useHanhaiStore = defineStore('hanhai', () => {
     refreshRotatingStock,
     addTradeSlot,
     dailyTradeUpdate,
+    startCaravanRoute,
+    finishEscortContract,
+    dailyCaravanUpdate,
     upgradeTradeShop,
     exchangeItem,
     resetDailyBets,

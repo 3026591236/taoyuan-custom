@@ -31,6 +31,9 @@
         <Button class="flex-1 justify-center" :class="{ '!bg-accent !text-bg': activeTab === 'trade' }" @click="activeTab = 'trade'">
           通商
         </Button>
+        <Button class="flex-1 justify-center" :class="{ '!bg-accent !text-bg': activeTab === 'caravan' }" @click="activeTab = 'caravan'">
+          商路
+        </Button>
         <Button class="flex-1 justify-center" :class="{ '!bg-accent !text-bg': activeTab === 'casino' }" @click="activeTab = 'casino'">
           瀚海赌坊
         </Button>
@@ -184,6 +187,43 @@
               </div>
             </div>
           </div>
+        </div>
+      </template>
+
+
+      <!-- 商路 -->
+      <template v-if="activeTab === 'caravan'">
+        <div class="border border-accent/20 rounded-xs p-2 mb-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted">商队队列</span>
+            <span class="text-xs text-accent">{{ hanhaiStore.activeCaravanCount }}/{{ hanhaiStore.maxCaravanRuns }}</span>
+          </div>
+          <div v-if="hanhaiStore.caravanRuns.length" class="mt-2 space-y-1">
+            <div v-for="run in hanhaiStore.caravanRuns" :key="run.routeId + run.daysLeft" class="border border-accent/10 rounded-xs px-2 py-1">
+              <div class="flex items-center justify-between"><span class="text-xs">{{ getRouteName(run.routeId) }}</span><span class="text-[10px] text-muted">剩余{{ run.daysLeft }}天</span></div>
+              <p class="text-[10px] text-muted">风险：{{ run.risk }} · {{ run.protected ? '护送中' : '未护送' }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-2 mb-3">
+          <div v-for="route in hanhaiStore.caravanRoutes" :key="route.id" class="border border-accent/20 rounded-xs p-2">
+            <div class="flex items-center justify-between mb-1"><span class="text-xs text-accent">{{ route.name }}</span><span class="text-[10px] text-muted">{{ route.days }}天 · 风险{{ Math.round(route.risk * 100) }}%</span></div>
+            <p class="text-[10px] text-muted mb-1">{{ route.desc }}</p>
+            <p class="text-[10px] text-muted mb-2">费用{{ route.cost }}文 · 预计商誉+{{ route.rewardPoints }} · 铜钱+{{ route.rewardMoney }}</p>
+            <div class="grid grid-cols-2 gap-1">
+              <Button class="justify-center" :disabled="hanhaiStore.activeCaravanCount >= hanhaiStore.maxCaravanRuns || playerStore.money < route.cost" @click="handleStartCaravan(route.id, false)">启程</Button>
+              <Button class="justify-center" :disabled="hanhaiStore.activeCaravanCount >= hanhaiStore.maxCaravanRuns || playerStore.money < route.cost + 600 || spiritStoneCount < 5" @click="handleStartCaravan(route.id, true)">护送启程</Button>
+            </div>
+          </div>
+        </div>
+        <div class="border border-accent/20 rounded-xs p-2">
+          <p class="text-xs text-accent mb-2">护送契约</p>
+          <div class="grid grid-cols-3 gap-1">
+            <Button class="justify-center" @click="handleEscort('scout')">探路</Button>
+            <Button class="justify-center" @click="handleEscort('escort')">护送</Button>
+            <Button class="justify-center" @click="handleEscort('guard')">镇守</Button>
+          </div>
+          <p class="text-[10px] text-muted mt-1">每日各一次，消耗体力换商誉、铜钱和少量材料。</p>
         </div>
       </template>
 
@@ -904,7 +944,7 @@
   } from '@/data/hanhai'
   import { getItemById } from '@/data/items'
   import type { HanhaiShopItemDef, CricketDef, TexasSetup, TexasTierId, BuckshotSetup, TradeExchangeItemDef } from '@/types'
-  import { addLog } from '@/composables/useGameLog'
+  import { addLog, showFloat } from '@/composables/useGameLog'
   import { useAudio } from '@/composables/useAudio'
   import {
     sfxRouletteSpin,
@@ -937,7 +977,7 @@
   const playerStore = usePlayerStore()
   const walletStore = useWalletStore()
   const { startHanhaiBgm, endHanhaiBgm } = useAudio()
-  const activeTab = ref<'shop' | 'casino' | 'trade'>('shop')
+  const activeTab = ref<'shop' | 'casino' | 'trade' | 'caravan'>('shop')
   const shopModalItem = ref<HanhaiShopItemDef | null>(null)
 
   onMounted(() => {
@@ -1016,7 +1056,12 @@
   // === 藏宝图 ===
   const inventoryStore = useInventoryStore()
   const treasureMapCount = computed(() => inventoryStore.getItemCount('hanhai_map'))
-  const handleUseTreasureMap = () => {
+const spiritStoneCount = computed(() => inventoryStore.getItemCount('spirit_stone'))
+  const getRouteName = (id: string) => hanhaiStore.caravanRoutes.find(r => r.id === id)?.name ?? id
+const handleStartCaravan = (id: 'short' | 'long' | 'forbidden', protect: boolean) => { const r = hanhaiStore.startCaravanRoute(id, protect); addLog(r.message); if (r.success) showFloat('商队启程', 'success') }
+const handleEscort = (id: 'escort' | 'scout' | 'guard') => { const r = hanhaiStore.finishEscortContract(id); addLog(r.message); showFloat(r.message, r.success ? 'success' : 'danger') }
+
+const handleUseTreasureMap = () => {
     const result = hanhaiStore.useTreasureMap()
     if (result.success) {
       sfxCasinoWin()

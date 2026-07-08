@@ -74,6 +74,20 @@
         </div>
       </div>
 
+
+      <div class="border border-accent/20 rounded-xs p-3 sect-card">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs text-accent">宗门远征队</span>
+          <span class="text-[10px] text-muted">每日一次 · {{ isDailyDone('sect_expedition') ? '今日已派遣' : '今日可派遣' }}</span>
+        </div>
+        <p class="text-[10px] text-muted mb-2">派遣宗门弟子探索秘境、护送商路或搜集灵材，消耗贡献换取功勋和材料。</p>
+        <div class="grid grid-cols-3 gap-1">
+          <button class="btn justify-center text-xs" :disabled="isDailyDone('sect_expedition') || (cultivationStore.sectContribution || 0) < 80" @click="startSectExpedition('relic')">遗府</button>
+          <button class="btn justify-center text-xs" :disabled="isDailyDone('sect_expedition') || (cultivationStore.sectContribution || 0) < 80" @click="startSectExpedition('escort')">护商</button>
+          <button class="btn justify-center text-xs" :disabled="isDailyDone('sect_expedition') || (cultivationStore.sectContribution || 0) < 80" @click="startSectExpedition('material')">采材</button>
+        </div>
+      </div>
+
       <div class="border border-accent/20 rounded-xs p-3 space-y-2">
         <div class="flex items-center justify-between">
           <p class="text-xs text-accent">宗门专属委派</p>
@@ -318,6 +332,21 @@
     cultivationStore.sectRank += 1
     addLog(`宗门职位晋升为「${next.name}」！`)
     showFloat(`晋升${next.name}`, 'success')
+  }
+
+  const startSectExpedition = (kind: 'relic' | 'escort' | 'material') => {
+    resetDailyIfNeeded()
+    if (isDailyDone('sect_expedition') || (cultivationStore.sectContribution || 0) < 80) return
+    cultivationStore.sectContribution -= 80
+    const rankBonus = 1 + (cultivationStore.sectRank || 0) * 0.15
+    const merit = Math.floor((kind === 'relic' ? 36 : kind === 'escort' ? 28 : 24) * rankBonus)
+    cultivationStore.sectMerit = (cultivationStore.sectMerit || 0) + merit
+    if (kind === 'relic') { inventoryStore.addItem('soul_crystal', 1); inventoryStore.addItem('jade_slip', 1) }
+    if (kind === 'escort') { inventoryStore.addItem('spirit_stone', 8) }
+    if (kind === 'material') { inventoryStore.addItem('wood_spirit', 1); inventoryStore.addItem('thunder_essence', 1) }
+    cultivationStore.sectDailyDone.push('sect_expedition')
+    addLog(`宗门远征队归来，功勋+${merit}。`)
+    showFloat('宗门远征完成', 'success')
   }
 
   const finishCommission = () => {
