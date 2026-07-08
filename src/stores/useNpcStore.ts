@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type {
   NpcState,
@@ -30,6 +30,18 @@ const FRIENDSHIP_THRESHOLDS: { level: FriendshipLevel; min: number }[] = [
   { level: 'friendly', min: 1000 },
   { level: 'acquaintance', min: 500 },
   { level: 'stranger', min: 0 }
+]
+
+type FamilySpecialty = 'farming' | 'ranching' | 'foraging' | 'cultivation'
+type ChildAptitude = 'farm' | 'animal' | 'study' | 'combat'
+type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project'
+
+const FAMILY_SPECIALTY_NAMES: Record<FamilySpecialty, string> = { farming: '农务助手', ranching: '牧场管家', foraging: '采集搭档', cultivation: '修行伴侣' }
+const CHILD_APTITUDE_NAMES: Record<ChildAptitude, string> = { farm: '灵田', animal: '牧养', study: '读书', combat: '护院' }
+const FAMILY_COMMISSIONS = [
+  { id: 'family_meal' as FamilyCommissionId, title: '家宴备料', desc: '准备一桌家宴，凝聚家人心气。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 3, rewardMoney: 1800, legacyExp: 25 },
+  { id: 'child_study' as FamilyCommissionId, title: '启蒙读书', desc: '为孩子准备启蒙材料，提升成长资质。', itemId: 'spirit_ink', itemName: '灵墨', quantity: 1, rewardMoney: 1200, legacyExp: 35 },
+  { id: 'spouse_project' as FamilyCommissionId, title: '家业筹划', desc: '与配偶共同筹划家业，沉淀家传经验。', itemId: 'wood', itemName: '木材', quantity: 20, rewardMoney: 2200, legacyExp: 30 }
 ]
 
 export const useNpcStore = defineStore('npc', () => {
@@ -85,6 +97,12 @@ export const useNpcStore = defineStore('npc', () => {
   // ============================================================
 
   const hiredHelpers = ref<HiredHelper[]>([])
+  const familyLegacyNeed = computed(() => 80 + familyLegacyLevel.value * 60)
+  const familyBonusText = computed(() => `家传Lv.${familyLegacyLevel.value}：家业/子女/配偶协助收益+${Math.min(25, familyLegacyLevel.value * 2)}%`)
+  const spouseSpecialty = ref<FamilySpecialty | null>(null)
+  const familyLegacyLevel = ref(1)
+  const familyLegacyExp = ref(0)
+  const familyCommissionClaimed = ref<string[]>([])
   const MAX_HELPERS = 2
 
   /** 雇工日薪 */
@@ -840,7 +858,10 @@ export const useNpcStore = defineStore('npc', () => {
       stage: 'baby',
       friendship: birthQuality === 'healthy' ? 30 : 0,
       interactedToday: false,
-      birthQuality
+      birthQuality,
+      aptitude: (['farm', 'animal', 'study', 'combat'] as ChildAptitude[])[Math.floor(Math.random() * 4)],
+      studyExp: 0,
+      legacyBond: birthQuality === 'healthy' ? 10 : 0
     })
 
     pregnancy.value = null
@@ -904,6 +925,7 @@ export const useNpcStore = defineStore('npc', () => {
       } else if (child.stage === 'child' && child.daysOld >= 56) {
         child.stage = 'teen'
       }
+      ;(child as any).studyExp = ((child as any).studyExp || 0) + (child.stage === 'teen' ? 2 : child.stage === 'child' ? 1 : 0)
     }
   }
 
@@ -916,6 +938,8 @@ export const useNpcStore = defineStore('npc', () => {
 
     child.interactedToday = true
     child.friendship = Math.min(300, child.friendship + 2)
+    ;(child as any).legacyBond = Math.min(100, ((child as any).legacyBond || 0) + 3)
+    ;(child as any).studyExp = ((child as any).studyExp || 0) + 2
 
     if (child.stage === 'child' && Math.random() < 0.1) {
       const finds = ['wood', 'herb', 'pine_cone', 'wild_berry']
@@ -970,6 +994,50 @@ export const useNpcStore = defineStore('npc', () => {
     }
   }
 
+
+  const setSpouseSpecialty = (specialty: FamilySpecialty): { success: boolean; message: string } => {
+    const spouse = getSpouse()
+    if (!spouse) return { success: false, message: '需要先结婚。' }
+    spouseSpecialty.value = specialty
+    return { success: true, message: `配偶专精调整为${FAMILY_SPECIALTY_NAMES[specialty]}。` }
+  }
+
+  const addFamilyLegacyExp = (amount: number) => {
+    familyLegacyExp.value += amount
+    while (familyLegacyExp.value >= familyLegacyNeed.value) {
+      familyLegacyExp.value -= familyLegacyNeed.value
+      familyLegacyLevel.value++
+    }
+  }
+
+  const familyCommissionCards = computed(() => {
+    return FAMILY_COMMISSIONS.map(c => ({ ...c, claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:${c.id}`) }))
+  })
+
+  const claimFamilyCommission = (id: FamilyCommissionId): { success: boolean; message: string } => {
+    const spouse = getSpouse()
+    if (!spouse) return { success: false, message: '需要有家人一起完成委托。' }
+    const commission = FAMILY_COMMISSIONS.find(c => c.id === id)
+    if (!commission) return { success: false, message: '家族委托不存在。' }
+    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:${id}`
+    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '今天已完成这个家族委托。' }
+    const inv = useInventoryStore()
+    if (inv.getItemCount(commission.itemId) < commission.quantity) return { success: false, message: `需要${commission.itemName}×${commission.quantity}。` }
+    inv.removeItem(commission.itemId, commission.quantity)
+    usePlayerStore().money += commission.rewardMoney
+    addFamilyLegacyExp(commission.legacyExp + children.value.length * 5)
+    familyCommissionClaimed.value.push(key)
+    return { success: true, message: `完成${commission.title}：铜钱+${commission.rewardMoney}，家传经验+${commission.legacyExp + children.value.length * 5}` }
+  }
+
+  const childGrowthCards = computed(() => children.value.map(c => ({
+    ...c,
+    aptitudeName: CHILD_APTITUDE_NAMES[((c as any).aptitude || 'study') as ChildAptitude],
+    studyExp: (c as any).studyExp || 0,
+    legacyBond: (c as any).legacyBond || 0,
+    bonusText: c.stage === 'teen' ? '可提供家传加成' : c.stage === 'child' ? '学习中，互动可积累家传羁绊' : '成长中'
+  })))
+
   /** 每日重置对话和送礼状态 + 伴侣好感衰减 */
   const dailyReset = () => {
     const gameStore = useGameStore()
@@ -994,6 +1062,8 @@ export const useNpcStore = defineStore('npc', () => {
       }
     }
 
+    familyCommissionClaimed.value = familyCommissionClaimed.value.slice(-30)
+
     // 知己天数递增
     if (getZhiji()) daysZhiji.value++
   }
@@ -1015,6 +1085,10 @@ export const useNpcStore = defineStore('npc', () => {
       weddingCountdown: weddingCountdown.value,
       weddingNpcId: weddingNpcId.value,
       hiredHelpers: hiredHelpers.value,
+      spouseSpecialty: spouseSpecialty.value,
+      familyLegacyLevel: familyLegacyLevel.value,
+      familyLegacyExp: familyLegacyExp.value,
+      familyCommissionClaimed: familyCommissionClaimed.value,
       friendshipVersion: 2
     }
   }
@@ -1047,7 +1121,10 @@ export const useNpcStore = defineStore('npc', () => {
     npcStates.value = [...savedStates, ...newNpcStates]
     children.value = ((data as any).children ?? []).map((c: any) => ({
       ...c,
-      birthQuality: c.birthQuality ?? 'normal'
+      birthQuality: c.birthQuality ?? 'normal',
+      aptitude: c.aptitude ?? 'study',
+      studyExp: c.studyExp ?? 0,
+      legacyBond: c.legacyBond ?? 0
     }))
     // 旧存档无 nextChildId → 从已有子女推算
     nextChildId.value =
@@ -1083,6 +1160,10 @@ export const useNpcStore = defineStore('npc', () => {
     weddingCountdown.value = (data as any).weddingCountdown ?? 0
     weddingNpcId.value = (data as any).weddingNpcId ?? null
     hiredHelpers.value = (data as any).hiredHelpers ?? []
+    spouseSpecialty.value = (data as any).spouseSpecialty ?? null
+    familyLegacyLevel.value = Number((data as any).familyLegacyLevel ?? 1)
+    familyLegacyExp.value = Number((data as any).familyLegacyExp ?? 0)
+    familyCommissionClaimed.value = Array.isArray((data as any).familyCommissionClaimed) ? (data as any).familyCommissionClaimed : []
   }
 
   return {
@@ -1098,6 +1179,14 @@ export const useNpcStore = defineStore('npc', () => {
     weddingCountdown,
     weddingNpcId,
     hiredHelpers,
+    spouseSpecialty,
+    familyLegacyLevel,
+    familyLegacyExp,
+    familyLegacyNeed,
+    familyBonusText,
+    familyCommissionCards,
+    childGrowthCards,
+    FAMILY_SPECIALTY_NAMES,
     HELPER_WAGES,
     HELPER_TASK_NAMES,
     getNpcState,
@@ -1123,6 +1212,8 @@ export const useNpcStore = defineStore('npc', () => {
     hireHelper,
     dismissHelper,
     processDailyHelpers,
+    setSpouseSpecialty,
+    claimFamilyCommission,
     checkChildProposal,
     triggerChildProposal,
     respondToChildProposal,

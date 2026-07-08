@@ -284,6 +284,7 @@ const defaultConfig = {
   iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-08", title: "V1.6.8 家族传承与子女成长", content: "小屋家人系统新增家族传承、配偶助手专精、子女资质/学识/羁绊成长与每日家族委托，让结婚和子女系统形成长期追求。" },
     { date: "2026-07-08", title: "V1.6.7 中后期追求扩展", content: "宗门公共建设扩展为三大工程；农场新增灵田中后期经营目标；装备词条加入锁定、保底、套装与稀有图鉴；奇遇链升级为连续剧情、选择旗标与隐藏结局。" },
     { date: "2026-07-08", title: "V1.6.6 镇魔结算修复", content: "修复活动中心镇魔周期战报显示内部 eventId 的问题，改为展示本期周期；领取结算邮件时补充账号登录鉴权，避免已登录玩家仍提示请先登录。" },
     { date: "2026-07-08", title: "V1.6.5 镇魔周期结算", content: "全服镇魔新增周期战报与邮件结算：活动中心可查看本期贡献、参与人数和结算评级，并按个人贡献发放镇魔司邮件奖励，避免奖励只停留在本地档位。" },

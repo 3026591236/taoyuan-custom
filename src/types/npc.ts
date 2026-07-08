@@ -83,6 +83,12 @@ export interface ChildState {
   interactedToday: boolean
   /** 出生品质 */
   birthQuality: 'normal' | 'premature' | 'healthy'
+  /** V1.6.8 家族传承：子女资质 */
+  aptitude?: 'farm' | 'animal' | 'study' | 'combat'
+  /** V1.6.8 家族传承：学识经验 */
+  studyExp?: number
+  /** V1.6.8 家族传承：家传羁绊 */
+  legacyBond?: number
 }
 
 /** 孕期阶段 */

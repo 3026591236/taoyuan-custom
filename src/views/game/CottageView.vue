@@ -34,6 +34,28 @@
         家人
       </p>
 
+
+      <!-- 家族传承 -->
+      <div class="border border-accent/20 rounded-xs p-2 mb-2 bg-accent/5">
+        <div class="flex items-center justify-between mb-1">
+          <p class="text-xs text-accent">家族传承</p>
+          <span class="text-[10px] text-muted">Lv.{{ npcStore.familyLegacyLevel }} · {{ npcStore.familyLegacyExp }}/{{ npcStore.familyLegacyNeed }}</span>
+        </div>
+        <p class="text-[10px] text-muted mb-2">{{ npcStore.familyBonusText }}</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-1 mb-2">
+          <Button v-for="option in familySpecialtyOptions" :key="option.id" class="py-0.5 px-1 text-[10px] justify-center" :class="npcStore.spouseSpecialty === option.id ? '!bg-accent !text-bg' : ''" @click="handleSetSpouseSpecialty(option.id)">
+            {{ option.name }}
+          </Button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+          <div v-for="task in npcStore.familyCommissionCards" :key="task.id" class="border border-accent/10 rounded-xs p-1.5">
+            <div class="flex items-center justify-between"><span class="text-[10px] text-accent">{{ task.title }}</span><span class="text-[10px] text-muted">{{ task.itemName }}×{{ task.quantity }}</span></div>
+            <p class="text-[10px] text-muted leading-relaxed">{{ task.desc }}</p>
+            <Button class="w-full py-0.5 px-1 text-[10px] justify-center mt-1" :disabled="task.claimed" @click="handleFamilyCommission(task.id)">{{ task.claimed ? '今日已完成' : '完成委托' }}</Button>
+          </div>
+        </div>
+      </div>
+
       <!-- 配偶互动 -->
       <div class="border border-accent/10 rounded-xs p-2 mb-2">
         <div class="flex items-center justify-between mb-1.5">
@@ -177,7 +199,7 @@
               <Button class="py-0 px-1 text-danger" @click="releaseConfirmChildId = child.id">送走</Button>
             </div>
           </div>
-          <p class="text-[10px] text-muted mb-0.5">{{ CHILD_STAGE_NAMES[child.stage] }} · {{ child.daysOld }}天</p>
+          <p class="text-[10px] text-muted mb-0.5">{{ CHILD_STAGE_NAMES[child.stage] }} · {{ child.daysOld }}天 · 资质：{{ child.aptitude ? ({ farm: '灵田', animal: '牧养', study: '读书', combat: '护院' } as any)[child.aptitude] : '读书' }} · 学识{{ child.studyExp || 0 }} · 羁绊{{ child.legacyBond || 0 }}</p>
           <div v-if="child.stage !== 'baby'" class="flex items-center space-x-0.5">
             <Heart
               v-for="h in 10"
@@ -737,6 +759,26 @@
   const spouseState = computed(() => npcStore.getSpouse())
   const spouseDef = computed(() => (spouseState.value ? getNpcById(spouseState.value.npcId) : null))
   const spouseDialogue = ref<string | null>(null)
+
+  type FamilySpecialty = 'farming' | 'ranching' | 'foraging' | 'cultivation'
+  type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project'
+  const familySpecialtyOptions = computed<{ id: FamilySpecialty; name: string }[]>(() => [
+    { id: 'farming', name: npcStore.FAMILY_SPECIALTY_NAMES.farming },
+    { id: 'ranching', name: npcStore.FAMILY_SPECIALTY_NAMES.ranching },
+    { id: 'foraging', name: npcStore.FAMILY_SPECIALTY_NAMES.foraging },
+    { id: 'cultivation', name: npcStore.FAMILY_SPECIALTY_NAMES.cultivation }
+  ])
+
+  const handleSetSpouseSpecialty = (specialty: FamilySpecialty) => {
+    const result = npcStore.setSpouseSpecialty(specialty)
+    addLog(result.message)
+  }
+
+  const handleFamilyCommission = (id: FamilyCommissionId) => {
+    const result = npcStore.claimFamilyCommission(id)
+    addLog(result.message)
+  }
+
 
   const handleSpouseTalk = () => {
     if (!spouseState.value) return
