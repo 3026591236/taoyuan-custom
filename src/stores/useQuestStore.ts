@@ -4,6 +4,7 @@ import type { QuestInstance, Season, MainQuestState, MainQuestObjective } from '
 import { generateQuest, generateSpecialOrder as _generateSpecialOrder } from '@/data/quests'
 import { getStoryQuestById, getNextStoryQuest, getFirstStoryQuest, STORY_QUESTS } from '@/data/storyQuests'
 import { getNpcById } from '@/data/npcs'
+import { getItemById } from '@/data/items'
 import { useInventoryStore } from './useInventoryStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useNpcStore } from './useNpcStore'
@@ -381,7 +382,7 @@ export const useQuestStore = defineStore('quest', () => {
 
     let message = `完成了${quest.orderTag ? quest.orderTag : quest.npcName + '的委托'}！获得${quest.moneyReward}文，${quest.npcName}好感+${quest.friendshipReward}。`
     if (quest.itemReward && quest.itemReward.length > 0) {
-      const itemNames = quest.itemReward.map(i => `${i.quantity}个物品`).join('、')
+      const itemNames = quest.itemReward.map(i => `${getItemById(i.itemId)?.name ?? i.itemId}×${i.quantity}`).join('、')
       message += ` 额外获得${itemNames}。`
     }
 

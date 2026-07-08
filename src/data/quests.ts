@@ -442,6 +442,88 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     orderTag: '宗门灵植',
     description: '宗门长老需要冰魄雪莲与紫韵灵芝合炼护魂丹，奖励高阶炼器材料。'
   }
+  ,
+  // === V1.7.6 经济消耗闭环：高阶资源订单，回收中后期矿物/修仙材料 ===
+  {
+    name: '百工堂玄铁急单',
+    targetItemId: 'mystic_iron',
+    targetItemName: '玄铁',
+    quantity: 6,
+    days: 7,
+    moneyReward: 5200,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 18 },
+      { itemId: 'artifact_shard', quantity: 2 }
+    ],
+    seasons: [],
+    npcId: 'a_shi',
+    tier: 3,
+    orderTag: '高阶资源',
+    description: '百工堂扩建炉台，急需玄铁稳固炉基；适合消耗中后期矿物库存，换取灵石与法宝碎片。'
+  },
+  {
+    name: '法衣云材征集',
+    targetItemId: 'cloud_silk',
+    targetItemName: '云纹丝',
+    quantity: 8,
+    days: 7,
+    moneyReward: 5600,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 20 },
+      { itemId: 'phoenix_plume', quantity: 1 }
+    ],
+    seasons: ['spring', 'summer', 'autumn'],
+    npcId: 'liu_niang',
+    tier: 3,
+    orderTag: '高阶资源',
+    description: '织造坊准备给宗门赶制法衣，征集云纹丝；交付后可换取灵石与凤羽。'
+  },
+  {
+    name: '镇塔器修复令',
+    targetItemId: 'star_iron',
+    targetItemName: '星陨铁',
+    quantity: 3,
+    targets: [
+      { itemId: 'star_iron', name: '星陨铁', quantity: 3 },
+      { itemId: 'artifact_shard', name: '法宝碎片', quantity: 4 },
+      { itemId: 'thunder_essence', name: '雷精', quantity: 1 }
+    ],
+    days: 7,
+    moneyReward: 9800,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 42 },
+      { itemId: 'lingyun_jade', quantity: 2 }
+    ],
+    seasons: [],
+    npcId: 'lin_lao',
+    tier: 4,
+    orderTag: '高阶资源',
+    description: '登仙塔镇塔器出现裂纹，需要星陨铁、法宝碎片和雷精修复；这是高价值材料回收订单。'
+  },
+  {
+    name: '护山灵阵补材',
+    targetItemId: 'immortal_dew',
+    targetItemName: '仙露',
+    quantity: 4,
+    targets: [
+      { itemId: 'immortal_dew', name: '仙露', quantity: 4 },
+      { itemId: 'spirit_bone', name: '灵骨', quantity: 3 },
+      { itemId: 'sunfire_crystal', name: '日炎晶', quantity: 2 }
+    ],
+    days: 7,
+    moneyReward: 11200,
+    itemReward: [
+      { itemId: 'spirit_stone', quantity: 50 },
+      { itemId: 'artifact_shard', quantity: 4 },
+      { itemId: 'lingyun_jade', quantity: 1 }
+    ],
+    seasons: ['summer', 'autumn'],
+    npcId: 'lin_lao',
+    tier: 4,
+    orderTag: '高阶资源',
+    description: '护山灵阵入夜灵压不稳，需仙露、灵骨与日炎晶补阵；奖励大量灵石与炼器材料。'
+  }
+
 ]
 
 const TIER_LABELS = ['简单', '普通', '困难', '极难']
