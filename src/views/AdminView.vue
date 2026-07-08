@@ -73,6 +73,13 @@
               <button class="btn text-xs" @click="loadWorldAnnouncements">刷新公告</button>
             </div>
             <textarea v-model="newWorldAnnouncement" class="input min-h-24" maxlength="500" placeholder="请输入要滚动展示给全服玩家的公告内容，最多500字" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <label class="text-sm space-y-1">
+                <span>重复滚动间隔（分钟）</span>
+                <input v-model.number="newWorldAnnouncementRepeatMinutes" class="input" type="number" min="0" max="10080" placeholder="0=只展示一次，如60=每小时重复" />
+              </label>
+              <div class="text-xs text-muted flex items-end">填 0 只展示一次；填 10~10080 分钟会让在线玩家按间隔重复看到同一条公告。</div>
+            </div>
             <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
               <span>{{ newWorldAnnouncement.length }}/500</span>
               <button class="btn justify-center" @click="publishWorldAnnouncement">发布全服公告</button>
@@ -85,7 +92,7 @@
               <div v-if="worldAnnouncements.length === 0" class="text-xs text-muted">暂无公告。</div>
               <div v-for="ann in worldAnnouncements" :key="ann.id" class="border border-accent/10 rounded-xs p-2 space-y-1">
                 <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span class="text-muted">{{ formatTime(ann.time) }} / {{ ann.type || 'admin' }}</span>
+                  <span class="text-muted">{{ formatTime(ann.time) }} / {{ ann.type || 'admin' }} / {{ ann.repeatIntervalMinutes ? `每${ann.repeatIntervalMinutes}分钟重复` : '只展示一次' }}</span>
                   <button class="btn text-xs text-danger" @click="deleteWorldAnnouncement(ann)">删除</button>
                 </div>
                 <p class="text-sm whitespace-pre-wrap">{{ ann.message }}</p>
@@ -379,6 +386,7 @@ const messageType = ref<'ok' | 'error'>('ok')
 const config = reactive<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], aboutQqText: '', aboutQqUrl: '', aboutGithubUrl: '', aboutTapTapUrl: '', sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: '', iosDownloadUrl: '', androidDownloadUrl: '', registrationEnabled: true, maintenanceMode: false })
 const overview = reactive<any>({ stats: { userCount: 0, saveCount: 0, sessionCount: 0 }, users: [] })
 const newWorldAnnouncement = ref('')
+const newWorldAnnouncementRepeatMinutes = ref(0)
 const worldAnnouncements = ref<any[]>([])
 const economyEvents = ref<any[]>([])
 const ledgerKeyword = ref('')
@@ -589,10 +597,12 @@ async function publishWorldAnnouncement() {
   const message = newWorldAnnouncement.value.trim()
   if (!message) { setMsg('公告内容不能为空', 'error'); return }
   try {
-    const data = await api('/api/admin/world-announcements', { method: 'POST', headers: headers(), body: JSON.stringify({ message, type: 'admin' }) })
+    const repeatIntervalMinutes = Math.max(0, Math.min(10080, Math.floor(Number(newWorldAnnouncementRepeatMinutes.value) || 0)))
+    const data = await api('/api/admin/world-announcements', { method: 'POST', headers: headers(), body: JSON.stringify({ message, type: 'admin', repeatIntervalMinutes }) })
     worldAnnouncements.value = data.announcements || []
     newWorldAnnouncement.value = ''
-    setMsg('全服公告已发布')
+    newWorldAnnouncementRepeatMinutes.value = 0
+    setMsg(repeatIntervalMinutes ? `全服公告已发布，将每${repeatIntervalMinutes}分钟重复滚动` : '全服公告已发布')
   } catch (e: any) { setMsg(e.message, 'error') }
 }
 async function deleteWorldAnnouncement(ann: any) {

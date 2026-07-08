@@ -284,6 +284,7 @@ const defaultConfig = {
   iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-08", title: "V1.7.0 公告重复滚动间隔", content: "后台全服公告新增重复间隔设置，发布时可填写每多少分钟重复滚动一次；填0则只展示一次，方便长期活动、维护和补偿提醒定时重复露出。" },
     { date: "2026-07-08", title: "V1.6.9 后台全服滚动公告", content: "后台新增全服滚动公告管理，可手动发布、刷新和删除公告；玩家在线时会在游戏顶部看到公告滚动通知，方便活动、维护和补偿提示。" },
     { date: "2026-07-08", title: "V1.6.8 家族传承与子女成长", content: "小屋家人系统新增家族传承、配偶助手专精、子女资质/学识/羁绊成长与每日家族委托，让结婚和子女系统形成长期追求。" },
     { date: "2026-07-08", title: "V1.6.7 中后期追求扩展", content: "宗门公共建设扩展为三大工程；农场新增灵田中后期经营目标；装备词条加入锁定、保底、套装与稀有图鉴；奇遇链升级为连续剧情、选择旗标与隐藏结局。" },
@@ -1094,7 +1095,7 @@ app.post('/api/breakthrough-announce', async (req, res) => {
 
 app.get('/api/world-announcements', async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT id, message, type, created_at as time FROM world_announcements ORDER BY created_at DESC LIMIT 10')
+    const [rows] = await pool.execute('SELECT id, message, type, repeat_interval_minutes as repeatIntervalMinutes, created_at as time FROM world_announcements ORDER BY created_at DESC LIMIT 10')
     send(res, 200, { announcements: rows })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
@@ -1104,7 +1105,7 @@ app.get('/api/admin/world-announcements', async (req, res) => {
   try {
     const admin = await requireAdmin(req, res); if (!admin) return
     const limit = Math.min(Math.max(Number(req.query.limit) || 30, 1), 100)
-    const [rows] = await pool.execute('SELECT id, message, type, created_at as time FROM world_announcements ORDER BY created_at DESC LIMIT ' + limit)
+    const [rows] = await pool.execute('SELECT id, message, type, repeat_interval_minutes as repeatIntervalMinutes, created_at as time FROM world_announcements ORDER BY created_at DESC LIMIT ' + limit)
     send(res, 200, { announcements: rows })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
@@ -1113,11 +1114,12 @@ app.post('/api/admin/world-announcements', async (req, res) => {
     const admin = await requireAdmin(req, res); if (!admin) return
     const message = String(req.body?.message || '').trim().slice(0, 500)
     const type = String(req.body?.type || 'admin').trim().slice(0, 20) || 'admin'
+    const repeatIntervalMinutes = Math.max(0, Math.min(10080, Math.floor(Number(req.body?.repeatIntervalMinutes || 0) || 0)))
     if (!message) return send(res, 400, { error: '公告内容不能为空' })
     const text = message.startsWith('📢') || message.startsWith('⚡') ? message : `📢 全服公告：${message}`
-    await pool.execute('INSERT INTO world_announcements (message, type) VALUES (?, ?)', [text, type])
+    await pool.execute('INSERT INTO world_announcements (message, type, repeat_interval_minutes) VALUES (?, ?, ?)', [text, type, repeatIntervalMinutes])
     await pool.execute('DELETE FROM world_announcements WHERE id NOT IN (SELECT id FROM (SELECT id FROM world_announcements ORDER BY created_at DESC LIMIT 50) t)')
-    const [rows] = await pool.execute('SELECT id, message, type, created_at as time FROM world_announcements ORDER BY created_at DESC LIMIT 30')
+    const [rows] = await pool.execute('SELECT id, message, type, repeat_interval_minutes as repeatIntervalMinutes, created_at as time FROM world_announcements ORDER BY created_at DESC LIMIT 30')
     send(res, 200, { ok: true, announcements: rows })
   } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })

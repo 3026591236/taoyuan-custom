@@ -683,8 +683,15 @@
         const latest = data.announcements[0]
         if (latest && latest.message) {
           const key = `${latest.id || ''}-${latest.time || ''}-${latest.message}`
-          if (key === lastWorldAnnouncementKey.value) return
+          const repeatIntervalMinutes = Math.max(0, Number(latest.repeatIntervalMinutes || 0) || 0)
+          const repeatStorageKey = `taoyuan_world_announcement_seen_${key}`
+          const now = Date.now()
+          const lastShownAt = Number(localStorage.getItem(repeatStorageKey) || 0) || 0
+          if (repeatIntervalMinutes > 0) {
+            if (now - lastShownAt < repeatIntervalMinutes * 60 * 1000) return
+          } else if (key === lastWorldAnnouncementKey.value || lastShownAt > 0) return
           lastWorldAnnouncementKey.value = key
+          localStorage.setItem(repeatStorageKey, String(now))
           const duration = Math.max(7000, Math.min(18000, String(latest.message).length * 320 + 3600))
           worldAnnouncement.value = latest.message
           worldAnnouncementStyle.value = { animationDuration: `${duration}ms` }
