@@ -1,4 +1,4 @@
-import type { MuseumItemDef, MuseumMilestone } from '@/types'
+import type { MuseumItemDef, MuseumMilestone, MuseumThemeCollection, MuseumRestorationDef } from '@/types'
 
 /** 博物馆可捐赠物品全目录 */
 export const MUSEUM_ITEMS: MuseumItemDef[] = [
@@ -79,3 +79,21 @@ export const MUSEUM_MILESTONES: MuseumMilestone[] = [
 
 /** 根据ID查找博物馆物品 */
 export const getMuseumItemById = (id: string): MuseumItemDef | undefined => MUSEUM_ITEMS.find(item => item.id === id)
+
+
+/** V1.7.4 主题收藏：让全收集从数量目标变成主题目标 */
+export const MUSEUM_THEME_COLLECTIONS: MuseumThemeCollection[] = [
+  { id: 'mine_core', name: '矿脉初鉴', desc: '集齐基础矿石与金属锭，建立矿物展柜。', itemIds: ['copper_ore', 'iron_ore', 'gold_ore', 'copper_bar', 'iron_bar', 'gold_bar'], reward: { fame: 60, money: 1600 } },
+  { id: 'gem_light', name: '宝石星辉', desc: '展出多色宝石，提升博物馆观赏度。', itemIds: ['quartz', 'jade', 'ruby', 'moonstone', 'obsidian', 'dragon_jade'], reward: { fame: 90, money: 2600, items: [{ itemId: 'spirit_stone', quantity: 8 }] } },
+  { id: 'fossil_age', name: '远古生灵', desc: '复原化石谱系，吸引学者远道而来。', itemIds: ['trilobite_fossil', 'ammonite_fossil', 'fern_fossil', 'shell_fossil', 'bone_fragment', 'dragon_tooth'], reward: { fame: 120, money: 3600, items: [{ itemId: 'jade_slip', quantity: 1 }] } },
+  { id: 'ancient_civilization', name: '古国遗响', desc: '串联古陶、铜镜、甲骨与玉器，讲述远古文明。', itemIds: ['ancient_pottery', 'jade_disc', 'bronze_mirror', 'oracle_bone', 'jade_pendant', 'bamboo_scroll'], reward: { fame: 150, money: 5200 } },
+  { id: 'spirit_wonders', name: '仙灵奇珍', desc: '收藏仙灵相关奇物，开启博物馆灵物终局陈列。', itemIds: ['fox_bead', 'spirit_peach', 'moon_herb', 'dream_silk', 'prismatic_shard'], reward: { fame: 220, money: 8000, items: [{ itemId: 'soul_crystal', quantity: 1 }] } }
+]
+
+/** V1.7.4 文物修复：消耗资源换名望和高阶奖励 */
+export const MUSEUM_RESTORATIONS: MuseumRestorationDef[] = [
+  { id: 'pottery_repair', name: '彩陶拼合', desc: '修复彩陶与古陶展品，增加基础人气。', requiredDonations: 8, cost: { money: 1200, items: [{ itemId: 'stone', quantity: 20 }, { itemId: 'clay', quantity: 6 }] }, reward: { fame: 45, itemId: 'ancient_pottery', quantity: 1 } },
+  { id: 'jade_polish', name: '玉器抛光', desc: '整理玉璧、玉佩与翡翠展柜。', requiredDonations: 14, cost: { money: 2600, items: [{ itemId: 'jade', quantity: 2 }, { itemId: 'spirit_stone', quantity: 5 }] }, reward: { fame: 80, itemId: 'jade_slip', quantity: 1 } },
+  { id: 'fossil_frame', name: '化石骨架复原', desc: '搭建化石骨架，显著提高馆藏吸引力。', requiredDonations: 22, cost: { money: 5200, items: [{ itemId: 'bone_fragment', quantity: 2 }, { itemId: 'wood', quantity: 40 }] }, reward: { fame: 130, itemId: 'dragon_tooth', quantity: 1 } },
+  { id: 'spirit_showcase', name: '灵物恒温展柜', desc: '为仙灵奇珍布置恒温灵柜，形成终局展示。', requiredDonations: 32, cost: { money: 9000, items: [{ itemId: 'spirit_stone', quantity: 18 }, { itemId: 'moonstone', quantity: 2 }] }, reward: { fame: 220, itemId: 'soul_crystal', quantity: 1 } }
+]

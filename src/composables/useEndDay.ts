@@ -20,6 +20,7 @@ import { useFishPondStore } from '@/stores/useFishPondStore'
 import { useTutorialStore } from '@/stores/useTutorialStore'
 import { useHiddenNpcStore } from '@/stores/useHiddenNpcStore'
 import { useMiningStore } from '@/stores/useMiningStore'
+import { useMuseumStore } from '@/stores/useMuseumStore'
 import { getItemById, getTodayEvent, getNpcById, getCropById, getForageItems } from '@/data'
 import { getFertilizerById } from '@/data/processing'
 import { FISH } from '@/data/fish'
@@ -631,6 +632,9 @@ export const handleEndDay = () => {
   if (hanhaiStore.unlocked) {
     hanhaiStore.dailyTradeUpdate()
   }
+  const museumStore = useMuseumStore()
+  const museumIncome = museumStore.dailyMuseumUpdate(`${gameStore.year}-${gameStore.season}-${gameStore.day}`)
+  if (museumIncome > 0) addLog(`博物馆今日人气收入 ${museumIncome} 文。`)
 
   // 仙灵每日处理
   const hiddenNpcStore = useHiddenNpcStore()

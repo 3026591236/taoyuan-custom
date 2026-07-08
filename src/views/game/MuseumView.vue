@@ -19,6 +19,13 @@
     </div>
 
     <template v-else>
+      <!-- 名望总览 -->
+      <div class="grid grid-cols-3 gap-1 mb-3">
+        <div class="border border-accent/20 rounded-xs p-2 text-center"><p class="text-[10px] text-muted">名望</p><p class="text-sm text-accent">{{ museumStore.fame }}</p></div>
+        <div class="border border-accent/20 rounded-xs p-2 text-center"><p class="text-[10px] text-muted">馆舍等级</p><p class="text-sm text-accent">Lv.{{ museumStore.museumLevel }}</p></div>
+        <div class="border border-accent/20 rounded-xs p-2 text-center"><p class="text-[10px] text-muted">每日收入</p><p class="text-sm text-accent">{{ museumStore.dailyIncome }}文</p></div>
+      </div>
+
       <!-- 分类标签 -->
       <div class="grid grid-cols-3 md:grid-cols-6 gap-1 mb-3">
         <Button
@@ -55,6 +62,36 @@
           <Button v-for="itemId in museumStore.donatableItems" :key="itemId" :icon="Send" :icon-size="10" @click="handleDonate(itemId)">
             {{ getItemName(itemId) }}
           </Button>
+        </div>
+      </div>
+
+
+      <!-- 主题收藏 -->
+      <div class="border border-accent/20 rounded-xs p-2 mb-3">
+        <p class="text-xs text-accent mb-2">主题收藏</p>
+        <div class="space-y-1 max-h-44 overflow-y-auto">
+          <div v-for="theme in museumStore.themeProgress" :key="theme.id" class="border border-accent/10 rounded-xs px-2 py-1 mr-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs">{{ theme.name }}</span>
+              <span class="text-[10px] text-muted">{{ theme.donated }}/{{ theme.total }}</span>
+            </div>
+            <p class="text-[10px] text-muted">{{ theme.desc }}</p>
+            <Button v-if="theme.completed && !theme.claimed" class="w-full justify-center mt-1 !bg-accent !text-bg" @click="claimTheme(theme.id)">领取主题奖励</Button>
+            <p v-else class="text-[10px] mt-1" :class="theme.claimed ? 'text-success' : 'text-muted'">{{ theme.claimed ? '已完成主题陈列' : `奖励：名望+${theme.reward.fame}` }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文物修复 -->
+      <div class="border border-accent/20 rounded-xs p-2 mb-3">
+        <p class="text-xs text-accent mb-2">文物修复</p>
+        <div class="space-y-1 max-h-44 overflow-y-auto">
+          <div v-for="project in museumStore.restorationProjects" :key="project.id" class="border border-accent/10 rounded-xs px-2 py-1 mr-1">
+            <div class="flex items-center justify-between"><span class="text-xs">{{ project.name }}</span><span class="text-[10px] text-muted">需{{ project.requiredDonations }}藏品</span></div>
+            <p class="text-[10px] text-muted">{{ project.desc }}</p>
+            <p class="text-[10px] text-accent">费用：{{ project.cost.money }}文{{ formatCostItems(project.cost.items) }}</p>
+            <Button class="w-full justify-center mt-1" :disabled="project.restored || !museumStore.canRestore(project.id)" @click="restoreProject(project.id)">{{ project.restored ? '已修复' : '修复' }}</Button>
+          </div>
         </div>
       </div>
 
@@ -185,6 +222,7 @@
   import { MUSEUM_ITEMS, MUSEUM_CATEGORIES, MUSEUM_MILESTONES } from '@/data/museum'
   import type { MuseumItemDef, MuseumCategory } from '@/types'
   import { getItemById } from '@/data/items'
+  import { addLog, showFloat } from '@/composables/useGameLog'
 
   const museumStore = useMuseumStore()
 
@@ -205,17 +243,41 @@
     return MUSEUM_CATEGORIES.find(c => c.key === cat)?.label ?? cat
   }
 
+  const EXTRA_ITEM_NAMES: Record<string, string> = {
+    stone: '石头',
+    clay: '黏土',
+    wood: '木材'
+  }
+
   const getItemName = (id: string): string => {
-    return getItemById(id)?.name ?? MUSEUM_ITEMS.find(i => i.id === id)?.name ?? id
+    return getItemById(id)?.name ?? MUSEUM_ITEMS.find(i => i.id === id)?.name ?? EXTRA_ITEM_NAMES[id] ?? id
   }
 
   const handleDonate = (itemId: string) => {
-    museumStore.donateItem(itemId)
+    const ok = museumStore.donateItem(itemId)
+    showFloat(ok ? '捐赠成功' : '无法捐赠', ok ? 'success' : 'danger')
   }
 
   const handleDonateAndClose = (itemId: string) => {
-    museumStore.donateItem(itemId)
+    handleDonate(itemId)
     selectedItem.value = null
+  }
+
+  const claimTheme = (themeId: string) => {
+    const ok = museumStore.claimThemeReward(themeId)
+    addLog(ok ? '完成博物馆主题收藏，名望提升。' : '主题收藏尚未完成。')
+    showFloat(ok ? '主题完成' : '未完成', ok ? 'success' : 'danger')
+  }
+
+  const restoreProject = (projectId: string) => {
+    const ok = museumStore.restoreProject(projectId)
+    addLog(ok ? '完成一项文物修复，博物馆名望提升。' : '修复条件不足。')
+    showFloat(ok ? '修复完成' : '条件不足', ok ? 'success' : 'danger')
+  }
+
+  const formatCostItems = (items?: { itemId: string; quantity: number }[]) => {
+    if (!items?.length) return ''
+    return ' · ' + items.map(i => `${getItemName(i.itemId)}×${i.quantity}`).join('、')
   }
 
   const isMilestoneClaimed = (count: number): boolean => {

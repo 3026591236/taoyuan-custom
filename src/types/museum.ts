@@ -19,3 +19,34 @@ export interface MuseumMilestone {
     items?: { itemId: string; quantity: number }[]
   }
 }
+
+
+/** 博物馆主题收藏 */
+export interface MuseumThemeCollection {
+  id: string
+  name: string
+  desc: string
+  itemIds: string[]
+  reward: {
+    fame: number
+    money?: number
+    items?: { itemId: string; quantity: number }[]
+  }
+}
+
+/** 文物修复项目 */
+export interface MuseumRestorationDef {
+  id: string
+  name: string
+  desc: string
+  requiredDonations: number
+  cost: {
+    money: number
+    items?: { itemId: string; quantity: number }[]
+  }
+  reward: {
+    fame: number
+    itemId?: string
+    quantity?: number
+  }
+}
