@@ -38,6 +38,28 @@ export interface RealmChoiceEvent {
   options: RealmChoiceOption[]
 }
 
+export interface TowerSeasonBadge {
+  id: string
+  floor: number
+  name: string
+  desc: string
+  rewardText: string
+}
+
+const TOWER_SEASON = {
+  id: 's1_cloud_ladder',
+  name: '云梯问道',
+  period: '长期赛季·每次大版本刷新目标',
+  desc: '以本赛季最高登塔层数领取徽章，补足登仙塔中后期追求。'
+}
+
+const TOWER_SEASON_BADGES: TowerSeasonBadge[] = [
+  { id: 'cloud-step', floor: 10, name: '踏云者', desc: '突破前十层，踏上云梯问道之路。', rewardText: '灵石×30、魂晶×3' },
+  { id: 'spirit-breaker', floor: 20, name: '破灵使', desc: '击破二十层灵压，能独当一面。', rewardText: '灵石×60、法宝碎片×2、灵蕴玉×1' },
+  { id: 'tower-warden', floor: 35, name: '镇塔客', desc: '穿过高层妖影，获得镇塔认可。', rewardText: '灵石×100、魂晶×8、雷精×1' },
+  { id: 'heaven-asker', floor: 50, name: '问天行者', desc: '抵达五十层，留名本季登仙榜。', rewardText: '灵石×180、法宝碎片×5、灵蕴玉×3' }
+]
+
 export interface RealmZone {
   id: string
   name: string
@@ -142,6 +164,9 @@ export const useCombatStore = defineStore('combat', () => {
   const towerHighestFloor = ref(0)
   const towerCurrentFloor = ref(0)
   const towerMilestoneClaimed = ref<number[]>([])
+  const towerSeasonId = ref(TOWER_SEASON.id)
+  const towerSeasonBestFloor = ref(0)
+  const towerSeasonBadgeClaimed = ref<string[]>([])
   const pendingRealmChoice = ref<RealmChoiceEvent | null>(null)
   let dmgId = 0
 
@@ -168,6 +193,17 @@ export const useCombatStore = defineStore('combat', () => {
   })
   const nextTowerMilestone = computed(() => towerMilestoneRewards.value.find(r => !r.claimed) || null)
   const towerClaimableMilestones = computed(() => towerMilestoneRewards.value.filter(r => r.reached && !r.claimed))
+  const towerSeason = computed(() => TOWER_SEASON)
+  const towerSeasonBadges = computed(() => TOWER_SEASON_BADGES.map(b => ({
+    ...b,
+    reached: towerSeasonBestFloor.value >= b.floor || towerHighestFloor.value >= b.floor,
+    claimed: towerSeasonBadgeClaimed.value.includes(b.id)
+  })))
+  const towerSeasonClaimableBadges = computed(() => towerSeasonBadges.value.filter(b => b.reached && !b.claimed))
+  const towerSeasonProgress = computed(() => {
+    const next = towerSeasonBadges.value.find(b => !b.reached)
+    return { bestFloor: Math.max(towerSeasonBestFloor.value, towerHighestFloor.value), nextBadge: next || null, completed: towerSeasonBadges.value.every(b => b.claimed) }
+  })
   const trialZones = computed(() => REALM_ZONES.filter(z => z.kind === 'trial'))
   const beastZones = computed(() => REALM_ZONES.filter(z => z.kind === 'beast'))
   const realmZones = computed(() => REALM_ZONES.filter(z => z.kind === 'realm'))
@@ -372,9 +408,11 @@ export const useCombatStore = defineStore('combat', () => {
     if (isTowerCombat.value) {
       const oldHighest = towerHighestFloor.value
       towerHighestFloor.value = Math.max(towerHighestFloor.value, towerCurrentFloor.value)
+      towerSeasonBestFloor.value = Math.max(towerSeasonBestFloor.value, towerCurrentFloor.value)
       if (towerHighestFloor.value > oldHighest) {
         addLog(`登仙塔最高层刷新：第${towerHighestFloor.value}层！`)
         if (Math.floor(towerHighestFloor.value / 5) > Math.floor(oldHighest / 5)) addLog('新的登塔阶段宝箱已可领取！')
+        if (towerSeasonClaimableBadges.value.length) addLog(`本季「${TOWER_SEASON.name}」有新的赛季徽章可领取！`)
       }
     }
     if (zone?.kind === 'beast') {
@@ -491,6 +529,24 @@ export const useCombatStore = defineStore('combat', () => {
     return { success: true, message: msg }
   }
 
+  const claimTowerSeasonBadge = (badgeId: string): { success: boolean; message: string } => {
+    const badge = TOWER_SEASON_BADGES.find(b => b.id === badgeId)
+    if (!badge) return { success: false, message: '无效的赛季徽章。' }
+    const best = Math.max(towerSeasonBestFloor.value, towerHighestFloor.value)
+    if (best < badge.floor) return { success: false, message: `本季最高需达到第${badge.floor}层。` }
+    if (towerSeasonBadgeClaimed.value.includes(badge.id)) return { success: false, message: '这个赛季徽章已经领取过了。' }
+    const inv = useInventoryStore()
+    if (badge.floor >= 10) { inv.addItem('spirit_stone', badge.floor === 10 ? 30 : badge.floor === 20 ? 60 : badge.floor === 35 ? 100 : 180) }
+    if (badge.floor === 10) inv.addItem('soul_crystal', 3)
+    if (badge.floor === 20) { inv.addItem('artifact_shard', 2); inv.addItem('lingyun_jade', 1) }
+    if (badge.floor === 35) { inv.addItem('soul_crystal', 8); inv.addItem('thunder_essence', 1) }
+    if (badge.floor === 50) { inv.addItem('artifact_shard', 5); inv.addItem('lingyun_jade', 3) }
+    towerSeasonBadgeClaimed.value.push(badge.id)
+    const msg = `领取登仙塔赛季徽章「${badge.name}」：${badge.rewardText}。`
+    addLog(msg)
+    return { success: true, message: msg }
+  }
+
   const collectDrops = () => {
     const inv = useInventoryStore()
     let okCount = 0
@@ -501,20 +557,37 @@ export const useCombatStore = defineStore('combat', () => {
     addLog(okCount ? '拾取了所有掉落物' : '背包已满或物品未登记，部分掉落未能拾取')
   }
 
-  const serialize = () => ({ dailyRuns: dailyRuns.value, towerHighestFloor: towerHighestFloor.value, towerMilestoneClaimed: towerMilestoneClaimed.value })
+  const serialize = () => ({
+    dailyRuns: dailyRuns.value,
+    towerHighestFloor: towerHighestFloor.value,
+    towerMilestoneClaimed: towerMilestoneClaimed.value,
+    towerSeasonId: towerSeasonId.value,
+    towerSeasonBestFloor: towerSeasonBestFloor.value,
+    towerSeasonBadgeClaimed: towerSeasonBadgeClaimed.value
+  })
   const deserialize = (data: unknown) => {
     if (!data || typeof data !== 'object') return
     dailyRuns.value = (data as any).dailyRuns || {}
     towerHighestFloor.value = Number((data as any).towerHighestFloor || 0)
     towerMilestoneClaimed.value = Array.isArray((data as any).towerMilestoneClaimed) ? (data as any).towerMilestoneClaimed.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n)) : []
+    towerSeasonId.value = String((data as any).towerSeasonId || TOWER_SEASON.id)
+    if (towerSeasonId.value !== TOWER_SEASON.id) {
+      towerSeasonId.value = TOWER_SEASON.id
+      towerSeasonBestFloor.value = 0
+      towerSeasonBadgeClaimed.value = []
+    } else {
+      towerSeasonBestFloor.value = Math.max(Number((data as any).towerSeasonBestFloor || 0), towerHighestFloor.value)
+      towerSeasonBadgeClaimed.value = Array.isArray((data as any).towerSeasonBadgeClaimed) ? (data as any).towerSeasonBadgeClaimed.map((x: any) => String(x)).filter(Boolean) : []
+    }
   }
 
   return {
     currentZone, activeZone, currentMonster, monsterHp, playerHp, playerMaxHp, playerAtk, playerDef,
     combatLog, isFighting, combatResult, drops, pendingRealmChoice, showFlash, damageNumbers, dailyRuns,
-    isTowerCombat, towerHighestFloor, towerCurrentFloor, towerNextFloor, towerCost, towerStaminaCost, towerMilestoneRewards, nextTowerMilestone, towerClaimableMilestones, combatTitle, combatRewardHint, towerLockReason,
+    isTowerCombat, towerHighestFloor, towerCurrentFloor, towerNextFloor, towerCost, towerStaminaCost, towerMilestoneRewards, nextTowerMilestone, towerClaimableMilestones,
+    towerSeason, towerSeasonBestFloor, towerSeasonBadges, towerSeasonClaimableBadges, towerSeasonProgress, combatTitle, combatRewardHint, towerLockReason,
     trialZones, beastZones, realmZones, getDailyCount, isZoneUnlocked, lockReason,
-    enterZone, challengeTower, startFight, leaveCombat, collectDrops, chooseRealmOption, claimTowerMilestone, serialize, deserialize,
+    enterZone, challengeTower, startFight, leaveCombat, collectDrops, chooseRealmOption, claimTowerMilestone, claimTowerSeasonBadge, serialize, deserialize,
     REALM_ZONES
   }
 })

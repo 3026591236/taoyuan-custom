@@ -42,6 +42,29 @@
           </div>
         </div>
 
+
+        <div class="mt-3 border border-accent/15 rounded-xs p-2 bg-bg/30">
+          <div class="flex items-center justify-between mb-1">
+            <h4 class="text-xs text-accent">🏅 赛季挑战 · {{ combatStore.towerSeason.name }}</h4>
+            <span class="text-[10px] text-muted">本季最高 {{ combatStore.towerSeasonProgress.bestFloor }} 层</span>
+          </div>
+          <p class="text-[10px] text-muted mb-2">{{ combatStore.towerSeason.desc }} {{ combatStore.towerSeason.period }}</p>
+          <div v-if="combatStore.towerSeasonClaimableBadges.length" class="space-y-1 mb-2">
+            <div v-for="badge in combatStore.towerSeasonClaimableBadges" :key="badge.id" class="flex items-center justify-between gap-2 border border-success/30 rounded-xs px-2 py-1 bg-success/5">
+              <span class="text-[10px] text-success truncate">{{ badge.name }} · {{ badge.rewardText }}</span>
+              <button class="text-[10px] text-accent" @click="handleClaimTowerSeasonBadge(badge.id)">领取</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-1 text-[10px]">
+            <div v-for="badge in combatStore.towerSeasonBadges" :key="badge.id" class="tower-box" :class="badge.claimed ? 'claimed' : badge.reached ? 'ready' : ''">
+              <span>{{ badge.name }}</span>
+              <b>{{ badge.claimed ? '已领' : badge.reached ? '可领' : badge.floor + '层' }}</b>
+            </div>
+          </div>
+          <p v-if="combatStore.towerSeasonProgress.nextBadge" class="text-[10px] text-muted mt-2">下个徽章：{{ combatStore.towerSeasonProgress.nextBadge.name }}（第{{ combatStore.towerSeasonProgress.nextBadge.floor }}层）</p>
+          <p v-else class="text-[10px] text-success mt-2">本季徽章目标已全部达成。</p>
+        </div>
+
         <div class="mt-3 border-t border-accent/20 pt-2">
           <div class="flex items-center justify-between mb-2">
             <h4 class="text-xs text-accent">🏆 实时爬塔榜</h4>
@@ -244,6 +267,11 @@
 
   const handleClaimTowerMilestone = (floor: number) => {
     const res = combatStore.claimTowerMilestone(floor)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+  }
+
+  const handleClaimTowerSeasonBadge = (badgeId: string) => {
+    const res = combatStore.claimTowerSeasonBadge(badgeId)
     showFloat(res.message, res.success ? 'success' : 'danger')
   }
 
