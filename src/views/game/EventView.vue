@@ -75,6 +75,7 @@
           </button>
         </div>
       </div>
+      <p class="text-[10px] text-muted">已完成 {{ longTerm.adventureStory.completed }} 段；已触发隐藏结局 {{ longTerm.adventureStory.endings.length }} 个。</p>
     </section>
 
 
@@ -148,12 +149,12 @@
       <div class="flex items-start justify-between gap-3">
         <div>
           <h2 class="text-accent text-lg">奇遇链</h2>
-          <p class="text-xs text-muted leading-relaxed mt-1">每次进入活动中心都会看到当前奇遇，做出选择后推进到下一段故事，并计入月度修行令。</p>
+          <p class="text-xs text-muted leading-relaxed mt-1">奇遇升级为连续剧情：选择会留下旗标，影响后续奖励与隐藏结局，并与宗门、瀚海和秘境材料联动。</p>
         </div>
         <div class="text-4xl">🧭</div>
       </div>
       <div v-if="longTerm.currentAdventure" class="reward-card ready">
-        <p class="text-sm text-accent">{{ longTerm.currentAdventure.title }}</p>
+        <p class="text-sm text-accent">{{ longTerm.currentAdventure.title }} <span class="text-[10px] text-muted">第{{ longTerm.currentAdventure.stage }}段 · {{ longTerm.currentAdventure.arc }}</span></p>
         <p class="text-xs text-muted mt-1 leading-relaxed">{{ longTerm.currentAdventure.desc }}</p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
           <button v-for="choice in longTerm.currentAdventure.choices" :key="choice.id" class="mini-btn" @click="finishAdventure(choice.id)">{{ choice.label }} · {{ longTerm.rewardText(choice.reward) }}</button>

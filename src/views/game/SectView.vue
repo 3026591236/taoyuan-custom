@@ -53,6 +53,20 @@
           <div class="h-full bg-accent" :style="{ width: Math.min(100, Math.floor((longTerm.sectBuildExp / Math.max(1, longTerm.sectBuildNeed)) * 100)) + '%' }" />
         </div>
         <div class="text-[10px] text-muted">建设度 {{ longTerm.sectBuildExp }}/{{ longTerm.sectBuildNeed }} · 本月贡献 {{ longTerm.sectBuildContributed }}</div>
+
+        <div class="text-[10px] text-caution">三大工程：{{ longTerm.sectProjectBonusText }}</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+          <div v-for="project in longTerm.sectProjectCards" :key="project.id" class="border border-accent/10 rounded-xs p-2 space-y-1">
+            <div class="flex items-center justify-between"><span class="text-xs text-accent">{{ project.emoji }} {{ project.name }} Lv.{{ project.level }}</span><span class="text-[10px] text-muted">{{ project.effect }}</span></div>
+            <p class="text-[10px] text-muted leading-relaxed">{{ project.desc }}</p>
+            <div class="grid grid-cols-3 gap-1">
+              <button class="mini-build-btn" @click="contributeProject(project.id, 'money')">铜钱</button>
+              <button class="mini-build-btn" @click="contributeProject(project.id, 'spirit')">灵石</button>
+              <button class="mini-build-btn" @click="contributeProject(project.id, 'material')">灵墨</button>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
           <button class="btn justify-center text-xs" @click="contributeBuild('money')">捐铜钱1200</button>
           <button class="btn justify-center text-xs" @click="contributeBuild('spirit')">捐灵石8</button>
@@ -270,6 +284,12 @@
     showFloat(`拜入${SECTS.find(s => s.id === id)?.name}`, 'success')
   }
 
+  const contributeProject = (id: 'spirit_array' | 'craft_hall' | 'sword_platform', kind: 'money' | 'spirit' | 'material') => {
+    const res = longTerm.contributeSectProject(id, kind)
+    addLog(res.message)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+  }
+
   const contributeBuild = (kind: 'money' | 'spirit' | 'material') => {
     const res = longTerm.contributeSectBuild(kind)
     addLog(res.message)
@@ -348,4 +368,9 @@
 <style scoped>
   .sect-card { transition: all 0.3s; }
   .sect-card:hover { border-color: rgba(255, 180, 0, 0.4); box-shadow: 0 0 15px rgba(255, 180, 0, 0.1); }
+</style>
+
+<style scoped>
+.mini-build-btn { border: 1px solid rgba(200, 164, 92, 0.28); color: var(--accent); font-size: 10px; padding: 3px 4px; border-radius: 2px; }
+.mini-build-btn:hover { background: rgba(200, 164, 92, 0.12); }
 </style>

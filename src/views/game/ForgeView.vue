@@ -42,12 +42,29 @@
           <div class="border border-accent/10 rounded-xs p-2 text-[10px] space-y-1">
             <p class="text-accent">词条洗练</p>
             <p v-if="affixFor(gear.slot)" class="text-muted">
-              当前：{{ affixFor(gear.slot)?.name }} Lv.{{ affixFor(gear.slot)?.level }} · {{ affixFor(gear.slot)?.desc }}
+              当前：<span :class="affixRarityClass(affixFor(gear.slot)?.rarity)">{{ affixFor(gear.slot)?.rarity || '普通' }}·{{ affixFor(gear.slot)?.name }}</span>
+              Lv.{{ affixFor(gear.slot)?.level }} · {{ affixFor(gear.slot)?.desc }}
+              <span v-if="affixFor(gear.slot)?.setId"> · {{ setName(affixFor(gear.slot)?.setId) }}</span>
             </p>
-            <p v-else class="text-muted">暂无词条，可消耗灵石洗练出随机方向。</p>
-            <button class="btn w-full justify-center text-xs" :disabled="spiritStoneCount < 12" @click="rerollAffix(gear.slot)">洗练词条（灵石×12）</button>
+            <p v-else class="text-muted">暂无词条，可消耗灵石洗练出随机方向；连续8次未出稀有会触发保底。</p>
+            <div class="grid grid-cols-2 gap-1">
+              <button class="btn justify-center text-xs" :disabled="spiritStoneCount < (affixFor(gear.slot)?.locked ? 20 : 12)" @click="rerollAffix(gear.slot)">洗练（{{ affixFor(gear.slot)?.locked ? '锁定×20' : '灵石×12' }}）</button>
+              <button class="btn justify-center text-xs" :disabled="!affixFor(gear.slot)" @click="toggleAffixLock(gear.slot)">{{ affixFor(gear.slot)?.locked ? '解锁词条' : '锁定词条' }}</button>
+            </div>
+            <p class="text-muted">保底进度：{{ longTerm.gearPity[gear.slot] || 0 }}/8</p>
           </div>
 
+        </div>
+      </div>
+
+
+      <div class="border border-accent/15 rounded-xs p-3 text-[10px] text-muted leading-relaxed space-y-2">
+        <p class="text-accent text-xs">套装词条与稀有图鉴</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div v-for="set in longTerm.gearSetBonuses" :key="set.id" class="stat-chip" :class="set.active ? 'text-success' : ''">{{ set.name }} {{ set.count }}/4 · {{ set.desc }}</div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-1">
+          <div v-for="entry in longTerm.rareAffixCodex" :key="entry.name" class="stat-chip" :class="entry.discovered ? affixRarityClass(entry.rarity) : 'text-muted'">{{ entry.discovered ? '已发现' : '未发现' }} · {{ entry.rarity }} {{ entry.name }} · {{ entry.desc }}</div>
         </div>
       </div>
 
@@ -89,6 +106,8 @@
   const spiritStoneCount = computed(() => inv.getItemCount('spirit_stone'))
 
   const affixFor = (slot: string) => longTerm.gearAffixes[slot]?.[0]
+  const setName = (id?: string) => ({ demon: '镇魔套装', spirit: '聚灵套装', sea: '瀚海套装' } as Record<string, string>)[id || ''] || ''
+  const affixRarityClass = (rarity?: string) => rarity === '绝品' ? 'text-amber-300' : rarity === '稀有' ? 'text-purple-300' : 'text-accent'
 
   const gearCards = computed(() => DAO_GEAR.map(gear => {
     const level = cultivationStore.daoGearLevel(gear.id)
@@ -108,6 +127,12 @@
       tribulation: Math.round(level * gear.tribulationPerLevel * 100)
     }
   }))
+
+  const toggleAffixLock = (slot: string) => {
+    const res = longTerm.toggleAffixLock(slot)
+    addLog(res.message)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+  }
 
   const rerollAffix = (slot: string) => {
     const res = longTerm.rerollGearAffix(slot)

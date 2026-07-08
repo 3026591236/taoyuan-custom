@@ -46,6 +46,24 @@
       <!-- 新手引导 -->
       <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">{{ tutorialHint }}</p>
 
+
+      <!-- 中后期经营目标 -->
+      <div class="mb-3 border border-accent/20 rounded-xs p-3 space-y-2 bg-black/10">
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-accent">灵田经营目标</p>
+          <span class="text-[10px] text-muted">规模 · 温室 · 自动化 · 灵植链</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div v-for="goal in farmGoalCards" :key="goal.id" class="border border-accent/10 rounded-xs p-2 space-y-1" :class="goal.done && !goal.claimed ? 'bg-accent/5' : ''">
+            <div class="flex items-center justify-between"><span class="text-xs">{{ goal.title }}</span><span class="text-[10px] text-muted">{{ goal.progress }}/{{ goal.target }}</span></div>
+            <p class="text-[10px] text-muted leading-relaxed">{{ goal.desc }}</p>
+            <div class="h-1.5 bg-bg border border-accent/20 rounded-xs overflow-hidden"><div class="h-full bg-accent" :style="{ width: Math.min(100, Math.floor((goal.progress / Math.max(1, goal.target)) * 100)) + '%' }" /></div>
+            <div class="text-[10px] text-accent">{{ longTerm.rewardText(goal.reward) }}</div>
+            <button class="btn w-full justify-center text-xs" :disabled="!goal.done || goal.claimed" @click="claimFarmGoal(goal.id)">{{ goal.claimed ? '已领取' : goal.done ? '领取奖励' : '经营中' }}</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 批量操作入口 -->
       <div class="mb-3">
         <Button class="w-full md:w-auto" :icon-size="12" :icon="Wrench" @click="showBatchActions = true">一键操作</Button>
@@ -1118,6 +1136,7 @@
   import { useSkillStore } from '@/stores/useSkillStore'
   import { useTutorialStore } from '@/stores/useTutorialStore'
   import { useWalletStore } from '@/stores/useWalletStore'
+  import { useLongTermStore } from '@/stores/useLongTermStore'
   import { getCropById, getCropsBySeason, getItemById } from '@/data'
   import { getStarRating, shouldReturnBreedingSeed, generateGeneticsId } from '@/data/breeding'
   import { FRUIT_TREE_DEFS, MAX_FRUIT_TREES } from '@/data/fruitTrees'
@@ -1155,6 +1174,7 @@
   const farmTab = ref<'field' | 'tree'>('field')
 
   const farmStore = useFarmStore()
+  const longTerm = useLongTermStore()
   const inventoryStore = useInventoryStore()
   const gameStore = useGameStore()
   const homeStore = useHomeStore()
@@ -1265,6 +1285,22 @@
   const wanwupuClosedReason = computed(() => {
     return '万物铺' + getShopClosedReason(wanwupu, gameStore.day, gameStore.hour, gameStore.weather, gameStore.season)
   })
+
+
+  const farmGoalStats = computed(() => {
+    const tilled = farmStore.plots.filter(p => p.state !== 'wasteland').length
+    const greenhouse = farmStore.greenhouseLevel * 3 + farmStore.greenhousePlots.filter(p => p.state !== 'wasteland').length
+    const automation = farmStore.sprinklers.length + farmStore.scarecrows + farmStore.lightningRods
+    const spiritItems = ['spirit_rice', 'dew_grass', 'vermilion_fruit', 'ice_soul_lotus', 'purple_ganoderma']
+    const spiritStock = spiritItems.reduce((sum, id) => sum + inventoryStore.getItemCount(id), 0)
+    return { field_scale: tilled, greenhouse_supply: greenhouse, automation, spirit_crop_chain: spiritStock }
+  })
+  const farmGoalCards = computed(() => longTerm.farmGoalCards(farmGoalStats.value))
+  const claimFarmGoal = (id: 'field_scale' | 'greenhouse_supply' | 'automation' | 'spirit_crop_chain') => {
+    const res = longTerm.claimFarmGoal(id, farmGoalStats.value)
+    addLog(res.message)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+  }
 
   const getItemName = (itemId: string): string => getItemById(itemId)?.name ?? itemId
 
