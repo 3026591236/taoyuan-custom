@@ -64,6 +64,35 @@
             <button class="btn w-full justify-center" @click="saveConfig">保存基础配置</button>
           </div>
 
+          <div v-if="activeTab === 'announcements'" class="border border-accent/20 rounded-xs p-3 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 class="text-accent">全服滚动公告</h2>
+                <p class="text-xs text-muted mt-1">发布后会进入全服公告队列，在线玩家会在游戏顶部看到滚动通知。内容会自动加上“📢 全服公告：”前缀。</p>
+              </div>
+              <button class="btn text-xs" @click="loadWorldAnnouncements">刷新公告</button>
+            </div>
+            <textarea v-model="newWorldAnnouncement" class="input min-h-24" maxlength="500" placeholder="请输入要滚动展示给全服玩家的公告内容，最多500字" />
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+              <span>{{ newWorldAnnouncement.length }}/500</span>
+              <button class="btn justify-center" @click="publishWorldAnnouncement">发布全服公告</button>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="text-sm text-accent">最近公告</h3>
+                <span class="text-xs text-muted">保留最近50条，玩家侧读取最近10条。</span>
+              </div>
+              <div v-if="worldAnnouncements.length === 0" class="text-xs text-muted">暂无公告。</div>
+              <div v-for="ann in worldAnnouncements" :key="ann.id" class="border border-accent/10 rounded-xs p-2 space-y-1">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span class="text-muted">{{ formatTime(ann.time) }} / {{ ann.type || 'admin' }}</span>
+                  <button class="btn text-xs text-danger" @click="deleteWorldAnnouncement(ann)">删除</button>
+                </div>
+                <p class="text-sm whitespace-pre-wrap">{{ ann.message }}</p>
+              </div>
+            </div>
+          </div>
+
           <div v-if="activeTab === 'about'" class="border border-accent/20 rounded-xs p-3 space-y-3">
             <h2 class="text-accent">关于游戏 / 赞助作者</h2>
             <p class="text-xs text-muted">这些内容会显示在首页“关于游戏”和“赞助作者”弹窗里。二维码图片地址留空时使用内置默认图片。</p>
@@ -333,10 +362,11 @@ const username = ref('')
 const password = ref('')
 const user = ref<any>(null)
 const keyword = ref('')
-const activeTab = ref<'basic' | 'about' | 'updates' | 'players' | 'saveAudit' | 'ledger' | 'gm' | 'feedbacks'>('basic')
+const activeTab = ref<'basic' | 'about' | 'announcements' | 'updates' | 'players' | 'saveAudit' | 'ledger' | 'gm' | 'feedbacks'>('basic')
 const adminTabs = [
   { key: 'basic', label: '基础配置' },
   { key: 'about', label: '关于/赞助' },
+  { key: 'announcements', label: '全服公告' },
   { key: 'updates', label: '更新记录' },
   { key: 'players', label: '玩家管理' },
   { key: 'saveAudit', label: '存档审计' },
@@ -348,6 +378,8 @@ const message = ref('')
 const messageType = ref<'ok' | 'error'>('ok')
 const config = reactive<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], aboutQqText: '', aboutQqUrl: '', aboutGithubUrl: '', aboutTapTapUrl: '', sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: '', iosDownloadUrl: '', androidDownloadUrl: '', registrationEnabled: true, maintenanceMode: false })
 const overview = reactive<any>({ stats: { userCount: 0, saveCount: 0, sessionCount: 0 }, users: [] })
+const newWorldAnnouncement = ref('')
+const worldAnnouncements = ref<any[]>([])
 const economyEvents = ref<any[]>([])
 const ledgerKeyword = ref('')
 const ledgerType = ref('')
@@ -548,6 +580,25 @@ async function api(path: string, options: RequestInit = {}) {
 async function loadMe() { const data = await api('/api/me', { headers: headers() }); user.value = data.user }
 async function loadConfig() { Object.assign(config, await api(user.value?.role === 'admin' ? '/api/admin/config' : '/api/config', { headers: headers() })) }
 async function loadOverview() { if (user.value?.role === 'admin') Object.assign(overview, await api('/api/admin/overview', { headers: headers() })) }
+async function loadWorldAnnouncements() {
+  if (user.value?.role !== 'admin') return
+  const data = await api('/api/admin/world-announcements?limit=30', { headers: headers() })
+  worldAnnouncements.value = data.announcements || []
+}
+async function publishWorldAnnouncement() {
+  const message = newWorldAnnouncement.value.trim()
+  if (!message) { setMsg('公告内容不能为空', 'error'); return }
+  try {
+    const data = await api('/api/admin/world-announcements', { method: 'POST', headers: headers(), body: JSON.stringify({ message, type: 'admin' }) })
+    worldAnnouncements.value = data.announcements || []
+    newWorldAnnouncement.value = ''
+    setMsg('全服公告已发布')
+  } catch (e: any) { setMsg(e.message, 'error') }
+}
+async function deleteWorldAnnouncement(ann: any) {
+  if (!confirm('确定删除这条全服公告？')) return
+  try { await api(`/api/admin/world-announcements/${encodeURIComponent(ann.id)}`, { method: 'DELETE', headers: headers() }); await loadWorldAnnouncements(); setMsg('公告已删除') } catch (e: any) { setMsg(e.message, 'error') }
+}
 async function loadEconomyEvents() {
   if (user.value?.role !== 'admin') return
   const q = new URLSearchParams()
@@ -580,12 +631,12 @@ async function loadSaveAuditEvents() {
   const data = await api(`/api/admin/save-audit-events?${q.toString()}`, { headers: headers() })
   saveAuditEvents.value = data.events || []
 }
-async function refreshAll() { try { await loadMe(); await loadConfig(); await loadOverview(); await loadEconomyEvents(); await loadSaveAuditEvents(); setMsg('后台数据已刷新') } catch (e: any) { setMsg(e.message, 'error') } }
+async function refreshAll() { try { await loadMe(); await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); await loadEconomyEvents(); await loadSaveAuditEvents(); setMsg('后台数据已刷新') } catch (e: any) { setMsg(e.message, 'error') } }
 async function login() {
-  try { const data = await api('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); localStorage.setItem('taoyuan_account_token', data.token); user.value = data.user; await loadConfig(); await loadOverview(); setMsg('登录成功') } catch (e: any) { setMsg(e.message, 'error') }
+  try { const data = await api('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); localStorage.setItem('taoyuan_account_token', data.token); user.value = data.user; await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); setMsg('登录成功') } catch (e: any) { setMsg(e.message, 'error') }
 }
 async function register() {
-  try { const data = await api('/api/auth/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); localStorage.setItem('taoyuan_account_token', data.token); user.value = data.user; await loadConfig(); await loadOverview(); setMsg(data.message || '注册成功') } catch (e: any) { setMsg(e.message, 'error') }
+  try { const data = await api('/api/auth/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); localStorage.setItem('taoyuan_account_token', data.token); user.value = data.user; await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); setMsg(data.message || '注册成功') } catch (e: any) { setMsg(e.message, 'error') }
 }
 function addUpdateLog() {
   config.updateLogs ||= []
@@ -651,5 +702,5 @@ function saveAuditStatusLabel(t: string) {
   const labels: Record<string, string> = { ok: '正常', conflict: '冲突' }
   return labels[t] || t
 }
-onMounted(async () => { try { await loadMe(); await loadConfig(); await loadOverview(); await loadEconomyEvents(); await loadSaveAuditEvents() } catch {} })
+onMounted(async () => { try { await loadMe(); await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); await loadEconomyEvents(); await loadSaveAuditEvents() } catch {} })
 </script>
