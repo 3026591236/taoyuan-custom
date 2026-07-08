@@ -284,6 +284,7 @@ const defaultConfig = {
   iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-08", title: "V1.6.6 镇魔结算修复", content: "修复活动中心镇魔周期战报显示内部 eventId 的问题，改为展示本期周期；领取结算邮件时补充账号登录鉴权，避免已登录玩家仍提示请先登录。" },
     { date: "2026-07-08", title: "V1.6.5 镇魔周期结算", content: "全服镇魔新增周期战报与邮件结算：活动中心可查看本期贡献、参与人数和结算评级，并按个人贡献发放镇魔司邮件奖励，避免奖励只停留在本地档位。" },
     { date: "2026-07-08", title: "V1.6.4 全量留存玩法", content: "新增全服镇魔个人贡献奖励、宗门公共建设、装备词条洗练、闭关归来礼包、奇遇链与月度修行令，全部接入现有活动/门派/炼器入口与存档。" },
     { date: "2026-07-07", title: "V1.6.3 周修行令", content: "活动中心新增周修行令，每7个游戏日重置一次，把秘境战斗、烹饪、博物馆捐赠、公会贡献、瀚海商誉、育种和钓鱼串成周目标，奖励灵石、灵气、资质经验和修仙材料。" },
@@ -1042,7 +1043,8 @@ app.get('/api/events/world-boss', async (req, res) => {
     }
     const target = 300
     const statusText = progress >= target ? '已镇压' : progress >= target * 0.6 ? '决战中' : '进行中'
-    send(res, 200, { eventId: 'yaochao-v152', title: '世界妖潮', progress, target, participants, percent: Math.min(100, Math.floor(progress / target * 100)), statusText })
+    const cycleKey = getWorldBossCycleKey()
+    send(res, 200, { eventId: 'yaochao-v152', cycleKey, title: '世界妖潮', progress, target, participants, percent: Math.min(100, Math.floor(progress / target * 100)), statusText })
   } catch (e) { console.error('world boss err', e); send(res, 500, { error: '服务器错误' }) }
 })
 

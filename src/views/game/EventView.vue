@@ -284,6 +284,7 @@ const router = useRouter()
 const retention = useRetentionStore()
 const longTerm = useLongTermStore()
 const saveStore = useSaveStore()
+function accountToken() { return localStorage.getItem('taoyuan_account_token') || localStorage.getItem('taoyuan_token') || '' }
 
 const worldBoss = reactive({ progress: 0, target: 300, participants: 0, statusText: '统计中', cycleKey: '本周' })
 const cycleClaiming = ref(false)
@@ -334,9 +335,11 @@ async function claimWorldBossCycle() {
   cycleClaiming.value = true
   try {
     const playerName = saveStore.getSlots().find(s => s.slot === saveStore.activeSlot)?.playerName || ''
+    const token = accountToken()
+    if (!token) throw new Error('请先登录账号后再领取结算邮件')
     const res = await fetch('/api/events/world-boss/claim-cycle', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
       body: JSON.stringify({ playerName, personalScore: retention.yaochaoPersonalKills, globalProgress: worldBoss.progress, globalTarget: worldBoss.target, participants: worldBoss.participants })
     })
     const data = await res.json().catch(() => ({}))
@@ -368,7 +371,7 @@ async function loadWorldBoss() {
     worldBoss.target = Number(data.target || 300)
     worldBoss.participants = Number(data.participants || 0)
     worldBoss.statusText = data.statusText || (worldBoss.progress >= worldBoss.target ? '已镇压' : '进行中')
-    worldBoss.cycleKey = data.cycleKey || data.eventId || '本周'
+    worldBoss.cycleKey = data.cycleKey || '本周'
   } catch {
     worldBoss.statusText = '本地进行中'
     worldBoss.progress = retention.yaochaoPersonalKills
