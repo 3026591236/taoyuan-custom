@@ -284,6 +284,7 @@ const defaultConfig = {
   iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
   updateLogs: [
+    { date: "2026-07-08", title: "V1.7.1 灵石炼气", content: "洞府灵石坊新增灵石炼气，可将大量灵石转化为灵气；每日固定10次，首次1000灵石约转10000灵气，后续同日成本快速递增且收益递减，定位为消耗多余灵石与突破前补缺口，避免无限膨胀。" },
     { date: "2026-07-08", title: "V1.7.0 公告重复滚动间隔", content: "后台全服公告新增重复间隔设置，发布时可填写每多少分钟重复滚动一次；填0则只展示一次，方便长期活动、维护和补偿提醒定时重复露出。" },
     { date: "2026-07-08", title: "V1.6.9 后台全服滚动公告", content: "后台新增全服滚动公告管理，可手动发布、刷新和删除公告；玩家在线时会在游戏顶部看到公告滚动通知，方便活动、维护和补偿提示。" },
     { date: "2026-07-08", title: "V1.6.8 家族传承与子女成长", content: "小屋家人系统新增家族传承、配偶助手专精、子女资质/学识/羁绊成长与每日家族委托，让结婚和子女系统形成长期追求。" },

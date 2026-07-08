@@ -78,7 +78,20 @@
     <!-- ===== 灵石坊 ===== -->
     <Divider title label="💎 灵石坊" />
     <div class="game-panel p-3 space-y-2">
-      <p class="text-xs text-muted leading-relaxed">灵石目前是背包材料：秘境会掉落，炼器会消耗，普通出售仍换铜钱；多余修仙材料可在这里折换成灵石。</p>
+      <p class="text-xs text-muted leading-relaxed">灵石目前是背包材料：秘境会掉落，炼器会消耗，普通出售仍换铜钱；多余修仙材料可在这里折换成灵石。为避免数值膨胀，灵石炼气有每日次数限制，且同日连续转化成本递增、收益略降。</p>
+      <div class="border border-accent/20 rounded-xs p-3 space-y-2 bg-black/10">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p class="text-accent text-sm">灵石炼气</p>
+            <p class="text-[10px] text-muted">今日 {{ cultivation.spiritStoneRefineCountToday }}/{{ cultivation.spiritStoneRefineLimit }} 次，剩余 {{ cultivation.spiritStoneRefineRemaining }} 次</p>
+          </div>
+          <div class="text-xs text-muted">灵石×{{ cultivation.spiritStoneRefineCost }} → 灵气+{{ cultivation.spiritStoneRefineAuraGain }}</div>
+        </div>
+        <Button class="w-full justify-center" :disabled="itemCount('spirit_stone') < cultivation.spiritStoneRefineCost || cultivation.spiritStoneRefineRemaining <= 0" @click="cultivation.refineSpiritStoneToAura">
+          灵石炼气（持有灵石 {{ itemCount('spirit_stone') }}）
+        </Button>
+        <p class="text-[10px] text-muted leading-relaxed">每日固定10次。首次约1000灵石→10000灵气，后续同日成本快速递增、收益逐步递减，定位为消耗大量多余灵石、突破前补缺口，避免无限刷灵气。</p>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div v-for="recipe in SPIRIT_STONE_EXCHANGES" :key="recipe.id" class="border border-accent/15 rounded-xs p-2 text-xs space-y-1">
           <div class="flex items-center justify-between gap-2">
