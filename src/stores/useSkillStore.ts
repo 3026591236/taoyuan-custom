@@ -2,6 +2,9 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { SkillType, SkillState, SkillPerk5, SkillPerk10 } from '@/types'
 import { useInventoryStore } from './useInventoryStore'
+import { usePlayerStore } from './usePlayerStore'
+import { addLog } from '@/composables/useGameLog'
+import { useGameStore } from './useGameStore'
 
 /** 各等级所需累计经验 **/
 const EXP_TABLE = [0, 100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000, 15000]
@@ -29,6 +32,14 @@ export const useSkillStore = defineStore('skill', () => {
   const miningLevel = computed(() => getSkill('mining').level)
   const foragingLevel = computed(() => getSkill('foraging').level)
   const combatLevel = computed(() => getSkill('combat').level)
+  type ProfessionOrderId = 'chef_supply' | 'angler_stock' | 'miner_refine' | 'forager_bundle'
+  const professionOrdersDone = ref<string[]>([])
+  const PROFESSION_ORDERS: { id: ProfessionOrderId; name: string; desc: string; skill: SkillType; itemId: string; itemName: string; quantity: number; money: number; exp: number }[] = [
+    { id: 'chef_supply', name: '灶台供餐', desc: '提交蕴灵稻，为村庄、宗门和家族提供日常膳食。', skill: 'farming', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 3, money: 1600, exp: 65 },
+    { id: 'angler_stock', name: '鱼鲜备货', desc: '提交鱼肉，补足商圈与家宴消耗。', skill: 'fishing', itemId: 'fish', itemName: '鱼', quantity: 5, money: 1200, exp: 55 },
+    { id: 'miner_refine', name: '矿材精炼', desc: '提交铁锭，支撑修仙装备和公会工程。', skill: 'mining', itemId: 'iron_bar', itemName: '铁锭', quantity: 3, money: 1500, exp: 60 },
+    { id: 'forager_bundle', name: '山野药篓', desc: '提交草药，为炼丹、医馆与反馈补偿储备材料。', skill: 'foraging', itemId: 'herb', itemName: '草药', quantity: 6, money: 1100, exp: 58 }
+  ]
 
   /** 增加经验并自动升级（含戒指经验加成） */
   const addExp = (type: SkillType, amount: number): { leveledUp: boolean; newLevel: number } => {
@@ -109,8 +120,25 @@ export const useSkillStore = defineStore('skill', () => {
     return 'normal'
   }
 
+  const currentOrderKey = () => { const g = useGameStore(); return `${g.year}-${g.season}-${g.day}` }
+  const professionOrderCards = computed(() => PROFESSION_ORDERS.map(o => ({ ...o, done: professionOrdersDone.value.includes(`${currentOrderKey()}:${o.id}`), level: getSkill(o.skill).level })))
+  const completeProfessionOrder = (id: ProfessionOrderId): { success: boolean; message: string } => {
+    const order = PROFESSION_ORDERS.find(o => o.id === id)
+    if (!order) return { success: false, message: '职业委托不存在。' }
+    const key = `${currentOrderKey()}:${id}`
+    if (professionOrdersDone.value.includes(key)) return { success: false, message: '今日已完成。' }
+    const inv = useInventoryStore()
+    if (inv.getItemCount(order.itemId) < order.quantity) return { success: false, message: `${order.itemName}不足，需要${order.quantity}。` }
+    inv.removeItem(order.itemId, order.quantity)
+    usePlayerStore().earnMoney(order.money)
+    addExp(order.skill, order.exp)
+    professionOrdersDone.value.push(key)
+    addLog(`完成生活职业委托「${order.name}」，获得${order.money}文与${order.exp}技能经验。`)
+    return { success: true, message: `${order.name}完成。` }
+  }
+
   const serialize = () => {
-    return { skills: skills.value }
+    return { skills: skills.value, professionOrdersDone: professionOrdersDone.value }
   }
 
   const deserialize = (data: ReturnType<typeof serialize>) => {
@@ -136,6 +164,7 @@ export const useSkillStore = defineStore('skill', () => {
       }
     }
     skills.value = arr
+    professionOrdersDone.value = Array.isArray((data as any).professionOrdersDone) ? (data as any).professionOrdersDone : []
   }
 
   return {
@@ -145,6 +174,8 @@ export const useSkillStore = defineStore('skill', () => {
     miningLevel,
     foragingLevel,
     combatLevel,
+    professionOrderCards,
+    completeProfessionOrder,
     getSkill,
     addExp,
     getExpToNextLevel,

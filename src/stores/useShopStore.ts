@@ -397,6 +397,12 @@ export const useShopStore = defineStore('shop', () => {
   }
 
   /** 获取近7天各品类总出货量 */
+  const marketSignalCards = computed(() => {
+    const recent = getRecentShipping()
+    const cats: MarketCategory[] = ['crop', 'fish', 'animal_product', 'processed', 'fruit', 'ore', 'gem']
+    return cats.map(cat => ({ category: cat, volume: recent[cat] ?? 0, multiplier: getMarketMultiplier(cat, gameStore.year, gameStore.seasonIndex, gameStore.day, recent[cat] ?? 0) }))
+  })
+
   const getRecentShipping = (): Partial<Record<MarketCategory, number>> => {
     _pruneShippingHistory()
     const result: Partial<Record<MarketCategory, number>> = {}
@@ -466,6 +472,7 @@ export const useShopStore = defineStore('shop', () => {
     shippedItems,
     // 行情供需
     getRecentShipping,
+    marketSignalCards,
     // 序列化
     serialize,
     deserialize

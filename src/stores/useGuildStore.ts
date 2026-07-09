@@ -40,6 +40,13 @@ export const useGuildStore = defineStore('guild', () => {
   /** 永久总购买数追踪：{ itemId: 累计已购次数 } */
   const totalPurchases = ref<Record<string, number>>({})
   const weeklyExpeditionClaimed = ref<string[]>([])
+  type GuildProjectId = 'monster_watch' | 'supply_line' | 'sect_drill'
+  const guildProjects = ref<Record<GuildProjectId, number>>({ monster_watch: 0, supply_line: 0, sect_drill: 0 })
+  const GUILD_PROJECTS: { id: GuildProjectId; name: string; desc: string; itemId: string; itemName: string; quantity: number; exp: number; max: number }[] = [
+    { id: 'monster_watch', name: '妖踪巡哨', desc: '提交灵骨布置巡哨，提升公会讨伐组织度。', itemId: 'spirit_bone', itemName: '灵骨', quantity: 1, exp: 55, max: 10 },
+    { id: 'supply_line', name: '远征补给线', desc: '提交云纹丝修整护具，支撑宗门/公会远征。', itemId: 'cloud_silk', itemName: '云纹丝', quantity: 1, exp: 70, max: 8 },
+    { id: 'sect_drill', name: '宗门合练', desc: '消耗灵石组织合练，给战斗与公会周常一个长期消耗点。', itemId: 'spirit_stone', itemName: '灵石', quantity: 10, exp: 65, max: 12 }
+  ]
   const WEEKLY_EXPEDITIONS = [
     { id: 'raid', name: '公会周常·秘境讨伐', desc: '本周累计击杀20只怪物。', target: 20, rewardPoints: 90 },
     { id: 'donate', name: '公会周常·物资筹备', desc: '公会等级达到2或贡献点达到300。', target: 1, rewardPoints: 70 },
@@ -193,6 +200,23 @@ export const useGuildStore = defineStore('guild', () => {
     return guildLevel.value * GUILD_BONUS_PER_LEVEL.maxHp
   }
 
+  const guildProjectCards = computed(() => GUILD_PROJECTS.map(p => ({ ...p, level: guildProjects.value[p.id] ?? 0, completed: (guildProjects.value[p.id] ?? 0) >= p.max })))
+  const guildProjectBonusText = computed(() => `协作工程：攻击+${guildProjects.value.monster_watch * 2}，生命+${guildProjects.value.supply_line * 8}，周常贡献+${guildProjects.value.sect_drill * 2}%`)
+  const contributeGuildProject = (id: GuildProjectId): { success: boolean; message: string } => {
+    const project = GUILD_PROJECTS.find(p => p.id === id)
+    if (!project) return { success: false, message: '工程不存在。' }
+    if ((guildProjects.value[id] ?? 0) >= project.max) return { success: false, message: '工程已满级。' }
+    const inv = useInventoryStore()
+    if (inv.getItemCount(project.itemId) < project.quantity) return { success: false, message: `${project.itemName}不足，需要${project.quantity}。` }
+    inv.removeItem(project.itemId, project.quantity)
+    guildProjects.value[id] = (guildProjects.value[id] ?? 0) + 1
+    contributionPoints.value += Math.floor(project.exp * 0.7)
+    guildExp.value += project.exp
+    checkLevelUp()
+    addLog(`参与${project.name}，公会经验+${project.exp}。`)
+    return { success: true, message: `${project.name}进度+1。` }
+  }
+
   const weeklyExpeditions = computed(() => {
     ensureWeeklyReset()
     const totalKills = Object.values(monsterKills.value).reduce((s, n) => s + (Number(n) || 0), 0)
@@ -209,12 +233,14 @@ export const useGuildStore = defineStore('guild', () => {
     if (!task.done) return { success: false, message: '周常目标尚未完成。' }
     if (task.claimed) return { success: false, message: '本周已领取。' }
     const inventory = useInventoryStore()
-    contributionPoints.value += task.rewardPoints
-    guildExp.value += Math.floor(task.rewardPoints * 0.8)
+    const projectBonus = 1 + (guildProjects.value.sect_drill || 0) * 0.02
+    const points = Math.floor(task.rewardPoints * projectBonus)
+    contributionPoints.value += points
+    guildExp.value += Math.floor(points * 0.8)
     inventory.addItem('spirit_stone', Math.max(3, Math.floor(task.rewardPoints / 20)))
     weeklyExpeditionClaimed.value.push(id)
     checkLevelUp()
-    addLog(`完成${task.name}，贡献点+${task.rewardPoints}。`)
+    addLog(`完成${task.name}，贡献点+${points}。`)
     return { success: true, message: `${task.name}奖励已领取。` }
   }
 
@@ -331,7 +357,7 @@ export const useGuildStore = defineStore('guild', () => {
     weeklyPurchases: { ...weeklyPurchases.value },
     lastResetWeek: lastResetWeek.value,
     totalPurchases: { ...totalPurchases.value },
-    weeklyExpeditionClaimed: [...weeklyExpeditionClaimed.value]
+    weeklyExpeditionClaimed: [...weeklyExpeditionClaimed.value], guildProjects: { ...guildProjects.value }
   })
 
   /** 反序列化 */
@@ -345,6 +371,7 @@ export const useGuildStore = defineStore('guild', () => {
     lastResetWeek.value = ((data as Record<string, unknown>).lastResetWeek as number) ?? -1
     totalPurchases.value = ((data as Record<string, unknown>).totalPurchases as Record<string, number>) ?? {}
     weeklyExpeditionClaimed.value = ((data as Record<string, unknown>).weeklyExpeditionClaimed as string[]) ?? []
+    guildProjects.value = { monster_watch: 0, supply_line: 0, sect_drill: 0, ...(((data as any).guildProjects) ?? {}) }
 
     // 旧存档迁移：如果没有贡献点字段但有已领取的讨伐目标，补发贡献点（不补经验，经验只来自捐献）
     const isOldSave = !('contributionPoints' in data)
@@ -373,6 +400,10 @@ export const useGuildStore = defineStore('guild', () => {
     contributionPoints,
     guildExp,
     guildLevel,
+    guildProjects,
+    guildProjectCards,
+    guildProjectBonusText,
+    contributeGuildProject,
     recordKill,
     recordEncounter,
     getKillCount,

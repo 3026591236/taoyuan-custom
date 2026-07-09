@@ -14,6 +14,13 @@ export const useMuseumStore = defineStore('museum', () => {
   const restoredProjects = ref<string[]>([])
   const fame = ref(0)
   const lastIncomeDay = ref('')
+  type ExhibitionId = 'farm_memory' | 'beast_bones' | 'immortal_relics'
+  const activeExhibition = ref<ExhibitionId>('farm_memory')
+  const EXHIBITIONS: { id: ExhibitionId; name: string; desc: string; fameNeed: number; incomeRate: number }[] = [
+    { id: 'farm_memory', name: '桃源农事展', desc: '展示农具、作物与村庄旧物，每日收入+8%。', fameNeed: 0, incomeRate: 1.08 },
+    { id: 'beast_bones', name: '妖骨秘闻展', desc: '突出秘境与妖兽藏品，每日收入+14%。', fameNeed: 80, incomeRate: 1.14 },
+    { id: 'immortal_relics', name: '登仙遗珍展', desc: '主打法宝、古碑与仙界遗珍，每日收入+20%。', fameNeed: 180, incomeRate: 1.2 }
+  ]
 
   /** 已捐赠数量 */
   const donatedCount = computed(() => donatedItems.value.length)
@@ -23,7 +30,15 @@ export const useMuseumStore = defineStore('museum', () => {
   const themeProgress = computed(() => MUSEUM_THEME_COLLECTIONS.map(t => ({ ...t, donated: t.itemIds.filter(id => isDonated(id)).length, total: t.itemIds.length, completed: t.itemIds.every(id => isDonated(id)), claimed: claimedThemes.value.includes(t.id) })))
   const restorationProjects = computed(() => MUSEUM_RESTORATIONS.map(r => ({ ...r, restored: restoredProjects.value.includes(r.id), unlocked: donatedCount.value >= r.requiredDonations })))
   const museumLevel = computed(() => Math.min(8, Math.floor((fame.value + donatedCount.value * 8 + restoredProjects.value.length * 25) / 120) + 1))
-  const dailyIncome = computed(() => Math.floor(donatedCount.value * 18 + fame.value * 2.5 + restoredProjects.value.length * 120 + claimedThemes.value.length * 80))
+  const exhibitionRate = computed(() => EXHIBITIONS.find(e => e.id === activeExhibition.value)?.incomeRate ?? 1)
+  const dailyIncome = computed(() => Math.floor((donatedCount.value * 18 + fame.value * 2.5 + restoredProjects.value.length * 120 + claimedThemes.value.length * 80) * exhibitionRate.value))
+  const exhibitionCards = computed(() => EXHIBITIONS.map(e => ({ ...e, active: activeExhibition.value === e.id, unlocked: fame.value >= e.fameNeed })))
+  const setExhibition = (id: ExhibitionId): boolean => {
+    const e = EXHIBITIONS.find(x => x.id === id)
+    if (!e || fame.value < e.fameNeed) return false
+    activeExhibition.value = id
+    return true
+  }
 
   /** 是否已捐赠 */
   const isDonated = (itemId: string): boolean => {
@@ -140,7 +155,7 @@ export const useMuseumStore = defineStore('museum', () => {
     claimedThemes: [...claimedThemes.value],
     restoredProjects: [...restoredProjects.value],
     fame: fame.value,
-    lastIncomeDay: lastIncomeDay.value
+    lastIncomeDay: lastIncomeDay.value, activeExhibition: activeExhibition.value
   })
 
   /** 反序列化 */
@@ -151,6 +166,7 @@ export const useMuseumStore = defineStore('museum', () => {
     restoredProjects.value = (data as any).restoredProjects ?? []
     fame.value = (data as any).fame ?? Math.floor(donatedItems.value.length * 3)
     lastIncomeDay.value = (data as any).lastIncomeDay ?? ''
+    activeExhibition.value = ((data as any).activeExhibition ?? 'farm_memory') as ExhibitionId
   }
 
   return {
@@ -159,6 +175,10 @@ export const useMuseumStore = defineStore('museum', () => {
     claimedThemes,
     restoredProjects,
     fame,
+    activeExhibition,
+    exhibitionCards,
+    exhibitionRate,
+    setExhibition,
     donatedCount,
     totalCount,
     themeProgress,

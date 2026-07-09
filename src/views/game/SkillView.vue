@@ -4,6 +4,18 @@
       <Star :size="14" class="inline" />
       技能
     </h3>
+    <div class="border border-accent/20 rounded-xs p-3 mb-3 bg-accent/5">
+      <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">生活职业委托</p><span class="text-[10px] text-muted">每日一次 · 消耗产物换技能经验</span></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="order in skillStore.professionOrderCards" :key="order.id" class="border border-accent/10 rounded-xs p-2">
+          <div class="flex items-center justify-between"><span class="text-xs text-accent">{{ order.name }}</span><span class="text-[10px] text-muted">{{ SKILL_NAMES[order.skill] }} Lv.{{ order.level }}</span></div>
+          <p class="text-[10px] text-muted leading-relaxed">{{ order.desc }}</p>
+          <p class="text-[10px] text-warning">交付：{{ order.itemName }}×{{ order.quantity }} · 奖励 {{ order.money }}文 / 经验{{ order.exp }}</p>
+          <button class="btn w-full justify-center mt-1" :disabled="order.done" @click="skillStore.completeProfessionOrder(order.id)">{{ order.done ? '今日已完成' : '完成委托' }}</button>
+        </div>
+      </div>
+    </div>
+
     <div class="space-y-3">
       <div v-for="skill in skillStore.skills" :key="skill.type" class="game-panel">
         <!-- 标题行：图标 + 名称等级 + 经验 -->

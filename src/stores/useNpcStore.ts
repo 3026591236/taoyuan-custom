@@ -23,6 +23,7 @@ import { useFarmStore } from './useFarmStore'
 import { useAnimalStore } from './useAnimalStore'
 import { useFishPondStore } from './useFishPondStore'
 import { useFishingStore } from './useFishingStore'
+import { addLog } from '@/composables/useGameLog'
 
 /** 好感等级阈值 (10心制, 每心250点, 上限2500) */
 const FRIENDSHIP_THRESHOLDS: { level: FriendshipLevel; min: number }[] = [
@@ -38,6 +39,13 @@ type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project' | 'fa
 
 const FAMILY_SPECIALTY_NAMES: Record<FamilySpecialty, string> = { farming: '农务助手', ranching: '牧场管家', foraging: '采集搭档', cultivation: '修行伴侣' }
 const CHILD_APTITUDE_NAMES: Record<ChildAptitude, string> = { farm: '灵田', animal: '牧养', study: '读书', combat: '护院' }
+type VillageRequestId = 'village_feast' | 'clinic_herbs' | 'forge_delivery'
+const VILLAGE_REQUESTS: { id: VillageRequestId; title: string; desc: string; npcHint: string; itemId: string; itemName: string; quantity: number; friendship: number; money: number }[] = [
+  { id: 'village_feast', title: '村宴备席', desc: '村里准备节令小宴，需要灵米撑场面。', npcHint: '陈伯会记得你帮村里备席。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 2, friendship: 18, money: 900 },
+  { id: 'clinic_herbs', title: '医馆药篓', desc: '医馆缺基础草药，送去能提升村庄人情。', npcHint: '医馆与村民都会承你一份情。', itemId: 'herb', itemName: '草药', quantity: 5, friendship: 14, money: 650 },
+  { id: 'forge_delivery', title: '铁匠急件', desc: '铁匠铺赶制农具，需要铁锭周转。', npcHint: '铁匠铺会更愿意帮你留意好材料。', itemId: 'iron_bar', itemName: '铁锭', quantity: 2, friendship: 16, money: 850 }
+]
+
 const FAMILY_COMMISSIONS = [
   { id: 'family_meal' as FamilyCommissionId, title: '家宴备料', desc: '准备一桌家宴，凝聚家人心气。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 3, rewardMoney: 1800, legacyExp: 25 },
   { id: 'child_study' as FamilyCommissionId, title: '启蒙读书', desc: '为孩子准备启蒙材料，提升成长资质。', itemId: 'spirit_ink', itemName: '灵墨', quantity: 1, rewardMoney: 1200, legacyExp: 35 },
@@ -1016,6 +1024,27 @@ export const useNpcStore = defineStore('npc', () => {
     return FAMILY_COMMISSIONS.map(c => ({ ...c, claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:${c.id}`) }))
   })
 
+
+  const villageRequestCards = computed(() => VILLAGE_REQUESTS.map(r => ({
+    ...r,
+    claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:village:${r.id}`)
+  })))
+
+  const completeVillageRequest = (id: VillageRequestId): { success: boolean; message: string } => {
+    const req = VILLAGE_REQUESTS.find(r => r.id === id)
+    if (!req) return { success: false, message: '村庄请求不存在。' }
+    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:village:${id}`
+    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '今日已完成。' }
+    const inv = useInventoryStore()
+    if (inv.getItemCount(req.itemId) < req.quantity) return { success: false, message: `${req.itemName}不足，需要${req.quantity}。` }
+    inv.removeItem(req.itemId, req.quantity)
+    usePlayerStore().earnMoney(req.money)
+    for (const state of npcStates.value) state.friendship += req.friendship
+    familyCommissionClaimed.value.push(key)
+    addLog(`完成${req.title}，全村好感+${req.friendship}。`)
+    return { success: true, message: `${req.title}完成：${req.npcHint}` }
+  }
+
   const claimFamilyCommission = (id: FamilyCommissionId): { success: boolean; message: string } => {
     const spouse = getSpouse()
     if (!spouse) return { success: false, message: '需要有家人一起完成委托。' }
@@ -1187,6 +1216,8 @@ export const useNpcStore = defineStore('npc', () => {
     familyLegacyNeed,
     familyBonusText,
     familyCommissionCards,
+    villageRequestCards,
+    completeVillageRequest,
     childGrowthCards,
     FAMILY_SPECIALTY_NAMES,
     HELPER_WAGES,

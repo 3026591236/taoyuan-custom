@@ -168,6 +168,14 @@ export const useCombatStore = defineStore('combat', () => {
   const towerSeasonBestFloor = ref(0)
   const towerSeasonBadgeClaimed = ref<string[]>([])
   const pendingRealmChoice = ref<RealmChoiceEvent | null>(null)
+  type BattleTactic = 'balanced' | 'burst' | 'guard' | 'treasure'
+  const battleTactic = ref<BattleTactic>('balanced')
+  const BATTLE_TACTICS: { id: BattleTactic; name: string; desc: string }[] = [
+    { id: 'balanced', name: '稳扎稳打', desc: '攻守均衡，适合推进新层数。' },
+    { id: 'burst', name: '爆发破阵', desc: '攻击+18%，防御-8%，适合速杀低层。' },
+    { id: 'guard', name: '守势磨血', desc: '防御+18%，生命+10%，攻击-6%，适合挑战首领。' },
+    { id: 'treasure', name: '寻宝留力', desc: '攻击-8%，战后额外小概率带回材料。' }
+  ]
   let dmgId = 0
 
   const activeZone = computed(() => REALM_ZONES.find(z => z.id === currentZone.value) || null)
@@ -214,19 +222,22 @@ export const useCombatStore = defineStore('combat', () => {
     const base = 12 + (c.realmIndex || 0) * 9 + Math.floor((c.cultivation || 0) / 45) + (c.rebirthCount || 0) * 18
     const beastBonus = c.beast === 'crane' ? Math.floor(base * (0.12 + Math.min(0.18, (c.beastBond || 0) / 3000))) : 0
     const artifactBonus = (c.destinedArtifactLevel || 0) * 8
-    return Math.floor((base + beastBonus + artifactBonus + p.attributeAttackBonus) * (1 + (c.sectCombatAttackBonusRate || 0)))
+    const tacticRate = battleTactic.value === 'burst' ? 1.18 : battleTactic.value === 'guard' ? 0.94 : battleTactic.value === 'treasure' ? 0.92 : 1
+    return Math.floor((base + beastBonus + artifactBonus + p.attributeAttackBonus) * (1 + (c.sectCombatAttackBonusRate || 0)) * tacticRate)
   })
 
   const playerDef = computed(() => {
     const c = useCultivationStore()
     const p = usePlayerStore()
-    return Math.floor((6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus + (c.beast === 'phoenix' ? Math.floor(4 + (c.beastBond || 0) / 80) : 0)) * (1 + (c.sectCombatDefenseBonusRate || 0)))
+    const tacticRate = battleTactic.value === 'guard' ? 1.18 : battleTactic.value === 'burst' ? 0.92 : 1
+    return Math.floor((6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus + (c.beast === 'phoenix' ? Math.floor(4 + (c.beastBond || 0) / 80) : 0)) * (1 + (c.sectCombatDefenseBonusRate || 0)) * tacticRate)
   })
 
   const playerMaxHp = computed(() => {
     const c = useCultivationStore()
     const p = usePlayerStore()
-    return Math.floor((120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus) * (1 + (c.sectMaxHpBonusRate || 0)))
+    const tacticRate = battleTactic.value === 'guard' ? 1.1 : 1
+    return Math.floor((120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus) * (1 + (c.sectMaxHpBonusRate || 0)) * tacticRate)
   })
 
   const getDailyCount = (zoneId: string) => {
@@ -326,6 +337,8 @@ export const useCombatStore = defineStore('combat', () => {
     const m = zone.monsters[Math.floor(Math.random() * zone.monsters.length)]!
     startFight(m)
   }
+
+  const setBattleTactic = (id: BattleTactic) => { battleTactic.value = id; addLog(`战斗策略调整为「${BATTLE_TACTICS.find(t => t.id === id)?.name ?? id}」。`) }
 
   const startFight = (monster: Monster) => {
     currentMonster.value = monster
@@ -583,7 +596,7 @@ export const useCombatStore = defineStore('combat', () => {
 
   return {
     currentZone, activeZone, currentMonster, monsterHp, playerHp, playerMaxHp, playerAtk, playerDef,
-    combatLog, isFighting, combatResult, drops, pendingRealmChoice, showFlash, damageNumbers, dailyRuns,
+    combatLog, isFighting, combatResult, drops, pendingRealmChoice, battleTactic, BATTLE_TACTICS, setBattleTactic, showFlash, damageNumbers, dailyRuns,
     isTowerCombat, towerHighestFloor, towerCurrentFloor, towerNextFloor, towerCost, towerStaminaCost, towerMilestoneRewards, nextTowerMilestone, towerClaimableMilestones,
     towerSeason, towerSeasonBestFloor, towerSeasonBadges, towerSeasonClaimableBadges, towerSeasonProgress, combatTitle, combatRewardHint, towerLockReason,
     trialZones, beastZones, realmZones, getDailyCount, isZoneUnlocked, lockReason,

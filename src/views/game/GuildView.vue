@@ -424,6 +424,18 @@
 
     <!-- 公会周常远征 -->
     <div v-if="tab === 'weekly'" class="flex flex-col space-y-2">
+      <div class="border border-accent/20 rounded-xs p-3 bg-accent/5">
+        <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">公会协作工程</p><span class="text-[10px] text-muted">{{ guildStore.guildProjectBonusText }}</span></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div v-for="project in guildStore.guildProjectCards" :key="project.id" class="border border-accent/10 rounded-xs p-2">
+            <div class="flex items-center justify-between"><span class="text-xs text-accent">{{ project.name }}</span><span class="text-[10px] text-muted">Lv.{{ project.level }}/{{ project.max }}</span></div>
+            <p class="text-[10px] text-muted leading-relaxed">{{ project.desc }}</p>
+            <p class="text-[10px] text-warning">消耗：{{ project.itemName }}×{{ project.quantity }}</p>
+            <Button class="w-full justify-center mt-1" :disabled="project.completed" @click="guildStore.contributeGuildProject(project.id)">{{ project.completed ? '已满级' : '投入物资' }}</Button>
+          </div>
+        </div>
+      </div>
+
       <div v-for="task in guildStore.weeklyExpeditions" :key="task.id" class="border border-accent/20 rounded-xs px-3 py-2">
         <div class="flex items-center justify-between mb-1">
           <span class="text-xs text-accent">{{ task.name }}</span>

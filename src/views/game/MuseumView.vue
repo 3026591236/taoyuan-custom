@@ -26,6 +26,17 @@
         <div class="border border-accent/20 rounded-xs p-2 text-center"><p class="text-[10px] text-muted">每日收入</p><p class="text-sm text-accent">{{ museumStore.dailyIncome }}文</p></div>
       </div>
 
+      <!-- 主题展览 -->
+      <div class="border border-accent/20 rounded-xs p-2 mb-3">
+        <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">主题展览</p><span class="text-[10px] text-muted">收入倍率 {{ Math.round(museumStore.exhibitionRate * 100) }}%</span></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+          <button v-for="ex in museumStore.exhibitionCards" :key="ex.id" class="border rounded-xs p-2 text-left" :class="ex.active ? 'border-accent bg-accent/10' : ex.unlocked ? 'border-accent/20' : 'border-accent/10 opacity-60'" :disabled="!ex.unlocked" @click="museumStore.setExhibition(ex.id)">
+            <div class="flex items-center justify-between"><span class="text-xs text-accent">{{ ex.name }}</span><span class="text-[10px] text-muted">名望{{ ex.fameNeed }}</span></div>
+            <p class="text-[10px] text-muted leading-relaxed">{{ ex.desc }}</p>
+          </button>
+        </div>
+      </div>
+
       <!-- 分类标签 -->
       <div class="grid grid-cols-3 md:grid-cols-6 gap-1 mb-3">
         <Button

@@ -100,6 +100,16 @@
         <template v-else-if="shopStore.currentShopId === 'cultivation-market'">
           <ShopHeader name="修仙市集" npc="灵石商会" />
           <p class="text-muted text-xs mb-3">专售修仙资源、储物法器与功法秘籍。这里的核心商品使用灵石兑换。</p>
+          <div class="border border-accent/20 rounded-xs p-2 mb-3 bg-bg/40">
+            <div class="flex items-center justify-between mb-1"><p class="text-xs text-accent">七日行情风向</p><span class="text-[10px] text-muted">出货越多，供给越足，售价越低</span></div>
+            <div class="grid grid-cols-3 md:grid-cols-7 gap-1 text-[10px]">
+              <div v-for="sig in shopStore.marketSignalCards" :key="sig.category" class="border border-accent/10 rounded-xs p-1 text-center">
+                <p class="text-muted">{{ MARKET_CATEGORY_NAMES[sig.category] }}</p>
+                <p class="text-accent">×{{ sig.multiplier.toFixed(2) }}</p>
+                <p class="text-muted">量{{ sig.volume }}</p>
+              </div>
+            </div>
+          </div>
 
           <h4 id="cultivation-market" ref="cultivationMarketRef" class="text-accent text-sm mb-2 mt-3 scroll-mt-4">
             <Sparkles :size="14" class="inline" />
