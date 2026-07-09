@@ -148,6 +148,20 @@ const MISC_ITEMS: ItemDef[] = [
   { id: 'minor_realm_pill', name: '境界丹', category: 'food', description: '蕴含破阶药力的珍贵丹，元婴期以下服用可直接提升一个小境界。', sellPrice: 6800, edible: false },
   { id: 'ascension_boost_pill', name: '直升丹', category: 'food', description: '修仙市集镇店灵丹，元婴期以下服用可连升三重小境界。', sellPrice: 16800, edible: false },
 
+  { id: 'lianjing_pill', name: '炼精丹', category: 'food', description: '基础高阶修炼丹，服用后增长修为。', sellPrice: 520, edible: false },
+  { id: 'huaqi_pill', name: '化气丹', category: 'food', description: '化药力为修为与灵力，适合筑基前后修士。', sellPrice: 760, edible: false },
+  { id: 'lianqi_pill', name: '炼气丹', category: 'food', description: '五味药材合炼的修炼丹，服用后增长大量修为并回补灵气。', sellPrice: 1200, edible: false },
+  { id: 'huashen_pill', name: '化神丹', category: 'food', description: '温养神魂的高阶修炼丹，服用后增长大量修为。', sellPrice: 2600, edible: false },
+  { id: 'lianshen_pill', name: '炼神丹', category: 'food', description: '炼神入道的珍贵丹药，服用后增长海量修为。', sellPrice: 4200, edible: false },
+  { id: 'life_extension_pill', name: '延寿丹', category: 'food', description: '龙葵入药的特殊丹药，服用后恢复全部体力。', sellPrice: 2200, edible: false },
+  { id: 'good_fortune_pill', name: '造化丹', category: 'food', description: '加速元神修炼的造化灵丹。', sellPrice: 3200, edible: false },
+  { id: 'returning_void_pill', name: '还虚丹', category: 'food', description: '可沉淀突破药力，降低下次突破灵气需求。', sellPrice: 1800, edible: false },
+  { id: 'refining_void_pill', name: '炼虚丹', category: 'food', description: '高阶突破辅助丹，显著降低下次突破灵气需求。', sellPrice: 3200, edible: false },
+  { id: 'merge_way_pill', name: '合道丹', category: 'food', description: '合道关隘所需的珍贵突破丹，极大降低突破灵气需求。', sellPrice: 5200, edible: false },
+  { id: 'dragon_face_pill', name: '龙颜丹', category: 'food', description: '龙葵炼成的驻颜强身丹，服用后提升体力上限。', sellPrice: 3000, edible: false },
+  { id: 'spirit_mending_pill', name: '补灵丹', category: 'food', description: '补足灵机的属性丹，服用后提升元神等级。', sellPrice: 2200, edible: false },
+  { id: 'rebirth_pill', name: '轮回丹', category: 'food', description: '轮回转生所需的顶级丹药，服用后增加轮回材料储备。', sellPrice: 12000, edible: false },
+
   { id: 'storage_talisman', name: '纳物符', category: 'misc', description: '刻有须弥小阵的符箓，使用后背包永久+1格，可突破普通上限。', sellPrice: 600, edible: false },
   { id: 'cosmos_bag', name: '乾坤袋', category: 'misc', description: '内藏一方小小空间，使用后背包永久+4格，可突破普通上限。', sellPrice: 2400, edible: false },
   { id: 'wood_scripture', name: '青木长生诀', category: 'misc', description: '温养生机的入门功法秘籍，学习后提升修炼与生命底蕴。', sellPrice: 1800, edible: false },
@@ -992,6 +1006,7 @@ const CRAB_POT_ITEMS: ItemDef[] = [
   { id: 'trash', name: '垃圾', category: 'misc', description: '没什么用的杂物。', sellPrice: 1, edible: false },
   { id: 'driftwood', name: '浮木', category: 'misc', description: '水中捞起的朽木。', sellPrice: 2, edible: false },
   { id: 'broken_cd', name: '碎碟片', category: 'misc', description: '不知谁丢的破碟子。', sellPrice: 1, edible: false },
+  { id: 'paper', name: '纸', category: 'material', description: '可用于书写札记、族谱修订和部分生活委托。', sellPrice: 3, edible: false },
   { id: 'soggy_newspaper', name: '湿报纸', category: 'misc', description: '泡烂的旧报纸。', sellPrice: 1, edible: false }
 ]
 
