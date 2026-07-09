@@ -51,6 +51,27 @@ type WeeklyTask = {
   reward: RetentionReward
 }
 
+type WorldStoryChapter = {
+  id: string
+  title: string
+  desc: string
+  requirement: string
+  done: () => boolean
+  reward: RetentionReward
+  claimed?: boolean
+}
+
+type SeasonalWorldEvent = {
+  id: string
+  title: string
+  desc: string
+  condition: string
+  active: () => boolean
+  reward: RetentionReward
+  claimed?: boolean
+}
+
+
 const ACTIVITY_BOXES: ActivityBox[] = [
   { score: 20, title: '晨耕小匣', desc: '完成一两件日课就能领取。', reward: { money: 260, spiritStone: 1 } },
   { score: 40, title: '修行补给', desc: '补上灵气与根骨沉淀。', reward: { money: 420, aura: 80, attributeExp: { physique: 12 } } },
@@ -103,6 +124,8 @@ export const useRetentionStore = defineStore('retention', () => {
   const weeklyClaimed = ref<string[]>([])
   const weeklyBaselineKey = ref('')
   const weeklyBaselines = ref<Partial<Record<WeeklyMetric, number>>>({})
+  const worldStoryClaimed = ref<string[]>([])
+  const seasonalEventClaimed = ref<string[]>([])
 
   const gameStore = useGameStore()
   const questStore = useQuestStore()
@@ -113,6 +136,30 @@ export const useRetentionStore = defineStore('retention', () => {
   const museumStore = useMuseumStore()
   const guildStore = useGuildStore()
   const hanhaiStore = useHanhaiStore()
+
+  const worldStoryChapters = computed<WorldStoryChapter[]>(() => [
+    { id: 'village_shadow', title: '凡界主线·村雨妖影', desc: '桃源村近日雨夜多妖踪，村民托你查明源头。', requirement: '击败10只怪物并完成1项村庄人情请求', done: () => achievementStore.stats.totalMonstersKilled >= 10, reward: { money: 1200, aura: 180, spiritStone: 4, attributeExp: { strength: 20, perception: 16 } } },
+    { id: 'sect_letter', title: '凡界主线·宗门来信', desc: '宗门传书，说妖潮与旧天庭碎片有关，需要你联络公会与宗门。', requirement: '公会贡献达到120', done: () => guildStore.contributionPoints >= 120, reward: { money: 1800, aura: 260, spiritStone: 8, items: [{ itemId: 'spirit_ink', name: '灵墨', quantity: 1 }], attributeExp: { perception: 26 } } },
+    { id: 'family_oath', title: '凡界主线·家族灯火', desc: '家人和村民共同守夜，凡界锚点第一次显出力量。', requirement: '博物馆藏品达到3或家族传承达到2级', done: () => museumStore.donatedCount >= 3, reward: { money: 2200, aura: 360, spiritStone: 10, items: [{ itemId: 'moonlight_jade', name: '月华玉', quantity: 1 }], attributeExp: { physique: 28, perception: 28 } } },
+    { id: 'tower_omen', title: '凡界主线·登仙塔异鸣', desc: '登仙塔内传出旧天庭钟声，秘境、宗门与仙界线索开始汇合。', requirement: '击败30只怪物或周修行令完成2项', done: () => achievementStore.stats.totalMonstersKilled >= 30 || weeklyDoneCount.value >= 2, reward: { money: 3000, aura: 520, spiritStone: 14, items: [{ itemId: 'artifact_shard', name: '法宝碎片', quantity: 2 }], attributeExp: { strength: 34, agility: 24 } } }
+  ].map(ch => ({ ...ch, claimed: worldStoryClaimed.value.includes(ch.id) } as any)))
+
+  const activeSeasonalEvents = computed<SeasonalWorldEvent[]>(() => {
+    const weatherText = gameStore.weatherName
+    return [
+      { id: 'spring_sowing_oath', title: '春令·村社共耕', desc: `春日${weatherText}，村里组织共耕，适合补农事与人情。`, condition: '春季任意日可完成一次', active: () => gameStore.season === 'spring', reward: { money: 900, aura: 120, items: [{ itemId: 'seed_cabbage', name: '卷心菜种子', quantity: 3 }], attributeExp: { physique: 14 } } },
+      { id: 'summer_storm_watch', title: '夏令·雷雨巡夜', desc: '夏季雷雨容易引来妖物，守夜可获得战斗与雷法材料。', condition: '夏季或暴雨/雷雨天气', active: () => gameStore.season === 'summer' || gameStore.weather === 'stormy', reward: { money: 1200, aura: 180, spiritStone: 4, items: [{ itemId: 'thunder_essence', name: '雷精', quantity: 1 }], attributeExp: { strength: 18 } } },
+      { id: 'autumn_fair_route', title: '秋令·丰收商路', desc: '秋收时商路最忙，提交行情与商誉相关目标可拿补给。', condition: '秋季任意日可完成一次', active: () => gameStore.season === 'autumn', reward: { money: 1600, spiritStone: 6, items: [{ itemId: 'cloud_silk', name: '云纹丝', quantity: 1 }], attributeExp: { perception: 18 } } },
+      { id: 'winter_hearth_guard', title: '冬令·守岁镇妖', desc: '冬夜妖气重，村庄、家族与宗门共同守岁。', condition: '冬季任意日可完成一次', active: () => gameStore.season === 'winter', reward: { money: 1800, aura: 260, spiritStone: 8, items: [{ itemId: 'spirit_bone', name: '灵骨', quantity: 1 }], attributeExp: { physique: 18, strength: 18 } } }
+    ].filter(e => e.active()).map(e => ({ ...e, claimed: seasonalEventClaimed.value.includes(`${weekKey.value}:${e.id}`) } as any))
+  })
+
+  const seasonEventBuffText = computed(() => {
+    const parts = [`本季：${gameStore.seasonName}`, `天气：${gameStore.weatherName}`]
+    if (gameStore.weather === 'stormy') parts.push('雷雨：战斗/渡劫材料事件活跃')
+    if (gameStore.isRainy) parts.push('雨天：采集和灵田事件更适合推进')
+    return parts.join(' · ')
+  })
 
   const dayKey = computed(() => `${gameStore.year}-${gameStore.season}-${gameStore.day}`)
   const seasonOrder: Record<string, number> = { spring: 0, summer: 1, autumn: 2, fall: 2, winter: 3 }
@@ -280,7 +327,31 @@ export const useRetentionStore = defineStore('retention', () => {
     return { success: true, message: `领取「${reward.title}」：${lines.join('、')}。` }
   }
 
-  const retentionBadge = computed(() => claimableActivityCount.value + claimableSevenDayCount.value + claimableStreakCount.value + claimableWeeklyCount.value + claimableYaochaoCount.value)
+
+  function claimWorldStoryChapter(id: string) {
+    const ch = worldStoryChapters.value.find(c => c.id === id) as any
+    if (!ch) return { success: false, message: '世界剧情不存在。' }
+    if (!ch.done()) return { success: false, message: `剧情条件未达成：${ch.requirement}` }
+    if (worldStoryClaimed.value.includes(id)) return { success: false, message: '这段世界剧情已经领取过。' }
+    const lines = applyReward(ch.reward)
+    worldStoryClaimed.value.push(id)
+    return { success: true, message: `推进「${ch.title}」：${lines.join('、')}。` }
+  }
+
+  function claimSeasonalEvent(id: string) {
+    const ev = activeSeasonalEvents.value.find(e => e.id === id) as any
+    if (!ev) return { success: false, message: '当前没有这个世界事件。' }
+    const key = `${weekKey.value}:${id}`
+    if (seasonalEventClaimed.value.includes(key)) return { success: false, message: '本周期已完成这个事件。' }
+    const lines = applyReward(ev.reward)
+    seasonalEventClaimed.value.push(key)
+    return { success: true, message: `完成「${ev.title}」：${lines.join('、')}。` }
+  }
+
+  const claimableWorldStoryCount = computed(() => worldStoryChapters.value.filter((c: any) => c.done() && !c.claimed).length)
+  const claimableSeasonalEventCount = computed(() => activeSeasonalEvents.value.filter((e: any) => !e.claimed).length)
+
+  const retentionBadge = computed(() => claimableActivityCount.value + claimableSevenDayCount.value + claimableStreakCount.value + claimableWeeklyCount.value + claimableYaochaoCount.value + claimableWorldStoryCount.value + claimableSeasonalEventCount.value)
 
   const serialize = () => ({
     activityClaimed: activityClaimed.value,
@@ -292,7 +363,9 @@ export const useRetentionStore = defineStore('retention', () => {
     streakClaimed: streakClaimed.value,
     weeklyClaimed: weeklyClaimed.value,
     weeklyBaselineKey: weeklyBaselineKey.value,
-    weeklyBaselines: weeklyBaselines.value
+    weeklyBaselines: weeklyBaselines.value,
+    worldStoryClaimed: worldStoryClaimed.value,
+    seasonalEventClaimed: seasonalEventClaimed.value
   })
 
   const deserialize = (data: any) => {
@@ -306,6 +379,8 @@ export const useRetentionStore = defineStore('retention', () => {
     weeklyClaimed.value = Array.isArray(data?.weeklyClaimed) ? data.weeklyClaimed : []
     weeklyBaselineKey.value = data?.weeklyBaselineKey || ''
     weeklyBaselines.value = data?.weeklyBaselines || {}
+    worldStoryClaimed.value = Array.isArray(data?.worldStoryClaimed) ? data.worldStoryClaimed : []
+    seasonalEventClaimed.value = Array.isArray(data?.seasonalEventClaimed) ? data.seasonalEventClaimed : []
   }
 
   return {
@@ -322,6 +397,11 @@ export const useRetentionStore = defineStore('retention', () => {
     streakGifts,
     weeklyTasks,
     weeklyDoneCount,
+    worldStoryChapters,
+    activeSeasonalEvents,
+    seasonEventBuffText,
+    claimableWorldStoryCount,
+    claimableSeasonalEventCount,
     yaochaoTask,
     yaochaoPersonalKills,
     yaochaoRewards,
@@ -335,6 +415,8 @@ export const useRetentionStore = defineStore('retention', () => {
     claimSevenDayGift,
     claimStreakGift,
     claimWeeklyTask,
+    claimWorldStoryChapter,
+    claimSeasonalEvent,
     claimYaochaoReward,
     serialize,
     deserialize

@@ -11,6 +11,34 @@
     <section class="game-panel space-y-3">
       <div class="flex items-start justify-between gap-3">
         <div>
+          <h2 class="text-accent text-lg">世界剧情与季节事件</h2>
+          <p class="text-xs text-muted leading-relaxed mt-1">把村庄、宗门、公会、家族、秘境和天气节令串成长期世界线。{{ retention.seasonEventBuffText }}</p>
+        </div>
+        <div class="text-right"><p class="text-2xl">🌏</p><p class="text-[10px] text-muted">世界在运转</p></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="ch in retention.worldStoryChapters" :key="ch.id" class="reward-card" :class="ch.claimed ? 'claimed' : ch.done() ? 'ready' : ''">
+          <p class="text-sm text-accent">{{ ch.title }}</p>
+          <p class="text-[10px] text-muted mt-1 leading-relaxed">{{ ch.desc }}</p>
+          <p class="text-[10px] text-warning mt-1">条件：{{ ch.requirement }}</p>
+          <p class="text-[10px] text-muted mt-1">{{ rewardText(ch.reward) }}</p>
+          <button class="mini-btn mt-2" :disabled="!ch.done() || ch.claimed" @click="claimWorldStory(ch.id)">{{ ch.claimed ? '已推进' : ch.done() ? '推进剧情' : '未达成' }}</button>
+        </div>
+      </div>
+      <div v-if="retention.activeSeasonalEvents.length" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="ev in retention.activeSeasonalEvents" :key="ev.id" class="reward-card" :class="ev.claimed ? 'claimed' : 'ready'">
+          <p class="text-sm text-accent">{{ ev.title }}</p>
+          <p class="text-[10px] text-muted mt-1 leading-relaxed">{{ ev.desc }}</p>
+          <p class="text-[10px] text-warning mt-1">{{ ev.condition }}</p>
+          <p class="text-[10px] text-muted mt-1">{{ rewardText(ev.reward) }}</p>
+          <button class="mini-btn mt-2" :disabled="ev.claimed" @click="claimSeasonalEvent(ev.id)">{{ ev.claimed ? '本周期已完成' : '完成事件' }}</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-panel space-y-3">
+      <div class="flex items-start justify-between gap-3">
+        <div>
           <h2 class="text-accent text-lg">今日活跃度</h2>
           <p class="text-xs text-muted leading-relaxed mt-1">完成修行志里的每日目标即可累积活跃度。宝箱每天刷新，形成「上线有事做、做完有奖励」的固定节奏。</p>
         </div>
@@ -316,6 +344,8 @@ function claimActivity(score: number) { const res = retention.claimActivityBox(s
 function claimSeven(day: number) { handleClaim(retention.claimSevenDayGift(day)) }
 function claimStreak(day: number) { handleClaim(retention.claimStreakGift(day)) }
 function claimWeekly(taskId: string) { handleClaim(retention.claimWeeklyTask(taskId)) }
+function claimWorldStory(id: string) { handleClaim(retention.claimWorldStoryChapter(id)) }
+function claimSeasonalEvent(id: string) { handleClaim(retention.claimSeasonalEvent(id)) }
 function claimYaochao(score: number) { const res = retention.claimYaochaoReward(score); if (res.success) longTerm.recordCombatContribution(score); handleClaim(res) }
 
 const cyclePreview = computed(() => {
