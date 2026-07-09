@@ -33,7 +33,7 @@ export type ImmortalMandateChoiceId = 'merit' | 'law' | 'mortal' | 'battle'
 export type ImmortalAllianceId = 'cloud_guard' | 'jade_register' | 'star_forge' | 'mortal_bridge'
 export type ChaosRiftId = 'void_tide' | 'fallen_star' | 'demon_gate' | 'law_maze'
 export type FatePlateId = 'merit_orbit' | 'battle_orbit' | 'harvest_orbit' | 'law_orbit'
-export type ImmortalStoryId = 'first_edict' | 'rift_truth' | 'old_heaven' | 'mortal_anchor' | 'new_heaven'
+export type ImmortalStoryId = 'first_edict' | 'rift_truth' | 'old_heaven' | 'mortal_anchor' | 'star_archive' | 'three_realms_debt' | 'ancient_oath' | 'demon_counterplot' | 'heaven_trial' | 'dao_dispute' | 'alliance_coronation' | 'new_heaven'
 
 export const IMMORTAL_ARTS: Array<{ id: ImmortalArtId; name: string; icon: string; element: string; desc: string; basePower: number; effect: string }> = [
   { id: 'starfall_sword', name: '星河落刃', icon: '🌌', element: '星辰法则', desc: '引星河为剑，普通剑气升格为群星坠落。', basePower: 120, effect: '星辉连斩' },
@@ -121,11 +121,18 @@ export const FATE_PLATES: Array<{ id: FatePlateId; name: string; icon: string; d
 ]
 
 export const IMMORTAL_STORY_CHAPTERS: Array<{ id: ImmortalStoryId; chapter: string; title: string; icon: string; desc: string; requirement: string; rewardText: string; need: (state: { immortalPower: number; mandateProgress: number; allianceScore: number; riftScore: number; fatePlatePower: number; seasonScore: number; immortalRealmStage: number }) => boolean }> = [
-  { id: 'first_edict', chapter: '第一章', title: '云阙初诏', icon: '📜', desc: '飞升后第一道天诏落下：旧天庭功簿残缺，凡界因果仍系于你身。你必须在仙职、天命与凡界回响之间找到自己的仙路。', requirement: '仙战力达到 180，天命积分达到 12', rewardText: '功德+80、仙玉+16、法则碎片+8', need: s => s.immortalPower >= 180 && s.mandateProgress >= 12 },
-  { id: 'rift_truth', chapter: '第二章', title: '裂隙真相', icon: '🌌', desc: '混沌裂隙并非自然灾厄，而是旧天庭崩塌后遗留的法则伤口。镇压裂隙越多，越接近仙界失序的源头。', requirement: '镇压混沌裂隙 2 次，命盘战力达到 40', rewardText: '功德+120、仙玉+24、法则碎片+14、仙擂气势+1', need: s => s.riftScore >= 2 && s.fatePlatePower >= 40 },
-  { id: 'old_heaven', chapter: '第三章', title: '旧天庭遗案', icon: '🏛️', desc: '玉册司残页揭开旧案：仙盟、仙市、仙擂皆曾是维系天道的机关。你要选择修补旧秩序，还是另立新道统。', requirement: '仙盟协作声望达到 3，仙擂赛季积分达到 70', rewardText: '功德+180、仙玉+32、法则碎片+22', need: s => s.allianceScore >= 3 && s.seasonScore >= 70 },
-  { id: 'mortal_anchor', chapter: '第四章', title: '凡界锚点', icon: '🌉', desc: '你发现凡界不是飞升后的过去，而是仙界法则稳定的锚点。宗门、家族、灵田的回响会决定仙界未来的形状。', requirement: '天命积分达到 80，仙阶至少达到地仙', rewardText: '功德+220、仙玉+40、法则碎片+28、凡界三线回响+3', need: s => s.mandateProgress >= 80 && s.immortalRealmStage >= 1 },
-  { id: 'new_heaven', chapter: '终章', title: '新天门立约', icon: '🚪', desc: '云阙天门重开，你不再只是飞升者，而是新仙界秩序的立约者。道统、命盘、仙盟、凡界回响汇成你的天道雏形。', requirement: '仙战力达到 760，命盘战力达到 160，镇压裂隙 5 次', rewardText: '功德+360、仙玉+60、法则碎片+45、称号升级为「新天立约者」', need: s => s.immortalPower >= 760 && s.fatePlatePower >= 160 && s.riftScore >= 5 }
+  { id: 'first_edict', chapter: '第一幕·第一章', title: '云阙初诏', icon: '📜', desc: '飞升后第一道天诏落下：旧天庭功簿残缺，凡界因果仍系于你身。你不是摆脱凡尘，而是被卷入仙界秩序的重建。', requirement: '仙战力达到 180，天命积分达到 12', rewardText: '功德+80、仙玉+16、法则碎片+8', need: s => s.immortalPower >= 180 && s.mandateProgress >= 12 },
+  { id: 'rift_truth', chapter: '第一幕·第二章', title: '裂隙真相', icon: '🌌', desc: '混沌裂隙并非自然灾厄，而是旧天庭崩塌后遗留的法则伤口。每一次镇压都能看见旧日仙官留下的残影。', requirement: '镇压混沌裂隙 2 次，命盘战力达到 40', rewardText: '功德+120、仙玉+24、法则碎片+14、仙擂气势+1', need: s => s.riftScore >= 2 && s.fatePlatePower >= 40 },
+  { id: 'old_heaven', chapter: '第一幕·第三章', title: '旧天庭遗案', icon: '🏛️', desc: '玉册司残页揭开旧案：仙盟、仙市、仙擂皆曾是维系天道的机关。旧天庭不是被外敌攻破，而是从功德账册里开始腐朽。', requirement: '仙盟协作声望达到 3，仙擂赛季积分达到 70', rewardText: '功德+180、仙玉+32、法则碎片+22', need: s => s.allianceScore >= 3 && s.seasonScore >= 70 },
+  { id: 'mortal_anchor', chapter: '第二幕·第一章', title: '凡界锚点', icon: '🌉', desc: '你发现凡界不是飞升后的过去，而是仙界法则稳定的锚点。宗门、家族、灵田的回响会决定仙界未来的形状。', requirement: '天命积分达到 80，仙阶至少达到地仙', rewardText: '功德+220、仙玉+40、法则碎片+28、凡界三线回响+3', need: s => s.mandateProgress >= 80 && s.immortalRealmStage >= 1 },
+  { id: 'star_archive', chapter: '第二幕·第二章', title: '星海秘档', icon: '📚', desc: '星海深处保存着飞升者名录。你查到自己的名字旁有一行旧注：“凡缘未断者，不可入无情天。”这意味着你的仙路会被凡界牵动。', requirement: '命盘战力达到 100，天命积分达到 120', rewardText: '功德+260、仙玉+46、法则碎片+34', need: s => s.fatePlatePower >= 100 && s.mandateProgress >= 120 },
+  { id: 'three_realms_debt', chapter: '第二幕·第三章', title: '三界债契', icon: '🧾', desc: '旧天庭曾向凡界抽取香火、向仙市借取仙玉、向仙盟许下战功。如今债契反噬，新仙界必须偿还旧秩序欠下的因果。', requirement: '仙盟协作声望达到 8，赛季积分达到 150', rewardText: '功德+320、仙玉+52、法则碎片+40', need: s => s.allianceScore >= 8 && s.seasonScore >= 150 },
+  { id: 'ancient_oath', chapter: '第三幕·第一章', title: '太古盟誓', icon: '🪬', desc: '太古仙盟留下盟誓：仙人不得只求长生，必须守住一方世界的四时、战火、香火与记忆。你开始从飞升者变成承担者。', requirement: '仙战力达到 520，镇压裂隙 4 次', rewardText: '功德+380、仙玉+60、法则碎片+50、仙盟声望+2', need: s => s.immortalPower >= 520 && s.riftScore >= 4 },
+  { id: 'demon_counterplot', chapter: '第三幕·第二章', title: '天魔反策', icon: '👁️', desc: '天魔不再正面攻打天门，而是伪装成仙盟功臣、仙市商贾、甚至凡界香火。你必须用天命抉择找出混沌的缝隙。', requirement: '天命积分达到 200，镇压裂隙 6 次', rewardText: '功德+460、仙玉+72、法则碎片+62、仙擂气势+2', need: s => s.mandateProgress >= 200 && s.riftScore >= 6 },
+  { id: 'heaven_trial', chapter: '第四幕·第一章', title: '新天试炼', icon: '⚖️', desc: '新天门开启前，四道试炼同时落下：功德、斗战、丰穰、法则。命盘中每一条星轨都在审问你的道。', requirement: '命盘战力达到 220，仙战力达到 760', rewardText: '功德+540、仙玉+84、法则碎片+76', need: s => s.fatePlatePower >= 220 && s.immortalPower >= 760 },
+  { id: 'dao_dispute', chapter: '第四幕·第二章', title: '诸道争衡', icon: '🌀', desc: '星河剑统、紫霄雷统、司农仙统、文命道统都要求你偏向它们。真正的新天道不是选一条路，而是让每条路都有位置。', requirement: '仙盟协作声望达到 12，仙阶至少达到天仙', rewardText: '功德+620、仙玉+96、法则碎片+90', need: s => s.allianceScore >= 12 && s.immortalRealmStage >= 2 },
+  { id: 'alliance_coronation', chapter: '第四幕·第三章', title: '万仙朝议', icon: '👑', desc: '云阙诸仙、凡界香火、仙市商盟、仙擂战魁齐聚天门。你必须证明新秩序不是另一个旧天庭，而是能让三界继续生长的约定。', requirement: '赛季积分达到 320，镇压裂隙 10 次', rewardText: '功德+760、仙玉+120、法则碎片+110', need: s => s.seasonScore >= 320 && s.riftScore >= 10 },
+  { id: 'new_heaven', chapter: '终幕', title: '新天门立约', icon: '🚪', desc: '云阙天门重开，你不再只是飞升者，而是新仙界秩序的立约者。道统、命盘、仙盟、凡界回响汇成你的天道雏形。', requirement: '仙战力达到 1200，命盘战力达到 360，镇压裂隙 15 次', rewardText: '功德+1000、仙玉+160、法则碎片+150、称号升级为「新天立约者」', need: s => s.immortalPower >= 1200 && s.fatePlatePower >= 360 && s.riftScore >= 15 }
 ]
 
 export const IMMORTAL_MANDATES: Array<{ id: ImmortalMandateId; name: string; icon: string; desc: string; choices: Array<{ id: ImmortalMandateChoiceId; name: string; desc: string; merit: number; jade: number; rule: number; echo: number; streak: number }> }> = [
@@ -183,7 +190,7 @@ export const useAscensionStore = defineStore('ascension', () => {
   const allianceProgress = ref<Record<ImmortalAllianceId, number>>({ cloud_guard: 0, jade_register: 0, star_forge: 0, mortal_bridge: 0 })
   const riftClears = ref<Record<ChaosRiftId, number>>({ void_tide: 0, fallen_star: 0, demon_gate: 0, law_maze: 0 })
   const fatePlateLevels = ref<Record<FatePlateId, number>>({ merit_orbit: 0, battle_orbit: 0, harvest_orbit: 0, law_orbit: 0 })
-  const storyClaimed = ref<Record<ImmortalStoryId, boolean>>({ first_edict: false, rift_truth: false, old_heaven: false, mortal_anchor: false, new_heaven: false })
+  const storyClaimed = ref<Record<ImmortalStoryId, boolean>>({ first_edict: false, rift_truth: false, old_heaven: false, mortal_anchor: false, star_archive: false, three_realms_debt: false, ancient_oath: false, demon_counterplot: false, heaven_trial: false, dao_dispute: false, alliance_coronation: false, new_heaven: false })
 
   const canAscend = computed(() => {
     const cultivation = useCultivationStore()
@@ -512,10 +519,12 @@ export const useAscensionStore = defineStore('ascension', () => {
     if (!chapter.need(storyState.value)) { addLog(`${chapter.title}尚未达成：${chapter.requirement}。`); return false }
     storyClaimed.value[id] = true
     const idx = IMMORTAL_STORY_CHAPTERS.findIndex(c => c.id === id)
-    merit.value += [80, 120, 180, 220, 360][idx] || 80
-    immortalJade.value += [16, 24, 32, 40, 60][idx] || 16
-    ruleFragments.value += [8, 14, 22, 28, 45][idx] || 8
+    merit.value += [80, 120, 180, 220, 260, 320, 380, 460, 540, 620, 760, 1000][idx] || 80
+    immortalJade.value += [16, 24, 32, 40, 46, 52, 60, 72, 84, 96, 120, 160][idx] || 16
+    ruleFragments.value += [8, 14, 22, 28, 34, 40, 50, 62, 76, 90, 110, 150][idx] || 8
     if (id === 'rift_truth') pkStreak.value += 1
+    if (id === 'ancient_oath') allianceProgress.value.cloud_guard = (allianceProgress.value.cloud_guard || 0) + 2
+    if (id === 'demon_counterplot') pkStreak.value += 2
     if (id === 'mortal_anchor') {
       echoBlessings.value.sect_blessing = (echoBlessings.value.sect_blessing || 0) + 3
       echoBlessings.value.family_blessing = (echoBlessings.value.family_blessing || 0) + 3
@@ -561,7 +570,7 @@ export const useAscensionStore = defineStore('ascension', () => {
     allianceProgress.value = { cloud_guard: 0, jade_register: 0, star_forge: 0, mortal_bridge: 0, ...(data?.allianceProgress ?? {}) }
     riftClears.value = { void_tide: 0, fallen_star: 0, demon_gate: 0, law_maze: 0, ...(data?.riftClears ?? {}) }
     fatePlateLevels.value = { merit_orbit: 0, battle_orbit: 0, harvest_orbit: 0, law_orbit: 0, ...(data?.fatePlateLevels ?? {}) }
-    storyClaimed.value = { first_edict: false, rift_truth: false, old_heaven: false, mortal_anchor: false, new_heaven: false, ...(data?.storyClaimed ?? {}) }
+    storyClaimed.value = { first_edict: false, rift_truth: false, old_heaven: false, mortal_anchor: false, star_archive: false, three_realms_debt: false, ancient_oath: false, demon_counterplot: false, heaven_trial: false, dao_dispute: false, alliance_coronation: false, new_heaven: false, ...(data?.storyClaimed ?? {}) }
   }
   return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, immortalLineage, mandateProgress, mandateDone, allianceProgress, riftClears, fatePlateLevels, storyClaimed, cavePower, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, lineageInfo, fatePlatePower, allianceScore, riftScore, storyState, storyProgress, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, chooseLineage, resolveMandate, coordinateAlliance, challengeChaosRift, upgradeFatePlate, claimStoryChapter, serialize, deserialize }
 })
