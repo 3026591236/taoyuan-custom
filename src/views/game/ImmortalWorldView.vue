@@ -59,6 +59,27 @@
     </div>
 
     <div class="relative z-10 mb-4">
+      <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙界主线</p><span class="text-[10px] text-muted">章节 {{ ascensionStore.storyProgress }}/{{ IMMORTAL_STORY_CHAPTERS.length }}</span></div>
+      <div class="space-y-2">
+        <div v-for="chapter in IMMORTAL_STORY_CHAPTERS" :key="chapter.id" class="story-card" :class="ascensionStore.storyClaimed[chapter.id] ? 'done' : ''">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-sm text-accent">{{ chapter.icon }} {{ chapter.chapter }} · {{ chapter.title }}</p>
+              <p class="text-[10px] text-muted leading-relaxed mt-1">{{ chapter.desc }}</p>
+            </div>
+            <button class="btn-mini shrink-0" :disabled="ascensionStore.storyClaimed[chapter.id] || !chapter.need(ascensionStore.storyState)" @click="ascensionStore.claimStoryChapter(chapter.id)">
+              {{ ascensionStore.storyClaimed[chapter.id] ? '已完成' : chapter.need(ascensionStore.storyState) ? '推进剧情' : '未达成' }}
+            </button>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2 text-[10px]">
+            <span class="text-warning">条件：{{ chapter.requirement }}</span>
+            <span class="text-success">奖励：{{ chapter.rewardText }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">道统传承</p><span class="text-[10px] text-muted">当前 {{ ascensionStore.lineageInfo.name }}</span></div>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="lineage in IMMORTAL_LINEAGES" :key="lineage.id" class="office-card lineage-card" :class="ascensionStore.immortalLineage === lineage.id ? 'active' : ''" @click="ascensionStore.chooseLineage(lineage.id)">
@@ -87,6 +108,43 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="relative z-10 mb-4">
+      <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙盟协作</p><span class="text-[10px] text-muted">协作声望 +{{ ascensionStore.allianceScore }}</span></div>
+      <div class="grid grid-cols-2 gap-2">
+        <button v-for="ally in IMMORTAL_ALLIANCES" :key="ally.id" class="alliance-card" @click="ascensionStore.coordinateAlliance(ally.id)">
+          <span class="text-sm text-accent">{{ ally.icon }} {{ ally.name }}</span>
+          <span class="text-[10px] text-muted leading-relaxed">{{ ally.desc }}</span>
+          <span class="text-[10px] text-warning">消耗 功德{{ ally.costMerit }} / 仙玉{{ ally.costJade }}</span>
+          <span class="text-[10px] text-success">法则+{{ ally.rewardRule }}｜赛季+{{ ally.rewardSeason }}｜已协作 {{ ascensionStore.allianceProgress[ally.id] || 0 }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="relative z-10 mb-4">
+      <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">混沌裂隙</p><span class="text-[10px] text-muted">镇压次数 +{{ ascensionStore.riftScore }}</span></div>
+      <div class="grid grid-cols-2 gap-2">
+        <button v-for="rift in CHAOS_RIFTS" :key="rift.id" class="rift-card" @click="ascensionStore.challengeChaosRift(rift.id)">
+          <span class="text-sm text-accent">{{ rift.icon }} {{ rift.name }}</span>
+          <span class="text-[10px] text-muted leading-relaxed">{{ rift.desc }}</span>
+          <span class="text-[10px]" :class="ascensionStore.immortalPower >= rift.needPower ? 'text-success' : 'text-danger'">建议仙战力 {{ rift.needPower }}｜当前 {{ ascensionStore.immortalPower }}</span>
+          <span class="text-[10px] text-warning">奖励 功德{{ rift.rewardMerit }} / 仙玉{{ rift.rewardJade }} / 法则{{ rift.rewardRule }}</span>
+          <span class="text-[10px] text-muted">已镇压 {{ ascensionStore.riftClears[rift.id] || 0 }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="relative z-10 mb-4">
+      <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙缘命盘</p><span class="text-[10px] text-muted">命盘战力 +{{ ascensionStore.fatePlatePower }}</span></div>
+      <div class="grid grid-cols-2 gap-2">
+        <button v-for="plate in FATE_PLATES" :key="plate.id" class="fate-card" @click="ascensionStore.upgradeFatePlate(plate.id)">
+          <span class="text-sm text-accent">{{ plate.icon }} {{ plate.name }} Lv.{{ ascensionStore.fatePlateLevels[plate.id] || 0 }}</span>
+          <span class="text-[10px] text-muted leading-relaxed">{{ plate.desc }}</span>
+          <span class="text-[10px] text-warning">消耗 法则{{ plate.costRule + (ascensionStore.fatePlateLevels[plate.id] || 0) * 6 }} / 仙玉{{ plate.costJade + (ascensionStore.fatePlateLevels[plate.id] || 0) * 4 }}</span>
+          <span class="text-[10px] text-success">每级仙战力+{{ plate.power }}｜{{ plate.bonus }}</span>
+        </button>
       </div>
     </div>
 
@@ -202,7 +260,7 @@
 </template>
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useAscensionStore, IMMORTAL_ARTS, IMMORTAL_TRIALS, IMMORTAL_OFFICES, IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES } from '@/stores/useAscensionStore'
+import { useAscensionStore, IMMORTAL_ARTS, IMMORTAL_TRIALS, IMMORTAL_OFFICES, IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS } from '@/stores/useAscensionStore'
 import { addLog } from '@/composables/useGameLog'
 import { computed } from 'vue'
 const router = useRouter(); const ascensionStore = useAscensionStore()
@@ -213,6 +271,6 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 .immortal-page{position:relative;overflow:hidden;border:1px solid rgba(250,214,124,.24);border-radius:4px;padding:12px;min-height:100%;background:radial-gradient(circle at 20% 0%,rgba(255,247,190,.18),transparent 28%),radial-gradient(circle at 80% 10%,rgba(135,196,255,.16),transparent 30%),linear-gradient(180deg,rgba(17,24,48,.92),rgba(42,31,62,.88));box-shadow:inset 0 0 35px rgba(255,224,139,.08)}
 .immortal-sky{position:absolute;inset:0;pointer-events:none;opacity:.9}.star,.cloud{position:absolute;animation:float 4s ease-in-out infinite alternate}.s1{left:12%;top:14%;color:#fff2a8}.s2{right:18%;top:8%;color:#bfe7ff;animation-delay:.6s}.s3{left:72%;top:34%;color:#ffd6fb;animation-delay:1.2s}.c1{left:-4%;top:58%;color:rgba(255,255,255,.18);font-size:46px}.c2{right:-2%;top:42%;color:rgba(255,255,255,.14);font-size:40px;animation-delay:.8s}
 .immortal-hero{display:flex;gap:14px;align-items:center;border:1px solid rgba(250,214,124,.22);background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border-radius:4px;padding:14px}.hero-avatar{position:relative;width:78px;height:96px;display:grid;place-items:center}.halo{position:absolute;width:70px;height:70px;border:2px double rgba(255,230,151,.8);border-radius:50%;box-shadow:0 0 18px rgba(255,223,126,.55),inset 0 0 18px rgba(120,200,255,.18);animation:pulse 1.6s ease-in-out}.immortal-body{position:relative;z-index:1;width:40px;height:58px;display:grid;place-items:center;color:#20150d;font-weight:700;background:linear-gradient(180deg,#fff6c4,#79d6ff 48%,#d5b1ff);clip-path:polygon(50% 0,78% 16%,88% 72%,50% 100%,12% 72%,22% 16%);box-shadow:0 0 16px rgba(255,255,255,.55)}.sword-light{position:absolute;right:7px;top:8px;width:4px;height:78px;background:linear-gradient(#fff,#8ddfff,transparent);transform:rotate(32deg);box-shadow:0 0 12px #9ee7ff}
-.stat,.body-card{border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:6px;background:rgba(0,0,0,.12)}.stat b{display:block;color:#ffe28a;font-size:12px}.stat span{color:rgba(255,255,255,.52);font-size:10px}.body-card{min-height:72px}.art-card,.office-card,.duty-card,.choice-card{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:9px;background:rgba(0,0,0,.12);transition:.16s}.art-card:hover,.office-card:hover,.duty-card:hover,.art-card.active,.office-card.active,.duty-card.done{border-color:rgba(255,226,138,.58);background:rgba(255,226,138,.08);box-shadow:0 0 14px rgba(255,226,138,.12)}.battle-log{border:1px solid rgba(141,222,255,.28);background:linear-gradient(90deg,rgba(113,210,255,.1),rgba(255,226,138,.08));border-radius:3px;padding:10px;animation:pulse .8s ease-out}.trial-card,.realm-card{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.art-purple_thunder_seal .battle-log{border-color:rgba(190,140,255,.5);box-shadow:0 0 15px rgba(183,108,255,.18)}.art-solar_flame .battle-log{border-color:rgba(255,180,72,.5);box-shadow:0 0 15px rgba(255,130,44,.18)}.art-cloud_body .battle-log{border-color:rgba(190,245,255,.5);box-shadow:0 0 15px rgba(168,236,255,.18)}.pk-card{border-color:rgba(255,120,120,.22)}.cave-card,.echo-card,.market-card{min-height:120px}.mandate-card{border:1px solid rgba(141,222,255,.2);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.choice-card{min-height:74px;gap:3px;align-items:flex-start;text-align:left;border:1px solid rgba(250,214,124,.14);border-radius:3px;padding:7px;background:rgba(255,255,255,.035);transition:.16s}.choice-card:hover{border-color:rgba(255,226,138,.55);background:rgba(255,226,138,.08)}.lineage-card{min-height:104px}.realm-card{border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.season-card{min-height:112px}.season-card.claimed{opacity:.62}.duty-card{min-height:110px}.duty-card.done{opacity:.72}
+.stat,.body-card{border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:6px;background:rgba(0,0,0,.12)}.stat b{display:block;color:#ffe28a;font-size:12px}.stat span{color:rgba(255,255,255,.52);font-size:10px}.body-card{min-height:72px}.art-card,.office-card,.duty-card,.choice-card,.alliance-card,.rift-card,.fate-card{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:9px;background:rgba(0,0,0,.12);transition:.16s}.art-card:hover,.office-card:hover,.duty-card:hover,.art-card.active,.office-card.active,.duty-card.done{border-color:rgba(255,226,138,.58);background:rgba(255,226,138,.08);box-shadow:0 0 14px rgba(255,226,138,.12)}.battle-log{border:1px solid rgba(141,222,255,.28);background:linear-gradient(90deg,rgba(113,210,255,.1),rgba(255,226,138,.08));border-radius:3px;padding:10px;animation:pulse .8s ease-out}.trial-card,.realm-card{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.art-purple_thunder_seal .battle-log{border-color:rgba(190,140,255,.5);box-shadow:0 0 15px rgba(183,108,255,.18)}.art-solar_flame .battle-log{border-color:rgba(255,180,72,.5);box-shadow:0 0 15px rgba(255,130,44,.18)}.art-cloud_body .battle-log{border-color:rgba(190,245,255,.5);box-shadow:0 0 15px rgba(168,236,255,.18)}.pk-card{border-color:rgba(255,120,120,.22)}.cave-card,.echo-card,.market-card{min-height:120px}.mandate-card{border:1px solid rgba(141,222,255,.2);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.choice-card{min-height:74px;gap:3px;align-items:flex-start;text-align:left;border:1px solid rgba(250,214,124,.14);border-radius:3px;padding:7px;background:rgba(255,255,255,.035);transition:.16s}.choice-card:hover{border-color:rgba(255,226,138,.55);background:rgba(255,226,138,.08)}.story-card{border:1px solid rgba(255,226,138,.18);border-radius:3px;padding:10px;background:linear-gradient(135deg,rgba(255,226,138,.07),rgba(141,222,255,.04));position:relative;overflow:hidden}.story-card.done{border-color:rgba(105,232,162,.45);background:rgba(105,232,162,.07)}.story-card::after{content:'';position:absolute;inset:auto 0 0 0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,226,138,.5),transparent)}.lineage-card{min-height:104px}.alliance-card,.rift-card,.fate-card{min-height:126px;gap:5px;align-items:flex-start;text-align:left;border:1px solid rgba(141,222,255,.16);border-radius:3px;padding:9px;background:linear-gradient(135deg,rgba(141,222,255,.055),rgba(255,226,138,.035));transition:.16s}.alliance-card:hover,.rift-card:hover,.fate-card:hover{border-color:rgba(141,222,255,.45);transform:translateY(-1px);box-shadow:0 0 18px rgba(141,222,255,.08)}.realm-card{border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.season-card{min-height:112px}.season-card.claimed{opacity:.62}.duty-card{min-height:110px}.duty-card.done{opacity:.72}
 @keyframes float{from{transform:translateY(0)}to{transform:translateY(-10px)}}@keyframes pulse{0%{transform:scale(.96);opacity:.72}60%{transform:scale(1.04);opacity:1}100%{transform:scale(1);opacity:1}}
 </style>
