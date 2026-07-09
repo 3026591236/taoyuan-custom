@@ -57,7 +57,7 @@ const pillFilter = ref('全部')
 const pillCategories = ['全部', '修炼', '突破', '恢复', '特殊', '属性', '元神']
 
 const pillRecipes: Array<{ id: PillId; name: string; desc: string; materialText: string; aura: number; mana: number; category: string; realmRequired: number }> = [
-  { id: 'mana_recovery_pill', name: '回灵丹', desc: '回复灵力45点', materialText: '凝露草×2', aura: 20, mana: 0, category: '恢复', realmRequired: 0 },
+  { id: 'mana_recovery_pill', name: '回灵丹', desc: '灵力未满时回复45点，满灵力不消耗', materialText: '凝露草×2', aura: 20, mana: 0, category: '恢复', realmRequired: 0 },
   { id: 'qi_gathering_pill', name: '聚气丹', desc: '修为+160', materialText: '蕴灵稻×3、凝露草×1', aura: 60, mana: 10, category: '修炼', realmRequired: 0 },
   { id: 'foundation_pill', name: '筑基丹', desc: '降低突破灵气900，修为+300', materialText: '朱果×2、凝露草×3、蕴灵稻×5', aura: 360, mana: 40, category: '突破', realmRequired: 3 },
   { id: 'lianjing_pill', name: '炼精丹', desc: '修为+500', materialText: '川芎×30、白芷×30、锁阳×30', aura: 300, mana: 25, category: '修炼', realmRequired: 4 },
@@ -66,7 +66,7 @@ const pillRecipes: Array<{ id: PillId; name: string; desc: string; materialText:
   { id: 'huashen_pill', name: '化神丹', desc: '修为+2500', materialText: '川芎×60、重楼×60、白芷×60、赤芍×60、锁阳×60', aura: 600, mana: 60, category: '修炼', realmRequired: 14 },
   { id: 'lianshen_pill', name: '炼神丹', desc: '修为+4000', materialText: '玉竹×70、赤芍×70、重楼×70、锁阳×70、佩兰×70', aura: 700, mana: 70, category: '修炼', realmRequired: 16 },
   { id: 'life_extension_pill', name: '延寿丹', desc: '恢复全部体力', materialText: '龙葵×3、神曲×5、紫菀×5', aura: 500, mana: 80, category: '特殊', realmRequired: 8 },
-  { id: 'marrow_wash_pill', name: '洗髓丹', desc: '随机洗炼灵根', materialText: '龙葵×5、赤芍×10、沉香×10、紫菀×10', aura: 800, mana: 100, category: '特殊', realmRequired: 6 },
+  { id: 'marrow_wash_pill', name: '洗髓丹', desc: '灵根必定晋升一阶，天灵根不消耗', materialText: '龙葵×5、赤芍×10、沉香×10、紫菀×10', aura: 800, mana: 100, category: '特殊', realmRequired: 6 },
   { id: 'good_fortune_pill', name: '造化丹', desc: '加速元神修炼', materialText: '龙葵×5、沉香×10、紫菀×10、神曲×10', aura: 900, mana: 120, category: '元神', realmRequired: 10 },
   { id: 'returning_void_pill', name: '还虚丹', desc: '突破灵气-1500', materialText: '川芎×20、玉竹×20、重楼×20、沉香×20', aura: 450, mana: 45, category: '突破', realmRequired: 12 },
   { id: 'refining_void_pill', name: '炼虚丹', desc: '突破灵气-3000', materialText: '白芷×30、赤芍×30、紫菀×30、佩兰×30、神曲×30', aura: 650, mana: 65, category: '突破', realmRequired: 18 },
@@ -77,7 +77,7 @@ const pillRecipes: Array<{ id: PillId; name: string; desc: string; materialText:
   { id: 'spirit_mending_pill', name: '补灵丹', desc: '灵力上限+20', materialText: '白芷×25、玉竹×25、紫菀×25', aura: 550, mana: 55, category: '属性', realmRequired: 11 },
   { id: 'rebirth_pill', name: '轮回丹', desc: '转生凭证，不可直接服用；需在轮回殿配合轮回材料完成转生', materialText: '龙葵×10、神曲×15、紫菀×15、锁阳×10', aura: 3000, mana: 200, category: '特殊', realmRequired: 20 },
   { id: 'snow_lotus_pill', name: '雪莲清心丹', desc: '顿悟+20、心魔-8', materialText: '冰魄雪莲×3、凝露草×2', aura: 200, mana: 30, category: '修炼', realmRequired: 10 },
-  { id: 'ganoderma_pill', name: '灵芝培元丹', desc: '修为+15%、灵气+300', materialText: '紫韵灵芝×3、蕴灵稻×5、凝露草×2', aura: 400, mana: 60, category: '修炼', realmRequired: 14 },
+  { id: 'ganoderma_pill', name: '灵芝培元丹', desc: '修为+15%、灵气+300（已实装）', materialText: '紫韵灵芝×3、蕴灵稻×5、凝露草×2', aura: 400, mana: 60, category: '修炼', realmRequired: 14 },
   { id: 'ice_soul_pill', name: '冰魄护魂丹', desc: '灵力回满、心魔-15、顿悟+10', materialText: '冰魄雪莲×5、紫韵灵芝×3、魂晶×2', aura: 800, mana: 100, category: '元神', realmRequired: 18 },
 ]
 

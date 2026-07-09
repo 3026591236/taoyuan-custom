@@ -1033,87 +1033,126 @@ export const useCultivationStore = defineStore('cultivation', () => {
       addLog('轮回丹不可直接服用，需要在轮回殿配合灵气、铜钱与轮回材料完成转生。')
       return false
     }
-    inventory.removeItem(pillId, 1)
     const player = usePlayerStore()
     if (pillId === 'mana_recovery_pill') {
+      if (mana.value >= maxMana.value) {
+        showFloat('灵力已满，回灵丹未消耗。', 'accent')
+        addLog('灵力已满，回灵丹暂未服用。')
+        return false
+      }
+      inventory.removeItem(pillId, 1)
       const gain = 45 + fieldTier.value * 10
+      const before = mana.value
       mana.value = Math.min(maxMana.value, mana.value + gain)
-      addLog(`服下一枚回灵丹，灵力恢复${gain}。`)
-      showFloat(`灵力+${gain}`, 'success')
+      const actual = mana.value - before
+      addLog(`服下一枚回灵丹，灵力恢复${actual}。`)
+      showFloat(`灵力+${actual}`, 'success')
     } else if (pillId === 'qi_gathering_pill') {
+      inventory.removeItem(pillId, 1)
       const gain = 160 + fieldTier.value * 45
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + gain)
       addLog(`服下一枚聚气丹，修为增长${gain}。`)
       showFloat(`修为+${gain}`, 'success')
     } else if (pillId === 'foundation_pill') {
+      inventory.removeItem(pillId, 1)
       foundationPillBlessing.value += 900
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + 300)
       addLog('服下一枚筑基丹，突破所需灵气降低900，并获得修为300。')
       showFloat('筑基丹生效', 'success')
     } else if (pillId === 'lianjing_pill') {
+      inventory.removeItem(pillId, 1)
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + 500)
       addLog('服下一枚炼精丹，修为增长500。')
       showFloat('修为+500', 'success')
     } else if (pillId === 'huaqi_pill') {
+      inventory.removeItem(pillId, 1)
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + 800)
       mana.value = Math.min(maxMana.value, mana.value + 30)
       addLog('服下一枚化气丹，修为+800，灵力+30。')
       showFloat('化气丹生效', 'success')
     } else if (pillId === 'lianqi_pill') {
+      inventory.removeItem(pillId, 1)
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + 1200)
       aura.value += 60
       addLog('服下一枚炼气丹，修为+1200，灵气+60。')
       showFloat('炼气丹生效', 'success')
     } else if (pillId === 'huashen_pill') {
+      inventory.removeItem(pillId, 1)
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + 2500)
       addLog('服下一枚化神丹，修为增长2500。')
       showFloat('修为+2500', 'success')
     } else if (pillId === 'lianshen_pill') {
+      inventory.removeItem(pillId, 1)
       cultivation.value = Math.min(maxCultivation.value, cultivation.value + 4000)
       addLog('服下一枚炼神丹，修为增长4000。')
       showFloat('修为+4000', 'success')
     } else if (pillId === 'life_extension_pill') {
+      inventory.removeItem(pillId, 1)
       player.restoreStamina(player.maxStamina)
       addLog('服下一枚延寿丹，体力完全恢复。')
       showFloat('体力已恢复', 'success')
     } else if (pillId === 'marrow_wash_pill') {
       const roots: SpiritRoot[] = ['mixed', 'wood', 'water', 'earth', 'fire', 'metal', 'celestial']
-      spiritRoot.value = roots[Math.floor(Math.random() * roots.length)] ?? 'mixed'
-      addLog(`服下一枚洗髓丹，灵根洗炼为「${spiritRootName.value}」。`)
-      showFloat(spiritRootName.value, 'success')
+      const idx = roots.indexOf(spiritRoot.value)
+      if (idx >= roots.length - 1) {
+        showFloat('已是天灵根，洗髓丹未消耗。', 'accent')
+        addLog('你已是天灵根，洗髓丹暂未消耗。')
+        return false
+      }
+      inventory.removeItem(pillId, 1)
+      spiritRoot.value = roots[Math.max(0, idx) + 1] ?? 'wood'
+      addLog(`服下一枚洗髓丹，灵根晋升为「${spiritRootName.value}」。`)
+      showFloat(`灵根晋升：${spiritRootName.value}`, 'success')
+    } else if (pillId === 'ganoderma_pill') {
+      inventory.removeItem(pillId, 1)
+      const cultivationGain = Math.max(1, Math.floor(maxCultivation.value * 0.15))
+      const beforeCultivation = cultivation.value
+      cultivation.value = Math.min(maxCultivation.value, cultivation.value + cultivationGain)
+      const actualCultivation = cultivation.value - beforeCultivation
+      aura.value += 300
+      addLog(`服下一枚灵芝培元丹，修为增长${actualCultivation}，灵气+300。`)
+      showFloat(`修为+${actualCultivation} 灵气+300`, 'success')
     } else if (pillId === 'good_fortune_pill') {
+      inventory.removeItem(pillId, 1)
       const leveled = addYuanShenExp(900)
       addLog(`服下一枚造化丹，元神经验+900${leveled ? `，元神提升${leveled}级` : ''}。`)
       showFloat('元神经验+900', 'success')
     } else if (pillId === 'returning_void_pill') {
+      inventory.removeItem(pillId, 1)
       foundationPillBlessing.value += 1500
       addLog('服下一枚还虚丹，下次突破灵气需求降低1500。')
       showFloat('突破灵气-1500', 'success')
     } else if (pillId === 'refining_void_pill') {
+      inventory.removeItem(pillId, 1)
       foundationPillBlessing.value += 3000
       addLog('服下一枚炼虚丹，下次突破灵气需求降低3000。')
       showFloat('突破灵气-3000', 'success')
     } else if (pillId === 'merge_way_pill') {
+      inventory.removeItem(pillId, 1)
       foundationPillBlessing.value += 5000
       addLog('服下一枚合道丹，下次突破灵气需求降低5000。')
       showFloat('突破灵气-5000', 'success')
     } else if (pillId === 'soul_mending_pill') {
+      inventory.removeItem(pillId, 1)
       const healed = recoverYuanShenInjury(2)
       player.restoreHealth(Math.floor(player.getMaxHp() * 0.35))
       addLog(`服下一枚养魂丹，元神伤势恢复${healed}层，并治疗肉身伤势。`)
       showFloat(healed ? `元神伤势-${healed}` : '伤势已恢复', 'success')
     } else if (pillId === 'nirvana_soul_pill') {
+      inventory.removeItem(pillId, 1)
       const healed = recoverYuanShenInjury(9)
       yuanShenLevel.value += 1
       player.restoreHealth(player.getMaxHp())
       addLog(`服下一枚涅魂丹，元神伤势清除${healed}层，元神等级+1，伤势完全恢复。`)
       showFloat('元神重凝，等级+1', 'success')
     } else if (pillId === 'dragon_face_pill') {
+      inventory.removeItem(pillId, 1)
       player.addBonusMaxStamina(20)
       player.restoreStamina(20)
       addLog('服下一枚龙颜丹，体力上限+20。')
       showFloat('体力上限+20', 'success')
     } else if (pillId === 'spirit_mending_pill') {
+      inventory.removeItem(pillId, 1)
       yuanShenLevel.value++
       mana.value = maxMana.value
       addLog('服下一枚补灵丹，元神稳固，灵力上限提升。')

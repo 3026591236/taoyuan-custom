@@ -113,7 +113,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: 'ganoderma_pill',
     name: '灵芝培元丹',
     category: 'food',
-    description: '灵芝炼成的培元丹，服用后大幅增长修为与灵气。',
+    description: '灵芝炼成的培元丹，服用后修为提升15%并获得灵气。',
     sellPrice: 550,
     edible: false
   },
@@ -134,6 +134,14 @@ const MISC_ITEMS: ItemDef[] = [
     edible: true,
     staminaRestore: 60,
     healthRestore: 999
+  },
+  {
+    id: 'marrow_wash_pill',
+    name: '洗髓丹',
+    category: 'food',
+    description: '洗炼经脉的珍贵丹药，服用后灵根必定晋升一阶，天灵根后不再消耗。',
+    sellPrice: 2600,
+    edible: false
   },
 
   { id: 'storage_talisman', name: '纳物符', category: 'misc', description: '刻有须弥小阵的符箓，使用后背包永久+1格，可突破普通上限。', sellPrice: 600, edible: false },
