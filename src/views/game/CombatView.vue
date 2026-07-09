@@ -10,6 +10,20 @@
     <div v-if="!combatStore.currentZone" class="space-y-4">
       <section class="border border-accent/20 rounded-xs p-3 bg-bg/40">
         <div class="flex items-center justify-between mb-2">
+          <h3 class="text-accent text-sm">🧬 战斗流派 / Build</h3>
+          <span class="text-[10px] text-muted">当前：{{ combatStore.battleBuildInfo?.name }}</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-1 mb-3">
+          <button v-for="build in combatStore.BATTLE_BUILDS" :key="build.id" class="border rounded-xs p-2 text-left" :class="combatStore.battleBuild === build.id ? 'border-accent bg-accent/10' : 'border-accent/15'" @click="combatStore.setBattleBuild(build.id)">
+            <p class="text-xs text-accent">{{ build.name }}</p>
+            <p class="text-[10px] text-muted leading-relaxed">{{ build.desc }}</p>
+            <p class="text-[10px] text-warning mt-1">攻×{{ build.atk }} 防×{{ build.def }} 血×{{ build.hp }}</p>
+          </button>
+        </div>
+      </section>
+
+      <section class="border border-accent/20 rounded-xs p-3 bg-bg/40">
+        <div class="flex items-center justify-between mb-2">
           <h3 class="text-accent text-sm">🧭 战斗策略</h3>
           <span class="text-[10px] text-muted">当前：{{ combatStore.BATTLE_TACTICS.find(t => t.id === combatStore.battleTactic)?.name }}</span>
         </div>

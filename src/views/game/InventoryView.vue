@@ -1318,13 +1318,49 @@
   }
 
   /** 可使用的特殊物品 */
+  const CULTIVATION_PILLS = new Set([
+    'mana_recovery_pill',
+    'cultivation_boost_pill',
+    'minor_realm_pill',
+    'ascension_boost_pill',
+    'qi_gathering_pill',
+    'foundation_pill',
+    'lianjing_pill',
+    'huaqi_pill',
+    'lianqi_pill',
+    'huashen_pill',
+    'lianshen_pill',
+    'life_extension_pill',
+    'marrow_wash_pill',
+    'good_fortune_pill',
+    'returning_void_pill',
+    'refining_void_pill',
+    'merge_way_pill',
+    'soul_mending_pill',
+    'nirvana_soul_pill',
+    'dragon_face_pill',
+    'spirit_mending_pill',
+    'rebirth_pill',
+    'snow_lotus_pill',
+    'ganoderma_pill',
+    'ice_soul_pill'
+  ])
   const USABLE_ITEMS = new Set(['rain_totem', 'stamina_fruit', 'storage_talisman', 'cosmos_bag', 'wood_scripture', 'thunder_scripture', 'void_scripture'])
 
   const isUsable = (itemId: string): boolean => {
-    return USABLE_ITEMS.has(itemId)
+    return USABLE_ITEMS.has(itemId) || CULTIVATION_PILLS.has(itemId)
   }
 
   const handleUse = (itemId: string, quality: Quality) => {
+    if (CULTIVATION_PILLS.has(itemId)) {
+      const used = cultivationStore.usePill(itemId as any)
+      if (!used) return
+      if (!inventoryStore.items.find(i => i.itemId === itemId && i.quality === quality)) {
+        activeItemKey.value = null
+      }
+      return
+    }
+
     if (itemId === 'rain_totem') {
       if (!inventoryStore.removeItem(itemId, 1, quality)) return
       gameStore.setTomorrowWeather('rainy')

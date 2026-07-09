@@ -26,6 +26,18 @@
     <div v-if="activeTab === 'villager'">
       <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">{{ tutorialHint }}</p>
 
+      <section class="border border-accent/20 rounded-xs p-2 mb-3 bg-bg/40">
+        <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">NPC 主动来信</p><span class="text-[10px] text-muted">每日可回复，消耗物资换人情</span></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div v-for="letter in npcStore.npcLetterCards" :key="letter.id" class="border border-accent/10 rounded-xs p-2">
+            <p class="text-xs text-accent">{{ letter.title }}</p>
+            <p class="text-[10px] text-muted leading-relaxed mt-1">{{ letter.desc }}</p>
+            <p class="text-[10px] text-warning mt-1">需要：{{ letter.itemName }}×{{ letter.quantity }}</p>
+            <button class="mini-btn mt-2" :disabled="letter.claimed" @click="handleNpcLetter(letter.id)">{{ letter.claimed ? '已回复' : '回复' }}</button>
+          </div>
+        </div>
+      </section>
+
       <!-- NPC 网格：移动端紧凑，桌面端详细 -->
       <div class="grid grid-cols-4 md:grid-cols-3 gap-1.5 md:gap-2">
         <div
@@ -566,6 +578,11 @@
     if (npcStore.npcStates.every(n => n.friendship === 0)) return '点击村民头像可以聊天和送礼，经常互动能增进友好度。'
     return null
   })
+
+  function handleNpcLetter(id: any) {
+    const res = npcStore.completeNpcLetter(id)
+    addLog(res.message)
+  }
 
   const selectedNpc = ref<string | null>(null)
   const dialogueText = ref<string | null>(null)

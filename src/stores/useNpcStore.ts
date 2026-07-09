@@ -40,10 +40,24 @@ type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project' | 'fa
 const FAMILY_SPECIALTY_NAMES: Record<FamilySpecialty, string> = { farming: '农务助手', ranching: '牧场管家', foraging: '采集搭档', cultivation: '修行伴侣' }
 const CHILD_APTITUDE_NAMES: Record<ChildAptitude, string> = { farm: '灵田', animal: '牧养', study: '读书', combat: '护院' }
 type VillageRequestId = 'village_feast' | 'clinic_herbs' | 'forge_delivery'
+type NpcLetterId = 'chen_spring' | 'liu_market' | 'lin_medicine'
+type ChildLongTermId = 'study_trip' | 'martial_drill' | 'family_archive'
 const VILLAGE_REQUESTS: { id: VillageRequestId; title: string; desc: string; npcHint: string; itemId: string; itemName: string; quantity: number; friendship: number; money: number }[] = [
   { id: 'village_feast', title: '村宴备席', desc: '村里准备节令小宴，需要灵米撑场面。', npcHint: '陈伯会记得你帮村里备席。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 2, friendship: 18, money: 900 },
   { id: 'clinic_herbs', title: '医馆药篓', desc: '医馆缺基础草药，送去能提升村庄人情。', npcHint: '医馆与村民都会承你一份情。', itemId: 'herb', itemName: '草药', quantity: 5, friendship: 14, money: 650 },
   { id: 'forge_delivery', title: '铁匠急件', desc: '铁匠铺赶制农具，需要铁锭周转。', npcHint: '铁匠铺会更愿意帮你留意好材料。', itemId: 'iron_bar', itemName: '铁锭', quantity: 2, friendship: 16, money: 850 }
+]
+
+const NPC_LETTERS: { id: NpcLetterId; title: string; from: string; desc: string; itemId: string; itemName: string; quantity: number; friendship: number; rewardMoney: number }[] = [
+  { id: 'chen_spring', title: '陈伯来信·春耕托付', from: '陈伯', desc: '陈伯请你捐些蕴灵稻给村社粮仓，村里会记下这份人情。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 2, friendship: 20, rewardMoney: 1000 },
+  { id: 'liu_market', title: '柳娘来信·市集布置', from: '柳娘', desc: '柳娘想把市集布置得热闹些，需要云纹丝作彩缎。', itemId: 'cloud_silk', itemName: '云纹丝', quantity: 1, friendship: 24, rewardMoney: 1400 },
+  { id: 'lin_medicine', title: '林老来信·药庐补缺', from: '林老', desc: '林老说最近雨湿伤寒多，请你送一批草药去药庐。', itemId: 'herb', itemName: '草药', quantity: 8, friendship: 16, rewardMoney: 900 }
+]
+
+const CHILD_LONG_TERM_EVENTS: { id: ChildLongTermId; title: string; desc: string; itemId: string; itemName: string; quantity: number; money: number; study: number; bond: number; legacy: number }[] = [
+  { id: 'study_trip', title: '子女远学·村塾游历', desc: '送孩子去村塾和博物馆旁听，提升学识与家族见闻。', itemId: 'spirit_ink', itemName: '灵墨', quantity: 1, money: 1800, study: 18, bond: 8, legacy: 30 },
+  { id: 'martial_drill', title: '子女护院·晨练', desc: '安排孩子跟随巡山弟子晨练，积累护院胆气。', itemId: 'spirit_bone', itemName: '灵骨', quantity: 1, money: 2200, study: 8, bond: 12, legacy: 38 },
+  { id: 'family_archive', title: '族谱修订·家传札记', desc: '整理族谱与家传札记，让家族传承更像长期资产。', itemId: 'paper', itemName: '纸', quantity: 5, money: 1200, study: 12, bond: 16, legacy: 42 }
 ]
 
 const FAMILY_COMMISSIONS = [
@@ -1030,6 +1044,27 @@ export const useNpcStore = defineStore('npc', () => {
     claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:village:${r.id}`)
   })))
 
+
+  const npcLetterCards = computed(() => NPC_LETTERS.map(l => ({
+    ...l,
+    claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:letter:${l.id}`)
+  })))
+
+  const completeNpcLetter = (id: NpcLetterId): { success: boolean; message: string } => {
+    const letter = NPC_LETTERS.find(l => l.id === id)
+    if (!letter) return { success: false, message: '来信不存在。' }
+    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:letter:${id}`
+    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '今日已回复这封来信。' }
+    const inv = useInventoryStore()
+    if (inv.getItemCount(letter.itemId) < letter.quantity) return { success: false, message: `${letter.itemName}不足，需要${letter.quantity}。` }
+    inv.removeItem(letter.itemId, letter.quantity)
+    usePlayerStore().earnMoney(letter.rewardMoney)
+    const npc = NPCS.find(n => n.name === letter.from)
+    if (npc) adjustFriendship(npc.id, letter.friendship)
+    familyCommissionClaimed.value.push(key)
+    return { success: true, message: `回复「${letter.title}」：${letter.from}好感+${letter.friendship}，铜钱+${letter.rewardMoney}。` }
+  }
+
   const completeVillageRequest = (id: VillageRequestId): { success: boolean; message: string } => {
     const req = VILLAGE_REQUESTS.find(r => r.id === id)
     if (!req) return { success: false, message: '村庄请求不存在。' }
@@ -1068,6 +1103,34 @@ export const useNpcStore = defineStore('npc', () => {
     legacyBond: (c as any).legacyBond || 0,
     bonusText: c.stage === 'teen' ? `可参与家族护器/洞天祭扫，家传收益+${Math.min(20, ((c as any).legacyBond || 0) / 5).toFixed(0)}%` : c.stage === 'child' ? '学习中，互动可积累家传羁绊' : '成长中'
   })))
+
+
+  const childLongTermEventCards = computed(() => CHILD_LONG_TERM_EVENTS.map(e => ({
+    ...e,
+    enabled: children.value.some(c => c.stage !== 'baby'),
+    claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:child:${e.id}`)
+  })))
+
+  const completeChildLongTermEvent = (id: ChildLongTermId): { success: boolean; message: string } => {
+    const event = CHILD_LONG_TERM_EVENTS.find(e => e.id === id)
+    if (!event) return { success: false, message: '子女事件不存在。' }
+    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:child:${id}`
+    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '今日已完成这个子女事件。' }
+    const targets = children.value.filter(c => c.stage !== 'baby')
+    if (targets.length === 0) return { success: false, message: '需要至少一个已会走动的孩子。' }
+    const inv = useInventoryStore()
+    if (inv.getItemCount(event.itemId) < event.quantity) return { success: false, message: `${event.itemName}不足，需要${event.quantity}。` }
+    if (!usePlayerStore().spendMoney(event.money)) return { success: false, message: `铜钱不足，需要${event.money}文。` }
+    inv.removeItem(event.itemId, event.quantity)
+    for (const child of targets) {
+      ;(child as any).studyExp = ((child as any).studyExp || 0) + event.study
+      ;(child as any).legacyBond = ((child as any).legacyBond || 0) + event.bond
+      child.friendship += event.bond
+    }
+    addFamilyLegacyExp(event.legacy + targets.length * 6)
+    familyCommissionClaimed.value.push(key)
+    return { success: true, message: `${event.title}完成：子女学识+${event.study}，羁绊+${event.bond}，家传经验+${event.legacy + targets.length * 6}。` }
+  }
 
   /** 每日重置对话和送礼状态 + 伴侣好感衰减 */
   const dailyReset = () => {
@@ -1218,7 +1281,11 @@ export const useNpcStore = defineStore('npc', () => {
     familyCommissionCards,
     villageRequestCards,
     completeVillageRequest,
+    npcLetterCards,
+    completeNpcLetter,
     childGrowthCards,
+    childLongTermEventCards,
+    completeChildLongTermEvent,
     FAMILY_SPECIALTY_NAMES,
     HELPER_WAGES,
     HELPER_TASK_NAMES,

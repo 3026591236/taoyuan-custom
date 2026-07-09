@@ -42,11 +42,19 @@ export const useGuildStore = defineStore('guild', () => {
   const weeklyExpeditionClaimed = ref<string[]>([])
   type GuildProjectId = 'monster_watch' | 'supply_line' | 'sect_drill'
   const guildProjects = ref<Record<GuildProjectId, number>>({ monster_watch: 0, supply_line: 0, sect_drill: 0 })
+  type SectOfficeId = 'outer_hall' | 'alchemy_hall' | 'patrol_hall'
+  const sectOffices = ref<Record<SectOfficeId, number>>({ outer_hall: 0, alchemy_hall: 0, patrol_hall: 0 })
   const GUILD_PROJECTS: { id: GuildProjectId; name: string; desc: string; itemId: string; itemName: string; quantity: number; exp: number; max: number }[] = [
     { id: 'monster_watch', name: '妖踪巡哨', desc: '提交灵骨布置巡哨，提升公会讨伐组织度。', itemId: 'spirit_bone', itemName: '灵骨', quantity: 1, exp: 55, max: 10 },
     { id: 'supply_line', name: '远征补给线', desc: '提交云纹丝修整护具，支撑宗门/公会远征。', itemId: 'cloud_silk', itemName: '云纹丝', quantity: 1, exp: 70, max: 8 },
     { id: 'sect_drill', name: '宗门合练', desc: '消耗灵石组织合练，给战斗与公会周常一个长期消耗点。', itemId: 'spirit_stone', itemName: '灵石', quantity: 10, exp: 65, max: 12 }
   ]
+  const SECT_OFFICES: { id: SectOfficeId; name: string; desc: string; itemId: string; itemName: string; quantity: number; cost: number; max: number }[] = [
+    { id: 'outer_hall', name: '外门执事堂', desc: '整理宗门杂务，提升捐献与周常收益。', itemId: 'spirit_ink', itemName: '灵墨', quantity: 1, cost: 1600, max: 8 },
+    { id: 'alchemy_hall', name: '丹药供奉堂', desc: '建立丹药供奉，给宗门与家族长期补给。', itemId: 'herb', itemName: '草药', quantity: 8, cost: 2200, max: 8 },
+    { id: 'patrol_hall', name: '巡山戒律堂', desc: '组织巡山与戒律，强化妖潮、秘境和宗门安全。', itemId: 'mystic_iron', itemName: '玄铁', quantity: 1, cost: 3600, max: 6 }
+  ]
+
   const WEEKLY_EXPEDITIONS = [
     { id: 'raid', name: '公会周常·秘境讨伐', desc: '本周累计击杀20只怪物。', target: 20, rewardPoints: 90 },
     { id: 'donate', name: '公会周常·物资筹备', desc: '公会等级达到2或贡献点达到300。', target: 1, rewardPoints: 70 },
@@ -202,6 +210,22 @@ export const useGuildStore = defineStore('guild', () => {
 
   const guildProjectCards = computed(() => GUILD_PROJECTS.map(p => ({ ...p, level: guildProjects.value[p.id] ?? 0, completed: (guildProjects.value[p.id] ?? 0) >= p.max })))
   const guildProjectBonusText = computed(() => `协作工程：攻击+${guildProjects.value.monster_watch * 2}，生命+${guildProjects.value.supply_line * 8}，周常贡献+${guildProjects.value.sect_drill * 2}%`)
+  const sectOfficeCards = computed(() => SECT_OFFICES.map(o => ({ ...o, level: sectOffices.value[o.id] ?? 0, completed: (sectOffices.value[o.id] ?? 0) >= o.max })))
+  const sectOfficeBonusText = computed(() => `宗门经营：捐献收益+${sectOffices.value.outer_hall * 2}%，丹药补给+${sectOffices.value.alchemy_hall}级，巡山战备+${sectOffices.value.patrol_hall}级`)
+  const upgradeSectOffice = (id: SectOfficeId): { success: boolean; message: string } => {
+    const office = SECT_OFFICES.find(o => o.id === id)
+    if (!office) return { success: false, message: '宗门机构不存在。' }
+    if ((sectOffices.value[id] ?? 0) >= office.max) return { success: false, message: '该机构已满级。' }
+    const inv = useInventoryStore()
+    const player = usePlayerStore()
+    if (inv.getItemCount(office.itemId) < office.quantity) return { success: false, message: `${office.itemName}不足，需要${office.quantity}。` }
+    if (!player.spendMoney(office.cost)) return { success: false, message: `铜钱不足，需要${office.cost}文。` }
+    inv.removeItem(office.itemId, office.quantity)
+    sectOffices.value[id] = (sectOffices.value[id] ?? 0) + 1
+    guildExp.value += office.cost / 40
+    contributionPoints.value += 20 + (sectOffices.value[id] ?? 0) * 3
+    return { success: true, message: `${office.name}提升到${sectOffices.value[id]}级，宗门经营加深。` }
+  }
   const contributeGuildProject = (id: GuildProjectId): { success: boolean; message: string } => {
     const project = GUILD_PROJECTS.find(p => p.id === id)
     if (!project) return { success: false, message: '工程不存在。' }
@@ -357,7 +381,7 @@ export const useGuildStore = defineStore('guild', () => {
     weeklyPurchases: { ...weeklyPurchases.value },
     lastResetWeek: lastResetWeek.value,
     totalPurchases: { ...totalPurchases.value },
-    weeklyExpeditionClaimed: [...weeklyExpeditionClaimed.value], guildProjects: { ...guildProjects.value }
+    weeklyExpeditionClaimed: [...weeklyExpeditionClaimed.value], guildProjects: { ...guildProjects.value }, sectOffices: { ...sectOffices.value }
   })
 
   /** 反序列化 */
@@ -372,6 +396,7 @@ export const useGuildStore = defineStore('guild', () => {
     totalPurchases.value = ((data as Record<string, unknown>).totalPurchases as Record<string, number>) ?? {}
     weeklyExpeditionClaimed.value = ((data as Record<string, unknown>).weeklyExpeditionClaimed as string[]) ?? []
     guildProjects.value = { monster_watch: 0, supply_line: 0, sect_drill: 0, ...(((data as any).guildProjects) ?? {}) }
+    sectOffices.value = { outer_hall: 0, alchemy_hall: 0, patrol_hall: 0, ...(((data as any).sectOffices) ?? {}) }
 
     // 旧存档迁移：如果没有贡献点字段但有已领取的讨伐目标，补发贡献点（不补经验，经验只来自捐献）
     const isOldSave = !('contributionPoints' in data)
@@ -404,6 +429,9 @@ export const useGuildStore = defineStore('guild', () => {
     guildProjectCards,
     guildProjectBonusText,
     contributeGuildProject,
+    sectOfficeCards,
+    sectOfficeBonusText,
+    upgradeSectOffice,
     recordKill,
     recordEncounter,
     getKillCount,

@@ -193,6 +193,18 @@
         </div>
       </div>
 
+      <div v-if="npcStore.children.length > 0" class="border border-accent/20 rounded-xs p-2 mb-2 bg-bg/40">
+        <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">家族后代长期线</p><span class="text-[10px] text-muted">每日培养，沉淀学识/羁绊/家传</span></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div v-for="ev in npcStore.childLongTermEventCards" :key="ev.id" class="border border-accent/10 rounded-xs p-2">
+            <p class="text-xs text-accent">{{ ev.title }}</p>
+            <p class="text-[10px] text-muted leading-relaxed mt-1">{{ ev.desc }}</p>
+            <p class="text-[10px] text-warning mt-1">{{ ev.itemName }}×{{ ev.quantity }} / {{ ev.money }}文</p>
+            <button class="mini-btn mt-2" :disabled="!ev.enabled || ev.claimed" @click="handleChildLongTerm(ev.id)">{{ ev.claimed ? '已完成' : ev.enabled ? '安排' : '需要子女成长' }}</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 子女列表 -->
       <div v-if="npcStore.children.length > 0" class="flex flex-col space-y-1">
         <div v-for="child in npcStore.children" :key="child.id" class="border border-accent/10 rounded-xs p-2">
@@ -745,6 +757,11 @@
   const hireableNpcs = computed(() => npcStore.getHireableNpcs())
   const currentHelpers = computed(() => npcStore.hiredHelpers)
   const hireConfirmNpc = computed(() => (hireConfirmNpcId.value ? getNpcById(hireConfirmNpcId.value) : null))
+
+  const handleChildLongTerm = (id: any) => {
+    const result = npcStore.completeChildLongTermEvent(id)
+    addLog(result.message)
+  }
 
   const handleHire = (npcId: string) => {
     const result = npcStore.hireHelper(npcId, selectedHireTask.value)

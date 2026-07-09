@@ -111,6 +111,21 @@
             </div>
           </div>
 
+          <div class="border border-accent/20 rounded-xs p-2 mb-3 bg-bg/40">
+            <div class="flex items-center justify-between mb-1"><p class="text-xs text-accent">玩家市场 · 拍卖雏形</p><span class="text-[10px] text-muted">每日限拍，铜钱沉淀与高阶材料流通</span></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div v-for="lot in shopStore.marketAuctionCards" :key="lot.id" class="border border-accent/10 rounded-xs p-2">
+                <p class="text-xs text-accent">{{ lot.name }}</p>
+                <p class="text-[10px] text-muted leading-relaxed mt-1">{{ lot.desc }}</p>
+                <p class="text-[10px] text-muted mt-1">拍品：{{ lot.reward.map(i => `${i.name}×${i.quantity}`).join('、') }}</p>
+                <div class="flex items-center justify-between mt-2">
+                  <span class="text-[10px] text-warning">当前价 {{ lot.price }}文</span>
+                  <button class="mini-btn" :disabled="lot.claimed || lot.capped" @click.stop="handleBidAuction(lot.id)">{{ lot.claimed ? '已拍下' : lot.capped ? '封顶' : '竞拍' }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <h4 id="cultivation-market" ref="cultivationMarketRef" class="text-accent text-sm mb-2 mt-3 scroll-mt-4">
             <Sparkles :size="14" class="inline" />
             修仙相关商品
@@ -1145,6 +1160,13 @@
   onMounted(scrollToCultivationMarket)
   watch(() => route.query.market, scrollToCultivationMarket)
 
+
+  function handleBidAuction(id: any) {
+    const res = shopStore.bidMarketAuction(id)
+    showFloat(res.message, res.success ? 'success' : 'danger')
+    addLog(res.message)
+    if (res.success) sfxBuy()
+  }
 
   const playerStore = usePlayerStore()
   const inventoryStore = useInventoryStore()

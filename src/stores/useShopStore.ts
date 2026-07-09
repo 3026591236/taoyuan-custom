@@ -61,6 +61,9 @@ export const useShopStore = defineStore('shop', () => {
 
   /** 当前选中的商铺（null=商圈总览） */
   const currentShopId = ref<string | null>(null)
+  type PlayerAuctionId = 'spirit_bone_lot' | 'cloud_silk_lot' | 'artifact_core_lot'
+  const marketAuctions = ref<Record<PlayerAuctionId, number>>({ spirit_bone_lot: 0, cloud_silk_lot: 0, artifact_core_lot: 0 })
+  const marketAuctionClaimed = ref<string[]>([])
 
   // === 折扣系统 ===
 
@@ -403,6 +406,31 @@ export const useShopStore = defineStore('shop', () => {
     return cats.map(cat => ({ category: cat, volume: recent[cat] ?? 0, multiplier: getMarketMultiplier(cat, gameStore.year, gameStore.seasonIndex, gameStore.day, recent[cat] ?? 0) }))
   })
 
+
+  const PLAYER_MARKET_AUCTIONS: { id: PlayerAuctionId; name: string; desc: string; itemId: string; itemName: string; baseBid: number; step: number; maxBid: number; reward: { itemId: string; name: string; quantity: number }[] }[] = [
+    { id: 'spirit_bone_lot', name: '玩家拍卖·灵骨整箱', desc: '镇魔与公会玩家寄售的灵骨，适合宗门工程与后期维护。', itemId: 'spirit_bone', itemName: '灵骨', baseBid: 6000, step: 2200, maxBid: 5, reward: [{ itemId: 'spirit_bone', name: '灵骨', quantity: 4 }] },
+    { id: 'cloud_silk_lot', name: '玩家拍卖·云纹丝卷', desc: '商路玩家压箱的云纹丝，常用于护具、商路和宗门补给。', itemId: 'cloud_silk', itemName: '云纹丝', baseBid: 9000, step: 3200, maxBid: 5, reward: [{ itemId: 'cloud_silk', name: '云纹丝', quantity: 3 }] },
+    { id: 'artifact_core_lot', name: '玩家拍卖·残器核心', desc: '高阶炼器玩家拆解出的法宝碎片与雷精组合包。', itemId: 'artifact_shard', itemName: '法宝碎片', baseBid: 14000, step: 5200, maxBid: 4, reward: [{ itemId: 'artifact_shard', name: '法宝碎片', quantity: 3 }, { itemId: 'thunder_essence', name: '雷精', quantity: 1 }] }
+  ]
+
+  const marketAuctionCards = computed(() => PLAYER_MARKET_AUCTIONS.map(a => {
+    const bids = marketAuctions.value[a.id] ?? 0
+    const key = `${gameStore.year}-${gameStore.season}-${gameStore.day}:${a.id}`
+    return { ...a, bids, price: a.baseBid + bids * a.step, capped: bids >= a.maxBid, claimed: marketAuctionClaimed.value.includes(key) }
+  }))
+
+  const bidMarketAuction = (id: PlayerAuctionId): { success: boolean; message: string } => {
+    const auction = marketAuctionCards.value.find(a => a.id === id)
+    if (!auction) return { success: false, message: '拍卖不存在。' }
+    if (auction.claimed) return { success: false, message: '今天已经拿下这组拍品。' }
+    if (auction.capped) return { success: false, message: '本轮竞价已到最高价，等待明日刷新。' }
+    if (!playerStore.spendMoney(auction.price)) return { success: false, message: `铜钱不足，需要${auction.price}文。` }
+    auction.reward.forEach(item => inventoryStore.addItem(item.itemId, item.quantity))
+    marketAuctions.value[id] = (marketAuctions.value[id] ?? 0) + 1
+    marketAuctionClaimed.value.push(`${gameStore.year}-${gameStore.season}-${gameStore.day}:${id}`)
+    return { success: true, message: `拍下「${auction.name}」：${auction.reward.map(i => `${i.name}×${i.quantity}`).join('、')}。` }
+  }
+
   const getRecentShipping = (): Partial<Record<MarketCategory, number>> => {
     _pruneShippingHistory()
     const result: Partial<Record<MarketCategory, number>> = {}
@@ -421,7 +449,9 @@ export const useShopStore = defineStore('shop', () => {
     travelingStock: travelingStock.value,
     shippingBox: shippingBox.value,
     shippedItems: shippedItems.value,
-    shippingHistory: shippingHistory.value
+    shippingHistory: shippingHistory.value,
+    marketAuctions: marketAuctions.value,
+    marketAuctionClaimed: marketAuctionClaimed.value
   })
 
   const deserialize = (data: any) => {
@@ -430,6 +460,8 @@ export const useShopStore = defineStore('shop', () => {
     shippingBox.value = data?.shippingBox ?? []
     shippedItems.value = data?.shippedItems ?? []
     shippingHistory.value = data?.shippingHistory ?? {}
+    marketAuctions.value = { spirit_bone_lot: 0, cloud_silk_lot: 0, artifact_core_lot: 0, ...(data?.marketAuctions ?? {}) }
+    marketAuctionClaimed.value = Array.isArray(data?.marketAuctionClaimed) ? data.marketAuctionClaimed : []
     currentShopId.value = null
   }
 
@@ -473,6 +505,8 @@ export const useShopStore = defineStore('shop', () => {
     // 行情供需
     getRecentShipping,
     marketSignalCards,
+    marketAuctionCards,
+    bidMarketAuction,
     // 序列化
     serialize,
     deserialize

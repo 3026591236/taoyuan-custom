@@ -9,6 +9,8 @@ import { useGameStore } from './useGameStore'
 import { useAchievementStore } from './useAchievementStore'
 
 export type ZoneKind = 'trial' | 'beast' | 'realm' | 'tower'
+type BattleBuildId = 'sword' | 'thunder' | 'guard' | 'beast'
+
 
 export interface Monster {
   id: string
@@ -170,6 +172,15 @@ export const useCombatStore = defineStore('combat', () => {
   const pendingRealmChoice = ref<RealmChoiceEvent | null>(null)
   type BattleTactic = 'balanced' | 'burst' | 'guard' | 'treasure'
   const battleTactic = ref<BattleTactic>('balanced')
+  const battleBuild = ref<BattleBuildId>('sword')
+  const BATTLE_BUILDS: { id: BattleBuildId; name: string; desc: string; atk: number; def: number; hp: number }[] = [
+    { id: 'sword', name: '剑修爆发', desc: '攻击更高，适合登塔和速杀。', atk: 1.12, def: 1, hp: 1 },
+    { id: 'thunder', name: '雷法破阵', desc: '攻击略高，秘境材料额外掉落倾向。', atk: 1.08, def: 0.98, hp: 1.02 },
+    { id: 'guard', name: '玄甲守御', desc: '防御与生命更稳，适合高层试错。', atk: 0.96, def: 1.12, hp: 1.12 },
+    { id: 'beast', name: '灵兽协战', desc: '均衡成长，强化持久探索。', atk: 1.04, def: 1.04, hp: 1.06 }
+  ]
+  const battleBuildInfo = computed(() => BATTLE_BUILDS.find(b => b.id === battleBuild.value) || BATTLE_BUILDS[0])
+
   const BATTLE_TACTICS: { id: BattleTactic; name: string; desc: string }[] = [
     { id: 'balanced', name: '稳扎稳打', desc: '攻守均衡，适合推进新层数。' },
     { id: 'burst', name: '爆发破阵', desc: '攻击+18%，防御-8%，适合速杀低层。' },
@@ -223,21 +234,24 @@ export const useCombatStore = defineStore('combat', () => {
     const beastBonus = c.beast === 'crane' ? Math.floor(base * (0.12 + Math.min(0.18, (c.beastBond || 0) / 3000))) : 0
     const artifactBonus = (c.destinedArtifactLevel || 0) * 8
     const tacticRate = battleTactic.value === 'burst' ? 1.18 : battleTactic.value === 'guard' ? 0.94 : battleTactic.value === 'treasure' ? 0.92 : 1
-    return Math.floor((base + beastBonus + artifactBonus + p.attributeAttackBonus) * (1 + (c.sectCombatAttackBonusRate || 0)) * tacticRate)
+    const buildRate = battleBuildInfo.value?.atk ?? 1
+    return Math.floor((base + beastBonus + artifactBonus + p.attributeAttackBonus) * (1 + (c.sectCombatAttackBonusRate || 0)) * tacticRate * buildRate)
   })
 
   const playerDef = computed(() => {
     const c = useCultivationStore()
     const p = usePlayerStore()
     const tacticRate = battleTactic.value === 'guard' ? 1.18 : battleTactic.value === 'burst' ? 0.92 : 1
-    return Math.floor((6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus + (c.beast === 'phoenix' ? Math.floor(4 + (c.beastBond || 0) / 80) : 0)) * (1 + (c.sectCombatDefenseBonusRate || 0)) * tacticRate)
+    const buildRate = battleBuildInfo.value?.def ?? 1
+    return Math.floor((6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus + (c.beast === 'phoenix' ? Math.floor(4 + (c.beastBond || 0) / 80) : 0)) * (1 + (c.sectCombatDefenseBonusRate || 0)) * tacticRate * buildRate)
   })
 
   const playerMaxHp = computed(() => {
     const c = useCultivationStore()
     const p = usePlayerStore()
     const tacticRate = battleTactic.value === 'guard' ? 1.1 : 1
-    return Math.floor((120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus) * (1 + (c.sectMaxHpBonusRate || 0)) * tacticRate)
+    const buildRate = battleBuildInfo.value?.hp ?? 1
+    return Math.floor((120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus) * (1 + (c.sectMaxHpBonusRate || 0)) * tacticRate * buildRate)
   })
 
   const getDailyCount = (zoneId: string) => {
@@ -339,6 +353,7 @@ export const useCombatStore = defineStore('combat', () => {
   }
 
   const setBattleTactic = (id: BattleTactic) => { battleTactic.value = id; addLog(`战斗策略调整为「${BATTLE_TACTICS.find(t => t.id === id)?.name ?? id}」。`) }
+  const setBattleBuild = (id: BattleBuildId) => { battleBuild.value = id; addLog(`战斗流派调整为「${BATTLE_BUILDS.find(t => t.id === id)?.name ?? id}」。`) }
 
   const startFight = (monster: Monster) => {
     currentMonster.value = monster
@@ -596,7 +611,7 @@ export const useCombatStore = defineStore('combat', () => {
 
   return {
     currentZone, activeZone, currentMonster, monsterHp, playerHp, playerMaxHp, playerAtk, playerDef,
-    combatLog, isFighting, combatResult, drops, pendingRealmChoice, battleTactic, BATTLE_TACTICS, setBattleTactic, showFlash, damageNumbers, dailyRuns,
+    combatLog, isFighting, combatResult, drops, pendingRealmChoice, battleTactic, battleBuild, battleBuildInfo, BATTLE_TACTICS, BATTLE_BUILDS, setBattleTactic, setBattleBuild, showFlash, damageNumbers, dailyRuns,
     isTowerCombat, towerHighestFloor, towerCurrentFloor, towerNextFloor, towerCost, towerStaminaCost, towerMilestoneRewards, nextTowerMilestone, towerClaimableMilestones,
     towerSeason, towerSeasonBestFloor, towerSeasonBadges, towerSeasonClaimableBadges, towerSeasonProgress, combatTitle, combatRewardHint, towerLockReason,
     trialZones, beastZones, realmZones, getDailyCount, isZoneUnlocked, lockReason,
