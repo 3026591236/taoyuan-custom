@@ -1419,6 +1419,9 @@
     void_scripture: '功法·归元功',
     soul_mending_pill: '疗元神伤势',
     nirvana_soul_pill: '复元神掉级',
+    cultivation_boost_pill: '元婴以下·修为',
+    minor_realm_pill: '元婴以下·升一重',
+    ascension_boost_pill: '元婴以下·升三重',
   }
 
   const hasDiscount = computed(() => walletStore.getShopDiscount() > 0 || inventoryStore.getRingEffectValue('shop_discount') > 0)

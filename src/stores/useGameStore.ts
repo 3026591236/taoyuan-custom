@@ -68,6 +68,17 @@ export const useGameStore = defineStore('game', () => {
   const farmMapType = ref<FarmMapType>('standard')
   const midnightWarned = ref(false)
   const dailyLuck = ref(0)
+  const dailyFateDate = ref('')
+
+  const realDateKey = () => new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })
+  const rollDailyFate = () => {
+    dailyLuck.value = Math.random() * 0.2 - 0.1
+    dailyFateType.value = DAILY_FATES[Math.floor(Math.random() * DAILY_FATES.length)]!.type
+    dailyFateDate.value = realDateKey()
+  }
+  const refreshDailyFateIfNeeded = () => {
+    if (dailyFateDate.value !== realDateKey()) rollDailyFate()
+  }
 
   type DailyFateType = 'harvest' | 'combat' | 'tower' | 'travel' | 'cultivation' | 'wealth'
   const DAILY_FATES: { type: DailyFateType; name: string; desc: string; bonusText: string }[] = [
@@ -79,8 +90,8 @@ export const useGameStore = defineStore('game', () => {
     { type: 'wealth', name: '财星照命', desc: '今日财运正旺，经营与任务的铜钱回报更讨喜。', bonusText: '今日目标铜钱 +15%' }
   ]
   const dailyFateType = ref<DailyFateType>('harvest')
-  const dailyFate = computed(() => DAILY_FATES.find(f => f.type === dailyFateType.value) ?? DAILY_FATES[0]!)
-  const dailyFateBonus = (type: DailyFateType): number => dailyFateType.value === type ? 1 : 0
+  const dailyFate = computed(() => { refreshDailyFateIfNeeded(); return DAILY_FATES.find(f => f.type === dailyFateType.value) ?? DAILY_FATES[0]! })
+  const dailyFateBonus = (type: DailyFateType): number => { refreshDailyFateIfNeeded(); return dailyFateType.value === type ? 1 : 0 }
 
   /** 山丘田庄：地表矿脉（日结生成，在农场面板开采后清除） */
   const surfaceOrePatch = ref<{ oreId: string; quantity: number } | null>(null)
@@ -238,9 +249,9 @@ export const useGameStore = defineStore('game', () => {
     const nextDay = day.value + 1 > 28 ? 1 : day.value + 1
     const nextSeason = day.value + 1 > 28 ? SEASON_ORDER[(SEASON_ORDER.indexOf(season.value) + 1) % 4]! : season.value
     tomorrowWeather.value = rollWeather(nextSeason, nextDay)
-    // 每日运势: -0.1 ~ +0.1，并刷新今日机缘
+    // 每日运势随游戏天刷新；今日机缘按现实自然日刷新
     dailyLuck.value = Math.random() * 0.2 - 0.1
-    dailyFateType.value = DAILY_FATES[Math.floor(Math.random() * DAILY_FATES.length)]!.type
+    refreshDailyFateIfNeeded()
     hour.value = DAY_START_HOUR
     midnightWarned.value = false
     currentLocationGroup.value = 'farm'
@@ -269,8 +280,7 @@ export const useGameStore = defineStore('game', () => {
     currentLocation.value = 'farm'
     currentLocationGroup.value = 'farm'
     farmMapType.value = mapType
-    dailyLuck.value = Math.random() * 0.2 - 0.1
-    dailyFateType.value = DAILY_FATES[0]!.type
+    rollDailyFate()
     isGameStarted.value = true
   }
 
@@ -288,6 +298,7 @@ export const useGameStore = defineStore('game', () => {
       farmMapType: farmMapType.value,
       dailyLuck: dailyLuck.value,
       dailyFateType: dailyFateType.value,
+      dailyFateDate: dailyFateDate.value,
       surfaceOrePatch: surfaceOrePatch.value,
       creekCatch: creekCatch.value
     }
@@ -306,7 +317,9 @@ export const useGameStore = defineStore('game', () => {
     currentLocationGroup.value = data.currentLocationGroup ?? 'farm'
     farmMapType.value = data.farmMapType ?? 'standard'
     dailyLuck.value = data.dailyLuck ?? 0
+    dailyFateDate.value = data.dailyFateDate ?? ''
     dailyFateType.value = data.dailyFateType ?? 'harvest'
+    refreshDailyFateIfNeeded()
     surfaceOrePatch.value = data.surfaceOrePatch ?? null
     creekCatch.value = data.creekCatch ?? []
     isGameStarted.value = true
@@ -326,6 +339,8 @@ export const useGameStore = defineStore('game', () => {
     midnightWarned,
     dailyLuck,
     dailyFateType,
+    dailyFateDate,
+    refreshDailyFateIfNeeded,
     dailyFate,
     dailyFateBonus,
     surfaceOrePatch,

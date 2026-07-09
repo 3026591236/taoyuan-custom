@@ -281,9 +281,13 @@
                 </div>
                 <p class="text-xs text-muted whitespace-pre-wrap">{{fb.content}}</p>
                 <div class="flex items-center gap-2 mt-1 text-[10px] text-muted/60">
-                  <span>{{fb.username||'游客'}}</span>
-                  <span v-if="fb.player_name"> · {{fb.player_name}}</span>
+                  <span>账号：{{fb.username||'游客'}}</span>
+                  <span v-if="fb.user_id"> · ID：{{fb.user_id}}</span>
+                  <span v-if="fb.player_name"> · 角色：{{fb.player_name}}</span>
                   <span> · {{new Date(fb.created_at).toLocaleString()}}</span>
+                </div>
+                <div class="flex gap-2 mt-2">
+                  <button v-if="fb.user_id" class="btn text-xs" @click="prepareFeedbackCompensation(fb)">补偿该玩家</button>
                 </div>
               </div>
             </template>
@@ -363,6 +367,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ITEMS } from '@/data/items'
 
 const router = useRouter()
 const username = ref('')
@@ -413,161 +418,10 @@ const feedbackStatusOptions = [
   { value: 'resolved', label: '已解决' },
   { value: 'closed', label: '已关闭' }
 ]
-const ALL_ITEMS = [
-  { id: 'mana_recovery_pill', name: '回灵丹', category: '丹药' },
-  { id: 'qi_gathering_pill', name: '聚气丹', category: '丹药' },
-  { id: 'foundation_pill', name: '筑基丹', category: '丹药' },
-  { id: 'dew_grass', name: '凝露草', category: '灵植' },
-  { id: 'spirit_rice', name: '蕴灵稻', category: '灵植' },
-  { id: 'vermilion_fruit', name: '朱果', category: '灵植' },
-  { id: 'moonlight_rice', name: '月光稻', category: '灵植' },
-  { id: 'phoenix_pepper', name: '凤椒', category: '灵植' },
-  { id: 'snow_lotus', name: '雪莲', category: '灵植' },
-  { id: 'fairy_chrysanthemum', name: '仙菊', category: '灵植' },
-  { id: 'golden_melon', name: '金瓜', category: '灵植' },
-  { id: 'jade_tea', name: '玉茶', category: '灵植' },
-  { id: 'pearl_grain', name: '珍珠米', category: '灵植' },
-  { id: 'lotus_tea', name: '莲茶', category: '灵植' },
-  { id: 'purple_bamboo', name: '紫竹', category: '灵植' },
-  { id: 'golden_fruit', name: '金果', category: '灵植' },
-  { id: 'celestial_rice', name: '天稻', category: '灵植' },
-  { id: 'saint_rice', name: '圣稻', category: '灵植' },
-  { id: 'dragon_melon', name: '龙瓜', category: '灵植' },
-  { id: 'primordial_melon', name: '混沌瓜', category: '灵植' },
-  { id: 'seed_dew_grass', name: '凝露草种子', category: '种子' },
-  { id: 'seed_spirit_rice', name: '蕴灵稻种子', category: '种子' },
-  { id: 'seed_vermilion_fruit', name: '朱果种子', category: '种子' },
-  { id: 'seed_ice_soul_lotus', name: '冰魄雪莲种子', category: '种子' },
-  { id: 'seed_purple_ganoderma', name: '紫韵灵芝孢子', category: '种子' },
-  { id: 'seed_moonlight_rice', name: '月光稻种子', category: '种子' },
-  { id: 'seed_phoenix_pepper', name: '凤椒种子', category: '种子' },
-  { id: 'seed_snow_lotus', name: '雪莲种子', category: '种子' },
-  { id: 'seed_fairy_chrysanthemum', name: '仙菊种子', category: '种子' },
-  { id: 'seed_golden_melon', name: '金瓜种子', category: '种子' },
-  { id: 'seed_jade_tea', name: '玉茶种子', category: '种子' },
-  { id: 'seed_pearl_grain', name: '珍珠米种子', category: '种子' },
-  { id: 'seed_lotus_tea', name: '莲茶种子', category: '种子' },
-  { id: 'seed_purple_bamboo', name: '紫竹种子', category: '种子' },
-  { id: 'seed_golden_fruit', name: '金果种子', category: '种子' },
-  { id: 'seed_celestial_rice', name: '天稻种子', category: '种子' },
-  { id: 'seed_saint_rice', name: '圣稻种子', category: '种子' },
-  { id: 'seed_dragon_melon', name: '龙瓜种子', category: '种子' },
-  { id: 'seed_primordial_melon', name: '混沌瓜种子', category: '种子' },
-  { id: 'vegetable_seed', name: '青菜种子', category: '种子' },
-  { id: 'carrot_seed', name: '胡萝卜种子', category: '种子' },
-  { id: 'turnip_seed', name: '芜菁种子', category: '种子' },
-  { id: 'cabbage_seed', name: '卷心菜种子', category: '种子' },
-  { id: 'tomato_seed', name: '番茄种子', category: '种子' },
-  { id: 'potato_seed', name: '土豆种子', category: '种子' },
-  { id: 'sunflower_seed', name: '向日葵种子', category: '种子' },
-  { id: 'cotton_seed', name: '棉花种子', category: '种子' },
-  { id: 'flax_seed', name: '亚麻种子', category: '种子' },
-  { id: 'hemp_seed', name: '大麻种子', category: '种子' },
-  { id: 'tea_seed', name: '茶叶种子', category: '种子' },
-  { id: 'iron_ore', name: '铁矿', category: '矿石' },
-  { id: 'gold_ore', name: '金矿', category: '矿石' },
-  { id: 'silver_ore', name: '银矿', category: '矿石' },
-  { id: 'copper_ore', name: '铜矿', category: '矿石' },
-  { id: 'stone', name: '石头', category: '矿石' },
-  { id: 'wood', name: '木头', category: '材料' },
-  { id: 'leather', name: '皮革', category: '材料' },
-  { id: 'cloth', name: '布料', category: '材料' },
-  { id: 'magic_crystal', name: '魔法水晶', category: '材料' },
-  { id: 'spirit_stone', name: '灵石', category: '材料' },
-  { id: 'bamboo', name: '竹子', category: '材料' },
-  { id: 'flower', name: '花', category: '材料' },
-  { id: 'tree_seeds', name: '树苗', category: '材料' },
-  { id: 'mushroom', name: '蘑菇', category: '材料' },
-  { id: 'axe', name: '斧头', category: '工具' },
-  { id: 'pickaxe', name: '镐', category: '工具' },
-  { id: 'hoe', name: '锄头', category: '工具' },
-  { id: 'watering_can', name: '水壶', category: '工具' },
-  { id: 'fishing_rod', name: '钓竿', category: '工具' },
-  { id: 'basket', name: '篮子', category: '工具' },
-  { id: 'fertilizer', name: '肥料', category: '工具' },
-  { id: 'pesticide', name: '杀虫剂', category: '工具' },
-  { id: 'sprinkler', name: '洒水器', category: '工具' },
-  { id: 'scarecrow', name: '稻草人', category: '工具' },
-  { id: 'vegetable', name: '青菜', category: '食材' },
-  { id: 'carrot', name: '胡萝卜', category: '食材' },
-  { id: 'turnip', name: '芜菁', category: '食材' },
-  { id: 'cabbage', name: '卷心菜', category: '食材' },
-  { id: 'tomato', name: '番茄', category: '食材' },
-  { id: 'potato', name: '土豆', category: '食材' },
-  { id: 'sunflower', name: '向日葵', category: '食材' },
-  { id: 'cotton', name: '棉花', category: '食材' },
-  { id: 'flax', name: '亚麻', category: '食材' },
-  { id: 'hemp', name: '大麻', category: '食材' },
-  { id: 'tea_leaf', name: '茶叶', category: '食材' },
-  { id: 'milk', name: '牛奶', category: '食材' },
-  { id: 'egg', name: '蛋', category: '食材' },
-  { id: 'honey', name: '蜂蜜', category: '食材' },
-  { id: 'meat', name: '肉', category: '食材' },
-  { id: 'bread', name: '面包', category: '食材' },
-  { id: 'cheese', name: '奶酪', category: '食材' },
-  { id: 'wine', name: '葡萄酒', category: '食材' },
-  { id: 'beer', name: '啤酒', category: '食材' },
-  { id: 'honey_cake', name: '蜂蜜蛋糕', category: '食材' },
-  { id: 'flour', name: '面粉', category: '食材' },
-  { id: 'sugar', name: '糖', category: '食材' },
-  { id: 'salt', name: '盐', category: '食材' },
-  { id: 'oil', name: '油', category: '食材' },
-  { id: 'vinegar', name: '醋', category: '食材' },
-  { id: 'soy_sauce', name: '酱油', category: '食材' },
-  { id: 'spice', name: '香料', category: '食材' },
-  { id: 'rare_fish', name: '稀有鱼类', category: '食材' },
-  { id: 'common_fish', name: '普通鱼类', category: '食材' },
-  { id: 'jade', name: '翡翠', category: '宝石' },
-  { id: 'amber', name: '琥珀', category: '宝石' },
-  { id: 'pearl', name: '珍珠', category: '宝石' },
-  { id: 'diamond', name: '钻石', category: '宝石' },
-  { id: 'ruby', name: '红宝石', category: '宝石' },
-  { id: 'sapphire', name: '蓝宝石', category: '宝石' },
-  { id: 'emerald', name: '绿宝石', category: '宝石' },
-  { id: 'topaz', name: '黄玉', category: '宝石' },
-  { id: 'opal', name: '蛋白石', category: '宝石' },
-  { id: 'onyx', name: '玛瑙', category: '宝石' },
-  { id: 'tiger_eye', name: '虎眼石', category: '宝石' },
-  { id: 'obsidian', name: '黑曜石', category: '宝石' },
-  { id: 'quartz', name: '石英', category: '宝石' },
-  { id: 'turquoise', name: '绿松石', category: '宝石' },
-  { id: 'garnet', name: '石榴石', category: '宝石' },
-  { id: 'amethyst', name: '紫水晶', category: '宝石' },
-  { id: 'citrine', name: '黄水晶', category: '宝石' },
-  { id: 'aquamarine', name: '海蓝宝石', category: '宝石' },
-  { id: 'moonstone', name: '月光石', category: '宝石' },
-  { id: 'bloodstone', name: '血石', category: '宝石' },
-  { id: 'legendary_gem', name: '传奇宝石', category: '宝石' },
-  { id: 'rare_gem', name: '稀有宝石', category: '宝石' },
-  { id: 'common_gem', name: '普通宝石', category: '宝石' },
-  { id: 'potion', name: '药水', category: '道具' },
-  { id: 'elixir', name: '仙丹', category: '道具' },
-  { id: 'scroll', name: '卷轴', category: '道具' },
-  { id: 'treasure_map', name: '藏宝图', category: '道具' },
-  { id: 'ancient_relic', name: '古代遗物', category: '道具' },
-  { id: 'chest', name: '箱子', category: '家具' },
-  { id: 'bed', name: '床', category: '家具' },
-  { id: 'table', name: '桌子', category: '家具' },
-  { id: 'chair', name: '椅子', category: '家具' },
-  { id: 'lantern', name: '灯笼', category: '家具' },
-  { id: 'torch', name: '火把', category: '家具' },
-  { id: 'trap', name: '陷阱', category: '家具' },
-  { id: 'fence', name: '栅栏', category: '家具' },
-  { id: 'well', name: '水井', category: '家具' },
-  { id: 'mill', name: '磨坊', category: '家具' },
-  { id: 'furnace', name: '熔炉', category: '家具' },
-  { id: 'anvil', name: '铁砧', category: '家具' },
-  { id: 'loom', name: '织布机', category: '家具' },
-  { id: 'kiln', name: '窑', category: '家具' },
-  { id: 'workbench', name: '工作台', category: '家具' },
-  { id: 'bookshelf', name: '书架', category: '家具' },
-  { id: 'spirit_oil', name: '灵油', category: '特殊' },
-  { id: 'ink', name: '墨', category: '特殊' },
-  { id: 'paper', name: '纸', category: '特殊' }
-]
+const ALL_ITEMS = ITEMS.map(i => ({ id: i.id, name: i.name, category: i.category }))
 const categories = computed(() => {
   
-  return ['丹药', '灵植', '种子', '矿石', '材料', '工具', '食材', '宝石', '道具', '家具', '特殊']
+  return Array.from(new Set(ALL_ITEMS.map(i => i.category))).sort()
 })
 const gmMail = reactive<any>({
   to: 'all',
@@ -629,7 +483,15 @@ async function loadFeedbacks() {
   } catch {}
 }
 async function updateFeedbackStatus(fb: any) {
-  try { await api(`/api/admin/feedbacks/${fb.id}`, { method: 'PUT', headers: headers(), body: JSON.stringify({ status: fb.status_tmp }) }) } catch { fb.status_tmp = fb.status }
+  try { await api(`/api/admin/feedbacks/${fb.id}`, { method: 'PUT', headers: headers(), body: JSON.stringify({ status: fb.status_tmp }) }); fb.status = fb.status_tmp } catch { fb.status_tmp = fb.status }
+}
+function prepareFeedbackCompensation(fb: any) {
+  if (!fb.user_id) { setMsg('该反馈没有绑定账号，无法直接补偿', 'error'); return }
+  gmMail.to = fb.user_id
+  gmMail.title = `反馈处理补偿：${fb.title || '玩家反馈'}`
+  gmMail.content = `感谢你的反馈「${fb.title || ''}」。管理员已核实处理，附上补偿奖励。`
+  activeTab.value = 'gm'
+  setMsg(`已切到 GM 邮件，收件人：${fb.username || fb.user_id}`)
 }
 async function loadSaveAuditEvents() {
   if (user.value?.role !== 'admin') return
@@ -641,7 +503,7 @@ async function loadSaveAuditEvents() {
   const data = await api(`/api/admin/save-audit-events?${q.toString()}`, { headers: headers() })
   saveAuditEvents.value = data.events || []
 }
-async function refreshAll() { try { await loadMe(); await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); await loadEconomyEvents(); await loadSaveAuditEvents(); setMsg('后台数据已刷新') } catch (e: any) { setMsg(e.message, 'error') } }
+async function refreshAll() { try { await loadMe(); await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); await loadEconomyEvents(); await loadSaveAuditEvents(); await loadFeedbacks(); setMsg('后台数据已刷新') } catch (e: any) { setMsg(e.message, 'error') } }
 async function login() {
   try { const data = await api('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); localStorage.setItem('taoyuan_account_token', data.token); user.value = data.user; await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); setMsg('登录成功') } catch (e: any) { setMsg(e.message, 'error') }
 }
@@ -712,5 +574,5 @@ function saveAuditStatusLabel(t: string) {
   const labels: Record<string, string> = { ok: '正常', conflict: '冲突' }
   return labels[t] || t
 }
-onMounted(async () => { try { await loadMe(); await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); await loadEconomyEvents(); await loadSaveAuditEvents() } catch {} })
+onMounted(async () => { try { await loadMe(); await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); await loadEconomyEvents(); await loadSaveAuditEvents(); await loadFeedbacks() } catch {} })
 </script>

@@ -156,6 +156,8 @@ const ALCHEMY_RECIPES = {
   ice_soul_pill: { name: '冰魄护魂丹', materials: [{ itemId: 'ice_soul_lotus', quantity: 5 }, { itemId: 'purple_ganoderma', quantity: 3 }, { itemId: 'soul_crystal', quantity: 2 }], aura: 800, mana: 100, output: 1, minRealm: 18 }
 } as const
 export type PillId = keyof typeof ALCHEMY_RECIPES
+type MarketPillId = 'cultivation_boost_pill' | 'minor_realm_pill' | 'ascension_boost_pill'
+type UsablePillId = PillId | MarketPillId
 export type AlchemyQuality = 'normal' | 'fine' | 'perfect'
 export const getAlchemyRecipes = () => ALCHEMY_RECIPES
 export const HERB_DATA: Record<string, { name: string; emoji: string; rarity: number; desc: string }> = {
@@ -580,12 +582,12 @@ export const useCultivationStore = defineStore('cultivation', () => {
     gain = Math.floor(gain * manualMultiplier)
     manaGain = Math.floor(manaGain * (1 + manuals.value.void * 0.05))
     auraGain = Math.floor(auraGain * (1 + manuals.value.wood * 0.03))
-    cultivation.value = Math.min(cultivation.value + gain, maxCultivation.value)
+    const cultivationResult = addCultivation(game.dailyFateType === 'cultivation' ? Math.floor(gain * 1.1) : gain)
     mana.value = Math.min(mana.value + manaGain, maxMana.value)
     aura.value += auraGain
     const tr = game.advanceTime(1)
-    addLog(`静坐调息一刻，消耗体力10，修为+${gain}，灵力+${manaGain}，灵气+${auraGain}。`)
-    showFloat(`修为+${gain}`, 'accent')
+    addLog(`静坐调息一刻，消耗体力10，修为+${cultivationResult.actual}${game.dailyFateType === 'cultivation' ? '（今日机缘加成）' : ''}，灵力+${manaGain}，灵气+${auraGain}${cultivationResult.auraGain ? `，溢出修为化为灵气+${cultivationResult.auraGain}` : ''}。`)
+    showFloat(`修为+${cultivationResult.actual}`, 'accent')
     if (tr.message) addLog(tr.message)
     return true
   }
@@ -602,11 +604,13 @@ export const useCultivationStore = defineStore('cultivation', () => {
       return false
     }
     const spend = Math.min(aura.value, 80 + fieldTier.value * 30)
-    const gain = Math.floor(spend * (1.15 + fieldTier.value * 0.12 + (artifacts.value.spiritKettle ? 0.18 : 0) + (cultivationPath.value === 'alchemy' ? 0.16 : 0)))
+    const game = useGameStore()
+    const baseGain = Math.floor(spend * (1.15 + fieldTier.value * 0.12 + (artifacts.value.spiritKettle ? 0.18 : 0) + (cultivationPath.value === 'alchemy' ? 0.16 : 0)))
+    const gain = game.dailyFateType === 'cultivation' ? Math.floor(baseGain * 1.1) : baseGain
     aura.value -= spend
-    cultivation.value = Math.min(cultivation.value + gain, maxCultivation.value)
-    addLog(`消耗体力5，炼化灵气${spend}点，修为增长${gain}。`)
-    showFloat(`修为+${gain}`, 'success')
+    const result = addCultivation(gain)
+    addLog(`消耗体力5，炼化灵气${spend}点，修为增长${result.actual}${game.dailyFateType === 'cultivation' ? '（今日机缘加成）' : ''}${result.auraGain ? `，溢出修为化为灵气+${result.auraGain}` : ''}。`)
+    showFloat(`修为+${result.actual}`, 'success')
     return true
   }
 
@@ -815,7 +819,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const manaGain = Math.floor((lesson.reward.mana || 0) * (1 + manuals.value.void * 0.04))
     const yuanShenGain = Math.floor((lesson.reward.yuanShenExp || 0) * (1 + manuals.value.void * 0.03 + manuals.value.thunder * 0.02))
     aura.value += auraGain
-    cultivation.value = Math.min(maxCultivation.value, cultivation.value + cultivationGain)
+    addCultivation(cultivationGain)
     mana.value = Math.min(maxMana.value, mana.value + manaGain)
     if (yuanShenGain > 0) addYuanShenExp(yuanShenGain)
     lessonDailyDone.value.push(id)
@@ -855,7 +859,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const cultivationGain = Math.floor(recipe.cultivation * (1 + fieldTier.value * 0.08 + (beast.value === 'crane' ? 0.12 : 0)))
     const manaGain = Math.floor(recipe.mana * (1 + (hasCaveSlot('meditation') ? 0.15 : 0)))
     aura.value += auraGain
-    cultivation.value = Math.min(maxCultivation.value, cultivation.value + cultivationGain)
+    addCultivation(cultivationGain)
     mana.value = Math.min(maxMana.value, mana.value + manaGain)
     spiritMealLastDaily.value[id] = gameDayKey()
     useGameStore().advanceTime(1)
@@ -901,7 +905,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     }
     if (pillId === 'qi_gathering_pill' || pillId === 'lianjing_pill' || pillId === 'huaqi_pill' || pillId === 'lianqi_pill' || pillId === 'huashen_pill' || pillId === 'lianshen_pill' || pillId === 'ganoderma_pill') {
       const gain = Math.max(30, Math.floor((ALCHEMY_RECIPES[pillId].aura + ALCHEMY_RECIPES[pillId].mana * 3) * bonusRate))
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + gain)
+      addCultivation(gain)
       return `丹香入体，修为+${gain}`
     }
     if (pillId === 'foundation_pill' || pillId === 'returning_void_pill' || pillId === 'refining_void_pill' || pillId === 'merge_way_pill') {
@@ -975,7 +979,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const cultivationGain = Math.max(1, Math.floor(capped * (4 + realmIndex.value * 0.28 + fieldTier.value * 0.8 + (hasCaveSlot('meditation') ? 3 : 0) + (beast.value === 'crane' ? 2 : 0) + manuals.value.void * 0.25)))
     const yuanShenGain = Math.max(0, Math.floor(capped / 30) + (hasCaveSlot('meditation') ? Math.floor(capped / 60) : 0))
     aura.value += auraGain
-    cultivation.value = Math.min(maxCultivation.value, cultivation.value + cultivationGain)
+    addCultivation(cultivationGain)
     if (yuanShenGain > 0) addYuanShenExp(yuanShenGain)
     return { aura: auraGain, cultivation: cultivationGain, yuanShen: yuanShenGain }
   }
@@ -1011,6 +1015,31 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return { success: true, message: `${def.name}提升至${manuals.value[key]}层。` }
   }
 
+  const addCultivation = (amount: number, overflowAuraRate = 0.18): { actual: number; overflow: number; auraGain: number } => {
+    const gain = Math.max(0, Math.floor(amount))
+    const before = cultivation.value
+    addCultivation(gain)
+    const actual = cultivation.value - before
+    const overflow = Math.max(0, gain - actual)
+    const auraGain = overflow > 0 ? Math.max(1, Math.floor(overflow * overflowAuraRate)) : 0
+    if (auraGain > 0) aura.value += auraGain
+    return { actual, overflow, auraGain }
+  }
+
+  const advanceMinorRealms = (steps: number): { from: string; to: string; actual: number } => {
+    const from = realmName.value
+    const limit = 16 // 元婴初期及以上不可使用市集直升丹
+    const oldIndex = realmIndex.value
+    realmIndex.value = Math.min(limit - 1, realmIndex.value + Math.max(0, Math.floor(steps)))
+    const actual = realmIndex.value - oldIndex
+    if (actual > 0) {
+      cultivation.value = 0
+      mana.value = maxMana.value
+      usePlayerStore().addBonusMaxStamina(actual)
+    }
+    return { from, to: realmName.value, actual }
+  }
+
   const addYuanShenExp = (amount: number) => {
     yuanShenExp.value += amount
     let leveled = 0
@@ -1022,7 +1051,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return leveled
   }
 
-  const usePill = (pillId: PillId) => {
+  const usePill = (pillId: UsablePillId) => {
     const inventory = useInventoryStore()
     if (!inventory.hasItem(pillId)) {
       showFloat('背包中没有这种丹药。', 'danger')
@@ -1047,43 +1076,62 @@ export const useCultivationStore = defineStore('cultivation', () => {
       const actual = mana.value - before
       addLog(`服下一枚回灵丹，灵力恢复${actual}。`)
       showFloat(`灵力+${actual}`, 'success')
+    } else if (pillId === 'cultivation_boost_pill') {
+      if (realmIndex.value >= 16) { showFloat('元婴期及以上已无法服用修为丹。', 'danger'); return false }
+      inventory.removeItem(pillId, 1)
+      const gain = Math.max(1200, Math.floor(maxCultivation.value * 0.35))
+      const result = addCultivation(gain)
+      addLog(`服下一枚修为丹，修为增长${result.actual}${result.auraGain ? `，溢出药力化为灵气+${result.auraGain}` : ''}。`)
+      showFloat(`修为+${result.actual}`, 'success')
+    } else if (pillId === 'minor_realm_pill') {
+      if (realmIndex.value >= 16) { showFloat('元婴期及以上已无法服用境界丹。', 'danger'); return false }
+      inventory.removeItem(pillId, 1)
+      const r = advanceMinorRealms(1)
+      addLog(`服下一枚境界丹，从「${r.from}」晋升至「${r.to}」。`)
+      showFloat(`境界提升：${r.to}`, 'success')
+    } else if (pillId === 'ascension_boost_pill') {
+      if (realmIndex.value >= 16) { showFloat('元婴期及以上已无法服用直升丹。', 'danger'); return false }
+      inventory.removeItem(pillId, 1)
+      const r = advanceMinorRealms(3)
+      addLog(`服下一枚直升丹，从「${r.from}」晋升至「${r.to}」（提升${r.actual}重）。`)
+      showFloat(`直升至：${r.to}`, 'success')
     } else if (pillId === 'qi_gathering_pill') {
       inventory.removeItem(pillId, 1)
       const gain = 160 + fieldTier.value * 45
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + gain)
+      addCultivation(gain)
       addLog(`服下一枚聚气丹，修为增长${gain}。`)
       showFloat(`修为+${gain}`, 'success')
     } else if (pillId === 'foundation_pill') {
       inventory.removeItem(pillId, 1)
       foundationPillBlessing.value += 900
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 300)
+      addCultivation(300)
       addLog('服下一枚筑基丹，突破所需灵气降低900，并获得修为300。')
       showFloat('筑基丹生效', 'success')
     } else if (pillId === 'lianjing_pill') {
       inventory.removeItem(pillId, 1)
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 500)
+      addCultivation(500)
       addLog('服下一枚炼精丹，修为增长500。')
       showFloat('修为+500', 'success')
     } else if (pillId === 'huaqi_pill') {
       inventory.removeItem(pillId, 1)
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 800)
+      addCultivation(800)
       mana.value = Math.min(maxMana.value, mana.value + 30)
       addLog('服下一枚化气丹，修为+800，灵力+30。')
       showFloat('化气丹生效', 'success')
     } else if (pillId === 'lianqi_pill') {
       inventory.removeItem(pillId, 1)
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 1200)
+      addCultivation(1200)
       aura.value += 60
       addLog('服下一枚炼气丹，修为+1200，灵气+60。')
       showFloat('炼气丹生效', 'success')
     } else if (pillId === 'huashen_pill') {
       inventory.removeItem(pillId, 1)
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 2500)
+      addCultivation(2500)
       addLog('服下一枚化神丹，修为增长2500。')
       showFloat('修为+2500', 'success')
     } else if (pillId === 'lianshen_pill') {
       inventory.removeItem(pillId, 1)
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + 4000)
+      addCultivation(4000)
       addLog('服下一枚炼神丹，修为增长4000。')
       showFloat('修为+4000', 'success')
     } else if (pillId === 'life_extension_pill') {
@@ -1107,7 +1155,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
       inventory.removeItem(pillId, 1)
       const cultivationGain = Math.max(1, Math.floor(maxCultivation.value * 0.15))
       const beforeCultivation = cultivation.value
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + cultivationGain)
+      addCultivation(cultivationGain)
       const actualCultivation = cultivation.value - beforeCultivation
       aura.value += 300
       addLog(`服下一枚灵芝培元丹，修为增长${actualCultivation}，灵气+300。`)
@@ -1326,7 +1374,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
       showFloat(`羁绊+${bondGain} 灵气+${gain}`, 'success')
     } else if (beast.value === 'crane') {
       const gain = 90 + level * 10
-      cultivation.value = Math.min(maxCultivation.value, cultivation.value + gain)
+      addCultivation(gain)
       addLog(`你随${beastEmoji.value}${beastName.value}演练身法，羁绊+${bondGain}，修为+${gain}。`)
       showFloat(`羁绊+${bondGain} 修为+${gain}`, 'success')
     } else {

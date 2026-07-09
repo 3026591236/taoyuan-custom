@@ -144,6 +144,10 @@ const MISC_ITEMS: ItemDef[] = [
     edible: false
   },
 
+  { id: 'cultivation_boost_pill', name: '修为丹', category: 'food', description: '市集流通的昂贵修行丹，元婴期以下服用可获得大量修为。', sellPrice: 1800, edible: false },
+  { id: 'minor_realm_pill', name: '境界丹', category: 'food', description: '蕴含破阶药力的珍贵丹，元婴期以下服用可直接提升一个小境界。', sellPrice: 6800, edible: false },
+  { id: 'ascension_boost_pill', name: '直升丹', category: 'food', description: '修仙市集镇店灵丹，元婴期以下服用可连升三重小境界。', sellPrice: 16800, edible: false },
+
   { id: 'storage_talisman', name: '纳物符', category: 'misc', description: '刻有须弥小阵的符箓，使用后背包永久+1格，可突破普通上限。', sellPrice: 600, edible: false },
   { id: 'cosmos_bag', name: '乾坤袋', category: 'misc', description: '内藏一方小小空间，使用后背包永久+4格，可突破普通上限。', sellPrice: 2400, edible: false },
   { id: 'wood_scripture', name: '青木长生诀', category: 'misc', description: '温养生机的入门功法秘籍，学习后提升修炼与生命底蕴。', sellPrice: 1800, edible: false },
