@@ -24,6 +24,9 @@ export type ImmortalDutyId = 'rain_edict' | 'demon_edict' | 'forge_edict' | 'fat
 export type ImmortalCaveId = 'star_platform' | 'merit_pool' | 'law_tablet'
 export type MortalEchoId = 'sect_blessing' | 'family_blessing' | 'farm_blessing'
 export type ImmortalRivalId = 'sword_immortal' | 'thunder_general' | 'moon_fairy'
+export type ImmortalMarketId = 'jade_seed' | 'star_sand' | 'edict_scroll' | 'law_core'
+export type ImmortalRealmId = 'true_immortal' | 'earth_immortal' | 'sky_immortal' | 'gold_immortal'
+export type ImmortalSeasonRewardId = 'arena_10' | 'arena_30' | 'arena_60'
 
 export const IMMORTAL_ARTS: Array<{ id: ImmortalArtId; name: string; icon: string; element: string; desc: string; basePower: number; effect: string }> = [
   { id: 'starfall_sword', name: '星河落刃', icon: '🌌', element: '星辰法则', desc: '引星河为剑，普通剑气升格为群星坠落。', basePower: 120, effect: '星辉连斩' },
@@ -67,6 +70,24 @@ export const IMMORTAL_RIVALS: Array<{ id: ImmortalRivalId; name: string; icon: s
   { id: 'moon_fairy', name: '广寒仙姬', icon: '🌙', style: '月华幻身', power: 1900, desc: '身法型对手，考验仙魂与法则碑。', rewardMerit: 36, rewardJade: 9, rewardRule: 4 }
 ]
 
+export const IMMORTAL_MARKET: Array<{ id: ImmortalMarketId; name: string; icon: string; desc: string; costMerit: number; costJade: number; costRule: number; reward: string; itemId?: string; itemName?: string; itemQty?: number; bodyGain?: number; boneGain?: number; soulGain?: number }> = [
+  { id: 'jade_seed', name: '仙灵种匣', icon: '🌱', desc: '司农仙官常购，可把仙界资源转化为凡界灵植后劲。', costMerit: 18, costJade: 6, costRule: 0, reward: '仙露+2', itemId: 'immortal_dew', itemName: '仙露', itemQty: 2 },
+  { id: 'star_sand', name: '星砂炼材', icon: '✨', desc: '炼宝仙官用来修补法宝与洞天器纹。', costMerit: 12, costJade: 8, costRule: 1, reward: '星陨铁+1', itemId: 'star_iron', itemName: '星陨铁', itemQty: 1 },
+  { id: 'edict_scroll', name: '仙谕文书', icon: '📜', desc: '文命仙官整理凡界香火，可强化仙魂。', costMerit: 36, costJade: 4, costRule: 2, reward: '仙魂+1', soulGain: 1 },
+  { id: 'law_core', name: '小法则核', icon: '💠', desc: '少量法则凝核，用于稳定突破与 PK 波动。', costMerit: 24, costJade: 10, costRule: 6, reward: '仙骨+1 / 仙体+1', bodyGain: 1, boneGain: 1 }
+]
+export const IMMORTAL_REALMS: Array<{ id: ImmortalRealmId; name: string; icon: string; desc: string; meritCost: number; jadeCost: number; ruleCost: number; powerBonus: number; title: string }> = [
+  { id: 'true_immortal', name: '真仙', icon: '☁️', desc: '初脱凡尘，掌仙术而未稳法则。', meritCost: 0, jadeCost: 0, ruleCost: 0, powerBonus: 0, title: '初入仙门' },
+  { id: 'earth_immortal', name: '地仙', icon: '⛰️', desc: '洞天落成，仙力可回响下界山河。', meritCost: 120, jadeCost: 32, ruleCost: 14, powerBonus: 380, title: '洞天地仙' },
+  { id: 'sky_immortal', name: '天仙', icon: '🌤️', desc: '仙职入册，可调度天庭事务与星河仙术。', meritCost: 260, jadeCost: 68, ruleCost: 32, powerBonus: 820, title: '云阙天仙' },
+  { id: 'gold_immortal', name: '太乙金仙', icon: '🌟', desc: '功德成轮，仙擂与法则试炼进入第二循环。', meritCost: 520, jadeCost: 128, ruleCost: 72, powerBonus: 1500, title: '太乙金仙' }
+]
+export const IMMORTAL_SEASON_REWARDS: Array<{ id: ImmortalSeasonRewardId; needScore: number; name: string; icon: string; desc: string; merit: number; jade: number; rule: number }> = [
+  { id: 'arena_10', needScore: 10, name: '问道小成', icon: '🥉', desc: '仙擂赛季首段奖励，鼓励参与 PK。', merit: 30, jade: 8, rule: 3 },
+  { id: 'arena_30', needScore: 30, name: '连胜入榜', icon: '🥈', desc: '进入仙擂榜单，奖励洞天建设资源。', merit: 70, jade: 18, rule: 8 },
+  { id: 'arena_60', needScore: 60, name: '云阙擂主', icon: '🥇', desc: '赛季擂主奖励，形成飞升后中期目标。', merit: 140, jade: 36, rule: 18 }
+]
+
 export const useAscensionStore = defineStore('ascension', () => {
   const ascended = ref(false)
   const ascensionQuestActive = ref(false)
@@ -90,6 +111,9 @@ export const useAscensionStore = defineStore('ascension', () => {
   const pkWins = ref(0)
   const pkLosses = ref(0)
   const pkStreak = ref(0)
+  const immortalRealmStage = ref(0)
+  const marketPurchases = ref<Record<ImmortalMarketId, number>>({ jade_seed: 0, star_sand: 0, edict_scroll: 0, law_core: 0 })
+  const seasonClaimed = ref<Record<ImmortalSeasonRewardId, boolean>>({ arena_10: false, arena_30: false, arena_60: false })
 
   const canAscend = computed(() => {
     const cultivation = useCultivationStore()
@@ -111,7 +135,7 @@ export const useAscensionStore = defineStore('ascension', () => {
   })
   const immortalPower = computed(() => {
     const cultivation = useCultivationStore()
-    return cultivation.combatPower + merit.value * 3 + immortalJade.value * 12 + ruleFragments.value * 25 + (immortalBodyLevel.value + immortalBoneLevel.value + immortalSoulLevel.value) * 80 + cavePower.value
+    return cultivation.combatPower + merit.value * 3 + immortalJade.value * 12 + ruleFragments.value * 25 + (immortalBodyLevel.value + immortalBoneLevel.value + immortalSoulLevel.value) * 80 + cavePower.value + immortalRealmPowerBonus.value
   })
   const bodyProfile = computed(() => [
     { name: '仙体', level: immortalBodyLevel.value, desc: '飞升后肉身蜕凡，角色外观出现仙光与云纹。' },
@@ -121,6 +145,10 @@ export const useAscensionStore = defineStore('ascension', () => {
   const officeInfo = computed(() => IMMORTAL_OFFICES.find(o => o.id === immortalOffice.value) || IMMORTAL_OFFICES[0]!)
   const cavePower = computed(() => IMMORTAL_CAVE_NODES.reduce((sum, node) => sum + (caveLevels.value[node.id] ?? 0) * node.powerPerLevel, 0))
   const pkRecord = computed(() => `${pkWins.value}胜 / ${pkLosses.value}负 · 连胜${pkStreak.value}`)
+  const immortalRealmInfo = computed(() => IMMORTAL_REALMS[Math.min(immortalRealmStage.value, IMMORTAL_REALMS.length - 1)] || IMMORTAL_REALMS[0]!)
+  const nextImmortalRealm = computed(() => IMMORTAL_REALMS[immortalRealmStage.value + 1] || null)
+  const immortalRealmPowerBonus = computed(() => immortalRealmInfo.value.powerBonus)
+  const seasonScore = computed(() => pkWins.value * 10 + Math.max(0, pkStreak.value) * 3)
 
   const triggerAscensionQuest = () => {
     if (ascended.value || ascensionQuestActive.value) return
@@ -255,7 +283,60 @@ export const useAscensionStore = defineStore('ascension', () => {
     return true
   }
 
-  const serialize = () => ({ ascended: ascended.value, ascensionQuestActive: ascensionQuestActive.value, ascensionQuestComplete: ascensionQuestComplete.value, inImmortalWorld: inImmortalWorld.value, immortalTitle: immortalTitle.value, immortalOffice: immortalOffice.value, merit: merit.value, immortalJade: immortalJade.value, ruleFragments: ruleFragments.value, immortalBodyLevel: immortalBodyLevel.value, immortalBoneLevel: immortalBoneLevel.value, immortalSoulLevel: immortalSoulLevel.value, trialWins: trialWins.value, lastArtId: lastArtId.value, lastBattleText: lastBattleText.value, visualPulse: visualPulse.value, dutyDone: dutyDone.value, caveLevels: caveLevels.value, echoBlessings: echoBlessings.value, pkWins: pkWins.value, pkLosses: pkLosses.value, pkStreak: pkStreak.value })
+  const buyImmortalMarket = (id: ImmortalMarketId): boolean => {
+    if (!ascended.value) return false
+    const goods = IMMORTAL_MARKET.find(g => g.id === id)
+    if (!goods) return false
+    if (merit.value < goods.costMerit || immortalJade.value < goods.costJade || ruleFragments.value < goods.costRule) {
+      addLog(`${goods.name}需要功德${goods.costMerit}、仙玉${goods.costJade}、法则碎片${goods.costRule}。`)
+      return false
+    }
+    const inventoryStore = useInventoryStore()
+    merit.value -= goods.costMerit
+    immortalJade.value -= goods.costJade
+    ruleFragments.value -= goods.costRule
+    if (goods.itemId && goods.itemQty) inventoryStore.addItem(goods.itemId, goods.itemQty)
+    if (goods.bodyGain) immortalBodyLevel.value += goods.bodyGain
+    if (goods.boneGain) immortalBoneLevel.value += goods.boneGain
+    if (goods.soulGain) immortalSoulLevel.value += goods.soulGain
+    marketPurchases.value[id] = (marketPurchases.value[id] ?? 0) + 1
+    visualPulse.value++
+    lastBattleText.value = `${goods.icon} 仙市购得「${goods.name}」：${goods.reward}。仙界资源转化为长期成长。`
+    addLog(lastBattleText.value)
+    return true
+  }
+  const breakthroughImmortalRealm = (): boolean => {
+    const next = nextImmortalRealm.value
+    if (!ascended.value || !next) return false
+    if (merit.value < next.meritCost || immortalJade.value < next.jadeCost || ruleFragments.value < next.ruleCost) {
+      addLog(`${next.name}突破需要功德${next.meritCost}、仙玉${next.jadeCost}、法则碎片${next.ruleCost}。`)
+      return false
+    }
+    merit.value -= next.meritCost
+    immortalJade.value -= next.jadeCost
+    ruleFragments.value -= next.ruleCost
+    immortalRealmStage.value += 1
+    immortalTitle.value = next.title
+    visualPulse.value++
+    lastBattleText.value = `${next.icon} 仙阶突破至「${next.name}」：${next.desc} 仙战力底蕴 +${next.powerBonus}。`
+    addLog(lastBattleText.value)
+    return true
+  }
+  const claimSeasonReward = (id: ImmortalSeasonRewardId): boolean => {
+    const reward = IMMORTAL_SEASON_REWARDS.find(r => r.id === id)
+    if (!reward || seasonClaimed.value[id]) return false
+    if (seasonScore.value < reward.needScore) { addLog(`${reward.name}需要仙擂赛季积分${reward.needScore}。`); return false }
+    seasonClaimed.value[id] = true
+    merit.value += reward.merit
+    immortalJade.value += reward.jade
+    ruleFragments.value += reward.rule
+    visualPulse.value++
+    lastBattleText.value = `${reward.icon} 领取仙擂赛季奖励「${reward.name}」：功德+${reward.merit}、仙玉+${reward.jade}、法则碎片+${reward.rule}。`
+    addLog(lastBattleText.value)
+    return true
+  }
+
+  const serialize = () => ({ ascended: ascended.value, ascensionQuestActive: ascensionQuestActive.value, ascensionQuestComplete: ascensionQuestComplete.value, inImmortalWorld: inImmortalWorld.value, immortalTitle: immortalTitle.value, immortalOffice: immortalOffice.value, merit: merit.value, immortalJade: immortalJade.value, ruleFragments: ruleFragments.value, immortalBodyLevel: immortalBodyLevel.value, immortalBoneLevel: immortalBoneLevel.value, immortalSoulLevel: immortalSoulLevel.value, trialWins: trialWins.value, lastArtId: lastArtId.value, lastBattleText: lastBattleText.value, visualPulse: visualPulse.value, dutyDone: dutyDone.value, caveLevels: caveLevels.value, echoBlessings: echoBlessings.value, pkWins: pkWins.value, pkLosses: pkLosses.value, pkStreak: pkStreak.value, immortalRealmStage: immortalRealmStage.value, marketPurchases: marketPurchases.value, seasonClaimed: seasonClaimed.value })
   const deserialize = (data: any) => {
     ascended.value = data?.ascended ?? false
     ascensionQuestActive.value = data?.ascensionQuestActive ?? false
@@ -279,6 +360,9 @@ export const useAscensionStore = defineStore('ascension', () => {
     pkWins.value = Number(data?.pkWins ?? 0)
     pkLosses.value = Number(data?.pkLosses ?? 0)
     pkStreak.value = Number(data?.pkStreak ?? 0)
+    immortalRealmStage.value = Math.max(0, Math.min(IMMORTAL_REALMS.length - 1, Number(data?.immortalRealmStage ?? 0)))
+    marketPurchases.value = { jade_seed: 0, star_sand: 0, edict_scroll: 0, law_core: 0, ...(data?.marketPurchases ?? {}) }
+    seasonClaimed.value = { arena_10: false, arena_30: false, arena_60: false, ...(data?.seasonClaimed ?? {}) }
   }
-  return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, echoBlessings, pkWins, pkLosses, pkStreak, cavePower, pkRecord, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, sendMortalEcho, challengeRival, serialize, deserialize }
+  return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, cavePower, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, serialize, deserialize }
 })
