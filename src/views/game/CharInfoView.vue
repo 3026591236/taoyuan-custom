@@ -14,8 +14,11 @@
       <div class="flex gap-3">
         <!-- 角色轮廓 -->
         <div class="shrink-0 flex items-center justify-center">
-          <div class="pixel-avatar-card" :class="[`avatar-${playerStore.gender}`, cultivationStore.unlocked ? `avatar-realm-${Math.min(cultivationStore.realmIndex, 4)}` : 'avatar-mortal']">
+          <div class="pixel-avatar-card" :class="[`avatar-${playerStore.gender}`, ascensionStore.ascended ? 'avatar-immortal' : (cultivationStore.unlocked ? `avatar-realm-${Math.min(cultivationStore.realmIndex, 4)}` : 'avatar-mortal')]">
             <div v-if="cultivationStore.unlocked" class="pixel-avatar-aura"></div>
+            <div v-if="ascensionStore.ascended" class="pixel-avatar-immortal-ring"></div>
+            <div v-if="ascensionStore.ascended" class="pixel-avatar-star star-a">✦</div>
+            <div v-if="ascensionStore.ascended" class="pixel-avatar-star star-b">✧</div>
             <div class="pixel-avatar">
               <span class="px-hair px"></span>
               <span class="px-bun px"></span>
@@ -37,11 +40,17 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between mb-1">
             <span class="text-sm text-accent">{{ playerStore.playerName }}</span>
-            <span class="text-xs text-muted">{{ genderLabel }}</span>
+            <span class="text-xs text-muted">{{ ascensionStore.ascended ? ascensionStore.immortalRank : genderLabel }}</span>
           </div>
           <div v-if="cultivationStore.unlocked" class="flex items-center justify-between mb-1">
             <span class="text-xs text-accent">{{ cultivationStore.realmName }}</span>
             <span class="text-xs text-muted">{{ cultivationStore.spiritRootName }}</span>
+          </div>
+          <div v-if="ascensionStore.ascended" class="grid grid-cols-3 gap-1 mb-1 text-center">
+            <div v-for="part in ascensionStore.bodyProfile" :key="part.name" class="border border-amber-200/20 rounded-xs px-1 py-0.5 bg-amber-200/5">
+              <p class="text-[10px] text-accent">{{ part.name }}</p>
+              <p class="text-[10px] text-muted">Lv.{{ part.level }}</p>
+            </div>
           </div>
           <div v-if="cultivationStore.unlocked" class="flex items-center justify-between mb-1">
             <span class="text-xs text-muted">战力</span>
@@ -428,6 +437,7 @@
   import { useSkillStore } from '@/stores/useSkillStore'
   import { useWalletStore } from '@/stores/useWalletStore'
   import { useCultivationStore, DAO_GEAR, type DaoGearId } from '@/stores/useCultivationStore'
+  import { useAscensionStore } from '@/stores/useAscensionStore'
   import { TOOL_NAMES, TIER_NAMES, getNpcById } from '@/data'
   import { getWeaponById, getEnchantmentById, getWeaponDisplayName } from '@/data/weapons'
   import { getRingById } from '@/data/rings'
@@ -444,6 +454,7 @@
   const skillStore = useSkillStore()
   const walletStore = useWalletStore()
   const cultivationStore = useCultivationStore()
+  const ascensionStore = useAscensionStore()
   const npcStore = useNpcStore()
   const gameStore = useGameStore()
 
@@ -910,6 +921,17 @@
   .avatar-realm-2 .px-tool { box-shadow: 0 -6px 0 #72c9ff, 0 -10px 0 #d8f5ff, inset -2px 0 0 rgba(0,0,0,.25); }
   .avatar-realm-3 .px-tool { box-shadow: 0 -6px 0 #c58bff, 0 -10px 0 #f0d9ff, inset -2px 0 0 rgba(0,0,0,.25); }
   .avatar-realm-4 .px-tool { box-shadow: 0 -6px 0 #ffd86d, 0 -10px 0 #fff2ad, inset -2px 0 0 rgba(0,0,0,.25), 0 0 7px #ffd86d; }
+  .avatar-immortal { border-color: rgba(255, 226, 138, .78); background: radial-gradient(circle at 50% 22%, rgba(255,246,188,.22), transparent 34%), linear-gradient(180deg, rgba(25,31,64,.96), rgba(56,36,79,.98)); box-shadow: inset 0 0 0 2px rgba(255,255,255,.08), 0 0 18px rgba(255, 226, 138, .24); }
+  .avatar-immortal .pixel-avatar-aura { border-color: rgba(255, 230, 151, .72); box-shadow: 0 0 18px rgba(255, 223, 126, .48), inset 0 0 18px rgba(121, 214, 255, .18); }
+  .avatar-immortal .px-robe { background: linear-gradient(90deg, #fff4b6 0 28%, #8ddfff 28% 55%, #d0a8ff 55%); box-shadow: inset -3px -3px 0 rgba(80,45,120,.28), 0 0 8px rgba(255,240,170,.42); }
+  .avatar-immortal .px-sleeve { background: #8ddfff; }
+  .avatar-immortal .px-belt { background: #fff0a6; box-shadow: 0 0 6px rgba(255,226,138,.7); }
+  .avatar-immortal .px-tool { background: #f7f1ff; box-shadow: 0 -6px 0 #8de7ff, 0 -12px 0 #fff7bd, inset -2px 0 0 rgba(0,0,0,.18), 0 0 12px #9ee7ff; }
+  .pixel-avatar-immortal-ring { position: absolute; left: 10px; right: 10px; top: 18px; height: 48px; border: 2px double rgba(255, 235, 154, .72); border-radius: 50%; box-shadow: 0 0 16px rgba(255,226,138,.45); animation: immortal-pulse 1.8s ease-in-out infinite alternate; }
+  .pixel-avatar-star { position: absolute; color: #fff2a8; text-shadow: 0 0 8px #fff2a8; font-size: 12px; animation: immortal-float 1.8s ease-in-out infinite alternate; }
+  .star-a { left: 8px; top: 18px; } .star-b { right: 8px; top: 46px; animation-delay: .6s; }
+  @keyframes immortal-pulse { from { transform: scale(.95); opacity: .62; } to { transform: scale(1.05); opacity: 1; } }
+  @keyframes immortal-float { from { transform: translateY(0); } to { transform: translateY(-5px); } }
   .pixel-avatar-aura {
     border-style: double;
     background: radial-gradient(circle at center, rgba(255,255,255,.06), transparent 58%);
