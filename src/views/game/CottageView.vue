@@ -778,7 +778,7 @@
   const spouseDialogue = ref<string | null>(null)
 
   type FamilySpecialty = 'farming' | 'ranching' | 'foraging' | 'cultivation'
-  type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project'
+  type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project' | 'family_forge' | 'family_dongtian'
   const familySpecialtyOptions = computed<{ id: FamilySpecialty; name: string }[]>(() => [
     { id: 'farming', name: npcStore.FAMILY_SPECIALTY_NAMES.farming },
     { id: 'ranching', name: npcStore.FAMILY_SPECIALTY_NAMES.ranching },

@@ -11,9 +11,14 @@
         <div class="stat-card"><span>洞府</span><b>{{ cultivation.caveTierName }}</b></div>
         <div class="stat-card"><span>槽位</span><b>{{ cultivation.caveSlots.length }}/{{ cultivation.caveMaxSlots }}</b></div>
         <div class="stat-card"><span>灵气恢复</span><b>+{{ cultivation.caveAuraRegen }}/次</b></div>
-        <div class="stat-card"><span>设施</span><b>{{ cultivation.caveSlotNames.join('、') || '空' }}</b></div>
+        <div class="stat-card"><span>灵脉稳定</span><b :class="cultivation.caveStability < 80 ? 'text-caution' : 'text-success'">{{ cultivation.caveStability }}%</b></div>
+        <div class="stat-card col-span-2"><span>设施</span><b>{{ cultivation.caveSlotNames.join('、') || '空' }}</b></div>
       </div>
-      <Button class="w-full justify-between" @click="cultivation.upgradeCave"><span>扩建洞府</span><span class="text-muted text-xs">消耗灵气</span></Button>
+      <div class="grid grid-cols-2 gap-2">
+        <Button class="w-full justify-between" @click="cultivation.upgradeCave"><span>扩建洞府</span><span class="text-muted text-xs">消耗灵气</span></Button>
+        <Button class="w-full justify-between" :disabled="!cultivation.caveNeedsMaintenance" @click="cultivation.maintainCave"><span>维护灵脉</span><span class="text-muted text-xs">{{ cultivation.caveMaintenanceCost.money }}文</span></Button>
+      </div>
+      <p class="text-[10px] text-muted leading-relaxed">洞府稳定影响灵气恢复。长期不维护会缓慢下降；维护消耗铜钱、灵气与灵石，形成中后期资源消耗闭环。</p>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
         <div v-for="slot in caveSlotOptions" :key="slot.type" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs">
           <p class="text-accent text-sm mb-1">{{ slot.name }}</p>

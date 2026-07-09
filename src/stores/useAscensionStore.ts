@@ -21,7 +21,7 @@ export type ImmortalArtId = 'starfall_sword' | 'purple_thunder_seal' | 'solar_fl
 export type ImmortalTrialId = 'star_river' | 'thunder_palace' | 'sun_ruins'
 export type ImmortalOfficeId = 'xuntian' | 'sinong' | 'lianbao' | 'wenming'
 export type ImmortalDutyId = 'rain_edict' | 'demon_edict' | 'forge_edict' | 'fate_edict'
-export type ImmortalCaveId = 'star_platform' | 'merit_pool' | 'law_tablet'
+export type ImmortalCaveId = 'star_platform' | 'merit_pool' | 'law_tablet' | 'spirit_spring' | 'mortal_anchor'
 export type MortalEchoId = 'sect_blessing' | 'family_blessing' | 'farm_blessing'
 export type ImmortalRivalId = 'sword_immortal' | 'thunder_general' | 'moon_fairy'
 export type ImmortalMarketId = 'jade_seed' | 'star_sand' | 'edict_scroll' | 'law_core'
@@ -64,7 +64,9 @@ export const IMMORTAL_DUTIES: Array<{ id: ImmortalDutyId; office: ImmortalOffice
 export const IMMORTAL_CAVE_NODES: Array<{ id: ImmortalCaveId; name: string; icon: string; desc: string; jadeCost: number; ruleCost: number; powerPerLevel: number }> = [
   { id: 'star_platform', name: '观星台', icon: '🌌', desc: '提升仙术与仙擂问道战力。', jadeCost: 8, ruleCost: 3, powerPerLevel: 95 },
   { id: 'merit_pool', name: '功德池', icon: '🪷', desc: '积累功德香火，支撑凡界回响。', jadeCost: 6, ruleCost: 2, powerPerLevel: 70 },
-  { id: 'law_tablet', name: '法则碑', icon: '🪧', desc: '稳固仙界法则，提升试炼和 PK 稳定。', jadeCost: 10, ruleCost: 4, powerPerLevel: 130 }
+  { id: 'law_tablet', name: '法则碑', icon: '🪧', desc: '稳固仙界法则，提升试炼和 PK 稳定。', jadeCost: 10, ruleCost: 4, powerPerLevel: 130 },
+  { id: 'spirit_spring', name: '仙露泉', icon: '💧', desc: '每日凝露，反哺炼丹、灵田和洞府维护。', jadeCost: 14, ruleCost: 5, powerPerLevel: 115 },
+  { id: 'mortal_anchor', name: '凡界锚', icon: '🌉', desc: '稳住宗门、家族与灵田回响，让飞升后仍牵动下界。', jadeCost: 16, ruleCost: 6, powerPerLevel: 150 }
 ]
 export const MORTAL_ECHOES: Array<{ id: MortalEchoId; name: string; icon: string; desc: string; meritCost: number; rewardText: string }> = [
   { id: 'sect_blessing', name: '赐福宗门', icon: '⛩️', desc: '向下界宗门降下仙谕。', meritCost: 24, rewardText: '宗门远征与日课获得仙界赐福。' },
@@ -176,7 +178,9 @@ export const useAscensionStore = defineStore('ascension', () => {
   const lastBattleText = ref('仙光初凝，尚未发动仙术。')
   const visualPulse = ref(0)
   const dutyDone = ref<Record<ImmortalDutyId, boolean>>({ rain_edict: false, demon_edict: false, forge_edict: false, fate_edict: false })
-  const caveLevels = ref<Record<ImmortalCaveId, number>>({ star_platform: 0, merit_pool: 0, law_tablet: 0 })
+  const caveLevels = ref<Record<ImmortalCaveId, number>>({ star_platform: 0, merit_pool: 0, law_tablet: 0, spirit_spring: 0, mortal_anchor: 0 })
+  const caveHeavenStability = ref(100)
+  const caveHeavenMaintenanceKey = ref('')
   const echoBlessings = ref<Record<MortalEchoId, number>>({ sect_blessing: 0, family_blessing: 0, farm_blessing: 0 })
   const pkWins = ref(0)
   const pkLosses = ref(0)
@@ -220,7 +224,8 @@ export const useAscensionStore = defineStore('ascension', () => {
     { name: '仙魂', level: immortalSoulLevel.value, desc: '凝聚功德香火，影响法则掌控与试炼稳定。' }
   ])
   const officeInfo = computed(() => IMMORTAL_OFFICES.find(o => o.id === immortalOffice.value) || IMMORTAL_OFFICES[0]!)
-  const cavePower = computed(() => IMMORTAL_CAVE_NODES.reduce((sum, node) => sum + (caveLevels.value[node.id] ?? 0) * node.powerPerLevel, 0))
+  const caveHeavenStabilityRate = computed(() => Math.max(0.5, Math.min(1.15, caveHeavenStability.value / 100)))
+  const cavePower = computed(() => Math.floor(IMMORTAL_CAVE_NODES.reduce((sum, node) => sum + (caveLevels.value[node.id] ?? 0) * node.powerPerLevel, 0) * caveHeavenStabilityRate.value))
   const pkRecord = computed(() => `${pkWins.value}胜 / ${pkLosses.value}负 · 连胜${pkStreak.value}`)
   const immortalRealmInfo = computed(() => IMMORTAL_REALMS[Math.min(immortalRealmStage.value, IMMORTAL_REALMS.length - 1)] || IMMORTAL_REALMS[0]!)
   const nextImmortalRealm = computed(() => IMMORTAL_REALMS[immortalRealmStage.value + 1] || null)
@@ -326,7 +331,8 @@ export const useAscensionStore = defineStore('ascension', () => {
     ruleFragments.value -= ruleCost
     caveLevels.value[id] = level + 1
     visualPulse.value++
-    lastBattleText.value = `${node.icon} 洞天「${node.name}」升至 Lv.${level + 1}，仙战力 +${node.powerPerLevel}。`
+    caveHeavenStability.value = Math.min(115, caveHeavenStability.value + 10)
+    lastBattleText.value = `${node.icon} 洞天「${node.name}」升至 Lv.${level + 1}，仙战力 +${node.powerPerLevel}，洞天稳定+10。`
     addLog(lastBattleText.value)
     return true
   }
@@ -537,7 +543,38 @@ export const useAscensionStore = defineStore('ascension', () => {
     return true
   }
 
-  const serialize = () => ({ ascended: ascended.value, ascensionQuestActive: ascensionQuestActive.value, ascensionQuestComplete: ascensionQuestComplete.value, inImmortalWorld: inImmortalWorld.value, immortalTitle: immortalTitle.value, immortalOffice: immortalOffice.value, merit: merit.value, immortalJade: immortalJade.value, ruleFragments: ruleFragments.value, immortalBodyLevel: immortalBodyLevel.value, immortalBoneLevel: immortalBoneLevel.value, immortalSoulLevel: immortalSoulLevel.value, trialWins: trialWins.value, lastArtId: lastArtId.value, lastBattleText: lastBattleText.value, visualPulse: visualPulse.value, dutyDone: dutyDone.value, caveLevels: caveLevels.value, echoBlessings: echoBlessings.value, pkWins: pkWins.value, pkLosses: pkLosses.value, pkStreak: pkStreak.value, immortalRealmStage: immortalRealmStage.value, marketPurchases: marketPurchases.value, seasonClaimed: seasonClaimed.value, immortalLineage: immortalLineage.value, mandateProgress: mandateProgress.value, mandateDone: mandateDone.value, allianceProgress: allianceProgress.value, riftClears: riftClears.value, fatePlateLevels: fatePlateLevels.value, storyClaimed: storyClaimed.value })
+
+  const todayKey = () => new Date().toISOString().slice(0, 10)
+  const caveHeavenMaintenanceCost = computed(() => {
+    const lv = IMMORTAL_CAVE_NODES.reduce((sum, n) => sum + (caveLevels.value[n.id] || 0), 0)
+    return { merit: Math.max(20, lv * 8), jade: Math.max(6, lv * 3), rule: Math.max(2, Math.floor(lv * 1.5)) }
+  })
+  const caveHeavenNeedsMaintenance = computed(() => ascended.value && caveHeavenStability.value < 100)
+  const maintainCaveHeaven = () => {
+    if (!ascended.value) return false
+    if (caveHeavenStability.value >= 100) { addLog('洞天稳定，无需维护。'); return false }
+    const cost = caveHeavenMaintenanceCost.value
+    if (merit.value < cost.merit || immortalJade.value < cost.jade || ruleFragments.value < cost.rule) { addLog(`洞天维护需要功德${cost.merit}、仙玉${cost.jade}、法则${cost.rule}。`); return false }
+    merit.value -= cost.merit
+    immortalJade.value -= cost.jade
+    ruleFragments.value -= cost.rule
+    caveHeavenStability.value = 110
+    caveHeavenMaintenanceKey.value = todayKey()
+    lastBattleText.value = `🏔️ 洞天维护完成：功德-${cost.merit}、仙玉-${cost.jade}、法则-${cost.rule}，洞天稳定恢复。`
+    addLog(lastBattleText.value)
+    return true
+  }
+  const dailyCaveHeavenUpdate = () => {
+    if (!ascended.value) return ''
+    const today = todayKey()
+    if (caveHeavenMaintenanceKey.value === today) return ''
+    const levelSum = IMMORTAL_CAVE_NODES.reduce((sum, n) => sum + (caveLevels.value[n.id] || 0), 0)
+    caveHeavenStability.value = Math.max(50, caveHeavenStability.value - Math.max(4, 3 + Math.floor(levelSum / 2)))
+    caveHeavenMaintenanceKey.value = today
+    return caveHeavenStability.value < 80 ? `洞天稳定降至${caveHeavenStability.value}，仙战力折损，可在仙界维护洞天。` : ''
+  }
+
+  const serialize = () => ({ ascended: ascended.value, ascensionQuestActive: ascensionQuestActive.value, ascensionQuestComplete: ascensionQuestComplete.value, inImmortalWorld: inImmortalWorld.value, immortalTitle: immortalTitle.value, immortalOffice: immortalOffice.value, merit: merit.value, immortalJade: immortalJade.value, ruleFragments: ruleFragments.value, immortalBodyLevel: immortalBodyLevel.value, immortalBoneLevel: immortalBoneLevel.value, immortalSoulLevel: immortalSoulLevel.value, trialWins: trialWins.value, lastArtId: lastArtId.value, lastBattleText: lastBattleText.value, visualPulse: visualPulse.value, dutyDone: dutyDone.value, caveLevels: caveLevels.value, caveHeavenStability: caveHeavenStability.value, caveHeavenMaintenanceKey: caveHeavenMaintenanceKey.value, echoBlessings: echoBlessings.value, pkWins: pkWins.value, pkLosses: pkLosses.value, pkStreak: pkStreak.value, immortalRealmStage: immortalRealmStage.value, marketPurchases: marketPurchases.value, seasonClaimed: seasonClaimed.value, immortalLineage: immortalLineage.value, mandateProgress: mandateProgress.value, mandateDone: mandateDone.value, allianceProgress: allianceProgress.value, riftClears: riftClears.value, fatePlateLevels: fatePlateLevels.value, storyClaimed: storyClaimed.value })
   const deserialize = (data: any) => {
     ascended.value = data?.ascended ?? false
     ascensionQuestActive.value = data?.ascensionQuestActive ?? false
@@ -556,7 +593,9 @@ export const useAscensionStore = defineStore('ascension', () => {
     lastBattleText.value = data?.lastBattleText ?? '仙光初凝，尚未发动仙术。'
     visualPulse.value = Number(data?.visualPulse ?? 0)
     dutyDone.value = { rain_edict: false, demon_edict: false, forge_edict: false, fate_edict: false, ...(data?.dutyDone ?? {}) }
-    caveLevels.value = { star_platform: 0, merit_pool: 0, law_tablet: 0, ...(data?.caveLevels ?? {}) }
+    caveLevels.value = { star_platform: 0, merit_pool: 0, law_tablet: 0, spirit_spring: 0, mortal_anchor: 0, ...(data?.caveLevels ?? {}) }
+    caveHeavenStability.value = Number(data?.caveHeavenStability ?? 100)
+    caveHeavenMaintenanceKey.value = String(data?.caveHeavenMaintenanceKey ?? todayKey())
     echoBlessings.value = { sect_blessing: 0, family_blessing: 0, farm_blessing: 0, ...(data?.echoBlessings ?? {}) }
     pkWins.value = Number(data?.pkWins ?? 0)
     pkLosses.value = Number(data?.pkLosses ?? 0)
@@ -572,5 +611,5 @@ export const useAscensionStore = defineStore('ascension', () => {
     fatePlateLevels.value = { merit_orbit: 0, battle_orbit: 0, harvest_orbit: 0, law_orbit: 0, ...(data?.fatePlateLevels ?? {}) }
     storyClaimed.value = { first_edict: false, rift_truth: false, old_heaven: false, mortal_anchor: false, star_archive: false, three_realms_debt: false, ancient_oath: false, demon_counterplot: false, heaven_trial: false, dao_dispute: false, alliance_coronation: false, new_heaven: false, ...(data?.storyClaimed ?? {}) }
   }
-  return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, immortalLineage, mandateProgress, mandateDone, allianceProgress, riftClears, fatePlateLevels, storyClaimed, cavePower, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, lineageInfo, fatePlatePower, allianceScore, riftScore, storyState, storyProgress, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, chooseLineage, resolveMandate, coordinateAlliance, challengeChaosRift, upgradeFatePlate, claimStoryChapter, serialize, deserialize }
+  return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, caveHeavenStability, caveHeavenStabilityRate, caveHeavenMaintenanceCost, caveHeavenNeedsMaintenance, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, immortalLineage, mandateProgress, mandateDone, allianceProgress, riftClears, fatePlateLevels, storyClaimed, cavePower, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, lineageInfo, fatePlatePower, allianceScore, riftScore, storyState, storyProgress, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, maintainCaveHeaven, dailyCaveHeavenUpdate, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, chooseLineage, resolveMandate, coordinateAlliance, challengeChaosRift, upgradeFatePlate, claimStoryChapter, serialize, deserialize }
 })

@@ -73,6 +73,10 @@ export const useQuestStore = defineStore('quest', () => {
     | 'hanhaiUnlocked'
     | 'hanhaiTradePoints'
     | 'hanhaiTradeLevel'
+    | 'daoGearPower'
+    | 'caveTier'
+    | 'caveStability'
+    | 'familyLegacyLevel'
 
   interface JourneyReward {
     money?: number
@@ -144,6 +148,11 @@ export const useQuestStore = defineStore('quest', () => {
     { id: 'v160_hanhai_trade_80', type: 'guide', title: '瀚海贸易：八十商誉', desc: '通过瀚海寄售获得80点商誉，让多余物产进入更高阶兑换。', metric: 'hanhaiTradePoints', target: 80, reward: { money: 2400, aura: 260, attributeExp: { perception: 44 } } },
     { id: 'v160_breed_8', type: 'guide', title: '育种熟手：八次配育', desc: '累计完成8次配育，持续推进作物杂交与动物养成目标。', metric: 'breedingsDone', target: 8, reward: { money: 1800, aura: 220, attributeExp: { physique: 32, perception: 38 } } },
     { id: 'v160_hybrid_3', type: 'guide', title: '异种谱系：三种杂交', desc: '发现3种杂交产物，形成育种图鉴和高价值作物追求。', metric: 'hybridsDiscovered', target: 3, reward: { money: 3200, aura: 420, attributeExp: { perception: 62, agility: 24 } } },
+
+    { id: 'v208_gear_power_1000', type: 'guide', title: '卡点指引：修仙装备成型', desc: '修仙装备总战力达到1000。若秘境/登塔打不动，去炼器页淬炼并维护灵韧。', metric: 'daoGearPower', target: 1000, reward: { money: 2200, aura: 360, attributeExp: { strength: 40, physique: 30 } } },
+    { id: 'v208_cave_open', type: 'guide', title: '卡点指引：开辟洞府', desc: '开辟洞府。若修行效率变慢，洞府静室、百草园与聚灵阵能补上长期收益。', metric: 'caveTier', target: 1, reward: { money: 1800, aura: 420, attributeExp: { perception: 42 } } },
+    { id: 'v208_cave_stable', type: 'guide', title: '卡点指引：灵脉维护', desc: '洞府灵脉稳定达到100。若收益下降，回洞府维护灵脉。', metric: 'caveStability', target: 100, reward: { money: 1600, aura: 300, attributeExp: { physique: 28, perception: 28 } } },
+    { id: 'v210_family_legacy_3', type: 'guide', title: '家族传承：三阶家业', desc: '家族传承达到3级。通过家族委托、子女互动和配偶协助沉淀长期收益。', metric: 'familyLegacyLevel', target: 3, reward: { money: 2600, aura: 380, attributeExp: { perception: 36, physique: 28 } } },
   ]
 
   const getJourneyDayKey = (): string => {
@@ -179,6 +188,10 @@ export const useQuestStore = defineStore('quest', () => {
       case 'hanhaiUnlocked': return useHanhaiStore().unlocked ? 1 : 0
       case 'hanhaiTradePoints': return useHanhaiStore().tradePoints
       case 'hanhaiTradeLevel': return useHanhaiStore().tradeShopLevel
+      case 'daoGearPower': return cultivationStore.daoGearPower
+      case 'caveTier': return cultivationStore.caveTier
+      case 'caveStability': return cultivationStore.caveStability
+      case 'familyLegacyLevel': return useNpcStore().familyLegacyLevel
       default: return 0
     }
   }

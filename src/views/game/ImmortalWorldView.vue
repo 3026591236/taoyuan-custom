@@ -149,6 +149,19 @@
     </div>
 
     <div class="relative z-10 mb-4">
+      <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙界洞天经营</p><span class="text-[10px] text-muted">稳定 {{ ascensionStore.caveHeavenStability }}% · 战力倍率 {{ Math.round(ascensionStore.caveHeavenStabilityRate * 100) }}%</span></div>
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <button v-for="node in IMMORTAL_CAVE_NODES" :key="node.id" class="body-card market-card" @click="ascensionStore.upgradeCaveNode(node.id)">
+          <span class="text-sm text-accent">{{ node.icon }} {{ node.name }} Lv.{{ ascensionStore.caveLevels[node.id] || 0 }}</span>
+          <span class="text-[10px] text-muted leading-relaxed">{{ node.desc }}</span>
+          <span class="text-[10px] text-warning">升级 仙玉{{ node.jadeCost + (ascensionStore.caveLevels[node.id] || 0) * 3 }} / 法则{{ node.ruleCost + (ascensionStore.caveLevels[node.id] || 0) }}</span>
+          <span class="text-[10px] text-success">每级仙战力+{{ node.powerPerLevel }}</span>
+        </button>
+      </div>
+      <button class="btn w-full justify-center" :disabled="!ascensionStore.caveHeavenNeedsMaintenance" @click="ascensionStore.maintainCaveHeaven">维护洞天（功德{{ ascensionStore.caveHeavenMaintenanceCost.merit }} / 仙玉{{ ascensionStore.caveHeavenMaintenanceCost.jade }} / 法则{{ ascensionStore.caveHeavenMaintenanceCost.rule }}）</button>
+    </div>
+
+    <div class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙阶突破</p><span class="text-[10px] text-muted">仙阶战力 +{{ ascensionStore.immortalRealmPowerBonus }}</span></div>
       <div class="realm-card">
         <div class="min-w-0">

@@ -6,7 +6,7 @@
     <template v-else>
       <div class="border border-accent/20 rounded-xs p-3 bg-panel/30 text-xs text-muted leading-relaxed space-y-1">
         <p class="text-accent text-sm">修仙装备淬炼</p>
-        <p>炼器页现在直接服务角色页的「灵剑 / 法衣 / 云靴 / 护符」。这里负责消耗秘境材料与灵石进行淬炼；角色页负责总览战力、渡劫稳定和农场装备区分。</p>
+        <p>炼器页现在直接服务角色页的「灵剑 / 法衣 / 云靴 / 护符」。这里负责淬炼、词条洗练与灵韧维护；灵韧过低会削弱战力和渡劫稳定，是后期材料/灵石/铜钱的长期消耗点。</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -23,9 +23,10 @@
             <span class="text-xs" :class="gear.level > 0 ? 'text-success' : 'text-muted'">{{ gear.level > 0 ? `${gear.level}阶` : '未凝练' }}</span>
           </div>
 
-          <div class="grid grid-cols-2 gap-1 text-[10px]">
+          <div class="grid grid-cols-3 gap-1 text-[10px]">
             <div class="stat-chip">战力 +{{ gear.power }}</div>
             <div class="stat-chip">渡劫 +{{ gear.tribulation }}%</div>
+            <div class="stat-chip" :class="gear.durability < 70 ? 'text-caution' : 'text-success'">灵韧 {{ gear.durability }}%</div>
           </div>
 
           <div class="text-[10px] leading-relaxed">
@@ -35,9 +36,13 @@
             <span :class="gear.hasSpiritStone ? 'text-accent' : 'text-danger'">灵石×{{ gear.spiritStoneCost }}（{{ spiritStoneCount }}）</span>
           </div>
 
-          <button class="btn w-full justify-center text-xs" :disabled="!gear.canForge || forging" @click="forgeGear(gear.id)">
-            {{ gear.level >= gear.maxLevel ? '已淬炼圆满' : gear.level > 0 ? '继续淬炼' : '凝练成器' }}
-          </button>
+          <div class="grid grid-cols-2 gap-1">
+            <button class="btn w-full justify-center text-xs" :disabled="!gear.canForge || forging" @click="forgeGear(gear.id)">
+              {{ gear.level >= gear.maxLevel ? '已淬炼圆满' : gear.level > 0 ? '继续淬炼' : '凝练成器' }}
+            </button>
+            <button class="btn w-full justify-center text-xs" :disabled="gear.level <= 0 || gear.durability >= 100" @click="maintainGear(gear.id)">维护灵韧</button>
+          </div>
+          <p v-if="gear.maintenance" class="text-[10px] text-muted">维护：{{ gear.material.name }}×{{ gear.maintenance.materialQty }} / 灵石×{{ gear.maintenance.spiritStone }} / 铜钱{{ gear.maintenance.money }}</p>
 
           <div class="border border-accent/10 rounded-xs p-2 text-[10px] space-y-1">
             <p class="text-accent">词条洗练</p>
@@ -123,8 +128,10 @@
       hasMaterial,
       hasSpiritStone,
       canForge: cultivationStore.canForgeDaoGear(gear.id),
-      power: level * gear.powerPerLevel,
-      tribulation: Math.round(level * gear.tribulationPerLevel * 100)
+      durability: Math.floor(cultivationStore.daoGearDurability[gear.id] ?? 100),
+      maintenance: cultivationStore.daoGearMaintenanceCost(gear.id),
+      power: Math.floor(level * gear.powerPerLevel * cultivationStore.daoGearDurabilityRate(gear.id)),
+      tribulation: Math.round(level * gear.tribulationPerLevel * cultivationStore.daoGearDurabilityRate(gear.id) * 100)
     }
   }))
 
@@ -138,6 +145,10 @@
     const res = longTerm.rerollGearAffix(slot)
     addLog(res.message)
     showFloat(res.message, res.success ? 'success' : 'danger')
+  }
+
+  const maintainGear = (id: DaoGearId) => {
+    cultivationStore.maintainDaoGear(id)
   }
 
   const forgeGear = async (id: DaoGearId) => {

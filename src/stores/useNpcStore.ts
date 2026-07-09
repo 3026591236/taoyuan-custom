@@ -34,14 +34,16 @@ const FRIENDSHIP_THRESHOLDS: { level: FriendshipLevel; min: number }[] = [
 
 type FamilySpecialty = 'farming' | 'ranching' | 'foraging' | 'cultivation'
 type ChildAptitude = 'farm' | 'animal' | 'study' | 'combat'
-type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project'
+type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project' | 'family_forge' | 'family_dongtian'
 
 const FAMILY_SPECIALTY_NAMES: Record<FamilySpecialty, string> = { farming: '农务助手', ranching: '牧场管家', foraging: '采集搭档', cultivation: '修行伴侣' }
 const CHILD_APTITUDE_NAMES: Record<ChildAptitude, string> = { farm: '灵田', animal: '牧养', study: '读书', combat: '护院' }
 const FAMILY_COMMISSIONS = [
   { id: 'family_meal' as FamilyCommissionId, title: '家宴备料', desc: '准备一桌家宴，凝聚家人心气。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 3, rewardMoney: 1800, legacyExp: 25 },
   { id: 'child_study' as FamilyCommissionId, title: '启蒙读书', desc: '为孩子准备启蒙材料，提升成长资质。', itemId: 'spirit_ink', itemName: '灵墨', quantity: 1, rewardMoney: 1200, legacyExp: 35 },
-  { id: 'spouse_project' as FamilyCommissionId, title: '家业筹划', desc: '与配偶共同筹划家业，沉淀家传经验。', itemId: 'wood', itemName: '木材', quantity: 20, rewardMoney: 2200, legacyExp: 30 }
+  { id: 'spouse_project' as FamilyCommissionId, title: '家业筹划', desc: '与配偶共同筹划家业，沉淀家传经验。', itemId: 'wood', itemName: '木材', quantity: 20, rewardMoney: 2200, legacyExp: 30 },
+  { id: 'family_forge' as FamilyCommissionId, title: '家传护器', desc: '家人协助整理修仙装备维护材料，提升家族护道经验。', itemId: 'mystic_iron', itemName: '玄铁', quantity: 1, rewardMoney: 3600, legacyExp: 55 },
+  { id: 'family_dongtian' as FamilyCommissionId, title: '洞天祭扫', desc: '配偶与子女共同维护洞府/洞天香火，沉淀凡界回响。', itemId: 'spirit_stone', itemName: '灵石', quantity: 12, rewardMoney: 4200, legacyExp: 65 }
 ]
 
 export const useNpcStore = defineStore('npc', () => {
@@ -1035,7 +1037,7 @@ export const useNpcStore = defineStore('npc', () => {
     aptitudeName: CHILD_APTITUDE_NAMES[((c as any).aptitude || 'study') as ChildAptitude],
     studyExp: (c as any).studyExp || 0,
     legacyBond: (c as any).legacyBond || 0,
-    bonusText: c.stage === 'teen' ? '可提供家传加成' : c.stage === 'child' ? '学习中，互动可积累家传羁绊' : '成长中'
+    bonusText: c.stage === 'teen' ? `可参与家族护器/洞天祭扫，家传收益+${Math.min(20, ((c as any).legacyBond || 0) / 5).toFixed(0)}%` : c.stage === 'child' ? '学习中，互动可积累家传羁绊' : '成长中'
   })))
 
   /** 每日重置对话和送礼状态 + 伴侣好感衰减 */
