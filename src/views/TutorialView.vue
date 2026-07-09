@@ -1,23 +1,44 @@
 <template>
   <div class="min-h-screen px-4 py-8 flex justify-center">
-    <div class="game-panel w-full max-w-4xl space-y-6">
+    <div class="game-panel w-full max-w-5xl space-y-5">
       <div class="flex items-center justify-between">
-        <h1 class="text-accent text-xl">📖 新手教程</h1>
+        <div>
+          <h1 class="text-accent text-xl">📚 桃源乡知识库</h1>
+          <p class="text-xs text-muted mt-1">新手教程、玩法说明、材料来源和版本更新都放在这里；不懂的直接搜索。</p>
+        </div>
         <button class="btn text-xs" @click="router.back()">返回</button>
       </div>
 
-      <div class="border border-accent/20 rounded-xs p-4 space-y-2">
-        <p class="text-sm text-muted">欢迎来到《我从种田开始修仙》！这篇教程将引导你从零开始，逐步掌握种田、经营与修仙成长。</p>
-        <div class="flex flex-wrap gap-2 mt-3">
-          <button v-for="(s, i) in sections" :key="i" class="btn text-xs" @click="scrollTo(i)">
-            {{ i + 1 }}. {{ s.title }}
+      <div class="border border-accent/20 rounded-xs p-4 space-y-3 bg-black/10">
+        <div class="flex gap-2">
+          <input v-model="query" class="kb-input flex-1" placeholder="搜索：灵气不足 / 雷精 / 飞升 / 洞府 / 怎么赚钱 / 更新记录" />
+          <button v-if="query" class="btn text-xs" @click="query = ''">清空</button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button v-for="c in categories" :key="c" class="btn text-xs" :class="activeCategory === c ? 'active-tab' : ''" @click="activeCategory = c">
+            {{ c }}
           </button>
         </div>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <span class="text-muted">热门：</span>
+          <button v-for="h in hotQueries" :key="h" class="hot-chip" @click="query = h">{{ h }}</button>
+        </div>
+        <p class="text-xs text-muted">已收录 {{ sections.length }} 条，当前显示 {{ filteredSections.length }} 条。</p>
       </div>
 
-      <div v-for="(s, i) in sections" :key="i" :id="`sec-${i}`" class="border border-accent/20 rounded-xs p-4 space-y-3">
-        <h2 class="text-accent text-lg">{{ i + 1 }}. {{ s.title }}</h2>
-        <p class="text-sm text-muted leading-relaxed">{{ s.content }}</p>
+      <div v-if="!filteredSections.length" class="border border-accent/20 rounded-xs p-6 text-center text-sm text-muted">
+        没搜到相关内容。可以换个词，比如“灵气”“材料”“飞升”“仙界”“订单”。
+      </div>
+
+      <div v-for="s in filteredSections" :key="s.index" :id="`sec-${s.index}`" class="kb-card border border-accent/20 rounded-xs p-4 space-y-3">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-[10px] text-warning mb-1">{{ s.category }}</div>
+            <h2 class="text-accent text-lg">{{ s.title }}</h2>
+          </div>
+          <button class="btn text-[10px] shrink-0" @click="scrollTo(s.index)">定位</button>
+        </div>
+        <p class="text-sm text-muted leading-relaxed whitespace-pre-line">{{ s.content }}</p>
         <ul v-if="s.tips?.length" class="text-xs text-muted space-y-1 list-disc list-inside">
           <li v-for="(t, j) in s.tips" :key="j">{{ t }}</li>
         </ul>
@@ -27,9 +48,33 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const query = ref('')
+const activeCategory = ref('全部')
+const categories = ['全部', '新手入门', '种田经营', '修仙成长', '资源材料', '社交生活', '活动留存', '版本更新']
+const sectionCategory = (title: string) => {
+  if (/V\d|版本|公告|赛季|周|满勤/.test(title)) return '版本更新'
+  if (/第一天|账号|赚钱|签到|教程/.test(title)) return '新手入门'
+  if (/种田|农场|作物|灵田|加工|养殖|牧场|鱼塘|工具|博物馆/.test(title)) return '种田经营'
+  if (/修仙|修行|境界|灵气|秘境|凶兽|渡劫|炼丹|炼器|法宝|灵兽|宗门|洞府|仙界|飞升|转生|制符/.test(title)) return '修仙成长'
+  if (/材料|雷精|魂晶|灵石|星陨铁|获取|速查/.test(title)) return '资源材料'
+  if (/社交|NPC|家族|结婚|公会/.test(title)) return '社交生活'
+  if (/活动|签到|每日|七日|修行志/.test(title)) return '活动留存'
+  return '新手入门'
+}
+const sectionKeywords = (s: any) => [s.title, s.content, ...(s.tips || [])].join(' ').toLowerCase()
+const filteredSections = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  return sections.map((s, index) => ({ ...s, index, category: sectionCategory(s.title) })).filter(s => {
+    const okCategory = activeCategory.value === '全部' || s.category === activeCategory.value
+    const okQuery = !q || sectionKeywords(s).includes(q)
+    return okCategory && okQuery
+  })
+})
+const hotQueries = ['灵气不足', '怎么赚钱', '雷精', '飞升', '仙界', '洞府', '宗门', '灵兽', '秘境', '更新记录']
 
 function scrollTo(i: number) {
   const el = document.getElementById(`sec-${i}`)
@@ -304,3 +349,8 @@ const sections = [
 ]
 </script>
 
+
+
+<style scoped>
+.kb-input{background:rgba(0,0,0,.28);border:1px solid rgba(250,214,124,.25);border-radius:3px;color:var(--color-text);font-size:13px;padding:9px 10px;outline:none}.kb-input:focus{border-color:rgba(250,214,124,.65);box-shadow:0 0 0 2px rgba(250,214,124,.08)}.active-tab{border-color:rgba(250,214,124,.75);background:rgba(250,214,124,.12)}.hot-chip{border:1px solid rgba(141,222,255,.24);border-radius:999px;padding:2px 8px;color:var(--color-muted);background:rgba(141,222,255,.06)}.hot-chip:hover{border-color:rgba(141,222,255,.55);color:var(--color-accent)}.kb-card{background:linear-gradient(135deg,rgba(255,226,138,.035),rgba(141,222,255,.025))}
+</style>
