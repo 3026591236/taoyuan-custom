@@ -26,6 +26,7 @@ import { useGuildStore } from './useGuildStore'
 import { useSecretNoteStore } from './useSecretNoteStore'
 import { useHanhaiStore } from './useHanhaiStore'
 import { useFishPondStore } from './useFishPondStore'
+import { useAscensionStore } from './useAscensionStore'
 import { useTutorialStore } from './useTutorialStore'
 import { useHiddenNpcStore } from './useHiddenNpcStore'
 import { useCultivationStore } from './useCultivationStore'
@@ -149,6 +150,7 @@ export const useSaveStore = defineStore('save', () => {
       const secretNoteStore = useSecretNoteStore()
       const hanhaiStore = useHanhaiStore()
       const fishPondStore = useFishPondStore()
+  const ascensionStore = useAscensionStore()
       const tutorialStore = useTutorialStore()
       const hiddenNpcStore = useHiddenNpcStore()
       const cultivationStore = useCultivationStore()
@@ -181,6 +183,7 @@ export const useSaveStore = defineStore('save', () => {
         secretNote: secretNoteStore.serialize(),
         hanhai: hanhaiStore.serialize(),
         fishPond: fishPondStore.serialize(),
+      ascension: ascensionStore.serialize(),
         tutorial: tutorialStore.serialize(),
         hiddenNpc: hiddenNpcStore.serialize(),
         cultivation: cultivationStore.serialize(),
@@ -235,6 +238,7 @@ export const useSaveStore = defineStore('save', () => {
       const secretNoteStore = useSecretNoteStore()
       const hanhaiStore = useHanhaiStore()
       const fishPondStore = useFishPondStore()
+  const ascensionStore = useAscensionStore()
       const tutorialStore = useTutorialStore()
       const hiddenNpcStore = useHiddenNpcStore()
       const cultivationStore = useCultivationStore()
@@ -266,6 +270,7 @@ export const useSaveStore = defineStore('save', () => {
       if (data.secretNote) secretNoteStore.deserialize(data.secretNote)
       if (data.hanhai) hanhaiStore.deserialize(data.hanhai)
       if (data.fishPond) fishPondStore.deserialize(data.fishPond)
+      ascensionStore.deserialize((data as any).ascension ?? {})
       if (data.tutorial) tutorialStore.deserialize(data.tutorial)
       if (data.hiddenNpc) hiddenNpcStore.deserialize(data.hiddenNpc)
       if (data.cultivation) cultivationStore.deserialize(data.cultivation)

@@ -1,5 +1,26 @@
 <template>
   <div class="space-y-3">
+
+    <!-- V1.7.8 飞升引导 -->
+    <div v-if="ascensionStore.ascensionQuestActive && !ascensionStore.ascended" class="border border-caution/30 rounded-xs p-3 mb-4 bg-caution/5">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="text-sm text-caution">飞升之机已至</p>
+          <p class="text-xs text-muted">天劫已过，飞升台开启。备齐飞升材料即可踏入仙界。</p>
+        </div>
+        <Button size="sm" @click="router.push('/game/ascension')">前往飞升台</Button>
+      </div>
+    </div>
+    <div v-if="ascensionStore.ascended" class="border border-success/30 rounded-xs p-3 mb-4">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="text-sm text-success">已飞升 · {{ ascensionStore.immortalTitle || '初入仙门' }}</p>
+          <p class="text-xs text-muted">仙界之门已开，可返回下界继续修行。</p>
+        </div>
+        <Button size="sm" @click="router.push('/game/immortal-world')">进入仙界</Button>
+      </div>
+    </div>
+
     <!-- ===== 灵田修行 ===== -->
     <Divider title label="灵田修行" />
 
@@ -239,7 +260,7 @@
             <p>· 灵田：<span class="text-caution">{{ cultivation.fieldTierName }}</span> → <span class="text-success">黄阶灵田</span></p>
             <p>· 灵兽羁绊：归零（灵兽保留）</p>
             <p class="text-success">· 保留：洞府/法宝/元神/丹药效果/30%灵气</p>
-            <p>· 消耗：{{ cultivation.rebirthMaterials.map(m => `${m.name}×${m.quantity}`).join('、') }}</p>
+            <p>· 消耗：{{ cultivation.rebirthMaterials.map((m: {name:string;quantity:number}) => `${m.name}×${m.quantity}`).join('、') }}</p>
             <p class="text-caution mt-2">此操作不可逆！确认要踏入{{ cultivation.rebirthCount + 1 }}转吗？</p>
           </div>
           <div class="grid grid-cols-2 gap-3">
@@ -273,10 +294,14 @@ import { addLog } from '@/composables/useGameLog'
 import Divider from '@/components/game/Divider.vue'
 import Button from '@/components/game/Button.vue'
 import { useInventoryStore } from '@/stores/useInventoryStore'
+import { useAscensionStore } from '@/stores/useAscensionStore'
+import { useRouter } from 'vue-router'
 import { useCultivationStore, SPIRIT_MEAL_RECIPES, FIELD_TIERS, CULTIVATION_MANUALS, CULTIVATION_LESSONS, CULTIVATION_PATHS } from '@/stores/useCultivationStore'
 import type { ArtifactKey, CultivationManualKey } from '@/stores/useCultivationStore'
 
 const cultivation = useCultivationStore()
+const ascensionStore = useAscensionStore()
+const router = useRouter()
 const inventory = useInventoryStore()
   // === 挂机收益估算 ===
   const idleAuraPerMin = computed(() => {
@@ -334,10 +359,15 @@ const playTribulationFx = (result: 'success' | 'fail') => {
 }
 const handleBreakthrough = () => {
   const major = cultivation.isMajorBreakthrough
+  const beforeRealm = cultivation.realmIndex
   const ok = cultivation.breakthrough()
+  if (ok && beforeRealm >= 27 && cultivation.realmIndex >= 28) {
+    ascensionStore.triggerAscensionQuest()
+  }
   if (major && cultivation.lastTribulationResult !== 'none') playTribulationFx(cultivation.lastTribulationResult)
   else if (ok) sfxLevelUp()
 }
+
 const handleUpgradeManual = (key: CultivationManualKey) => {
   const result = cultivation.upgradeManual(key)
   addLog(result.message)

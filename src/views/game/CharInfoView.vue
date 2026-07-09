@@ -465,7 +465,7 @@
     if (inventoryStore.getItemCount('spirit_stone') < 5 && cultivationStore.unlocked) tips.push('💎 灵石不足，建议红尘历练')
     if (playerStore.attributeCombatPower < 20) tips.push('⚔️ 战力偏低，升级功法/装备')
     if (inventoryStore.items.length >= inventoryStore.capacity - 3) tips.push('🎒 背包将满，可购买纳物符')
-    const manuals = Object.values(cultivationStore.manuals).reduce((s,l)=>s+(Number(l)||0),0)
+    const manuals = Object.values(cultivationStore.manuals as Record<string,number>).reduce((s: number,l: number)=>s+(Number(l)||0),0)
     if (cultivationStore.unlocked && manuals < 2) tips.push('📖 功法层数低，去修仙市集购买秘籍')
     if (!cultivationStore.unlocked) tips.push('🌱 未启蒙灵田，多种田触发地脉感应')
     if (tips.length === 0) tips.push('✨ 全面发展，继续探索各系统')
