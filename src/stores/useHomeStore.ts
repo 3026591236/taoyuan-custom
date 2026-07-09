@@ -46,6 +46,7 @@ export const useHomeStore = defineStore('home', () => {
   const cellarLevel = ref(1)
   const caveLevel = ref(1)
   const caveDaysActive = ref(0)
+  const manorMaintenanceDays = ref(0)
 
   const farmhouseName = computed(() => {
     const names: Record<FarmhouseLevel, string> = { 0: '茅屋', 1: '砖房', 2: '宅院', 3: '酒窖宅院' }
@@ -83,6 +84,43 @@ export const useHomeStore = defineStore('home', () => {
   const nextCaveUpgrade = computed(() => {
     return CAVE_UPGRADES.find(u => u.level === caveLevel.value + 1) ?? null
   })
+
+  const manorMaintenanceCost = computed(() => {
+    const level = Math.max(0, farmhouseLevel.value)
+    return {
+      days: 7,
+      money: 1200 + level * 900,
+      materials: [
+        { itemId: 'wood', quantity: 12 + level * 6 },
+        { itemId: 'stone', quantity: 8 + level * 4 }
+      ]
+    }
+  })
+
+  const manorMaintenanceActive = computed(() => manorMaintenanceDays.value > 0)
+
+  const getManorMaintenanceBonus = (): number => {
+    return manorMaintenanceActive.value ? 0.05 : 0
+  }
+
+  /** 庄园维护：消耗铜钱与基础材料，换取7天小额恢复增益 */
+  const maintainManor = (): boolean => {
+    const playerStore = usePlayerStore()
+    const cost = manorMaintenanceCost.value
+    for (const mat of cost.materials) {
+      if (getCombinedItemCount(mat.itemId) < mat.quantity) return false
+    }
+    if (!playerStore.spendMoney(cost.money)) return false
+    for (const mat of cost.materials) {
+      removeCombinedItem(mat.itemId, mat.quantity)
+    }
+    manorMaintenanceDays.value = cost.days
+    return true
+  }
+
+  const dailyManorMaintenanceUpdate = () => {
+    if (manorMaintenanceDays.value > 0) manorMaintenanceDays.value--
+  }
 
   /** 升级农舍 */
   const upgradeFarmhouse = (): boolean => {
@@ -267,7 +305,7 @@ export const useHomeStore = defineStore('home', () => {
 
   /** 获取睡眠恢复加成（Level 2+） */
   const getStaminaRecoveryBonus = (): number => {
-    return farmhouseLevel.value >= 2 ? 0.1 : 0
+    return (farmhouseLevel.value >= 2 ? 0.1 : 0) + getManorMaintenanceBonus()
   }
 
   const serialize = () => {
@@ -279,7 +317,8 @@ export const useHomeStore = defineStore('home', () => {
       cellarSlots: cellarSlots.value,
       cellarLevel: cellarLevel.value,
       caveLevel: caveLevel.value,
-      caveDaysActive: caveDaysActive.value
+      caveDaysActive: caveDaysActive.value,
+      manorMaintenanceDays: manorMaintenanceDays.value
     }
   }
 
@@ -291,6 +330,7 @@ export const useHomeStore = defineStore('home', () => {
     cellarLevel.value = data.cellarLevel ?? 1
     caveLevel.value = data.caveLevel ?? 1
     caveDaysActive.value = data.caveDaysActive ?? 0
+    manorMaintenanceDays.value = Math.max(0, data.manorMaintenanceDays ?? 0)
     // 兼容旧存档：旧 slot 有 quality 无 originalQuality/addedValue/upgradeCount
     cellarSlots.value = (data.cellarSlots ?? []).map((s: any) => ({
       itemId: s.itemId,
@@ -315,6 +355,7 @@ export const useHomeStore = defineStore('home', () => {
     cellarLevel,
     caveLevel,
     caveDaysActive,
+    manorMaintenanceDays,
     farmhouseName,
     nextUpgrade,
     hasCellar,
@@ -324,6 +365,11 @@ export const useHomeStore = defineStore('home', () => {
     caveName,
     caveQuality,
     nextCaveUpgrade,
+    manorMaintenanceCost,
+    manorMaintenanceActive,
+    maintainManor,
+    dailyManorMaintenanceUpdate,
+    getManorMaintenanceBonus,
     upgradeFarmhouse,
     unlockCave,
     chooseCave,

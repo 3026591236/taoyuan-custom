@@ -62,6 +62,8 @@ export type ToolType = 'wateringCan' | 'hoe' | 'pickaxe' | 'fishingRod' | 'scyth
 export interface Tool {
   type: ToolType
   tier: ToolTier
+  /** 工具精通等级（V1.7.7）：0-3，提升效率并形成后期消耗 */
+  masteryLevel?: number
 }
 
 /** 武器类型 */

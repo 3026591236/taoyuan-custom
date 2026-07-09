@@ -17,6 +17,23 @@
         <span class="text-xs text-muted">等级 {{ homeStore.farmhouseLevel }}</span>
       </div>
       <p class="text-xs text-muted mb-2">{{ currentBenefit }}</p>
+
+      <div class="border border-accent/10 rounded-xs p-2 mb-2 bg-bg/40">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs text-accent">庄园维护</p>
+            <p class="text-xs text-muted mt-0.5">
+              {{ homeStore.manorMaintenanceActive ? `维护中：剩余${homeStore.manorMaintenanceDays}天，睡眠恢复额外+5%` : '消耗铜钱与木石维护屋舍，获得7天睡眠恢复加成。' }}
+            </p>
+            <p class="text-xs text-muted mt-0.5">
+              费用：{{ homeStore.manorMaintenanceCost.money }}文；材料：{{ homeStore.manorMaintenanceCost.materials.map(m => getItemName(m.itemId) + '×' + m.quantity).join('、') }}
+            </p>
+          </div>
+          <Button class="shrink-0" size="sm" :disabled="!canMaintainManor" @click="handleMaintainManor">
+            维护
+          </Button>
+        </div>
+      </div>
       <div
         v-if="homeStore.nextUpgrade"
         class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5"
@@ -939,8 +956,23 @@
     return upgrade.materialCost.every(mat => getCombinedItemCount(mat.itemId) >= mat.quantity)
   })
 
-  const ageableInInventory = computed(() => {
-    return inventoryStore.items.filter(inv => AGEABLE_ITEMS.includes(inv.itemId))
+
+
+  const canMaintainManor = computed(() => {
+    const cost = homeStore.manorMaintenanceCost
+    if (playerStore.money < cost.money) return false
+    return cost.materials.every(mat => getCombinedItemCount(mat.itemId) >= mat.quantity)
+  })
+
+  const handleMaintainManor = () => {
+    if (homeStore.maintainManor()) {
+      addLog(`完成庄园维护，未来${homeStore.manorMaintenanceCost.days}天睡眠恢复额外+5%。`)
+    } else {
+      addLog('铜钱或维护材料不足。')
+    }
+  }
+
+  const ageableInInventory = computed(() => {    return inventoryStore.items.filter(inv => AGEABLE_ITEMS.includes(inv.itemId))
   })
 
   const getItemName = (itemId: string): string => {

@@ -855,7 +855,8 @@ export const handleEndDay = () => {
 
   // 酒窖更新
   if (homeStore.farmhouseLevel >= 3) {
-    const cellarResult = homeStore.dailyCellarUpdate()
+    homeStore.dailyManorMaintenanceUpdate()
+  const cellarResult = homeStore.dailyCellarUpdate()
     for (const r of cellarResult.upgraded) {
       const name = getItemById(r.itemId)?.name ?? r.itemId
       addLog(`酒窖中的${name}价值提升了+${homeStore.cellarValuePerCycle}文（共+${r.addedValue}文）`)

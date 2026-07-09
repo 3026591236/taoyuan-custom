@@ -31,13 +31,13 @@ export const useInventoryStore = defineStore('inventory', () => {
   const items = ref<InventoryItem[]>([])
   const capacity = ref(INITIAL_CAPACITY)
   const tools = ref<Tool[]>([
-    { type: 'wateringCan', tier: 'basic' },
-    { type: 'hoe', tier: 'basic' },
-    { type: 'pickaxe', tier: 'basic' },
-    { type: 'fishingRod', tier: 'basic' },
-    { type: 'scythe', tier: 'basic' },
-    { type: 'axe', tier: 'basic' },
-    { type: 'pan', tier: 'basic' }
+    { type: 'wateringCan', tier: 'basic', masteryLevel: 0 },
+    { type: 'hoe', tier: 'basic', masteryLevel: 0 },
+    { type: 'pickaxe', tier: 'basic', masteryLevel: 0 },
+    { type: 'fishingRod', tier: 'basic', masteryLevel: 0 },
+    { type: 'scythe', tier: 'basic', masteryLevel: 0 },
+    { type: 'axe', tier: 'basic', masteryLevel: 0 },
+    { type: 'pan', tier: 'basic', masteryLevel: 0 }
   ])
 
   /** 拥有的武器列表 */
@@ -394,7 +394,8 @@ export const useInventoryStore = defineStore('inventory', () => {
     const tool = getTool(type)
     if (!tool) return 1
     const multipliers: Record<ToolTier, number> = { basic: 1.0, iron: 0.8, steel: 0.6, iridium: 0.4 }
-    return multipliers[tool.tier]
+    const masteryBonus = Math.min(3, Math.max(0, tool.masteryLevel ?? 0)) * 0.05
+    return Math.max(0.25, multipliers[tool.tier] - masteryBonus)
   }
 
   /** 获取工具等级对应的批量操作数量（蓄力机制） */
@@ -402,7 +403,8 @@ export const useInventoryStore = defineStore('inventory', () => {
     const tool = getTool(type)
     if (!tool) return 1
     const counts: Record<ToolTier, number> = { basic: 1, iron: 2, steel: 4, iridium: 8 }
-    return counts[tool.tier]
+    const mastery = Math.min(3, Math.max(0, tool.masteryLevel ?? 0))
+    return counts[tool.tier] + (mastery >= 3 ? 2 : mastery >= 2 ? 1 : 0)
   }
 
   /** 升级工具 */
@@ -413,6 +415,16 @@ export const useInventoryStore = defineStore('inventory', () => {
     const currentIndex = tiers.indexOf(tool.tier)
     if (currentIndex >= tiers.length - 1) return false
     tool.tier = tiers[currentIndex + 1]!
+    return true
+  }
+
+  /** 提升工具精通等级 */
+  const upgradeToolMastery = (type: ToolType): boolean => {
+    const tool = getTool(type)
+    if (!tool) return false
+    const current = Math.min(3, Math.max(0, tool.masteryLevel ?? 0))
+    if (current >= 3) return false
+    tool.masteryLevel = current + 1
     return true
   }
 
@@ -976,19 +988,22 @@ export const useInventoryStore = defineStore('inventory', () => {
     capacity.value = data.capacity ?? INITIAL_CAPACITY
     tempItems.value = ((data as any).tempItems ?? []).filter((i: InventoryItem) => getItemById(i.itemId))
     tools.value = data.tools ?? [
-      { type: 'wateringCan', tier: 'basic' },
-      { type: 'hoe', tier: 'basic' },
-      { type: 'pickaxe', tier: 'basic' },
-      { type: 'fishingRod', tier: 'basic' },
-      { type: 'scythe', tier: 'basic' },
-      { type: 'axe', tier: 'basic' },
-      { type: 'pan', tier: 'basic' }
+      { type: 'wateringCan', tier: 'basic', masteryLevel: 0 },
+      { type: 'hoe', tier: 'basic', masteryLevel: 0 },
+      { type: 'pickaxe', tier: 'basic', masteryLevel: 0 },
+      { type: 'fishingRod', tier: 'basic', masteryLevel: 0 },
+      { type: 'scythe', tier: 'basic', masteryLevel: 0 },
+      { type: 'axe', tier: 'basic', masteryLevel: 0 },
+      { type: 'pan', tier: 'basic', masteryLevel: 0 }
     ]
     // 向后兼容：旧存档可能缺少新工具
     const requiredTools: ToolType[] = ['wateringCan', 'hoe', 'pickaxe', 'fishingRod', 'scythe', 'axe', 'pan']
     for (const rt of requiredTools) {
-      if (!tools.value.find(t => t.type === rt)) {
-        tools.value.push({ type: rt, tier: 'basic' })
+      const existing = tools.value.find(t => t.type === rt)
+      if (!existing) {
+        tools.value.push({ type: rt, tier: 'basic', masteryLevel: 0 })
+      } else {
+        existing.masteryLevel = Math.min(3, Math.max(0, existing.masteryLevel ?? 0))
       }
     }
 
@@ -1067,6 +1082,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     getToolStaminaMultiplier,
     getToolBatchCount,
     upgradeTool,
+    upgradeToolMastery,
     isToolAvailable,
     startUpgrade,
     dailyUpgradeUpdate,

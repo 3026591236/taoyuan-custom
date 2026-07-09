@@ -112,3 +112,22 @@ export const TIER_NAMES: Record<ToolTier, string> = {
   steel: '精钢',
   iridium: '铱金'
 }
+
+
+/** V1.7.7 工具精通消耗：满级3级，消耗铜钱与中后期材料换长期效率 */
+export interface ToolMasteryCost {
+  level: number
+  money: number
+  materials: { itemId: string; quantity: number }[]
+  effect: string
+}
+
+export const TOOL_MASTERY_COSTS: ToolMasteryCost[] = [
+  { level: 1, money: 6000, materials: [{ itemId: 'iron_bar', quantity: 3 }, { itemId: 'wood', quantity: 20 }], effect: '体力消耗额外降低5%' },
+  { level: 2, money: 12000, materials: [{ itemId: 'gold_bar', quantity: 3 }, { itemId: 'quartz', quantity: 6 }], effect: '体力消耗额外降低10%，蓄力效率+1' },
+  { level: 3, money: 24000, materials: [{ itemId: 'mystic_iron', quantity: 3 }, { itemId: 'artifact_shard', quantity: 2 }, { itemId: 'spirit_stone', quantity: 12 }], effect: '体力消耗额外降低15%，蓄力效率+2' }
+]
+
+export const getToolMasteryCost = (currentLevel: number): ToolMasteryCost | null => {
+  return TOOL_MASTERY_COSTS.find(c => c.level === currentLevel + 1) ?? null
+}

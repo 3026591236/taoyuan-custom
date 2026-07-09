@@ -76,7 +76,10 @@
                 <span class="text-xs text-muted">钓鱼时限</span>
                 <span class="text-xs">{{ ROD_TIME[selectedToolObj!.tier] }}秒</span>
               </div>
-            </template>
+            
+
+
+</template>
             <div v-if="isUpgrading(selectedTool)" class="flex items-center justify-between mt-1">
               <span class="text-xs text-muted">锻造目标</span>
               <span class="text-xs text-accent">{{ TIER_NAMES[inventoryStore.pendingUpgrade!.targetTier] }}</span>
@@ -154,6 +157,29 @@
               {{ getUpgradeBlockReason(selectedTool) }}
             </p>
 
+
+            <!-- V1.7.7 工具精通 -->
+            <div v-if="selectedToolObj" class="mt-3 rounded border border-muted p-3 bg-bg/40">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-sm text-accent">工具精通 Lv.{{ selectedToolObj.masteryLevel ?? 0 }}/3</p>
+                  <p class="text-xs text-muted">消耗铜钱与材料，永久降低体力消耗；2级起提升蓄力效率。</p>
+                </div>
+                <button
+                  v-if="getMasteryCost(selectedTool)"
+                  class="btn btn-xs"
+                  :disabled="!canUpgradeMastery(selectedTool)"
+                  @click.stop="handleUpgradeMastery(selectedTool)"
+                >
+                  精通 {{ getMasteryCost(selectedTool)?.money }}文
+                </button>
+                <span v-else class="text-xs text-success">已满级</span>
+              </div>
+              <p v-if="getMasteryCost(selectedTool)" class="mt-2 text-xs text-muted">
+                下级：{{ getMasteryCost(selectedTool)?.effect }}；材料：{{ formatMasteryMaterials(selectedTool) }}
+              </p>
+            </div>
+
             <button
               class="btn text-xs w-full justify-center"
               :class="{ '!bg-accent !text-bg': canUpgrade(selectedTool) }"
@@ -186,7 +212,8 @@
   import { useNpcStore } from '@/stores/useNpcStore'
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { getCombinedItemCount, removeCombinedItem } from '@/composables/useCombinedInventory'
-  import { getUpgradeCost, TOOL_NAMES, TIER_NAMES, getItemById } from '@/data'
+  import { getUpgradeCost, getToolMasteryCost, TOOL_NAMES, TIER_NAMES } from '@/data/upgrades'
+  import { getItemById } from '@/data/items'
   import { ACTION_TIME_COSTS } from '@/data/timeConstants'
   import { addLog } from '@/composables/useGameLog'
   import { handleEndDay } from '@/composables/useEndDay'
@@ -217,6 +244,8 @@
   }
   const meetsLevel = (current: FriendshipLevel, required: FriendshipLevel): boolean =>
     LEVEL_ORDER.indexOf(current) >= LEVEL_ORDER.indexOf(required)
+
+  const getItemName = (itemId: string): string => getItemById(itemId)?.name ?? itemId
 
   const inventoryStore = useInventoryStore()
   const playerStore = usePlayerStore()
@@ -315,4 +344,39 @@
       return
     }
   }
+
+  const getMasteryCost = (type: ToolType) => {
+    const tool = inventoryStore.getTool(type)
+    return getToolMasteryCost(tool?.masteryLevel ?? 0)
+  }
+
+  const canUpgradeMastery = (type: ToolType): boolean => {
+    const cost = getMasteryCost(type)
+    if (!cost) return false
+    if (playerStore.money < cost.money) return false
+    return cost.materials.every(mat => getCombinedItemCount(mat.itemId) >= mat.quantity)
+  }
+
+  const formatMasteryMaterials = (type: ToolType): string => {
+    const cost = getMasteryCost(type)
+    return cost ? cost.materials.map(mat => `${getItemName(mat.itemId)}×${mat.quantity}`).join('、') : ''
+  }
+
+  const handleUpgradeMastery = (type: ToolType) => {
+    const cost = getMasteryCost(type)
+    if (!cost) return
+    if (!canUpgradeMastery(type)) {
+      addLog('铜钱或材料不足，无法提升工具精通。')
+      return
+    }
+    playerStore.spendMoney(cost.money)
+    for (const mat of cost.materials) removeCombinedItem(mat.itemId, mat.quantity)
+    if (inventoryStore.upgradeToolMastery(type)) {
+      addLog(`${TOOL_NAMES[type]}精通提升至${inventoryStore.getTool(type)?.masteryLevel ?? cost.level}级：${cost.effect}。`)
+      const tr = gameStore.advanceTime(20)
+      if (tr.message) addLog(tr.message)
+      if (tr.passedOut) handleEndDay()
+    }
+  }
+
 </script>
