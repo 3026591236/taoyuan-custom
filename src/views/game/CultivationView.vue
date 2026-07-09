@@ -68,7 +68,7 @@
       <Button class="justify-between" @click="cultivation.meditate"><span>打坐调息</span><span class="text-muted text-xs">修为/灵力</span></Button>
       <Button class="justify-between" @click="cultivation.refineAura"><span>炼化灵气</span><span class="text-muted text-xs">灵气→修为</span></Button>
       <Button class="justify-between" @click="cultivation.meditateInSeclusion"><span>闭关参悟</span><span class="text-muted text-xs">顿悟/心魔</span></Button>
-      <Button class="justify-between" :disabled="!cultivation.canBreakthrough" @click="handleBreakthrough"><span>{{ cultivation.isMajorBreakthrough ? '渡劫突破' : '尝试突破' }}</span><span class="text-muted text-xs">{{ cultivation.isMajorBreakthrough ? `成功率${cultivation.tribulationSuccessPercent}%` : '消耗灵气' }}</span></Button>
+      <Button class="justify-between" :disabled="!cultivation.canBreakthrough" @click="handleBreakthrough"><span>{{ cultivation.isMajorBreakthrough ? '渡劫突破' : '尝试突破' }}</span><span class="text-muted text-xs">{{ cultivation.canBreakthrough ? (cultivation.isMajorBreakthrough ? `成功率${cultivation.tribulationSuccessPercent}%` : '消耗灵气') : cultivation.breakthroughRequirementText }}</span></Button>
       <Button class="justify-between" @click="cultivation.upgradeField"><span>温养灵田</span><span class="text-muted text-xs">提升等阶</span></Button>
     </div>
 
@@ -119,7 +119,7 @@
         <p class="text-muted">失败惩罚：扣除突破灵气、损失部分修为和灵力，元神受伤，严重时元神掉级，并积累心魔。可闭关、炼养魂丹/涅魂丹恢复。</p>
       </template>
       <template v-else>
-        <p class="text-muted">小层突破不会触发雷劫；闭关参悟可积累顿悟，小层突破会消耗少量顿悟并压低心魔。</p>
+        <p class="text-muted">小层突破不会触发雷劫；闭关参悟可积累顿悟，小层突破会消耗少量顿悟并压低心魔。当前突破需求：修为 {{ cultivation.cultivation }}/{{ cultivation.maxCultivation }}，灵气 {{ cultivation.aura }}/{{ cultivation.breakthroughAuraCost }}。</p>
       </template>
     </div>
 

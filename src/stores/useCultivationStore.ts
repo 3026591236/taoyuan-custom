@@ -426,6 +426,14 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const fieldTierName = computed(() => FIELD_TIERS[fieldTier.value] ?? FIELD_TIERS[0]!)
   const spiritRootName = computed(() => SPIRIT_ROOT_NAMES[spiritRoot.value])
   const breakthroughAuraCost = computed(() => Math.max(0, realm.value.breakthroughCost - foundationPillBlessing.value))
+  const breakthroughCultivationMissing = computed(() => Math.max(0, maxCultivation.value - cultivation.value))
+  const breakthroughAuraMissing = computed(() => Math.max(0, breakthroughAuraCost.value - aura.value))
+  const breakthroughRequirementText = computed(() => {
+    const parts: string[] = []
+    if (breakthroughCultivationMissing.value > 0) parts.push(`修为还差${Math.ceil(breakthroughCultivationMissing.value)}`)
+    if (breakthroughAuraMissing.value > 0) parts.push(`灵气还差${Math.ceil(breakthroughAuraMissing.value)}`)
+    return parts.length ? parts.join('，') : '条件已满足'
+  })
   const nextRealm = computed(() => REALMS[Math.min(realmIndex.value + 1, REALMS.length - 1)] ?? realm.value)
   const isMajorBreakthrough = computed(() => realmMajor(nextRealm.value.name) !== realmMajor(realm.value.name))
   const tribulationSuccessRate = computed(() => {
@@ -606,7 +614,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
     lastTribulationResult.value = 'none'
     if (!unlocked.value) return unlock()
     if (!canBreakthrough.value) {
-      showFloat('修为或灵气不足，尚不能突破。', 'danger')
+      showFloat(`尚不能突破：${breakthroughRequirementText.value}。`, 'danger')
       return false
     }
     const old = realmName.value
@@ -1177,6 +1185,15 @@ export const useCultivationStore = defineStore('cultivation', () => {
     return true
   }
 
+  const removeCaveSlot = (type: CaveSlotType) => {
+    const index = caveSlots.value.indexOf(type)
+    if (index < 0) { showFloat('该洞府设施尚未安置。', 'danger'); return false }
+    caveSlots.value = caveSlots.value.filter(slot => slot !== type)
+    addLog(`已取消安置「${CAVE_SLOT_DATA[type].name}」，洞府槽位空出。`)
+    showFloat(`已取消${CAVE_SLOT_DATA[type].name}`, 'success')
+    return true
+  }
+
   // === V0.3 灵兽 ===
   const encounterBeast = () => {
     if (!unlocked.value) return unlock()
@@ -1561,5 +1578,5 @@ export const useCultivationStore = defineStore('cultivation', () => {
     manuals.value = { wood: 0, thunder: 0, void: 0, ...((data as any).manuals ?? {}) }
   }
 
-  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, daoGear, daoGearPower, daoGearTribulationBonus, daoGearLevel, canForgeDaoGear, forgeDaoGear, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, talismanPower, talismanTribulationBonus, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, beastStage, beastAssistDesc, beastDailyAvailable, beastExpedition, beastExpeditionName, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, spiritStoneRefineLimit, spiritStoneRefineCountToday, spiritStoneRefineRemaining, spiritStoneRefineCost, spiritStoneRefineAuraGain, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, encounterBeast, feedBeast, startBeastExpedition, dailyBeastExpeditionUpdate, trainBeastDaily, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, refineSpiritStoneToAura, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, useTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirthMaterials, hasRebirthMaterials, rebirth, serialize, deserialize }
+  return { unlocked, realmIndex, cultivation, aura, mana, spiritRoot, combatPower, daoGear, daoGearPower, daoGearTribulationBonus, daoGearLevel, canForgeDaoGear, forgeDaoGear, fieldTier, earthPulse, totalAuraHarvested, alchemyUnlocked, lastAlchemyQuality, insight, heartDemon, cultivationPath, currentCultivationPath, pathTitle, spiritMealLastDaily, artifacts, foundationPillBlessing, caveTier, caveSlots, herbGardenLevel, herbLastDaily, herbs, spiritArrayLevel, spiritArrayLastDaily, elements, yuanShenLevel, yuanShenExp, yuanShenInjury, lastTribulationResult, destinedArtifact, destinedArtifactLevel, talismans, talismanCooldown, rebirthCount, rebirthBonus, lingYun, rebirthUnlocked, talismanRechargeRate, talismanPower, talismanTribulationBonus, yuanShenBonus, rebirthRealmName, beast, beastBond, sect, sectSkills, sectContribution, sectRank, sectMerit, sectDailyKey, sectDailyDone, sectCombatAttackBonusRate, sectCombatDefenseBonusRate, sectMaxHpBonusRate, sectAlchemyExtraOutputChance, sectSpiritCropAuraBonusRate, sectDemonClearBonus, manuals, lessonDailyKey, lessonDailyDone, realmName, maxCultivation, maxMana, fieldTierName, spiritRootName, breakthroughAuraCost, breakthroughCultivationMissing, breakthroughAuraMissing, breakthroughRequirementText, nextRealm, isMajorBreakthrough, tribulationSuccessRate, tribulationSuccessPercent, canBreakthrough, artifactName, caveTierName, caveMaxSlots, caveAuraRegen, caveSlotNames, hasCaveSlot, beastData, beastName, beastEmoji, beastLevel, beastStage, beastAssistDesc, beastDailyAvailable, beastExpedition, beastExpeditionName, talismanUnlocked, talismanCount, herbClaimDays, herbDailyYield, spiritArrayClaimDays, spiritArrayElementYield, spiritArrayStoneYield, spiritStoneRefineLimit, spiritStoneRefineCountToday, spiritStoneRefineRemaining, spiritStoneRefineCost, spiritStoneRefineAuraGain, unlockTalisman, learnManual, upgradeManual, setCultivationPath, unlock, meditate, refineAura, meditateInSeclusion, breakthrough, upgradeField, addAuraFromHarvest, gainIdleCultivation, lessonAvailable, doCultivationLesson, triggerRealmEvent, spiritMealAvailable, cookSpiritMeal, unlockAlchemy, craftPill, usePill, unlockArtifact, openCave, upgradeCave, placeCaveSlot, removeCaveSlot, encounterBeast, feedBeast, startBeastExpedition, dailyBeastExpeditionUpdate, trainBeastDaily, claimDailyHerbs, upgradeHerbGarden, claimDailyElements, exchangeForSpiritStones, refineSpiritStoneToAura, forgeDestinedArtifact, upgradeDestinedArtifact, craftTalisman, useTalisman, cultivateYuanShen, trainYuanShen, canRebirth, rebirthCost, rebirthMaterials, hasRebirthMaterials, rebirth, serialize, deserialize }
 })

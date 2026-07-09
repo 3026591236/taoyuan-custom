@@ -19,8 +19,12 @@
           <p class="text-accent text-sm mb-1">{{ slot.name }}</p>
           <p class="text-muted leading-relaxed min-h-[2rem]">{{ slot.desc }}</p>
           <p class="text-[10px] text-muted my-2">安置费：{{ slot.cost }}文</p>
-          <Button class="w-full justify-center" :disabled="cultivation.hasCaveSlot(slot.type) || cultivation.caveSlots.length >= cultivation.caveMaxSlots" @click="cultivation.placeCaveSlot(slot.type)">
-            {{ cultivation.hasCaveSlot(slot.type) ? '已安置' : '安置' }}
+          <Button
+            class="w-full justify-center"
+            :disabled="!cultivation.hasCaveSlot(slot.type) && cultivation.caveSlots.length >= cultivation.caveMaxSlots"
+            @click="cultivation.hasCaveSlot(slot.type) ? cultivation.removeCaveSlot(slot.type) : cultivation.placeCaveSlot(slot.type)"
+          >
+            {{ cultivation.hasCaveSlot(slot.type) ? '取消安置' : '安置' }}
           </Button>
         </div>
       </div>
