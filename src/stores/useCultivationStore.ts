@@ -1018,7 +1018,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const addCultivation = (amount: number, overflowAuraRate = 0.18): { actual: number; overflow: number; auraGain: number } => {
     const gain = Math.max(0, Math.floor(amount))
     const before = cultivation.value
-    addCultivation(gain)
+    cultivation.value = Math.min(maxCultivation.value, cultivation.value + gain)
     const actual = cultivation.value - before
     const overflow = Math.max(0, gain - actual)
     const auraGain = overflow > 0 ? Math.max(1, Math.floor(overflow * overflowAuraRate)) : 0
