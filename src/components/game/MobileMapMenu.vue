@@ -98,6 +98,10 @@
               <Store :size="18" />
               <span>市集</span>
             </button>
+            <button class="map-loc map-loc-ascension" :disabled="navBusy" :class="{ 'map-loc-active': current === 'ascension' || current === 'immortal-world' }" @click="goAscension">
+              <Sparkles :size="18" />
+              <span>{{ ascensionStore.ascended ? '仙界' : '飞升' }}</span>
+            </button>
             <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'alchemy' }" @click="go('alchemy')">
               <FlaskConical :size="18" />
               <span>炼丹</span>
@@ -189,10 +193,12 @@
   import { useRouter } from 'vue-router'
   import { X, Gift, Mail, Trophy, Swords, Sparkles, Flame, Cog, Store, FlaskConical, Mountain, Sword, ScrollText, CircleDot, PawPrint, CalendarDays, MessageCircle } from 'lucide-vue-next'
   import { TABS, navigateToPanel } from '@/composables/useNavigation'
+  import { useAscensionStore } from '@/stores/useAscensionStore'
   import type { PanelKey } from '@/composables/useNavigation'
 
   const props = defineProps<{ open: boolean; current: string; checkinChecked?: boolean; checkinBusy?: boolean; unclaimedMailCount?: number }>()
   const router = useRouter()
+  const ascensionStore = useAscensionStore()
   const navBusy = ref(false)
   const emit = defineEmits<{ close: []; checkin: []; openMail: []; openLeaderboard: []; openCombat: []; openForge: []; openSect: [] }>()
 
@@ -226,6 +232,9 @@
   const goCultivationMarket = () => {
     afterCloseNavigate(() => { void router.push({ path: '/game/shop', query: { market: 'cultivation' } }) })
   }
+  const goAscension = () => {
+    afterCloseNavigate(() => { void router.push(ascensionStore.ascended ? '/game/immortal-world' : '/game/ascension') })
+  }
 
   const handleCheckin = () => {
     afterCloseNavigate(() => emit('checkin'))
@@ -256,7 +265,9 @@
         import('@/views/game/ForgeView.vue'),
         import('@/views/game/SectView.vue'),
         import('@/views/game/LeaderboardView.vue'),
-        import('@/views/game/EventView.vue')
+        import('@/views/game/EventView.vue'),
+        import('@/views/game/AscensionView.vue'),
+        import('@/views/game/ImmortalWorldView.vue')
       ])
     }
     const idle = (globalThis as any).requestIdleCallback as undefined | ((cb: () => void, opts?: { timeout?: number }) => number)
@@ -327,6 +338,12 @@
 
   .daily-checkin-loc {
     color: var(--color-accent);
+  }
+
+  .map-loc-ascension {
+    color: var(--color-accent);
+    border-color: rgba(245, 198, 92, 0.45);
+    box-shadow: 0 0 10px rgba(245, 198, 92, 0.12);
   }
   .map-loc:disabled,
   .daily-checkin-loc:disabled {
