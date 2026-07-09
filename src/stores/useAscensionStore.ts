@@ -27,6 +27,9 @@ export type ImmortalRivalId = 'sword_immortal' | 'thunder_general' | 'moon_fairy
 export type ImmortalMarketId = 'jade_seed' | 'star_sand' | 'edict_scroll' | 'law_core'
 export type ImmortalRealmId = 'true_immortal' | 'earth_immortal' | 'sky_immortal' | 'gold_immortal'
 export type ImmortalSeasonRewardId = 'arena_10' | 'arena_30' | 'arena_60'
+export type ImmortalLineageId = 'sword_dao' | 'thunder_dao' | 'harvest_dao' | 'fate_dao'
+export type ImmortalMandateId = 'heaven_river' | 'star_audit' | 'mortal_incense' | 'arena_invite'
+export type ImmortalMandateChoiceId = 'merit' | 'law' | 'mortal' | 'battle'
 
 export const IMMORTAL_ARTS: Array<{ id: ImmortalArtId; name: string; icon: string; element: string; desc: string; basePower: number; effect: string }> = [
   { id: 'starfall_sword', name: '星河落刃', icon: '🌌', element: '星辰法则', desc: '引星河为剑，普通剑气升格为群星坠落。', basePower: 120, effect: '星辉连斩' },
@@ -88,6 +91,35 @@ export const IMMORTAL_SEASON_REWARDS: Array<{ id: ImmortalSeasonRewardId; needSc
   { id: 'arena_60', needScore: 60, name: '云阙擂主', icon: '🥇', desc: '赛季擂主奖励，形成飞升后中期目标。', merit: 140, jade: 36, rule: 18 }
 ]
 
+export const IMMORTAL_LINEAGES: Array<{ id: ImmortalLineageId; name: string; icon: string; desc: string; bonus: string }> = [
+  { id: 'sword_dao', name: '星河剑统', icon: '🗡️', desc: '以星河落刃开道，偏向仙擂与试炼爆发。', bonus: 'PK胜利功德+6，星河落刃额外加势' },
+  { id: 'thunder_dao', name: '紫霄雷统', icon: '⚡', desc: '执雷罚、正天规，偏向法则碎片与突破稳定。', bonus: '天命法则选择额外+2' },
+  { id: 'harvest_dao', name: '司农仙统', icon: '🌾', desc: '以仙界调度反哺凡界，偏向仙市与凡界回响。', bonus: '凡界回响消耗降低，仙市兑换返还仙玉' },
+  { id: 'fate_dao', name: '文命道统', icon: '📜', desc: '记录香火因果，偏向天命事件与功德累积。', bonus: '天命功德选择额外+8' }
+]
+export const IMMORTAL_MANDATES: Array<{ id: ImmortalMandateId; name: string; icon: string; desc: string; choices: Array<{ id: ImmortalMandateChoiceId; name: string; desc: string; merit: number; jade: number; rule: number; echo: number; streak: number }> }> = [
+  { id: 'heaven_river', name: '天河决堤', icon: '🌊', desc: '天河水势倒灌云阙，是救灾积功德，还是截取法则稳洞天？', choices: [
+    { id: 'merit', name: '救灾积德', desc: '安抚仙民，功德大增。', merit: 36, jade: 3, rule: 1, echo: 0, streak: 0 },
+    { id: 'law', name: '截流悟法', desc: '观天河流向，凝聚水行法则。', merit: 12, jade: 4, rule: 5, echo: 0, streak: 0 },
+    { id: 'mortal', name: '引水润凡', desc: '将余泽导入凡界灵田。', merit: 16, jade: 2, rule: 2, echo: 2, streak: 0 }
+  ] },
+  { id: 'star_audit', name: '星官问责', icon: '⭐', desc: '星官稽核仙职功过，选择偏向会影响仙界资源节奏。', choices: [
+    { id: 'merit', name: '呈报功簿', desc: '清算功簿，功德入账。', merit: 28, jade: 5, rule: 1, echo: 0, streak: 0 },
+    { id: 'law', name: '辩明天条', desc: '以法则自证，碎片增加。', merit: 10, jade: 4, rule: 6, echo: 0, streak: 0 },
+    { id: 'battle', name: '请战证道', desc: '以仙擂表现回应质疑。', merit: 18, jade: 6, rule: 2, echo: 0, streak: 1 }
+  ] },
+  { id: 'mortal_incense', name: '凡界香火冲突', icon: '🕯️', desc: '宗门、家族、灵田争夺仙缘，需要选择回响方向。', choices: [
+    { id: 'mortal', name: '均分香火', desc: '三线皆得回响。', merit: 18, jade: 3, rule: 2, echo: 3, streak: 0 },
+    { id: 'merit', name: '立碑明德', desc: '聚香火成功德。', merit: 34, jade: 2, rule: 1, echo: 1, streak: 0 },
+    { id: 'law', name: '斩断杂念', desc: '清理因果，凝聚法则。', merit: 8, jade: 3, rule: 5, echo: 0, streak: 0 }
+  ] },
+  { id: 'arena_invite', name: '云阙邀战', icon: '🥊', desc: '仙擂送来邀战帖，可借势提升赛季节奏。', choices: [
+    { id: 'battle', name: '登台应战', desc: '积累连胜气势。', merit: 16, jade: 8, rule: 2, echo: 0, streak: 2 },
+    { id: 'law', name: '观战悟道', desc: '不战而观法。', merit: 10, jade: 4, rule: 5, echo: 0, streak: 0 },
+    { id: 'merit', name: '调停斗争', desc: '化解私斗换功德。', merit: 30, jade: 3, rule: 1, echo: 0, streak: 0 }
+  ] }
+]
+
 export const useAscensionStore = defineStore('ascension', () => {
   const ascended = ref(false)
   const ascensionQuestActive = ref(false)
@@ -114,6 +146,9 @@ export const useAscensionStore = defineStore('ascension', () => {
   const immortalRealmStage = ref(0)
   const marketPurchases = ref<Record<ImmortalMarketId, number>>({ jade_seed: 0, star_sand: 0, edict_scroll: 0, law_core: 0 })
   const seasonClaimed = ref<Record<ImmortalSeasonRewardId, boolean>>({ arena_10: false, arena_30: false, arena_60: false })
+  const immortalLineage = ref<ImmortalLineageId>('sword_dao')
+  const mandateProgress = ref(0)
+  const mandateDone = ref<Record<ImmortalMandateId, number>>({ heaven_river: 0, star_audit: 0, mortal_incense: 0, arena_invite: 0 })
 
   const canAscend = computed(() => {
     const cultivation = useCultivationStore()
@@ -148,7 +183,8 @@ export const useAscensionStore = defineStore('ascension', () => {
   const immortalRealmInfo = computed(() => IMMORTAL_REALMS[Math.min(immortalRealmStage.value, IMMORTAL_REALMS.length - 1)] || IMMORTAL_REALMS[0]!)
   const nextImmortalRealm = computed(() => IMMORTAL_REALMS[immortalRealmStage.value + 1] || null)
   const immortalRealmPowerBonus = computed(() => immortalRealmInfo.value.powerBonus)
-  const seasonScore = computed(() => pkWins.value * 10 + Math.max(0, pkStreak.value) * 3)
+  const seasonScore = computed(() => pkWins.value * 10 + Math.max(0, pkStreak.value) * 3 + mandateProgress.value)
+  const lineageInfo = computed(() => IMMORTAL_LINEAGES.find(l => l.id === immortalLineage.value) || IMMORTAL_LINEAGES[0]!)
 
   const triggerAscensionQuest = () => {
     if (ascended.value || ascensionQuestActive.value) return
@@ -251,7 +287,7 @@ export const useAscensionStore = defineStore('ascension', () => {
     const echo = MORTAL_ECHOES.find(e => e.id === id)
     if (!echo) return false
     if (merit.value < echo.meritCost) { addLog(`${echo.name}需要功德${echo.meritCost}。`); return false }
-    merit.value -= echo.meritCost
+    merit.value -= Math.max(1, echo.meritCost - (immortalLineage.value === 'harvest_dao' ? 5 : 0))
     echoBlessings.value[id] = (echoBlessings.value[id] ?? 0) + 1
     visualPulse.value++
     lastBattleText.value = `${echo.icon} ${echo.name}已降下：${echo.rewardText}`
@@ -275,10 +311,10 @@ export const useAscensionStore = defineStore('ascension', () => {
     pkWins.value += 1
     pkStreak.value += 1
     const streakBonus = Math.min(10, pkStreak.value)
-    merit.value += rival.rewardMerit + streakBonus
+    merit.value += rival.rewardMerit + streakBonus + (immortalLineage.value === 'sword_dao' ? 6 : 0)
     immortalJade.value += rival.rewardJade
     ruleFragments.value += rival.rewardRule
-    lastBattleText.value = `${rival.icon} 仙擂胜利！${art.name}破开「${rival.name}」的${rival.style}，功德+${rival.rewardMerit + streakBonus}、仙玉+${rival.rewardJade}、法则+${rival.rewardRule}。`
+    lastBattleText.value = `${rival.icon} 仙擂胜利！${art.name}破开「${rival.name}」的${rival.style}，功德+${rival.rewardMerit + streakBonus + (immortalLineage.value === 'sword_dao' ? 6 : 0)}、仙玉+${rival.rewardJade}、法则+${rival.rewardRule}。`
     addLog(lastBattleText.value)
     return true
   }
@@ -336,7 +372,40 @@ export const useAscensionStore = defineStore('ascension', () => {
     return true
   }
 
-  const serialize = () => ({ ascended: ascended.value, ascensionQuestActive: ascensionQuestActive.value, ascensionQuestComplete: ascensionQuestComplete.value, inImmortalWorld: inImmortalWorld.value, immortalTitle: immortalTitle.value, immortalOffice: immortalOffice.value, merit: merit.value, immortalJade: immortalJade.value, ruleFragments: ruleFragments.value, immortalBodyLevel: immortalBodyLevel.value, immortalBoneLevel: immortalBoneLevel.value, immortalSoulLevel: immortalSoulLevel.value, trialWins: trialWins.value, lastArtId: lastArtId.value, lastBattleText: lastBattleText.value, visualPulse: visualPulse.value, dutyDone: dutyDone.value, caveLevels: caveLevels.value, echoBlessings: echoBlessings.value, pkWins: pkWins.value, pkLosses: pkLosses.value, pkStreak: pkStreak.value, immortalRealmStage: immortalRealmStage.value, marketPurchases: marketPurchases.value, seasonClaimed: seasonClaimed.value })
+  const chooseLineage = (id: ImmortalLineageId) => {
+    if (!IMMORTAL_LINEAGES.some(l => l.id === id)) return false
+    immortalLineage.value = id
+    const info = lineageInfo.value
+    visualPulse.value++
+    lastBattleText.value = `${info.icon} 道统调整为「${info.name}」：${info.bonus}。`
+    addLog(lastBattleText.value)
+    return true
+  }
+  const resolveMandate = (mandateId: ImmortalMandateId, choiceId: ImmortalMandateChoiceId): boolean => {
+    if (!ascended.value) return false
+    const mandate = IMMORTAL_MANDATES.find(m => m.id === mandateId)
+    const choice = mandate?.choices.find(c => c.id === choiceId)
+    if (!mandate || !choice) return false
+    const meritBonus = choice.id === 'merit' && immortalLineage.value === 'fate_dao' ? 8 : 0
+    const ruleBonus = choice.id === 'law' && immortalLineage.value === 'thunder_dao' ? 2 : 0
+    merit.value += choice.merit + meritBonus
+    immortalJade.value += choice.jade
+    ruleFragments.value += choice.rule + ruleBonus
+    if (choice.streak) pkStreak.value += choice.streak
+    if (choice.echo) {
+      echoBlessings.value.sect_blessing = (echoBlessings.value.sect_blessing || 0) + choice.echo
+      echoBlessings.value.family_blessing = (echoBlessings.value.family_blessing || 0) + choice.echo
+      echoBlessings.value.farm_blessing = (echoBlessings.value.farm_blessing || 0) + choice.echo
+    }
+    mandateProgress.value += 6 + choice.echo * 2 + choice.streak * 3
+    mandateDone.value[mandateId] = (mandateDone.value[mandateId] || 0) + 1
+    visualPulse.value++
+    lastBattleText.value = `${mandate.icon} 天命「${mandate.name}」选择「${choice.name}」：功德+${choice.merit + meritBonus}、仙玉+${choice.jade}、法则+${choice.rule + ruleBonus}${choice.echo ? `，凡界回响+${choice.echo}` : ''}${choice.streak ? `，仙擂气势+${choice.streak}` : ''}。`
+    addLog(lastBattleText.value)
+    return true
+  }
+
+  const serialize = () => ({ ascended: ascended.value, ascensionQuestActive: ascensionQuestActive.value, ascensionQuestComplete: ascensionQuestComplete.value, inImmortalWorld: inImmortalWorld.value, immortalTitle: immortalTitle.value, immortalOffice: immortalOffice.value, merit: merit.value, immortalJade: immortalJade.value, ruleFragments: ruleFragments.value, immortalBodyLevel: immortalBodyLevel.value, immortalBoneLevel: immortalBoneLevel.value, immortalSoulLevel: immortalSoulLevel.value, trialWins: trialWins.value, lastArtId: lastArtId.value, lastBattleText: lastBattleText.value, visualPulse: visualPulse.value, dutyDone: dutyDone.value, caveLevels: caveLevels.value, echoBlessings: echoBlessings.value, pkWins: pkWins.value, pkLosses: pkLosses.value, pkStreak: pkStreak.value, immortalRealmStage: immortalRealmStage.value, marketPurchases: marketPurchases.value, seasonClaimed: seasonClaimed.value, immortalLineage: immortalLineage.value, mandateProgress: mandateProgress.value, mandateDone: mandateDone.value })
   const deserialize = (data: any) => {
     ascended.value = data?.ascended ?? false
     ascensionQuestActive.value = data?.ascensionQuestActive ?? false
@@ -363,6 +432,9 @@ export const useAscensionStore = defineStore('ascension', () => {
     immortalRealmStage.value = Math.max(0, Math.min(IMMORTAL_REALMS.length - 1, Number(data?.immortalRealmStage ?? 0)))
     marketPurchases.value = { jade_seed: 0, star_sand: 0, edict_scroll: 0, law_core: 0, ...(data?.marketPurchases ?? {}) }
     seasonClaimed.value = { arena_10: false, arena_30: false, arena_60: false, ...(data?.seasonClaimed ?? {}) }
+    immortalLineage.value = data?.immortalLineage ?? 'sword_dao'
+    mandateProgress.value = Number(data?.mandateProgress ?? 0)
+    mandateDone.value = { heaven_river: 0, star_audit: 0, mortal_incense: 0, arena_invite: 0, ...(data?.mandateDone ?? {}) }
   }
-  return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, cavePower, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, serialize, deserialize }
+  return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, immortalLineage, mandateProgress, mandateDone, cavePower, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, lineageInfo, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, chooseLineage, resolveMandate, serialize, deserialize }
 })
