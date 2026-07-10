@@ -73,27 +73,27 @@ type SeasonalWorldEvent = {
 
 
 const ACTIVITY_BOXES: ActivityBox[] = [
-  { score: 20, title: '晨耕小匣', desc: '完成一两件日课就能领取。', reward: { money: 260, spiritStone: 1 } },
-  { score: 40, title: '修行补给', desc: '补上灵气与根骨沉淀。', reward: { money: 420, aura: 80, attributeExp: { physique: 12 } } },
-  { score: 60, title: '秘境行囊', desc: '鼓励继续战斗、钓鱼、探矿。', reward: { money: 620, spiritStone: 2, attributeExp: { strength: 12, agility: 12 } } },
-  { score: 80, title: '宗门嘉奖', desc: '一天活跃已成习惯。', reward: { money: 880, aura: 160, spiritStone: 3, attributeExp: { perception: 16 } } },
-  { score: 100, title: '满勤仙缘', desc: '今日桃源事毕，给长期成长一份重奖。', reward: { money: 1280, aura: 260, spiritStone: 5, attributeExp: { physique: 18, strength: 18, agility: 18, perception: 18 } } }
+  { score: 20, title: '晨耕小匣', desc: '完成一两件日课就能领取。', reward: { money: 520, aura: 60, spiritStone: 2 } },
+  { score: 40, title: '修行补给', desc: '补上灵气与根骨沉淀。', reward: { money: 860, aura: 180, spiritStone: 2, attributeExp: { physique: 18 } } },
+  { score: 60, title: '秘境行囊', desc: '鼓励继续战斗、钓鱼、探矿。', reward: { money: 1280, aura: 240, spiritStone: 4, attributeExp: { strength: 18, agility: 18 } } },
+  { score: 80, title: '宗门嘉奖', desc: '一天活跃已成习惯。', reward: { money: 1880, aura: 360, spiritStone: 6, items: [{ itemId: 'mana_recovery_pill', name: '回灵丹', quantity: 2 }], attributeExp: { perception: 24 } } },
+  { score: 100, title: '满勤仙缘', desc: '今日桃源事毕，给长期成长一份重奖。', reward: { money: 2880, aura: 620, spiritStone: 10, items: [{ itemId: 'qi_gathering_pill', name: '聚气丹', quantity: 1 }], attributeExp: { physique: 30, strength: 30, agility: 30, perception: 30 } } }
 ]
 
 const SEVEN_DAY_GIFTS: SevenDayGift[] = [
-  { day: 1, title: '第1日：安家种田', desc: '铜钱与灵石，帮你快速补种子和基础修仙材料。', reward: { money: 800, spiritStone: 3, attributeExp: { physique: 12 } } },
-  { day: 2, title: '第2日：灵气入门', desc: '补一口灵气，让灵田与修行线更早成型。', reward: { money: 900, aura: 180, spiritStone: 4, attributeExp: { perception: 14 } } },
-  { day: 3, title: '第3日：秘境试锋', desc: '给战斗流一点启动资源。', reward: { money: 1100, spiritStone: 6, attributeExp: { strength: 20, agility: 16 } } },
-  { day: 4, title: '第4日：宗门馈赠', desc: '稳定养成资源，适合兑换功法或淬炼装备。', reward: { money: 1300, aura: 260, spiritStone: 8, attributeExp: { perception: 20 } } },
-  { day: 5, title: '第5日：灵兽亲和', desc: '提升体魄与身法，为灵兽、秘境和登塔做准备。', reward: { money: 1500, spiritStone: 10, attributeExp: { physique: 24, agility: 24 } } },
-  { day: 6, title: '第6日：法宝蕴养', desc: '中期修仙材料补给，推动法宝和修仙装备成长。', reward: { money: 1888, aura: 360, spiritStone: 12, attributeExp: { strength: 26, perception: 26 } } },
-  { day: 7, title: '第7日：桃源仙缘', desc: '七日留存大奖，给新玩家一个明确阶段终点。', reward: { money: 2888, aura: 520, spiritStone: 20, attributeExp: { physique: 36, strength: 36, agility: 36, perception: 36 } } }
+  { day: 1, title: '第1日：安家种田', desc: '铜钱、灵石与回灵丹，帮你快速补种子和基础修仙材料。', reward: { money: 1800, aura: 120, spiritStone: 8, items: [{ itemId: 'mana_recovery_pill', name: '回灵丹', quantity: 2 }], attributeExp: { physique: 20 } } },
+  { day: 2, title: '第2日：灵气入门', desc: '补一口灵气，让灵田与修行线更早成型。', reward: { money: 2200, aura: 420, spiritStone: 10, items: [{ itemId: 'qi_gathering_pill', name: '聚气丹', quantity: 1 }], attributeExp: { perception: 24 } } },
+  { day: 3, title: '第3日：秘境试锋', desc: '给战斗流一点启动资源。', reward: { money: 2600, aura: 360, spiritStone: 14, items: [{ itemId: 'demon_core', name: '妖丹', quantity: 1 }], attributeExp: { strength: 30, agility: 26 } } },
+  { day: 4, title: '第4日：宗门馈赠', desc: '稳定养成资源，适合兑换功法或淬炼装备。', reward: { money: 3200, aura: 560, spiritStone: 18, items: [{ itemId: 'spirit_ink', name: '灵墨', quantity: 2 }], attributeExp: { perception: 32 } } },
+  { day: 5, title: '第5日：灵兽亲和', desc: '提升体魄与身法，为灵兽、秘境和登塔做准备。', reward: { money: 3800, aura: 680, spiritStone: 24, items: [{ itemId: 'spirit_bone', name: '灵骨', quantity: 1 }], attributeExp: { physique: 36, agility: 36 } } },
+  { day: 6, title: '第6日：法宝蕴养', desc: '中期修仙材料补给，推动法宝和修仙装备成长。', reward: { money: 4600, aura: 880, spiritStone: 32, items: [{ itemId: 'mystic_iron', name: '玄铁', quantity: 2 }, { itemId: 'artifact_shard', name: '法宝碎片', quantity: 1 }], attributeExp: { strength: 42, perception: 42 } } },
+  { day: 7, title: '第7日：桃源仙缘', desc: '七日留存大奖，给新玩家一个明确阶段终点。', reward: { money: 6888, aura: 1280, spiritStone: 60, items: [{ itemId: 'foundation_pill', name: '筑基丹', quantity: 1 }, { itemId: 'moonlight_jade', name: '月华玉', quantity: 2 }, { itemId: 'cold_jade', name: '寒髓玉', quantity: 1 }], attributeExp: { physique: 60, strength: 60, agility: 60, perception: 60 } } }
 ]
 
 const STREAK_GIFTS: StreakGift[] = [
-  { day: 3, title: '三日满勤：灵田回响', desc: '连续3天达到100活跃，奖励稳定修行补给。', reward: { money: 1800, aura: 320, spiritStone: 8, items: [{ itemId: 'moonlight_jade', name: '月华玉', quantity: 1 }], attributeExp: { perception: 24 } } },
-  { day: 5, title: '五日满勤：宗门加持', desc: '连续5天满勤，补给炼器与公会成长材料。', reward: { money: 3200, aura: 520, spiritStone: 15, items: [{ itemId: 'mystic_iron', name: '玄铁', quantity: 2 }, { itemId: 'spirit_ink', name: '灵墨', quantity: 2 }], attributeExp: { strength: 26, physique: 26 } } },
-  { day: 7, title: '七日满勤：仙缘不断', desc: '连续7天满勤大奖，给长期回访一个明确周目标。', reward: { money: 5200, aura: 900, spiritStone: 28, items: [{ itemId: 'phoenix_plume', name: '凤羽', quantity: 1 }, { itemId: 'demon_core', name: '妖丹', quantity: 1 }, { itemId: 'cold_jade', name: '寒髓玉', quantity: 1 }], attributeExp: { physique: 40, strength: 40, agility: 40, perception: 40 } } }
+  { day: 3, title: '三日满勤：灵田回响', desc: '连续3天达到100活跃，奖励稳定修行补给。', reward: { money: 3600, aura: 720, spiritStone: 18, items: [{ itemId: 'moonlight_jade', name: '月华玉', quantity: 2 }, { itemId: 'qi_gathering_pill', name: '聚气丹', quantity: 1 }], attributeExp: { perception: 40 } } },
+  { day: 5, title: '五日满勤：宗门加持', desc: '连续5天满勤，补给炼器与公会成长材料。', reward: { money: 6200, aura: 1100, spiritStone: 32, items: [{ itemId: 'mystic_iron', name: '玄铁', quantity: 3 }, { itemId: 'spirit_ink', name: '灵墨', quantity: 3 }, { itemId: 'thunder_essence', name: '雷精', quantity: 1 }], attributeExp: { strength: 46, physique: 46 } } },
+  { day: 7, title: '七日满勤：仙缘不断', desc: '连续7天满勤大奖，给长期回访一个明确周目标。', reward: { money: 10888, aura: 1880, spiritStone: 68, items: [{ itemId: 'phoenix_plume', name: '凤羽', quantity: 1 }, { itemId: 'demon_core', name: '妖丹', quantity: 2 }, { itemId: 'cold_jade', name: '寒髓玉', quantity: 2 }, { itemId: 'artifact_shard', name: '法宝碎片', quantity: 2 }], attributeExp: { physique: 72, strength: 72, agility: 72, perception: 72 } } }
 ]
 
 const WEEKLY_TASKS: WeeklyTask[] = [

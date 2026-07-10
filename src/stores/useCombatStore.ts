@@ -282,16 +282,18 @@ export const useCombatStore = defineStore('combat', () => {
         ? [{ emoji: '🦅', name: '凌霄妖禽', sprite: 'tower_bird' }, { emoji: '⚡', name: '雷纹傀儡', sprite: 'tower_puppet' }, { emoji: '🔥', name: '赤焰塔灵', sprite: 'tower_flame' }]
         : [{ emoji: '👺', name: '塔中妖影', sprite: 'tower_shadow' }, { emoji: '🧿', name: '巡塔灵魄', sprite: 'tower_spirit' }, { emoji: '🦂', name: '玄砂毒蝎', sprite: 'tower_scorpion' }, { emoji: '🐺', name: '噬月灵狼', sprite: 'tower_moon_wolf' }]
     const pick = names[(tier + Math.floor(Math.random() * names.length)) % names.length]!
-    const scale = boss ? 1.9 : elite ? 1.35 : 1
-    const realmBoost = Math.floor(tier / 10) * 18
+    const scale = boss ? 1.55 : elite ? 1.22 : 0.92
+    const floorPressure = Math.max(0, tier - 1)
+    const realmSoftener = Math.max(0, (useCultivationStore().realmIndex || 0) - 1) * 0.018
+    const difficultyRate = Math.max(0.72, 1 - Math.min(0.18, realmSoftener))
     return {
       id: `tower_${tier}`,
       name: `${pick.name}·${tier}层`,
       emoji: pick.emoji,
       sprite: pick.sprite || '',
-      hp: Math.floor((95 + tier * 34 + Math.pow(tier, 1.35) * 6) * scale),
-      atk: Math.floor((14 + tier * 4.2 + realmBoost) * scale),
-      def: Math.floor((4 + tier * 1.9 + Math.floor(tier / 6) * 3) * scale),
+      hp: Math.floor((90 + floorPressure * 27 + Math.pow(floorPressure, 1.26) * 4.2) * scale * difficultyRate),
+      atk: Math.floor((12 + floorPressure * 3.25 + Math.floor(floorPressure / 10) * 8) * scale * difficultyRate),
+      def: Math.floor((3 + floorPressure * 1.45 + Math.floor(floorPressure / 8) * 2) * scale * difficultyRate),
       exp: Math.floor((38 + tier * 18) * (boss ? 1.8 : elite ? 1.35 : 1)),
       aura: Math.floor((14 + tier * 8) * (boss ? 1.8 : elite ? 1.35 : 1)),
       drops: [
@@ -397,8 +399,9 @@ export const useCombatStore = defineStore('combat', () => {
     const rebirthBoost = 1 + (c.rebirthCount || 0) * 0.03
     const gameStore = useGameStore()
     const fateBoost = isTowerCombat.value && gameStore.dailyFateType === 'tower' ? 1.18 : (!isTowerCombat.value && gameStore.dailyFateType === 'combat' ? 1.12 : 1)
-    const exp = Math.floor(m.exp * rebirthBoost * fateBoost)
-    const aura = Math.floor(m.aura * rebirthBoost * fateBoost)
+    const towerRewardBoost = isTowerCombat.value ? 1.22 : 1
+    const exp = Math.floor(m.exp * rebirthBoost * fateBoost * towerRewardBoost)
+    const aura = Math.floor(m.aura * rebirthBoost * fateBoost * towerRewardBoost)
     c.cultivation = (c.cultivation || 0) + exp
     c.aura = (c.aura || 0) + aura
     if (c.beast) {
