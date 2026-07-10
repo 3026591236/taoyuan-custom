@@ -420,10 +420,11 @@ export const useCultivationStore = defineStore('cultivation', () => {
     const oldArtifactPower = ['glimmerHoe', 'spiritKettle', 'spiritRain'].filter(k => artifactMap[k] === true).length * 80
     const weaponPower = Math.max(0, Number(inventory.getWeaponAttack?.() || 0)) * 16
     const ringPower = Math.floor((inventory.getRingEffectValue?.('attack_bonus') || 0) * 120 + (inventory.getRingEffectValue?.('defense_bonus') || 0) * 100 + (inventory.getRingEffectValue?.('max_hp_bonus') || 0) * 3)
-    const realmPower = realmIndex.value * 1000 + rebirthCount.value * 50000
-    // V2.2.1：战力只吃稳定底蕴，不再直接吃“当前修为/当前灵气/当前灵力”。
+    const majorStageBonus = Math.floor(Math.pow(Math.floor(realmIndex.value / 3), 2) * 1200)
+    const realmPower = realmIndex.value * 3500 + majorStageBonus + rebirthCount.value * 50000
+    // V2.5.2：战力只吃境界稳定底蕴，不再直接吃“当前修为/当前灵气/当前灵力”。
     // 突破会清空修为并消耗灵气，如果把这些临时资源当作战力，会出现成功突破反而掉战力的反直觉体验。
-    const realmFoundationPower = Math.floor(maxCultivation.value * 0.75 + maxMana.value * 18)
+    const realmFoundationPower = Math.floor(maxCultivation.value * 1.05 + maxMana.value * 24)
     const auraFoundationPower = Math.floor(Math.log10(Math.max(1, aura.value) + 1) * 180)
     const cultivationPower = realmFoundationPower + auraFoundationPower
     const bodyPower = Math.floor(player.attributePower * 6 + player.getMaxHp() * 1.5 + skills.combatLevel * 180)

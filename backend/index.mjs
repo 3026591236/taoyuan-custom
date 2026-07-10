@@ -274,6 +274,38 @@ async function requireAdmin(req, res) {
 
 // 境界列表 (V0.4: 30级)
 const REALMS = ['凡人','炼气一层','炼气二层','炼气三层','炼气四层','炼气五层','炼气六层','炼气七层','炼气八层','炼气九层','筑基初期','筑基中期','筑基后期','金丹初期','金丹中期','金丹后期','元婴初期','元婴中期','元婴后期','化神初期','化神中期','化神后期','渡劫初期','渡劫中期','渡劫后期','大乘初期','大乘中期','大乘后期','真仙','玄仙']
+const REALM_STATS = [
+  { name: '凡人', maxCultivation: 100, maxMana: 30 },
+  { name: '炼气一层', maxCultivation: 220, maxMana: 45 },
+  { name: '炼气二层', maxCultivation: 420, maxMana: 65 },
+  { name: '炼气三层', maxCultivation: 760, maxMana: 90 },
+  { name: '炼气四层', maxCultivation: 1200, maxMana: 120 },
+  { name: '炼气五层', maxCultivation: 1800, maxMana: 155 },
+  { name: '炼气六层', maxCultivation: 2600, maxMana: 195 },
+  { name: '炼气七层', maxCultivation: 3700, maxMana: 240 },
+  { name: '炼气八层', maxCultivation: 5200, maxMana: 290 },
+  { name: '炼气九层', maxCultivation: 7200, maxMana: 350 },
+  { name: '筑基初期', maxCultivation: 11000, maxMana: 460 },
+  { name: '筑基中期', maxCultivation: 16000, maxMana: 580 },
+  { name: '筑基后期', maxCultivation: 24000, maxMana: 720 },
+  { name: '金丹初期', maxCultivation: 40000, maxMana: 1000 },
+  { name: '金丹中期', maxCultivation: 65000, maxMana: 1400 },
+  { name: '金丹后期', maxCultivation: 100000, maxMana: 2000 },
+  { name: '元婴初期', maxCultivation: 160000, maxMana: 2800 },
+  { name: '元婴中期', maxCultivation: 250000, maxMana: 3800 },
+  { name: '元婴后期', maxCultivation: 400000, maxMana: 5200 },
+  { name: '化神初期', maxCultivation: 650000, maxMana: 7200 },
+  { name: '化神中期', maxCultivation: 1000000, maxMana: 10000 },
+  { name: '化神后期', maxCultivation: 1600000, maxMana: 14000 },
+  { name: '渡劫初期', maxCultivation: 2600000, maxMana: 20000 },
+  { name: '渡劫中期', maxCultivation: 4200000, maxMana: 28000 },
+  { name: '渡劫后期', maxCultivation: 6800000, maxMana: 40000 },
+  { name: '大乘初期', maxCultivation: 11000000, maxMana: 58000 },
+  { name: '大乘中期', maxCultivation: 18000000, maxMana: 82000 },
+  { name: '大乘后期', maxCultivation: 30000000, maxMana: 120000 },
+  { name: '真仙', maxCultivation: 50000000, maxMana: 180000 },
+  { name: '玄仙', maxCultivation: 99999999, maxMana: 300000 }
+]
 
 const defaultConfig = {
   siteName: '桃源乡',
@@ -295,6 +327,8 @@ const defaultConfig = {
     ]
   },
   updateLogs: [
+    {"date": "2026-07-10", "title": "V2.5.2 排行榜战力境界权重修复", "content": "修复排行榜战力和角色页战力口径不一致的问题：排行榜服务端不再按当前修为、当前灵气、当前灵力等临时资源计算战力，改为按境界上限、灵力上限、境界阶段权重和稳定养成底蕴计算；同步提高高境界基础权重，避免高境界玩家战力异常低于低境界玩家。"},
+    {"date": "2026-07-10", "title": "V2.5.1 存档删除二次确认", "content": "首页账号角色列表新增“删除”按钮：玩家删除存档前会先看到不可恢复风险提示，并必须二次输入“删除存档”后才能确认；删除后会同步清除云端存档、角色槽位和本地缓存，释放角色名额，后台存档审计会记录删除事件。"},
     { date: "2026-07-10", title: "V2.2.1 战力突破稳定修复", content: "修复战力和战斗属性过度依赖当前修为、当前灵气、当前灵力的问题：突破成功会清空修为并消耗灵气，因此改为按境界上限、灵力上限与稳定底蕴计算战力/攻防/气血，避免玩家突破境界后战力反而下降。" },
     { date: "2026-07-10", title: "V2.2.0 自动打坐调息", content: "修行页新增“后台自动打坐调息”按钮，玩家开启后会定时自动执行打坐调息，无需反复手动点击；过程中会正常消耗体力并获得修为、灵力和灵气收益，切换到背包、农场、商圈等页面仍会继续运行，体力不足时自动暂停，适合挂机修炼和减少重复操作。" },
     { date: "2026-07-10", title: "V2.1.9 知识库补充", content: "继续补充游戏内知识库，新增悬浮福利领取、福利按钮看不到、每日/七日福利重置、商圈打不开、登仙塔卡层、排行榜名字特效、村庄回响、玩家拍卖、宗门经营、丹药使用、物品异常、反馈补偿、V2.1.3~V2.1.8版本说明和战斗Build选择等条目，方便玩家直接搜索近期反馈问题和新系统玩法。" },
@@ -629,14 +663,28 @@ app.put('/api/saves/:slot', async (req, res) => {
 })
 
 app.delete('/api/saves/:slot', async (req, res) => {
+  const conn = await pool.getConnection()
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
     const slot = Number(req.params.slot)
-    const [before] = await pool.execute('SELECT character_id, player_name, updated_at, LENGTH(raw) AS raw_size, LENGTH(data_json) AS data_size FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
-    await pool.execute('DELETE FROM saves WHERE user_id = ? AND slot = ?', [user.id, slot])
-    if (before.length) await recordSaveAuditEvent(user, req, { eventType: 'save_delete', status: 'ok', slot, characterId: before[0].character_id, playerName: before[0].player_name, rawSize: before[0].raw_size || 0, dataSize: before[0].data_size || 0, serverUpdatedAt: before[0].updated_at, detail: { deleted: true } })
+    if (!Number.isInteger(slot) || slot < 0 || slot > 2) return send(res, 400, { error: '槽位无效' })
+    const [before] = await conn.execute(`SELECT s.character_id, COALESCE(c.name, s.player_name) AS player_name, s.updated_at, LENGTH(s.raw) AS raw_size, LENGTH(s.data_json) AS data_size
+      FROM saves s LEFT JOIN characters c ON c.id = s.character_id
+      WHERE s.user_id = ? AND s.slot = ? LIMIT 1`, [user.id, slot])
+    const [chars] = await conn.execute('SELECT id, name FROM characters WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+    await conn.beginTransaction()
+    await conn.execute('DELETE FROM saves WHERE user_id = ? AND slot = ?', [user.id, slot])
+    await conn.execute('DELETE FROM characters WHERE user_id = ? AND slot = ?', [user.id, slot])
+    await conn.commit()
+    const deletedCharacter = chars[0] || null
+    const auditSource = before[0] || deletedCharacter || {}
+    await recordSaveAuditEvent(user, req, { eventType: 'save_delete', status: 'ok', slot, characterId: auditSource.character_id || deletedCharacter?.id || null, playerName: auditSource.player_name || deletedCharacter?.name || null, rawSize: auditSource.raw_size || 0, dataSize: auditSource.data_size || 0, serverUpdatedAt: auditSource.updated_at || null, detail: { deleted: true, characterDeleted: Boolean(deletedCharacter) } })
     send(res, 200, { ok: true })
-  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+  } catch (e) {
+    try { await conn.rollback() } catch {}
+    console.error('delete save err', e)
+    send(res, 500, { error: '服务器错误' })
+  } finally { conn.release() }
 })
 
 // --- 签到 ---
@@ -780,9 +828,10 @@ function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}) {
   const oldArtifactPower = ['glimmerHoe', 'spiritKettle', 'spiritRain'].filter(k => artifacts[k] === true).length * 80
   const realmIndex = num(cu.realmIndex ?? cu.realm)
   const rebirthCount = num(cu.rebirthCount)
-  const cultivation = num(cu.cultivation)
+  const realmStat = REALM_STATS[realmIndex] || REALM_STATS[0]
+  const realmMaxCultivation = num(realmStat?.maxCultivation || 100)
+  const realmMaxMana = num(realmStat?.maxMana || 30)
   const aura = num(cu.aura)
-  const mana = num(cu.mana)
   const attrs = p.attributes || {}
   const attrLevel = k => num(attrs?.[k]?.level || 1)
   const attrPower = num(p.attributePower) || ['physique', 'strength', 'agility', 'perception'].reduce((sum, k) => sum + attrLevel(k), 0)
@@ -830,8 +879,13 @@ function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}) {
         ? num(cu.fieldTier) * 160 + num(manuals.wood) * 120
         : Math.max(0, 100 - num(cu.heartDemon)) * 4
 
-  const realmPower = realmIndex * 1000 + rebirthCount * 50000
-  const cultivationPower = Math.floor(cultivation * 1.2 + aura * 0.25 + mana * 2)
+  // V2.5.2：排行榜必须按境界稳定底蕴算，不能再吃当前修为/当前灵气/当前灵力。
+  // 当前资源会在突破、消耗后大幅波动，曾导致低境界高临时资源玩家压过高境界玩家。
+  const majorStageBonus = Math.floor(Math.pow(Math.floor(realmIndex / 3), 2) * 1200)
+  const realmPower = realmIndex * 3500 + majorStageBonus + rebirthCount * 50000
+  const realmFoundationPower = Math.floor(realmMaxCultivation * 1.05 + realmMaxMana * 24)
+  const auraFoundationPower = Math.floor(Math.log10(Math.max(1, aura) + 1) * 180)
+  const cultivationPower = realmFoundationPower + auraFoundationPower
   const bodyPower = Math.floor(attrPower * 6 + hp * 1.5 + combatLevel * 180)
   const systemPower = num(cu.fieldTier) * 120 + num(cu.caveTier) * 180 + num(cu.yuanShenLevel) * 260 + num(cu.destinedArtifactLevel) * 360 + daoGearPower + talismanPower + num(cu.beastBond) * 12 + num(cu.sectContribution) * 0.2 + num(cu.sectMerit) * 0.6 + sectSkillPower + sectIdentityPower + pathPower + manualPower
   return Math.max(0, Math.floor(realmPower + cultivationPower + bodyPower + weaponPower + ringPower + artifactPower + oldArtifactPower + systemPower))

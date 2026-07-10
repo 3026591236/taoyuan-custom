@@ -52,7 +52,12 @@
               <p class="text-accent truncate">{{ character.name }}</p>
               <p class="text-muted truncate">槽位 {{ character.slot + 1 }} · {{ character.meta?.playerName || '桃源旅人' }}</p>
             </div>
-            <button class="btn text-xs shrink-0" @click.stop="continueCharacter(character)">继续游戏</button>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button class="btn text-xs" @click.stop="continueCharacter(character)">继续游戏</button>
+              <button class="btn text-xs text-danger" :disabled="deletingSaveSlot === Number(character.slot)" title="删除存档" @click.stop="openDeleteSaveConfirm(character)">
+                <Trash2 :size="12" /> 删除
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -100,6 +105,30 @@
         </Button>
       </div>
     </div>
+
+    <!-- 删除存档二次确认弹窗 -->
+    <Transition name="panel-fade">
+      <div v-if="deleteSaveTarget" class="fixed inset-0 z-50 flex items-center justify-center bg-bg/80" @click.self="closeDeleteSaveConfirm">
+        <div class="game-panel w-full max-w-sm mx-4 relative">
+          <button class="absolute top-2 right-2 text-muted hover:text-text" @click="closeDeleteSaveConfirm">
+            <X :size="14" />
+          </button>
+          <h2 class="text-danger text-lg mb-2 text-center">删除存档</h2>
+          <div class="border border-danger/30 rounded-xs p-3 text-xs leading-relaxed space-y-2">
+            <p class="text-text">你正在删除角色「<span class="text-accent">{{ deleteSaveTarget.name }}</span>」的存档。</p>
+            <p class="text-danger">此操作会删除云端存档和本地缓存，删除后无法恢复。建议确认已经导出备份后再继续。</p>
+          </div>
+          <label class="text-xs text-muted mt-3 mb-1 block">二次确认：请输入 <span class="text-danger">删除存档</span></label>
+          <input v-model="deleteSaveConfirmText" class="input" placeholder="删除存档" @click.stop />
+          <div class="flex space-x-3 justify-center mt-4">
+            <Button :icon-size="12" :icon="ArrowLeft" @click="closeDeleteSaveConfirm">取消</Button>
+            <Button class="px-4 !text-danger" :disabled="deleteSaveConfirmText !== '删除存档' || deletingSaveSlot === Number(deleteSaveTarget.slot)" :icon-size="12" :icon="Trash2" @click="deleteAccountSave">
+              {{ deletingSaveSlot === Number(deleteSaveTarget.slot) ? '删除中...' : '确认删除' }}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <!-- 首页反馈弹窗 -->
     <Transition name="panel-fade">
@@ -441,7 +470,7 @@
 </template>
 
 <script setup lang="ts">
-  import { Play, ArrowLeft, Info, ShieldCheck, X, UserRound, BookOpen, Lightbulb, Bug, MessageSquare, Smartphone } from 'lucide-vue-next'
+  import { Play, ArrowLeft, Info, ShieldCheck, X, UserRound, BookOpen, Lightbulb, Bug, MessageSquare, Smartphone, Trash2 } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import { ref, computed, onMounted } from 'vue'
@@ -489,6 +518,9 @@
   const charGender = ref<Gender>('male')
   const showPrivacy = ref(false)
   const showFarmConfirm = ref(false)
+  const deleteSaveTarget = ref<any>(null)
+  const deleteSaveConfirmText = ref('')
+  const deletingSaveSlot = ref<number | null>(null)
 
   const accountUsername = ref('')
   const accountPassword = ref('')
@@ -618,6 +650,36 @@
       return
     }
     showPrivacy.value = true
+  }
+  const openDeleteSaveConfirm = (character: any) => {
+    deleteSaveTarget.value = character
+    deleteSaveConfirmText.value = ''
+  }
+  const closeDeleteSaveConfirm = () => {
+    if (deletingSaveSlot.value !== null) return
+    deleteSaveTarget.value = null
+    deleteSaveConfirmText.value = ''
+  }
+  const deleteAccountSave = async () => {
+    const target = deleteSaveTarget.value
+    if (!target || deleteSaveConfirmText.value !== '删除存档') return
+    const slot = Number(target.slot)
+    deletingSaveSlot.value = slot
+    try {
+      await accountApi(`/api/saves/${slot}`, { method: 'DELETE', headers: accountHeaders() })
+      saveStore.deleteSlot(slot)
+      localStorage.removeItem(`taoyuan_cloud_loaded_at_${slot}`)
+      if (localStorage.getItem('taoyuan_active_slot') === String(slot)) localStorage.removeItem('taoyuan_active_slot')
+      await loadAccountCharacters()
+      await loadAccountSaves()
+      refreshSlots()
+      showFloat('存档已删除。', 'success')
+      closeDeleteSaveConfirm()
+    } catch (e: any) {
+      showFloat(e.message || '删除存档失败。', 'danger')
+    } finally {
+      deletingSaveSlot.value = null
+    }
   }
   const continueCharacter = async (character: any) => {
     if (!character) return
