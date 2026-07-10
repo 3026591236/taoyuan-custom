@@ -195,6 +195,8 @@ export const useAscensionStore = defineStore('ascension', () => {
   const riftClears = ref<Record<ChaosRiftId, number>>({ void_tide: 0, fallen_star: 0, demon_gate: 0, law_maze: 0 })
   const fatePlateLevels = ref<Record<FatePlateId, number>>({ merit_orbit: 0, battle_orbit: 0, harvest_orbit: 0, law_orbit: 0 })
   const storyClaimed = ref<Record<ImmortalStoryId, boolean>>({ first_edict: false, rift_truth: false, old_heaven: false, mortal_anchor: false, star_archive: false, three_realms_debt: false, ancient_oath: false, demon_counterplot: false, heaven_trial: false, dao_dispute: false, alliance_coronation: false, new_heaven: false })
+  const adminPreviewMode = ref(false)
+  const adminPreviewSnapshot = ref<any | null>(null)
 
   const canAscend = computed(() => {
     const cultivation = useCultivationStore()
@@ -574,7 +576,45 @@ export const useAscensionStore = defineStore('ascension', () => {
     return caveHeavenStability.value < 80 ? `洞天稳定降至${caveHeavenStability.value}，仙战力折损，可在仙界维护洞天。` : ''
   }
 
-  const serialize = () => ({ ascended: ascended.value, ascensionQuestActive: ascensionQuestActive.value, ascensionQuestComplete: ascensionQuestComplete.value, inImmortalWorld: inImmortalWorld.value, immortalTitle: immortalTitle.value, immortalOffice: immortalOffice.value, merit: merit.value, immortalJade: immortalJade.value, ruleFragments: ruleFragments.value, immortalBodyLevel: immortalBodyLevel.value, immortalBoneLevel: immortalBoneLevel.value, immortalSoulLevel: immortalSoulLevel.value, trialWins: trialWins.value, lastArtId: lastArtId.value, lastBattleText: lastBattleText.value, visualPulse: visualPulse.value, dutyDone: dutyDone.value, caveLevels: caveLevels.value, caveHeavenStability: caveHeavenStability.value, caveHeavenMaintenanceKey: caveHeavenMaintenanceKey.value, echoBlessings: echoBlessings.value, pkWins: pkWins.value, pkLosses: pkLosses.value, pkStreak: pkStreak.value, immortalRealmStage: immortalRealmStage.value, marketPurchases: marketPurchases.value, seasonClaimed: seasonClaimed.value, immortalLineage: immortalLineage.value, mandateProgress: mandateProgress.value, mandateDone: mandateDone.value, allianceProgress: allianceProgress.value, riftClears: riftClears.value, fatePlateLevels: fatePlateLevels.value, storyClaimed: storyClaimed.value })
+  const serialize = () => adminPreviewMode.value && adminPreviewSnapshot.value ? adminPreviewSnapshot.value : ({ ascended: ascended.value, ascensionQuestActive: ascensionQuestActive.value, ascensionQuestComplete: ascensionQuestComplete.value, inImmortalWorld: inImmortalWorld.value, immortalTitle: immortalTitle.value, immortalOffice: immortalOffice.value, merit: merit.value, immortalJade: immortalJade.value, ruleFragments: ruleFragments.value, immortalBodyLevel: immortalBodyLevel.value, immortalBoneLevel: immortalBoneLevel.value, immortalSoulLevel: immortalSoulLevel.value, trialWins: trialWins.value, lastArtId: lastArtId.value, lastBattleText: lastBattleText.value, visualPulse: visualPulse.value, dutyDone: dutyDone.value, caveLevels: caveLevels.value, caveHeavenStability: caveHeavenStability.value, caveHeavenMaintenanceKey: caveHeavenMaintenanceKey.value, echoBlessings: echoBlessings.value, pkWins: pkWins.value, pkLosses: pkLosses.value, pkStreak: pkStreak.value, immortalRealmStage: immortalRealmStage.value, marketPurchases: marketPurchases.value, seasonClaimed: seasonClaimed.value, immortalLineage: immortalLineage.value, mandateProgress: mandateProgress.value, mandateDone: mandateDone.value, allianceProgress: allianceProgress.value, riftClears: riftClears.value, fatePlateLevels: fatePlateLevels.value, storyClaimed: storyClaimed.value })
+  const enterAdminPreview = () => {
+    if (!adminPreviewSnapshot.value) adminPreviewSnapshot.value = serialize()
+    adminPreviewMode.value = true
+    ascended.value = true
+    ascensionQuestActive.value = false
+    ascensionQuestComplete.value = true
+    inImmortalWorld.value = true
+    immortalTitle.value = '太乙巡览 · 管理预览'
+    immortalOffice.value = 'xuntian'
+    merit.value = 1200
+    immortalJade.value = 300
+    ruleFragments.value = 180
+    immortalBodyLevel.value = 12
+    immortalBoneLevel.value = 12
+    immortalSoulLevel.value = 12
+    immortalRealmStage.value = 4
+    caveLevels.value = { star_platform: 6, merit_pool: 6, law_tablet: 6, spirit_spring: 6, mortal_anchor: 6 }
+    caveHeavenStability.value = 115
+    pkWins.value = 8
+    pkLosses.value = 1
+    pkStreak.value = 4
+    mandateProgress.value = 90
+    allianceProgress.value = { cloud_guard: 3, jade_register: 3, star_forge: 3, mortal_bridge: 3 }
+    riftClears.value = { void_tide: 2, fallen_star: 2, demon_gate: 2, law_maze: 2 }
+    fatePlateLevels.value = { merit_orbit: 4, battle_orbit: 4, harvest_orbit: 4, law_orbit: 4 }
+    storyClaimed.value = { first_edict: true, rift_truth: true, old_heaven: true, mortal_anchor: true, star_archive: true, three_realms_debt: false, ancient_oath: false, demon_counterplot: false, heaven_trial: false, dao_dispute: false, alliance_coronation: false, new_heaven: false }
+    lastBattleText.value = '管理员仙界预览模式已开启：当前数据仅用于界面与功能完整性检查，不会写入正式存档、排行或公告。'
+    visualPulse.value++
+    addLog('管理员仙界预览模式已开启，本次预览不会保存到正式存档。')
+  }
+  const exitAdminPreview = () => {
+    const snap = adminPreviewSnapshot.value
+    adminPreviewMode.value = false
+    adminPreviewSnapshot.value = null
+    if (snap) deserialize(snap)
+    addLog('已退出管理员仙界预览模式，正式存档未被修改。')
+  }
+
   const deserialize = (data: any) => {
     ascended.value = data?.ascended ?? false
     ascensionQuestActive.value = data?.ascensionQuestActive ?? false
@@ -611,5 +651,5 @@ export const useAscensionStore = defineStore('ascension', () => {
     fatePlateLevels.value = { merit_orbit: 0, battle_orbit: 0, harvest_orbit: 0, law_orbit: 0, ...(data?.fatePlateLevels ?? {}) }
     storyClaimed.value = { first_edict: false, rift_truth: false, old_heaven: false, mortal_anchor: false, star_archive: false, three_realms_debt: false, ancient_oath: false, demon_counterplot: false, heaven_trial: false, dao_dispute: false, alliance_coronation: false, new_heaven: false, ...(data?.storyClaimed ?? {}) }
   }
-  return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, caveHeavenStability, caveHeavenStabilityRate, caveHeavenMaintenanceCost, caveHeavenNeedsMaintenance, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, immortalLineage, mandateProgress, mandateDone, allianceProgress, riftClears, fatePlateLevels, storyClaimed, cavePower, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, lineageInfo, fatePlatePower, allianceScore, riftScore, storyState, storyProgress, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, maintainCaveHeaven, dailyCaveHeavenUpdate, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, chooseLineage, resolveMandate, coordinateAlliance, challengeChaosRift, upgradeFatePlate, claimStoryChapter, serialize, deserialize }
+  return { IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, trialWins, lastArtId, lastBattleText, visualPulse, dutyDone, caveLevels, caveHeavenStability, caveHeavenStabilityRate, caveHeavenMaintenanceCost, caveHeavenNeedsMaintenance, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, immortalLineage, mandateProgress, mandateDone, allianceProgress, riftClears, fatePlateLevels, storyClaimed, adminPreviewMode, cavePower, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, lineageInfo, fatePlatePower, allianceScore, riftScore, storyState, storyProgress, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, maintainCaveHeaven, dailyCaveHeavenUpdate, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, chooseLineage, resolveMandate, coordinateAlliance, challengeChaosRift, upgradeFatePlate, claimStoryChapter, enterAdminPreview, exitAdminPreview, serialize, deserialize }
 })

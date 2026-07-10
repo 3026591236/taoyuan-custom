@@ -7,10 +7,11 @@
 
     <div class="flex items-center justify-between mb-3 relative z-10">
       <div>
-        <h3 class="text-accent text-sm">仙界 · 云阙天门</h3>
+        <h3 class="text-accent text-sm">仙界 · 云阙天门 <span v-if="ascensionStore.adminPreviewMode" class="preview-badge">ADMIN 预览</span></h3>
         <p class="text-[10px] text-muted">飞升后人物、技能、战斗反馈切换为仙界体系</p>
+        <p v-if="ascensionStore.adminPreviewMode" class="text-[10px] text-warning mt-1">管理员预览数据仅用于检查界面/功能完整性，不写入正式存档。</p>
       </div>
-      <button class="text-xs text-muted hover:text-accent" @click="returnToWorld">返回下界</button>
+      <div class="flex items-center gap-2"><button v-if="ascensionStore.adminPreviewMode" class="text-xs text-warning hover:text-accent" @click="exitAdminPreview">退出预览</button><button class="text-xs text-muted hover:text-accent" @click="returnToWorld">返回下界</button></div>
     </div>
 
     <div class="immortal-hero relative z-10 mb-4">
@@ -278,6 +279,10 @@ import { addLog } from '@/composables/useGameLog'
 import { computed } from 'vue'
 const router = useRouter(); const ascensionStore = useAscensionStore()
 const officeInfo = computed(() => ascensionStore.officeInfo)
+const exitAdminPreview = () => {
+  ascensionStore.exitAdminPreview()
+  router.replace('/')
+}
 const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game/cultivation'); addLog('返回下界，仙光暂敛。') }
 </script>
 <style scoped>
@@ -417,4 +422,5 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 @keyframes twinkle{from{opacity:.45;filter:blur(.2px)}to{opacity:1;filter:blur(0)}}
 @media (prefers-reduced-motion:reduce){.immortal-celestial-page::before,.celestial-orbit-ring,.celestial-starfield{animation:none}.immortal-celestial-page *{transition:none!important}}
 
+.preview-badge{display:inline-flex;margin-left:6px;padding:1px 6px;border:1px solid rgba(255,226,138,.45);border-radius:999px;font-size:10px;color:#ffe28a;background:rgba(255,226,138,.12);box-shadow:0 0 12px rgba(255,226,138,.18)}
 </style>

@@ -596,6 +596,7 @@
   import { useWarehouseStore } from '@/stores/useWarehouseStore'
   import { parseSaveData, useSaveStore } from '@/stores/useSaveStore'
   import { useFloatingWelfareStore } from '@/stores/useFloatingWelfareStore'
+  import { useAscensionStore } from '@/stores/useAscensionStore'
   import { useFarmStore } from '@/stores/useFarmStore'
   import { useDialogs } from '@/composables/useDialogs'
   import type { MorningChoiceEvent } from '@/data/farmEvents'
@@ -646,6 +647,7 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
   const questStore = useQuestStore()
   const cultivationStore = useCultivationStore()
   const floatingWelfareStore = useFloatingWelfareStore()
+  const ascensionStore = useAscensionStore()
   const { switchToSeasonalBgm } = useAudio()
 
 
@@ -975,6 +977,7 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
 
 
   const autoSaveCurrent = async () => {
+    if (ascensionStore.adminPreviewMode) return
     if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return
     const slot = saveStore.activeSlot
     localStorage.setItem('taoyuan_active_slot', String(slot))
@@ -1011,7 +1014,11 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
   }
 
   // 游戏未开始时重定向到主菜单
-  if (!gameStore.isGameStarted) {
+  const isAdminImmortalPreviewRoute = router.currentRoute.value.name === 'immortal-world' && router.currentRoute.value.query.adminPreview === '1' && localStorage.getItem('taoyuan_admin_immortal_preview') === '1'
+  if (isAdminImmortalPreviewRoute) {
+    gameStore.isGameStarted = true
+    ascensionStore.enterAdminPreview()
+  } else if (!gameStore.isGameStarted) {
     void router.replace('/')
   }
 
@@ -1131,7 +1138,7 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
   })
 
   // 实时时钟生命周期
-  onMounted(() => { startClock(); startAccountAutoSave(); startOnlineStaminaRegen(); startBackgroundMeditation(); void loadServerConfig(); void loadCheckinStatus(); void loadMails(); void grantOfflineRewards(); void autoSaveCurrent() })
+  onMounted(() => { startClock(); if (!ascensionStore.adminPreviewMode) startAccountAutoSave(); startOnlineStaminaRegen(); startBackgroundMeditation(); void loadServerConfig(); void loadCheckinStatus(); void loadMails(); if (!ascensionStore.adminPreviewMode) { void grantOfflineRewards(); void autoSaveCurrent() } })
   onUnmounted(() => {
     stopClock()
     stopAccountAutoSave()

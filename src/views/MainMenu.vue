@@ -34,6 +34,7 @@
           <button class="btn text-xs" @click.stop="showAnnouncement = true">公告</button>
           <button class="btn text-xs" @click.stop="showUpdateLogs = true">更新记录</button>
           <button class="btn text-xs" @click.stop="router.push('/admin')">后台</button>
+          <button v-if="accountUser?.role === 'admin'" class="btn text-xs" @click.stop="openAdminImmortalPreview">仙界预览</button>
         </div>
       </div>
       <div v-if="accountUser" class="space-y-2">
@@ -553,6 +554,18 @@
   const homeFeedbackOk = ref(false)
   const homeFeedbackLabel = computed(() => HOME_FEEDBACK_CATEGORIES.find(c => c.key === homeFeedbackCategory.value)?.label || '提交反馈')
   const accountToken = () => localStorage.getItem('taoyuan_account_token') || ''
+  const openAdminImmortalPreview = async () => {
+    const token = accountToken()
+    if (!token || accountUser.value?.role !== 'admin') { showFloat('只有管理员账号可使用仙界预览。', 'danger'); return }
+    try {
+      const res = await fetch('/api/admin/config', { headers: { Authorization: `Bearer ${token}` } })
+      if (!res.ok) throw new Error('管理员权限验证失败')
+      localStorage.setItem('taoyuan_admin_immortal_preview', '1')
+      router.push('/game/immortal-world?adminPreview=1')
+    } catch (e: any) {
+      showFloat(e?.message || '管理员权限验证失败', 'danger')
+    }
+  }
   const accountHeaders = () => ({ 'content-type': 'application/json', authorization: `Bearer ${accountToken()}` })
   const accountApi = async (path: string, options: RequestInit = {}) => {
     const res = await fetch(path, options)
