@@ -51,6 +51,10 @@
     <button class="mobile-map-btn" @click="showMobileMap = true">
       <Map :size="20" />
     </button>
+    <button class="quick-use-float-btn" title="快捷用药" @click="router.push('/game/quick-use')">
+      <Zap :size="18" />
+      <span>快捷</span>
+    </button>
     <button class="mobile-setting-btn" @click="showSettings = true">
       <SettingsIcon :size="20" />
     </button>
@@ -581,7 +585,7 @@
   import { useAudio } from '@/composables/useAudio'
   import type { Quality } from '@/types'
   import type { AttributeKey } from '@/stores/usePlayerStore'
-  import { Moon, X, Map, Settings as SettingsIcon, Archive, ArrowDown, ArrowDownToLine, History, Trash2, Gift } from 'lucide-vue-next'
+  import { Moon, X, Map, Settings as SettingsIcon, Archive, ArrowDown, ArrowDownToLine, History, Trash2, Gift, Zap } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import MobileMapMenu from '@/components/game/MobileMapMenu.vue'
@@ -1549,6 +1553,28 @@
 
 
 <style scoped>
+.quick-use-float-btn {
+  position: fixed;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 46;
+  min-width: 46px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 2px solid var(--color-accent);
+  background: linear-gradient(135deg, rgba(75, 45, 18, .96), rgba(200,164,92,.96));
+  color: rgb(var(--color-bg));
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 0 16px rgba(200, 164, 92, .28);
+  font-size: 12px;
+  font-weight: 700;
+}
+.quick-use-float-btn:hover { filter: brightness(1.08); }
+
 .floating-welfare-btn {
   position: fixed;
   right: 12px;
