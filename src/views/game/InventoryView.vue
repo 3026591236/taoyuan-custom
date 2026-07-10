@@ -548,6 +548,16 @@
               食用
             </Button>
             <Button
+              v-if="isQuickCandidate(activeItem.itemId)"
+              class="w-full justify-center"
+              :class="inventoryStore.isQuickUseItem(activeItem.itemId, activeItem.quality) ? '!bg-accent !text-bg' : ''"
+              :icon="Zap"
+              :icon-size="12"
+              @click="handleSetQuickUse(activeItem.itemId, activeItem.quality)"
+            >
+              {{ inventoryStore.isQuickUseItem(activeItem.itemId, activeItem.quality) ? '取消快捷' : '设为快捷' }}
+            </Button>
+            <Button
               v-if="isUsable(activeItem.itemId)"
               class="w-full justify-center"
               :icon="Zap"
@@ -1275,6 +1285,13 @@
 
   const isUsable = (itemId: string): boolean => {
     return USABLE_ITEMS.has(itemId) || CULTIVATION_PILLS.has(itemId)
+  }
+
+  const isQuickCandidate = (itemId: string): boolean => isUsable(itemId) || isEdible(itemId)
+
+  const handleSetQuickUse = (itemId: string, quality: Quality) => {
+    if (inventoryStore.isQuickUseItem(itemId, quality)) inventoryStore.clearQuickUseItem()
+    else inventoryStore.setQuickUseItem(itemId, quality)
   }
 
   const handleUse = (itemId: string, quality: Quality) => {

@@ -51,7 +51,7 @@
     <button class="mobile-map-btn" @click="showMobileMap = true">
       <Map :size="20" />
     </button>
-    <button class="quick-use-float-btn" title="快捷用药" @click="router.push('/game/quick-use')">
+    <button class="quick-use-float-btn" title="快捷用药" @click="handleQuickUse">
       <Zap :size="18" />
       <span>快捷</span>
     </button>
@@ -582,6 +582,7 @@
   import { getNpcById, getItemById, getCropById } from '@/data'
   import { CHEST_DEFS } from '@/data/items'
   import { useGameClock } from '@/composables/useGameClock'
+import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
   import { useAudio } from '@/composables/useAudio'
   import type { Quality } from '@/types'
   import type { AttributeKey } from '@/stores/usePlayerStore'
@@ -913,6 +914,32 @@
       addLog(`领取邮件失败：${e?.message || '请求失败'}`)
     }
   }
+  const handleQuickUse = async () => {
+    const quick = inventoryStore.quickUseItem
+    if (!quick) {
+      addLog('还没有设置快捷物品，请先在背包中选择可用物品并点“设为快捷”。')
+      router.push('/game/inventory')
+      return
+    }
+    const item = inventoryStore.items.find(i => i.itemId === quick.itemId && i.quality === quick.quality)
+    if (!item) {
+      inventoryStore.clearQuickUseItem()
+      addLog('快捷物品已用完，请在背包重新设置。')
+      router.push('/game/inventory')
+      return
+    }
+    const def = getItemById(quick.itemId)
+    const ok = isQuickUsableItem(quick.itemId)
+      ? itemUsage.useItem(quick.itemId, quick.quality)
+      : itemUsage.eatItem(quick.itemId, quick.quality)
+    if (ok) {
+      if (!inventoryStore.items.some(i => i.itemId === quick.itemId && i.quality === quick.quality)) inventoryStore.clearQuickUseItem()
+      await autoSaveCurrent()
+    } else {
+      addLog(`${def?.name || '快捷物品'}当前无法使用。`)
+    }
+  }
+
   const autoSaveCurrent = async () => {
     if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return
     const slot = saveStore.activeSlot
@@ -1231,6 +1258,7 @@
   }
 
   const inventoryStore = useInventoryStore()
+  const itemUsage = useItemUsage()
   const warehouseStore = useWarehouseStore()
 
   const handleFarmEventChoice = (choice: MorningChoiceEvent['choices'][number]) => {

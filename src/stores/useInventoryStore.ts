@@ -71,6 +71,27 @@ export const useInventoryStore = defineStore('inventory', () => {
 
   const isFull = computed(() => items.value.length >= capacity.value)
 
+  /** 游戏内悬浮快捷使用的物品 */
+  const quickUseItem = ref<{ itemId: string; quality: Quality } | null>(null)
+
+  const setQuickUseItem = (itemId: string, quality: Quality = 'normal') => {
+    if (!items.value.some(i => i.itemId === itemId && i.quality === quality)) {
+      showFloat('背包里没有这个物品。', 'danger')
+      return false
+    }
+    quickUseItem.value = { itemId, quality }
+    showFloat(`已设为快捷：${getItemById(itemId)?.name || itemId}`)
+    return true
+  }
+
+  const clearQuickUseItem = () => {
+    quickUseItem.value = null
+    showFloat('已取消快捷物品。')
+  }
+
+  const isQuickUseItem = (itemId: string, quality: Quality = 'normal') => quickUseItem.value?.itemId === itemId && quickUseItem.value?.quality === quality
+
+
   /** 临时背包（溢出缓冲区） */
   const tempItems = ref<InventoryItem[]>([])
   const isTempFull = computed(() => tempItems.value.length >= TEMP_CAPACITY)
@@ -979,7 +1000,8 @@ export const useInventoryStore = defineStore('inventory', () => {
       ownedShoes: ownedShoes.value,
       equippedShoeIndex: equippedShoeIndex.value,
       equipmentPresets: equipmentPresets.value,
-      activePresetId: activePresetId.value
+      activePresetId: activePresetId.value,
+      quickUseItem: quickUseItem.value
     }
   }
 
@@ -1053,6 +1075,8 @@ export const useInventoryStore = defineStore('inventory', () => {
     // 装备方案（向后兼容旧存档）
     equipmentPresets.value = ((data as Record<string, unknown>).equipmentPresets as EquipmentPreset[] | undefined) ?? []
     activePresetId.value = ((data as Record<string, unknown>).activePresetId as string | null | undefined) ?? null
+    const quick = (data as Record<string, unknown>).quickUseItem as { itemId?: string; quality?: Quality } | null | undefined
+    quickUseItem.value = quick?.itemId && getItemById(quick.itemId) ? { itemId: quick.itemId, quality: quick.quality || 'normal' } : null
   }
 
   return {
@@ -1063,6 +1087,10 @@ export const useInventoryStore = defineStore('inventory', () => {
     equippedWeaponIndex,
     pendingUpgrade,
     isFull,
+    quickUseItem,
+    setQuickUseItem,
+    clearQuickUseItem,
+    isQuickUseItem,
     tempItems,
     isTempFull,
     isAllFull,

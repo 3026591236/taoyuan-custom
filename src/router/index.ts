@@ -24,7 +24,6 @@ const router = createRouter({
         { path: 'workshop', name: 'workshop', component: () => import('@/views/game/ProcessingView.vue') },
         { path: 'upgrade', name: 'upgrade', component: () => import('@/views/game/ToolUpgradeView.vue') },
         { path: 'inventory', name: 'inventory', component: () => import('@/views/game/InventoryView.vue') },
-        { path: 'quick-use', name: 'quick-use', component: () => import('@/views/game/QuickUseView.vue') },
         { path: 'skills', name: 'skills', component: () => import('@/views/game/SkillView.vue') },
         { path: 'achievement', name: 'achievement', component: () => import('@/views/game/AchievementView.vue') },
         { path: 'wallet', name: 'wallet', component: () => import('@/views/game/WalletView.vue') },
