@@ -388,6 +388,7 @@ const defaultConfig = {
     ]
   },
   updateLogs: [
+    {"date": "2026-07-10", "title": "V2.6.1 奖励与公告防伪校验", "content": "安全巡检并加固潜在注入点：世界妖潮周期奖励不再信任客户端上报贡献，改由服务端云存档计算；突破公告校验角色归属、境界合法性与云档当前境界并加入频率限制；客户端经济日志只允许白名单类型，避免伪造系统奖励审计。"},
     {"date": "2026-07-10", "title": "V2.6.0 五格快捷栏", "content": "快捷使用升级为五格快捷栏：背包中可将最多5个可用物品加入快捷栏，点击游戏内悬浮快捷按钮会弹出五格选择，点选后立即使用，对应用完会自动移出快捷栏。"},
     {"date": "2026-07-10", "title": "V2.5.9 快捷物品设置与一键使用", "content": "调整快捷用药交互：不再把快捷做成第二个背包页；玩家需在背包中选择可用物品设为快捷，游戏内右侧悬浮快捷按钮会直接使用该物品，用完后自动取消并提示重新设置。"},
     {"date": "2026-07-10", "title": "V2.5.8 前端注入与后台奖励拦截", "content": "修复保存管理器手动上传未携带云档加载时间导致异常存档可绕过拦截的问题；后端保存接口始终读取当前云档做进度跳变校验；后台悬浮福利和GM邮件奖励统一清洗限额，阻断通过后台配置注入超大铜钱。"},
@@ -874,8 +875,12 @@ app.post('/api/economy-events', async (req, res) => {
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
     const { eventType, amount, itemId, quantity, quality, source, detail, slot, characterId, playerName } = req.body || {}
-    if (!eventType) return send(res, 400, { error: '事件类型必填' })
-    await recordEconomyEvent(user, req, { eventType, amount, itemId, quantity, quality, source, detail, slot, characterId, playerName })
+    const allowedClientEvents = new Set(['client_note','shop_buy','shop_sell','quest_reward','activity_reward','item_use','craft','farm_harvest','combat_reward'])
+    const cleanType = String(eventType || '').slice(0, 40)
+    if (!cleanType || !allowedClientEvents.has(cleanType)) return send(res, 400, { error: '事件类型无效' })
+    const recentLimit = await pool.execute('SELECT COUNT(*) AS c FROM economy_events WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 10 SECOND)', [user.id])
+    if (Number(recentLimit[0][0]?.c || 0) >= 20) return send(res, 429, { error: '记录过于频繁' })
+    await recordEconomyEvent(user, req, { eventType: cleanType, amount, itemId, quantity, quality, source: `client:${String(source || cleanType).slice(0, 60)}`, detail, slot, characterId, playerName })
     send(res, 200, { ok: true })
   } catch (e) { console.error('economy event post err', e); send(res, 500, { error: '服务器错误' }) }
 })
@@ -1148,37 +1153,67 @@ function worldBossCycleReward(score, globalProgress = 0) {
     }
   }
 }
+function worldBossScoreFromSaveData(d = {}) {
+  const quest = d.quest || d.questStore || (d.stores && d.stores.quest) || {}
+  const combat = d.combat || d.combatStore || (d.stores && d.stores.combat) || {}
+  const claimed = Array.isArray(quest.journeyClaimed) ? quest.journeyClaimed : []
+  const tower = Number(combat.towerHighestFloor || 0) || 0
+  let score = 0
+  // 服务端只信任云存档中已有的长期进度，不再接受客户端直接上报 personalScore。
+  if (claimed.includes('v11_event_hunt')) score = Math.max(score, 20)
+  score = Math.max(score, tower * 2)
+  return Math.min(80, Math.max(0, Math.floor(score)))
+}
+async function computeWorldBossStats(focusUserId = null) {
+  const [rows] = await pool.execute(`SELECT user_id, player_name, data_json, updated_at FROM saves WHERE data_json IS NOT NULL AND data_json <> '' ORDER BY updated_at DESC LIMIT 500`)
+  let progress = 0
+  let participants = 0
+  let focusScore = 0
+  let focusPlayerName = ''
+  const seen = new Set()
+  for (const r of rows) {
+    let d = null
+    try { d = typeof r.data_json === 'string' ? JSON.parse(r.data_json) : r.data_json } catch {}
+    if (!d) continue
+    const score = worldBossScoreFromSaveData(d)
+    const userKey = r.user_id || r.player_name || String(Math.random())
+    if (score > 0 && !seen.has(userKey)) {
+      seen.add(userKey)
+      participants++
+      progress += score
+    }
+    if (focusUserId && r.user_id === focusUserId && score >= focusScore) {
+      const p = d.player || d.playerStore || (d.stores && d.stores.player) || {}
+      focusScore = score
+      focusPlayerName = normalizePlayerName(p.playerName || p.name || r.player_name || '')
+    }
+  }
+  const target = 300
+  const statusText = progress >= target ? '已镇压' : progress >= target * 0.6 ? '决战中' : '进行中'
+  const cycleKey = getWorldBossCycleKey()
+  return { eventId: 'yaochao-v152', cycleKey, title: '世界妖潮', progress, target, participants, percent: Math.min(100, Math.floor(progress / target * 100)), statusText, focusScore, focusPlayerName }
+}
+function isValidRealmName(name) {
+  const n = String(name || '')
+  return REALMS.includes(n) || IMMORTAL_REALMS.some(r => r.name === n)
+}
+async function getLatestSaveSnapshot(userId) {
+  const [rows] = await pool.execute('SELECT s.user_id, s.player_name, s.data_json, s.updated_at, c.name AS character_name FROM saves s LEFT JOIN characters c ON c.id = s.character_id WHERE s.user_id = ? AND s.data_json IS NOT NULL AND s.data_json <> "" ORDER BY s.updated_at DESC LIMIT 1', [userId])
+  if (!rows.length) return null
+  let data = null
+  try { data = typeof rows[0].data_json === 'string' ? JSON.parse(rows[0].data_json) : rows[0].data_json } catch {}
+  if (!data) return null
+  const p = data.player || data.playerStore || (data.stores && data.stores.player) || {}
+  const cu = data.cultivation || data.cultivationStore || (data.stores && data.stores.cultivation) || {}
+  const asc = data.ascension || data.ascensionStore || (data.stores && data.stores.ascension) || {}
+  return { row: rows[0], data, playerName: normalizePlayerName(p.playerName || p.name || rows[0].character_name || rows[0].player_name || ''), realmName: realmNameFromSave(cu, asc), cu, asc }
+}
 
 // --- 活动：世界妖潮（聚合线上存档进度） ---
 app.get('/api/events/world-boss', async (req, res) => {
   try {
-    const [rows] = await pool.execute(`SELECT user_id, player_name, data_json, updated_at FROM saves WHERE data_json IS NOT NULL AND data_json <> '' ORDER BY updated_at DESC LIMIT 500`)
-    let progress = 0
-    let participants = 0
-    const seen = new Set()
-    for (const r of rows) {
-      let d = null
-      try { d = typeof r.data_json === 'string' ? JSON.parse(r.data_json) : r.data_json } catch {}
-      if (!d) continue
-      const quest = d.quest || d.questStore || (d.stores && d.stores.quest) || {}
-      const combat = d.combat || d.combatStore || (d.stores && d.stores.combat) || {}
-      const claimed = Array.isArray(quest.journeyClaimed) ? quest.journeyClaimed : []
-      const tower = Number(combat.towerHighestFloor || 0) || 0
-      let kills = 0
-      // v11_event_hunt 的真实进度在前端由累计战斗指标计算，旧存档不一定持久化明细；这里用登塔层数与领取状态估算全服贡献。
-      if (claimed.includes('v11_event_hunt')) kills = Math.max(kills, 20)
-      kills = Math.max(kills, tower * 2)
-      const userKey = r.user_id || r.player_name || String(Math.random())
-      if (kills > 0 && !seen.has(userKey)) {
-        seen.add(userKey)
-        participants++
-        progress += Math.min(80, kills)
-      }
-    }
-    const target = 300
-    const statusText = progress >= target ? '已镇压' : progress >= target * 0.6 ? '决战中' : '进行中'
-    const cycleKey = getWorldBossCycleKey()
-    send(res, 200, { eventId: 'yaochao-v152', cycleKey, title: '世界妖潮', progress, target, participants, percent: Math.min(100, Math.floor(progress / target * 100)), statusText })
+    const stats = await computeWorldBossStats()
+    send(res, 200, { eventId: stats.eventId, cycleKey: stats.cycleKey, title: stats.title, progress: stats.progress, target: stats.target, participants: stats.participants, percent: stats.percent, statusText: stats.statusText })
   } catch (e) { console.error('world boss err', e); send(res, 500, { error: '服务器错误' }) }
 })
 
@@ -1187,21 +1222,23 @@ app.post('/api/events/world-boss/claim-cycle', async (req, res) => {
   const conn = await pool.getConnection()
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
-    const { playerName, personalScore, globalProgress, globalTarget, participants } = req.body || {}
-    const cycleKey = getWorldBossCycleKey()
-    const score = Math.max(0, Math.floor(Number(personalScore || 0) || 0))
+    const stats = await computeWorldBossStats(user.id)
+    const cycleKey = stats.cycleKey
+    const score = stats.focusScore
     if (score <= 0) return send(res, 400, { error: '本期暂无镇魔贡献' })
     const legacyId = `world-boss-cycle:${cycleKey}`
     await conn.beginTransaction()
     const [exists] = await conn.execute('SELECT id FROM user_mails WHERE user_id = ? AND legacy_mail_id = ? LIMIT 1 FOR UPDATE', [user.id, legacyId])
     if (exists.length) { await conn.rollback(); return send(res, 409, { error: '本期结算邮件已发放，请前往邮箱领取' }) }
-    const calc = worldBossCycleReward(score, Number(globalProgress || 0) || 0)
+    const calc = worldBossCycleReward(score, stats.progress)
+    const cleanRewards = sanitizeRewardPayload(calc.rewards)
     const title = `全服镇魔战报 · ${cycleKey}`
-    const content = `本期全服镇魔结算完成。道友${String(playerName || user.username || '').slice(0, 20) || '无名'}个人贡献 ${score}，评级「${calc.tier}」。全服贡献 ${Number(globalProgress || 0) || 0}/${Number(globalTarget || 300) || 300}，参与人数 ${Number(participants || 0) || 0}。奖励已随信附上。`
+    const content = `本期全服镇魔结算完成。道友${stats.focusPlayerName || user.username || '无名'}个人贡献 ${score}，评级「${calc.tier}」。全服贡献 ${stats.progress}/${stats.target}，参与人数 ${stats.participants}。奖励已随信附上。`
     const id = uuidv4()
-    await conn.execute('INSERT INTO user_mails (id, user_id, legacy_mail_id, title, content, rewards, from_name) VALUES (?, ?, ?, ?, ?, ?, ?)', [id, user.id, legacyId, title, content, JSON.stringify(calc.rewards), '镇魔司'])
+    await conn.execute('INSERT INTO user_mails (id, user_id, legacy_mail_id, title, content, rewards, from_name) VALUES (?, ?, ?, ?, ?, ?, ?)', [id, user.id, legacyId, title, content, JSON.stringify(cleanRewards), '镇魔司'])
     await conn.commit()
-    send(res, 200, { ok: true, mailId: id, cycleKey, tier: calc.tier, rewards: calc.rewards, title, content })
+    await recordEconomyEvent(user, req, { eventType: 'world_boss_cycle_mail', amount: Number(cleanRewards.money || 0), source: 'world_boss', detail: { cycleKey, score, progress: stats.progress, rewards: cleanRewards } })
+    send(res, 200, { ok: true, mailId: id, cycleKey, tier: calc.tier, rewards: cleanRewards, title, content })
   } catch (e) {
     try { await conn.rollback() } catch {}
     console.error('world boss cycle claim err', e)
@@ -1213,14 +1250,23 @@ app.post('/api/events/world-boss/claim-cycle', async (req, res) => {
 app.post('/api/breakthrough-announce', async (req, res) => {
   try {
     const user = await auth(req); if (!user) return send(res, 401, { error: '请先登录' })
-    const { playerName, from, to, realmIndex } = req.body
-    if (!playerName || !to) return send(res, 400, { error: '参数不完整' })
-    const msg = `⚡ 全服公告：${playerName} 渡劫成功，自「${from || '凡人'}」踏入「${to}」！天雷散尽，道号留名。`
+    const { playerName, from, to } = req.body || {}
+    const cleanPlayerName = normalizePlayerName(playerName)
+    const cleanTo = String(to || '').slice(0, 50)
+    const cleanFrom = String(from || '凡人').slice(0, 50)
+    if (!cleanPlayerName || !cleanTo || !isValidRealmName(cleanTo) || (cleanFrom && !isValidRealmName(cleanFrom))) return send(res, 400, { error: '参数不完整或境界无效' })
+    const snap = await getLatestSaveSnapshot(user.id)
+    if (!snap || snap.playerName !== cleanPlayerName) return send(res, 403, { error: '角色信息不匹配' })
+    // 不信任客户端写排行榜境界：排行榜境界只使用当前云档解析值；公告目标境界必须与云档当前境界一致，防伪造高境界。
+    if (snap.realmName !== cleanTo) return send(res, 409, { error: '云端存档境界与公告不一致，请先完成云存档保存。', currentRealm: snap.realmName })
+    const [recent] = await pool.execute('SELECT COUNT(*) AS c FROM world_announcements WHERE type = ? AND message LIKE ? AND created_at > DATE_SUB(NOW(), INTERVAL 10 MINUTE)', ['breakthrough', `%${cleanPlayerName}%`])
+    if (Number(recent[0]?.c || 0) > 0) return send(res, 429, { error: '公告发送过于频繁，请稍后再试' })
+    const msg = `⚡ 全服公告：${cleanPlayerName} 渡劫成功，自「${cleanFrom || '凡人'}」踏入「${cleanTo}」！天雷散尽，道号留名。`
     await pool.execute('INSERT INTO world_announcements (message, type) VALUES (?, ?)', [msg, 'breakthrough'])
     await pool.execute('DELETE FROM world_announcements WHERE id NOT IN (SELECT id FROM (SELECT id FROM world_announcements ORDER BY created_at DESC LIMIT 20) t)')
-    await pool.execute('INSERT INTO leaderboard (user_id, username, player_name, realm_name) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE realm_name=VALUES(realm_name)', [user.id, user.username, playerName, to])
+    await pool.execute('INSERT INTO leaderboard (user_id, username, player_name, realm_name) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name=VALUES(player_name), realm_name=VALUES(realm_name)', [user.id, user.username, snap.playerName, snap.realmName])
     send(res, 200, { ok: true })
-  } catch (e) { send(res, 500, { error: '服务器错误' }) }
+  } catch (e) { console.error('breakthrough announce err', e); send(res, 500, { error: '服务器错误' }) }
 })
 
 app.get('/api/world-announcements', async (req, res) => {
