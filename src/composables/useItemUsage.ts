@@ -23,6 +23,11 @@ export const SPECIAL_USABLE_ITEM_IDS = new Set([
 
 export const isQuickUsableItem = (itemId: string): boolean => SPECIAL_USABLE_ITEM_IDS.has(itemId) || CULTIVATION_PILL_IDS.has(itemId)
 
+const STAMINA_PILL_DAY_LIMIT = 5
+const STAMINA_PILL_COOLDOWN_MS = 10_000
+const staminaPillUsageKey = () => `taoyuan_stamina_pill_usage_${useGameStore().year}_${useGameStore().day}`
+const staminaPillLastUseKey = () => 'taoyuan_stamina_pill_last_use'
+
 export const useItemUsage = () => {
   const inventoryStore = useInventoryStore()
   const playerStore = usePlayerStore()
@@ -62,10 +67,20 @@ export const useItemUsage = () => {
   const useItem = (itemId: string, quality: Quality = 'normal'): boolean => {
     if (CULTIVATION_PILL_IDS.has(itemId)) return cultivationStore.usePill(itemId as any)
     if (itemId === 'stamina_pill') {
+      const now = Date.now()
+      const lastUse = Number(localStorage.getItem(staminaPillLastUseKey()) || 0)
+      if (now - lastUse < STAMINA_PILL_COOLDOWN_MS) { addLog('体力丹药力尚未化开，请稍后再服用。'); return false }
+      const usageKey = staminaPillUsageKey()
+      const usedToday = Number(localStorage.getItem(usageKey) || 0)
+      if (usedToday >= STAMINA_PILL_DAY_LIMIT) { addLog(`今日体力丹最多服用${STAMINA_PILL_DAY_LIMIT}枚，过量服用已无效。`); return false }
+      if (playerStore.stamina >= playerStore.maxStamina + 500) { addLog('体力已经达到体力丹可提升的上限。'); return false }
+      // 先扣物品再生效，避免快捷栏/并发点击导致扣除失败却恢复体力。
+      if (!inventoryStore.removeItem(itemId, 1, quality)) return false
       const gained = playerStore.restoreStaminaOvercap(100, 500)
       if (gained <= 0) { addLog('体力已经达到体力丹可提升的上限。'); return false }
-      if (!inventoryStore.removeItem(itemId, 1, quality)) return false
-      addLog(`服用了体力丹，体力+${gained}（最多可临时超过上限500点）。`)
+      localStorage.setItem(staminaPillLastUseKey(), String(now))
+      localStorage.setItem(usageKey, String(usedToday + 1))
+      addLog(`服用了体力丹，体力+${gained}（今日${usedToday + 1}/${STAMINA_PILL_DAY_LIMIT}，最多可临时超过上限500点）。`)
       return true
     }
     if (itemId === 'time_stasis_pill') {

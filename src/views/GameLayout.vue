@@ -764,6 +764,7 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
     if (backgroundMeditateTimer != null) return
     backgroundMeditateTimer = window.setInterval(() => {
       if (!gameStore.isGameStarted || !cultivationStore.autoMeditateEnabled) return
+      if (isTimeFrozen.value) return
       const changed = cultivationStore.runAutoMeditateTick()
       if (changed || !cultivationStore.autoMeditateEnabled) void autoSaveCurrent()
     }, 3000)
@@ -1035,7 +1036,7 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
 
   const npcStore = useNpcStore()
 
-  const { startClock, stopClock, pauseClock, resumeClock } = useGameClock()
+  const { startClock, stopClock, pauseClock, resumeClock, isTimeFrozen } = useGameClock()
 
   /** 移动端地图菜单 */
   const showMobileMap = ref(false)

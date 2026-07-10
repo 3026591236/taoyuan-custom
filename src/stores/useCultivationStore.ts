@@ -664,11 +664,23 @@ export const useCultivationStore = defineStore('cultivation', () => {
 
   const runAutoMeditateTick = () => {
     if (!autoMeditateEnabled.value) return false
+    const game = useGameStore()
+    if (game.isPastBedtime) {
+      autoMeditateEnabled.value = false
+      addLog('后台自动打坐调息已暂停：已到凌晨2点，不能继续无休止修炼。')
+      return false
+    }
     const ok = meditate()
     if (!ok) {
       autoMeditateEnabled.value = false
       addLog('后台自动打坐调息已暂停：体力不足或当前无法继续打坐。')
       return false
+    }
+    const time = game.advanceTime(0.05)
+    if (time.message) addLog(time.message)
+    if (time.passedOut) {
+      autoMeditateEnabled.value = false
+      addLog('后台自动打坐调息已暂停：已经累到昏倒。')
     }
     autoMeditateCount.value += 1
     return true
