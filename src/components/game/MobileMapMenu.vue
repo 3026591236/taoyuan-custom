@@ -8,7 +8,26 @@
         >
           <X :size="14" />
         </button>
-        <p class="text-accent text-sm text-center mb-3 tracking-widest">修仙地图</p>
+        <p class="text-accent text-sm text-center mb-3 tracking-widest">{{ isImmortalMap ? '仙界地图' : '修仙地图' }}</p>
+
+        <template v-if="isImmortalMap">
+          <div class="map-path map-path-cultivation">── 云阙仙域 ──</div>
+          <div class="map-area map-area-immortal">
+            <p class="map-area-title map-cultivation-title">仙界</p>
+            <div class="map-area-grid">
+              <button v-for="z in immortalMapZones" :key="z.key" class="map-loc map-loc-immortal" :disabled="navBusy" :class="{ 'map-loc-active': route.query.tab === z.key || (!route.query.tab && z.key === 'home') }" @click="goImmortalZone(z.key)">
+                <span class="immortal-map-icon">{{ z.icon }}</span>
+                <span>{{ z.label }}</span>
+              </button>
+              <button class="map-loc map-loc-return" :disabled="navBusy" @click="returnMortalWorld">
+                <Sparkles :size="18" />
+                <span>返回下界</span>
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <template v-else>
 
         <!-- 田庄 -->
         <div class="map-area">
@@ -183,6 +202,7 @@
             </button>
           </div>
         </div>
+        </template>
       </div>
     </div>
   </Transition>
@@ -190,7 +210,7 @@
 
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
-  import { useRouter } from 'vue-router'
+  import { useRoute, useRouter } from 'vue-router'
   import { X, Gift, Mail, Trophy, Swords, Sparkles, Flame, Cog, Store, FlaskConical, Mountain, Sword, ScrollText, CircleDot, PawPrint, CalendarDays, MessageCircle } from 'lucide-vue-next'
   import { TABS, navigateToPanel } from '@/composables/useNavigation'
   import { useAscensionStore } from '@/stores/useAscensionStore'
@@ -198,8 +218,24 @@
 
   const props = defineProps<{ open: boolean; current: string; checkinChecked?: boolean; checkinBusy?: boolean; unclaimedMailCount?: number }>()
   const router = useRouter()
+  const route = useRoute()
   const ascensionStore = useAscensionStore()
   const navBusy = ref(false)
+  const isImmortalMap = computed(() => route.path.includes('/game/immortal-world'))
+  const immortalMapZones = [
+    { key: 'home', label: '仙界大厅', icon: '🏯' },
+    { key: 'realm', label: '仙阶突破', icon: '🌌' },
+    { key: 'cave', label: '仙界洞天', icon: '🏔️' },
+    { key: 'market', label: '仙市兑换', icon: '💎' },
+    { key: 'trial', label: '仙域试炼', icon: '⚔️' },
+    { key: 'arena', label: '仙擂问道', icon: '🏆' },
+    { key: 'fate', label: '命盘天命', icon: '🔮' },
+    { key: 'rift', label: '混沌裂隙', icon: '🕳️' },
+    { key: 'office', label: '仙职仙盟', icon: '📜' },
+    { key: 'story', label: '仙界主线', icon: '📖' },
+    { key: 'arts', label: '仙术演武', icon: '✨' },
+    { key: 'echo', label: '凡界回响', icon: '🌾' }
+  ]
   const emit = defineEmits<{ close: []; checkin: []; openMail: []; openLeaderboard: []; openCombat: []; openForge: []; openSect: [] }>()
 
   const tabMap = computed(() => {
@@ -228,6 +264,12 @@
 
   const go = (key: PanelKey) => {
     afterCloseNavigate(() => navigateToPanel(key))
+  }
+  const goImmortalZone = (tab: string) => {
+    afterCloseNavigate(() => { void router.push({ path: '/game/immortal-world', query: { ...route.query, tab } }) })
+  }
+  const returnMortalWorld = () => {
+    afterCloseNavigate(() => { ascensionStore.returnToWorld(); void router.push('/game/cultivation') })
   }
   const goCultivationMarket = () => {
     afterCloseNavigate(() => { void router.push({ path: '/game/shop', query: { market: 'cultivation' } }) })
@@ -335,6 +377,22 @@
     background: var(--color-accent);
     border-color: var(--color-accent);
   }
+
+  .map-area-immortal {
+    border-color: rgba(255, 226, 138, 0.42);
+    background: radial-gradient(circle at 50% 0%, rgba(255, 226, 138, 0.12), transparent 60%), rgba(0, 0, 0, 0.12);
+  }
+  .map-loc-immortal {
+    min-width: 70px;
+    border-color: rgba(255, 226, 138, 0.26);
+    background: linear-gradient(135deg, rgba(255, 226, 138, 0.09), rgba(116, 203, 255, 0.06));
+  }
+  .map-loc-return {
+    min-width: 70px;
+    color: #ffe28a;
+    border-color: rgba(255, 226, 138, 0.5);
+  }
+  .immortal-map-icon { font-size: 18px; line-height: 1; }
 
   .daily-checkin-loc {
     color: var(--color-accent);

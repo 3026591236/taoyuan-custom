@@ -8,17 +8,28 @@
     <div class="flex items-center justify-between mb-3 relative z-10">
       <div>
         <h3 class="text-accent text-sm">仙界 · 云阙天门 <span v-if="ascensionStore.adminPreviewMode" class="preview-badge">ADMIN 预览</span></h3>
-        <p class="text-[10px] text-muted">飞升后人物、技能、战斗反馈切换为仙界体系</p>
+        <p class="text-[10px] text-muted">{{ sectionTitle }} · 通过仙界地图切换区域</p>
         <p v-if="ascensionStore.adminPreviewMode" class="text-[10px] text-warning mt-1">管理员预览数据仅用于检查界面/功能完整性，不写入正式存档。</p>
       </div>
-      <div class="flex items-center gap-2"><button v-if="ascensionStore.adminPreviewMode" class="text-xs text-warning hover:text-accent" @click="exitAdminPreview">退出预览</button><button class="text-xs text-muted hover:text-accent" @click="returnToWorld">返回下界</button></div>
+      <div class="flex items-center gap-2"><button v-if="ascensionStore.adminPreviewMode" class="text-xs text-warning hover:text-accent" @click="exitAdminPreview">退出预览</button><button class="text-xs text-muted hover:text-accent" @click="returnToWorld">返回凡界</button></div>
     </div>
 
-    <div class="immortal-hero relative z-10 mb-4">
-      <div class="hero-avatar" :key="ascensionStore.visualPulse">
-        <div class="halo"></div>
-        <div class="immortal-body">仙</div>
-        <div class="sword-light"></div>
+    <div v-if="isTab('home')" class="immortal-hero relative z-10 mb-4">
+      <div class="hero-avatar immortal-portrait" :key="ascensionStore.visualPulse">
+        <div class="portrait-aura aura-back"></div>
+        <div class="halo halo-outer"></div>
+        <div class="halo halo-inner"></div>
+        <div class="immortal-crown">✦</div>
+        <div class="immortal-head"></div>
+        <div class="immortal-hair hair-left"></div>
+        <div class="immortal-hair hair-right"></div>
+        <div class="immortal-robe"><span class="robe-core">仙</span><span class="robe-sash"></span></div>
+        <div class="immortal-sleeve sleeve-left"></div>
+        <div class="immortal-sleeve sleeve-right"></div>
+        <div class="sword-light sword-main"></div>
+        <div class="sword-light sword-echo"></div>
+        <div class="portrait-cloud cloud-left"></div>
+        <div class="portrait-cloud cloud-right"></div>
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-xl text-accent">{{ ascensionStore.immortalTitle || '初入仙门' }} · {{ ascensionStore.immortalRank }}</p>
@@ -33,7 +44,15 @@
       </div>
     </div>
 
-    <div class="border border-amber-200/20 rounded-xs p-3 mb-4 bg-black/10 relative z-10">
+    <div v-if="isTab('home')" class="immortal-zone-grid relative z-10 mb-4">
+      <button v-for="zone in IMMORTAL_ZONES" :key="zone.key" class="zone-card" @click="switchTab(zone.key)">
+        <span class="zone-icon">{{ zone.icon }}</span>
+        <span class="text-sm text-accent">{{ zone.name }}</span>
+        <span class="text-[10px] text-muted leading-relaxed">{{ zone.desc }}</span>
+      </button>
+    </div>
+
+    <div v-if="isTab('home')" class="border border-amber-200/20 rounded-xs p-3 mb-4 bg-black/10 relative z-10">
       <div class="flex items-center justify-between mb-2">
         <p class="text-xs text-accent">仙体显化</p>
         <span class="text-[10px] text-muted">飞升后角色不再是凡身立绘</span>
@@ -46,7 +65,7 @@
       </div>
     </div>
 
-    <div class="mb-4 relative z-10">
+    <div v-if="isTab('arts')" class="mb-4 relative z-10">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙术特效</p><span class="text-[10px] text-muted">点击切换战斗表现</span></div>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="art in IMMORTAL_ARTS" :key="art.id" class="art-card" :class="ascensionStore.lastArtId === art.id ? 'active' : ''" @click="ascensionStore.castImmortalArt(art.id)">
@@ -55,11 +74,11 @@
       </div>
     </div>
 
-    <div class="battle-log relative z-10 mb-4" :key="`battle-${ascensionStore.visualPulse}`">
+    <div v-if="isTab('arts')" class="battle-log relative z-10 mb-4" :key="`battle-${ascensionStore.visualPulse}`">
       <p class="text-xs text-accent mb-1">仙术反馈</p><p class="text-xs leading-relaxed">{{ ascensionStore.lastBattleText }}</p>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('story')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙界主线</p><span class="text-[10px] text-muted">章节 {{ ascensionStore.storyProgress }}/{{ IMMORTAL_STORY_CHAPTERS.length }}</span></div>
       <div class="space-y-2">
         <div v-for="chapter in IMMORTAL_STORY_CHAPTERS" :key="chapter.id" class="story-card" :class="ascensionStore.storyClaimed[chapter.id] ? 'done' : ''">
@@ -80,7 +99,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('fate')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">道统传承</p><span class="text-[10px] text-muted">当前 {{ ascensionStore.lineageInfo.name }}</span></div>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="lineage in IMMORTAL_LINEAGES" :key="lineage.id" class="office-card lineage-card" :class="ascensionStore.immortalLineage === lineage.id ? 'active' : ''" @click="ascensionStore.chooseLineage(lineage.id)">
@@ -91,7 +110,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('fate')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙界天命</p><span class="text-[10px] text-muted">天命积分 +{{ ascensionStore.mandateProgress }}</span></div>
       <div class="grid grid-cols-1 gap-2">
         <div v-for="mandate in IMMORTAL_MANDATES" :key="mandate.id" class="mandate-card">
@@ -112,7 +131,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('office')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙盟协作</p><span class="text-[10px] text-muted">协作声望 +{{ ascensionStore.allianceScore }}</span></div>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="ally in IMMORTAL_ALLIANCES" :key="ally.id" class="alliance-card" @click="ascensionStore.coordinateAlliance(ally.id)">
@@ -124,7 +143,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('rift')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">混沌裂隙</p><span class="text-[10px] text-muted">镇压次数 +{{ ascensionStore.riftScore }}</span></div>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="rift in CHAOS_RIFTS" :key="rift.id" class="rift-card" @click="ascensionStore.challengeChaosRift(rift.id)">
@@ -137,7 +156,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('fate')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙缘命盘</p><span class="text-[10px] text-muted">命盘战力 +{{ ascensionStore.fatePlatePower }}</span></div>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="plate in FATE_PLATES" :key="plate.id" class="fate-card" @click="ascensionStore.upgradeFatePlate(plate.id)">
@@ -149,7 +168,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('cave')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙界洞天经营</p><span class="text-[10px] text-muted">稳定 {{ ascensionStore.caveHeavenStability }}% · 战力倍率 {{ Math.round(ascensionStore.caveHeavenStabilityRate * 100) }}%</span></div>
       <div class="grid grid-cols-2 gap-2 mb-2">
         <button v-for="node in IMMORTAL_CAVE_NODES" :key="node.id" class="body-card market-card" @click="ascensionStore.upgradeCaveNode(node.id)">
@@ -162,7 +181,7 @@
       <button class="btn w-full justify-center" :disabled="!ascensionStore.caveHeavenNeedsMaintenance" @click="ascensionStore.maintainCaveHeaven">维护洞天（功德{{ ascensionStore.caveHeavenMaintenanceCost.merit }} / 仙玉{{ ascensionStore.caveHeavenMaintenanceCost.jade }} / 法则{{ ascensionStore.caveHeavenMaintenanceCost.rule }}）</button>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('realm')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙阶突破</p><span class="text-[10px] text-muted">仙阶战力 +{{ ascensionStore.immortalRealmPowerBonus }}</span></div>
       <div class="realm-card">
         <div class="min-w-0">
@@ -175,7 +194,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('market')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙市兑换</p><span class="text-[10px] text-muted">资源转化，不复制凡界商店</span></div>
       <div class="grid grid-cols-2 gap-2">
         <div v-for="goods in IMMORTAL_MARKET" :key="goods.id" class="body-card market-card">
@@ -188,7 +207,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('trial')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙域试炼</p><span class="text-[10px] text-muted">奖励功德 / 仙玉 / 法则碎片</span></div>
       <div class="grid grid-cols-1 gap-2">
         <div v-for="trial in IMMORTAL_TRIALS" :key="trial.id" class="trial-card">
@@ -203,7 +222,7 @@
     </div>
 
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('arena')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙擂问道 · PK</p><span class="text-[10px] text-muted">{{ ascensionStore.pkRecord }}</span></div>
       <div class="grid grid-cols-1 gap-2">
         <div v-for="rival in IMMORTAL_RIVALS" :key="rival.id" class="trial-card pk-card">
@@ -217,7 +236,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('arena')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙擂赛季</p><span class="text-[10px] text-muted">积分 {{ ascensionStore.seasonScore }}</span></div>
       <div class="grid grid-cols-3 gap-2">
         <div v-for="reward in IMMORTAL_SEASON_REWARDS" :key="reward.id" class="body-card season-card" :class="ascensionStore.seasonClaimed[reward.id] ? 'claimed' : ''">
@@ -229,7 +248,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('office')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙职事务</p><span class="text-[10px] text-muted">同仙职完成奖励更高</span></div>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="duty in IMMORTAL_DUTIES" :key="duty.id" class="duty-card" :class="ascensionStore.dutyDone[duty.id] ? 'done' : ''" @click="ascensionStore.completeDuty(duty.id)">
@@ -239,7 +258,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('cave')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">洞天建设</p><span class="text-[10px] text-muted">洞天战力 +{{ ascensionStore.cavePower }}</span></div>
       <div class="grid grid-cols-3 gap-2">
         <div v-for="node in IMMORTAL_CAVE_NODES" :key="node.id" class="body-card cave-card">
@@ -250,7 +269,7 @@
       </div>
     </div>
 
-    <div class="relative z-10 mb-4">
+    <div v-if="isTab('echo')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">凡界回响</p><span class="text-[10px] text-muted">飞升后反哺旧系统</span></div>
       <div class="grid grid-cols-3 gap-2">
         <div v-for="echo in MORTAL_ECHOES" :key="echo.id" class="body-card echo-card">
@@ -262,7 +281,7 @@
       </div>
     </div>
 
-    <div class="relative z-10">
+    <div v-if="isTab('office')" class="relative z-10">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙职</p><span class="text-[10px] text-muted">仙界身份影响方向</span></div>
       <div class="grid grid-cols-2 gap-2">
         <button v-for="office in IMMORTAL_OFFICES" :key="office.id" class="office-card" :class="ascensionStore.immortalOffice === office.id ? 'active' : ''" @click="ascensionStore.chooseOffice(office.id)">
@@ -273,12 +292,42 @@
   </div>
 </template>
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAscensionStore, IMMORTAL_ARTS, IMMORTAL_TRIALS, IMMORTAL_OFFICES, IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS } from '@/stores/useAscensionStore'
 import { addLog } from '@/composables/useGameLog'
 import { computed } from 'vue'
-const router = useRouter(); const ascensionStore = useAscensionStore()
+const router = useRouter(); const route = useRoute(); const ascensionStore = useAscensionStore()
 const officeInfo = computed(() => ascensionStore.officeInfo)
+const immortalTab = computed(() => String(route.query.tab || 'home'))
+const isTab = (...keys: string[]) => keys.includes(immortalTab.value)
+const switchTab = (tab: string) => { void router.push({ path: '/game/immortal-world', query: { ...route.query, tab } }) }
+const sectionTitle = computed(() => ({
+  home: '仙界大厅',
+  arts: '仙术演武',
+  story: '仙界主线',
+  realm: '仙阶突破',
+  cave: '仙界洞天',
+  market: '仙市兑换',
+  trial: '仙域试炼',
+  arena: '仙擂问道',
+  office: '仙职仙盟',
+  fate: '命盘天命',
+  rift: '混沌裂隙',
+  echo: '凡界回响'
+}[immortalTab.value] || '仙界大厅'))
+const IMMORTAL_ZONES = [
+  { key: 'realm', icon: '🌌', name: '仙阶突破', desc: '真仙、玄仙、地仙等仙阶成长' },
+  { key: 'cave', icon: '🏯', name: '仙界洞天', desc: '仙域经营、洞天维护与建设' },
+  { key: 'market', icon: '💎', name: '仙市兑换', desc: '功德、仙玉、法则资源转化' },
+  { key: 'trial', icon: '⚔️', name: '仙域试炼', desc: '挑战仙域敌人与获取材料' },
+  { key: 'arena', icon: '🏆', name: '仙擂问道', desc: '斗法、连胜与赛季奖励' },
+  { key: 'fate', icon: '🔮', name: '命盘天命', desc: '命盘、道统与天命抉择' },
+  { key: 'rift', icon: '🕳️', name: '混沌裂隙', desc: '镇压裂隙获取高阶奖励' },
+  { key: 'office', icon: '📜', name: '仙职仙盟', desc: '仙职事务与仙盟协作' },
+  { key: 'story', icon: '📖', name: '仙界主线', desc: '云阙天门后的主线章节' },
+  { key: 'arts', icon: '✨', name: '仙术演武', desc: '切换仙术表现与战斗反馈' },
+  { key: 'echo', icon: '🌾', name: '凡界回响', desc: '飞升后反哺凡界系统' }
+]
 const exitAdminPreview = () => {
   ascensionStore.exitAdminPreview()
   router.replace('/')
@@ -421,6 +470,11 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 @keyframes celestialSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes twinkle{from{opacity:.45;filter:blur(.2px)}to{opacity:1;filter:blur(0)}}
 @media (prefers-reduced-motion:reduce){.immortal-celestial-page::before,.celestial-orbit-ring,.celestial-starfield{animation:none}.immortal-celestial-page *{transition:none!important}}
+
+
+.immortal-zone-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.zone-card{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;min-height:92px;border:1px solid rgba(255,226,138,.22);border-radius:4px;padding:10px;background:linear-gradient(135deg,rgba(255,226,138,.09),rgba(116,203,255,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.06);transition:.16s}.zone-card:hover{border-color:rgba(255,226,138,.58);transform:translateY(-1px);box-shadow:0 0 18px rgba(255,226,138,.13)}.zone-icon{font-size:22px;filter:drop-shadow(0 0 8px rgba(255,226,138,.35))}
+.immortal-portrait{width:116px;height:148px;overflow:visible}.portrait-aura{position:absolute;inset:8px;border-radius:999px;background:radial-gradient(circle,rgba(255,245,179,.36),rgba(123,214,255,.12) 48%,transparent 72%);filter:blur(4px);animation:pulse 2.2s ease-in-out infinite}.halo-outer{width:106px;height:106px;border-color:rgba(255,230,151,.85);animation:celestialSpin 12s linear infinite}.halo-inner{width:78px;height:78px;border-style:dashed;border-color:rgba(144,224,255,.7);animation:celestialSpin 8s linear infinite reverse}.immortal-crown{position:absolute;top:14px;z-index:5;color:#fff0a8;font-size:20px;text-shadow:0 0 12px rgba(255,226,138,.9)}.immortal-head{position:absolute;top:36px;z-index:4;width:24px;height:28px;border-radius:50% 50% 45% 45%;background:linear-gradient(180deg,#fff6d2,#ffd7b3);box-shadow:0 0 14px rgba(255,240,170,.55)}.immortal-hair{position:absolute;top:32px;z-index:3;width:24px;height:70px;background:linear-gradient(180deg,#f9fbff,#b6dbff 70%,transparent);filter:drop-shadow(0 0 8px rgba(157,220,255,.45))}.hair-left{left:37px;border-radius:60% 20% 70% 30%;transform:rotate(10deg)}.hair-right{right:37px;border-radius:20% 60% 30% 70%;transform:rotate(-10deg)}.immortal-robe{position:absolute;top:58px;z-index:4;width:54px;height:72px;display:grid;place-items:center;color:#321c06;font-weight:900;background:linear-gradient(180deg,#fff7bf 0%,#74dcff 46%,#c899ff 100%);clip-path:polygon(50% 0,86% 22%,96% 78%,50% 100%,4% 78%,14% 22%);box-shadow:0 0 22px rgba(255,255,255,.65),inset 0 0 15px rgba(255,226,138,.35)}.robe-core{font-size:20px;text-shadow:0 0 8px rgba(255,255,255,.6)}.robe-sash{position:absolute;width:70px;height:8px;background:linear-gradient(90deg,transparent,#fff0a8,#87e7ff,transparent);transform:rotate(-18deg);box-shadow:0 0 10px rgba(255,226,138,.7)}.immortal-sleeve{position:absolute;top:70px;z-index:2;width:44px;height:44px;background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(117,216,255,.24));filter:drop-shadow(0 0 10px rgba(151,226,255,.5))}.sleeve-left{left:17px;clip-path:polygon(100% 0,0 45%,85% 100%)}.sleeve-right{right:17px;clip-path:polygon(0 0,100% 45%,15% 100%)}.sword-main{right:5px;top:10px;height:118px;width:5px}.sword-echo{left:12px;top:26px;height:92px;width:3px;transform:rotate(-28deg);opacity:.55}.portrait-cloud{position:absolute;bottom:10px;width:52px;height:18px;border-radius:999px;background:rgba(255,255,255,.18);filter:blur(.2px);box-shadow:0 0 12px rgba(255,255,255,.14)}.cloud-left{left:2px}.cloud-right{right:0}
+@media (max-width:420px){.immortal-zone-grid{grid-template-columns:1fr}.immortal-hero{align-items:flex-start}.immortal-portrait{width:98px;height:132px;transform:scale(.92);transform-origin:left center}}
 
 .preview-badge{display:inline-flex;margin-left:6px;padding:1px 6px;border:1px solid rgba(255,226,138,.45);border-radius:999px;font-size:10px;color:#ffe28a;background:rgba(255,226,138,.12);box-shadow:0 0 12px rgba(255,226,138,.18)}
 </style>
