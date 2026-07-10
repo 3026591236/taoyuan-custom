@@ -23,9 +23,12 @@ export const SPECIAL_USABLE_ITEM_IDS = new Set([
 
 export const isQuickUsableItem = (itemId: string): boolean => SPECIAL_USABLE_ITEM_IDS.has(itemId) || CULTIVATION_PILL_IDS.has(itemId)
 
-const STAMINA_PILL_DAY_LIMIT = 5
+const STAMINA_PILL_REAL_DAY_LIMIT = 5
+const TIME_STASIS_PILL_REAL_DAY_LIMIT = 3
 const STAMINA_PILL_COOLDOWN_MS = 10_000
-const staminaPillUsageKey = () => `taoyuan_stamina_pill_usage_${useGameStore().year}_${useGameStore().day}`
+const realDateKey = () => new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' })
+const staminaPillUsageKey = () => `taoyuan_stamina_pill_usage_real_${realDateKey()}`
+const timeStasisPillUsageKey = () => `taoyuan_time_stasis_pill_usage_real_${realDateKey()}`
 const staminaPillLastUseKey = () => 'taoyuan_stamina_pill_last_use'
 
 export const useItemUsage = () => {
@@ -65,15 +68,16 @@ export const useItemUsage = () => {
   }
 
   const useItem = (itemId: string, quality: Quality = 'normal'): boolean => {
+    const isPill = CULTIVATION_PILL_IDS.has(itemId) || itemId === 'stamina_pill' || itemId === 'time_stasis_pill'
+    if (isPill && gameStore.isPastBedtime) { addLog('已经凌晨2点了，不能继续服用丹药，请立刻休息。'); return false }
     if (CULTIVATION_PILL_IDS.has(itemId)) return cultivationStore.usePill(itemId as any)
     if (itemId === 'stamina_pill') {
-      if (gameStore.isPastBedtime) { addLog('已经凌晨2点了，强撑着服药也无法继续行动，请先休息。'); return false }
       const now = Date.now()
       const lastUse = Number(localStorage.getItem(staminaPillLastUseKey()) || 0)
       if (now - lastUse < STAMINA_PILL_COOLDOWN_MS) { addLog('体力丹药力尚未化开，请稍后再服用。'); return false }
       const usageKey = staminaPillUsageKey()
       const usedToday = Number(localStorage.getItem(usageKey) || 0)
-      if (usedToday >= STAMINA_PILL_DAY_LIMIT) { addLog(`今日体力丹最多服用${STAMINA_PILL_DAY_LIMIT}枚，过量服用已无效。`); return false }
+      if (usedToday >= STAMINA_PILL_REAL_DAY_LIMIT) { addLog(`今日（现实时间）体力丹最多服用${STAMINA_PILL_REAL_DAY_LIMIT}枚，过量服用已无效。`); return false }
       if (playerStore.stamina >= playerStore.maxStamina + 500) { addLog('体力已经达到体力丹可提升的上限。'); return false }
       // 先扣物品再生效，避免快捷栏/并发点击导致扣除失败却恢复体力。
       if (!inventoryStore.removeItem(itemId, 1, quality)) return false
@@ -82,13 +86,17 @@ export const useItemUsage = () => {
       const time = gameStore.advanceTime(0.05)
       localStorage.setItem(staminaPillLastUseKey(), String(now))
       localStorage.setItem(usageKey, String(usedToday + 1))
-      addLog(`服用了体力丹，体力+${gained}（今日${usedToday + 1}/${STAMINA_PILL_DAY_LIMIT}，最多可临时超过上限500点），炼化药力也耗去片刻。${time.message ? ` ${time.message}` : ''}`)
+      addLog(`服用了体力丹，体力+${gained}（今日现实${usedToday + 1}/${STAMINA_PILL_REAL_DAY_LIMIT}，最多可临时超过上限500点），炼化药力也耗去片刻。${time.message ? ` ${time.message}` : ''}`)
       return true
     }
     if (itemId === 'time_stasis_pill') {
+      const usageKey = timeStasisPillUsageKey()
+      const usedToday = Number(localStorage.getItem(usageKey) || 0)
+      if (usedToday >= TIME_STASIS_PILL_REAL_DAY_LIMIT) { addLog(`今日（现实时间）时间禁锢丹最多服用${TIME_STASIS_PILL_REAL_DAY_LIMIT}枚。`); return false }
       if (!inventoryStore.removeItem(itemId, 1, quality)) return false
-      useGameClock().freezeGameTime(3)
-      addLog('服用了时间禁锢丹，游戏时间将在现实时间3小时内暂停流逝。')
+      useGameClock().freezeGameTime(0.5)
+      localStorage.setItem(usageKey, String(usedToday + 1))
+      addLog(`服用了时间禁锢丹，游戏时间将在现实时间30分钟内暂停流逝（今日现实${usedToday + 1}/${TIME_STASIS_PILL_REAL_DAY_LIMIT}）。`)
       return true
     }
     if (itemId === 'rain_totem') {
