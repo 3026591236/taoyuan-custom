@@ -92,6 +92,23 @@ const MISC_ITEMS: ItemDef[] = [
   },
 
   {
+    id: 'stamina_pill',
+    name: '体力丹',
+    category: 'food',
+    description: '浓缩精气的丹药，使用后体力+100，可临时超过体力上限，额外体力最多+500。',
+    sellPrice: 3000,
+    edible: false
+  },
+  {
+    id: 'time_stasis_pill',
+    name: '时间禁锢丹',
+    category: 'food',
+    description: '以时砂封炼的稀有丹药，使用后暂停游戏时间流逝3小时现实时间。',
+    sellPrice: 12000,
+    edible: false
+  },
+
+  {
     id: 'soul_mending_pill',
     name: '养魂丹',
     category: 'food',

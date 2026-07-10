@@ -1449,6 +1449,8 @@
     wood_scripture: '功法·长生诀',
     thunder_scripture: '功法·雷诀',
     void_scripture: '功法·归元功',
+    stamina_pill: '体力+100',
+    time_stasis_pill: '时间暂停3小时',
     soul_mending_pill: '疗元神伤势',
     nirvana_soul_pill: '复元神掉级',
     cultivation_boost_pill: '元婴以下·修为',

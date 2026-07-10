@@ -33,6 +33,8 @@ export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
   { itemId: 'suoyang', name: '锁阳', price: 360, description: '炼精与化神丹重要辅药' },
   { itemId: 'shenqu', name: '神曲', price: 680, description: '调和高阶丹性的稀有药材' },
   { itemId: 'mana_recovery_pill', name: '回灵丹', price: 520, description: '回复灵力的小丹，适合修炼前备药' },
+  { itemId: 'stamina_pill', name: '体力丹', price: 80, description: '灵石兑换，体力+100，可临时超过上限，额外体力最多+500', currency: 'spirit_stone' },
+  { itemId: 'time_stasis_pill', name: '时间禁锢丹', price: 600, description: '灵石兑换，暂停游戏时间流逝3小时现实时间', currency: 'spirit_stone' },
   { itemId: 'qi_gathering_pill', name: '聚气丹', price: 980, description: '辅助聚气修行，初期修士常备' },
   { itemId: 'foundation_pill', name: '筑基丹', price: 3600, description: '辅助突破的珍贵丹药' },
   { itemId: 'storage_talisman', name: '纳物符', price: 12, description: '灵石兑换，使用后背包永久+1格，可突破普通上限', currency: 'spirit_stone' },

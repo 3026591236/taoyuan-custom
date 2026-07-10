@@ -772,13 +772,8 @@
   import { ref, computed, watch } from 'vue'
   import { Apple, Archive, ArrowDown01, ArrowRight, BookMarked, Filter, Lock, LockOpen, Package, Trash2, X, Zap } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
-  import { useCookingStore } from '@/stores/useCookingStore'
-  import { useGameStore } from '@/stores/useGameStore'
   import { useInventoryStore } from '@/stores/useInventoryStore'
-  import { usePlayerStore } from '@/stores/usePlayerStore'
-  import { useCultivationStore } from '@/stores/useCultivationStore'
   import { useSettingsStore } from '@/stores/useSettingsStore'
-  import { useSkillStore } from '@/stores/useSkillStore'
   import { getItemById, getItemSource } from '@/data'
   import { getRecipeById } from '@/data/recipes'
   import { getWeaponById, getWeaponDisplayName, getWeaponSellPrice, getEnchantmentById, WEAPON_TYPE_NAMES } from '@/data/weapons'
@@ -787,14 +782,11 @@
   import { getShoeById } from '@/data/shoes'
   import { QUALITY_NAMES } from '@/composables/useFarmActions'
   import { addLog } from '@/composables/useGameLog'
+  import { useItemUsage, CULTIVATION_PILL_IDS, SPECIAL_USABLE_ITEM_IDS } from '@/composables/useItemUsage'
   import type { Quality, RingEffectType, ItemCategory } from '@/types'
 
   const inventoryStore = useInventoryStore()
-  const playerStore = usePlayerStore()
-  const cultivationStore = useCultivationStore()
-  const skillStore = useSkillStore()
-  const gameStore = useGameStore()
-  const cookingStore = useCookingStore()
+  const itemUsage = useItemUsage()
   const settingsStore = useSettingsStore()
 
   // === 页签 ===
@@ -1273,129 +1265,21 @@
   }
 
   const handleEat = (itemId: string, quality: Quality) => {
-    const def = getItemById(itemId)
-    if (!def?.edible || !def.staminaRestore) return
-    const staminaFull = playerStore.stamina >= playerStore.maxStamina
-    const hpFull = playerStore.hp >= playerStore.getMaxHp()
-    if (staminaFull && hpFull) {
-      addLog('体力和生命值都已满，不需要食用。')
-      return
-    }
-
-    // 烹饪品走 cookingStore.eat()，以正确应用buff、厨房加成等
-    if (itemId.startsWith('food_')) {
-      const recipeId = itemId.slice(5) // 去掉 'food_' 前缀
-      const result = cookingStore.eat(recipeId, quality)
-      if (result.success) {
-        addLog(result.message)
-      } else {
-        addLog(result.message)
-      }
-      // 物品消耗完则关闭弹窗
-      if (!inventoryStore.items.find(i => i.itemId === itemId && i.quality === quality)) {
-        activeItemKey.value = null
-      }
-      return
-    }
-
-    if (!inventoryStore.removeItem(itemId, 1, quality)) return
-    // 炼金师专精：食物恢复+50%
-    const alchemistBonus = skillStore.getSkill('foraging').perk10 === 'alchemist' ? 1.5 : 1.0
-    const staminaRestore = Math.floor(def.staminaRestore * alchemistBonus)
-    playerStore.restoreStamina(staminaRestore)
-    let msg = `食用了${def.name}，恢复${staminaRestore}体力`
-    if (def.healthRestore) {
-      const healthRestore = Math.floor(def.healthRestore * alchemistBonus)
-      playerStore.restoreHealth(healthRestore)
-      msg += `、${healthRestore}生命值`
-    }
-    msg += '。'
-    addLog(msg)
-    // 物品消耗完则关闭弹窗
-    if (!inventoryStore.items.find(i => i.itemId === itemId && i.quality === quality)) {
-      activeItemKey.value = null
-    }
+    itemUsage.eatItem(itemId, quality)
+    if (!inventoryStore.items.find(i => i.itemId === itemId && i.quality === quality)) activeItemKey.value = null
   }
 
   /** 可使用的特殊物品 */
-  const CULTIVATION_PILLS = new Set([
-    'mana_recovery_pill',
-    'cultivation_boost_pill',
-    'minor_realm_pill',
-    'ascension_boost_pill',
-    'qi_gathering_pill',
-    'foundation_pill',
-    'lianjing_pill',
-    'huaqi_pill',
-    'lianqi_pill',
-    'huashen_pill',
-    'lianshen_pill',
-    'life_extension_pill',
-    'marrow_wash_pill',
-    'good_fortune_pill',
-    'returning_void_pill',
-    'refining_void_pill',
-    'merge_way_pill',
-    'soul_mending_pill',
-    'nirvana_soul_pill',
-    'dragon_face_pill',
-    'spirit_mending_pill',
-    'rebirth_pill',
-    'snow_lotus_pill',
-    'ganoderma_pill',
-    'ice_soul_pill'
-  ])
-  const USABLE_ITEMS = new Set(['rain_totem', 'stamina_fruit', 'storage_talisman', 'cosmos_bag', 'wood_scripture', 'thunder_scripture', 'void_scripture'])
+  const CULTIVATION_PILLS = CULTIVATION_PILL_IDS
+  const USABLE_ITEMS = SPECIAL_USABLE_ITEM_IDS
 
   const isUsable = (itemId: string): boolean => {
     return USABLE_ITEMS.has(itemId) || CULTIVATION_PILLS.has(itemId)
   }
 
   const handleUse = (itemId: string, quality: Quality) => {
-    if (CULTIVATION_PILLS.has(itemId)) {
-      const used = cultivationStore.usePill(itemId as any)
-      if (!used) return
-      if (!inventoryStore.items.find(i => i.itemId === itemId && i.quality === quality)) {
-        activeItemKey.value = null
-      }
-      return
-    }
-
-    if (itemId === 'rain_totem') {
-      if (!inventoryStore.removeItem(itemId, 1, quality)) return
-      gameStore.setTomorrowWeather('rainy')
-      addLog('你使用了雨图腾，明天将会下雨。')
-    }
-    if (itemId === 'stamina_fruit') {
-      if (playerStore.staminaCapLevel >= 4) {
-        addLog('体力上限已达到最高，无法再使用仙桃。')
-        return
-      }
-      if (!inventoryStore.removeItem(itemId, 1, quality)) return
-      playerStore.upgradeMaxStamina()
-      addLog(`食用了仙桃，体力上限永久提升至${playerStore.maxStamina}！`)
-    }
-    if (itemId === 'storage_talisman') {
-      if (!inventoryStore.removeItem(itemId, 1, quality)) return
-      inventoryStore.expandCapacityExtra()
-      addLog(`使用了纳物符，背包永久扩容至${inventoryStore.capacity}格！`)
-    }
-    if (itemId === 'cosmos_bag') {
-      if (!inventoryStore.removeItem(itemId, 1, quality)) return
-      for (let i = 0; i < 4; i++) inventoryStore.expandCapacityExtra()
-      addLog(`使用了乾坤袋，背包永久扩容至${inventoryStore.capacity}格！`)
-    }
-    if (itemId === 'wood_scripture' || itemId === 'thunder_scripture' || itemId === 'void_scripture') {
-      const map: Record<string, string> = { wood_scripture: 'wood', thunder_scripture: 'thunder', void_scripture: 'void' }
-      const result = cultivationStore.learnManual(map[itemId])
-      if (!result.success) { addLog(result.message); return }
-      if (!inventoryStore.removeItem(itemId, 1, quality)) return
-      addLog(result.message)
-    }
-    // 物品消耗完则关闭弹窗
-    if (!inventoryStore.items.find(i => i.itemId === itemId && i.quality === quality)) {
-      activeItemKey.value = null
-    }
+    itemUsage.useItem(itemId, quality)
+    if (!inventoryStore.items.find(i => i.itemId === itemId && i.quality === quality)) activeItemKey.value = null
   }
 
   // === 丢弃物品 ===

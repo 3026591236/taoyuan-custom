@@ -13,12 +13,14 @@ const TICK_MS = 200
 // === 模块级单例状态 ===
 export const GAME_SPEED_OPTIONS = [0.2, 0.3, 0.5, 1, 2, 4, 8] as const
 const SPEED_STORAGE_KEY = 'taoyuan_game_speed'
+const TIME_FREEZE_UNTIL_KEY = 'taoyuan_time_freeze_until'
 const readSavedSpeed = (): number => {
   const raw = Number(localStorage.getItem(SPEED_STORAGE_KEY) || 1)
   return GAME_SPEED_OPTIONS.includes(raw as any) ? raw : 1
 }
 const gameSpeed = ref(readSavedSpeed())
 const isPaused = ref(true)
+const timeFreezeUntil = ref(Number(localStorage.getItem(TIME_FREEZE_UNTIL_KEY) || 0) || 0)
 let timerId: ReturnType<typeof setInterval> | null = null
 /** 页面隐藏前时钟是否在运行（用于恢复） */
 let wasRunningBeforeHidden = false
@@ -32,6 +34,7 @@ const getHoursPerTick = (): number => {
 /** 时钟 tick */
 const tick = () => {
   if (isPaused.value) return
+  if (timeFreezeUntil.value > Date.now()) return
 
   const gameStore = useGameStore()
   const prevHour = gameStore.hour
@@ -86,6 +89,15 @@ export const useGameClock = () => {
   }
 
   const gameSpeedLabel = computed(() => `${gameSpeed.value}x`)
+  const isTimeFrozen = computed(() => timeFreezeUntil.value > Date.now())
+  const timeFreezeRemainingMs = computed(() => Math.max(0, timeFreezeUntil.value - Date.now()))
+
+  const freezeGameTime = (realHours = 3) => {
+    const until = Math.max(timeFreezeUntil.value, Date.now()) + Math.max(0, realHours) * 3600000
+    timeFreezeUntil.value = until
+    localStorage.setItem(TIME_FREEZE_UNTIL_KEY, String(until))
+    return until
+  }
 
   /** 设置速度倍率 */
   const setSpeed = (speed: number) => {
@@ -122,6 +134,10 @@ export const useGameClock = () => {
     gameSpeedLabel,
     gameSpeedOptions: GAME_SPEED_OPTIONS,
     isPaused,
+    isTimeFrozen,
+    timeFreezeUntil,
+    timeFreezeRemainingMs,
+    freezeGameTime,
     startClock,
     stopClock,
     pauseClock,

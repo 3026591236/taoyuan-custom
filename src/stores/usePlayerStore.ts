@@ -177,6 +177,14 @@ export const usePlayerStore = defineStore('player', () => {
     stamina.value = Math.min(stamina.value + amount, maxStamina.value)
   }
 
+  /** 恢复体力并允许临时溢出（体力丹等），默认最多超过上限500点 */
+  const restoreStaminaOvercap = (amount: number, overcap = 500): number => {
+    const before = stamina.value
+    const cap = maxStamina.value + Math.max(0, overcap)
+    stamina.value = Math.min(stamina.value + Math.max(0, amount), cap)
+    return stamina.value - before
+  }
+
   /** 按游戏时间缓慢恢复体力：每15分钟恢复1点，满体力时清空累计 */
   const recoverStaminaByGameTime = (hours: number): number => {
     if (hours <= 0) return 0
@@ -358,6 +366,7 @@ export const usePlayerStore = defineStore('player', () => {
     getIsLowHp,
     consumeStamina,
     restoreStamina,
+    restoreStaminaOvercap,
     recoverStaminaByGameTime,
     takeDamage,
     restoreHealth,

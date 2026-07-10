@@ -34,7 +34,8 @@ import {
   Trophy,
   Landmark,
   Swords,
-  Gift
+  Gift,
+  Zap
 } from 'lucide-vue-next'
 import { useNpcStore } from '@/stores/useNpcStore'
 
@@ -42,6 +43,7 @@ export type PanelKey =
   | 'farm'
   | 'shop'
   | 'inventory'
+  | 'quick-use'
   | 'fishing'
   | 'mining'
   | 'village'
@@ -105,6 +107,7 @@ export const TABS: { key: PanelKey; label: string; icon: Component; getIcon?: ()
   { key: 'forge', label: '炼器', icon: Cog },
   { key: 'sect', label: '门派', icon: Users },
   { key: 'inventory', label: '背包', icon: Package },
+  { key: 'quick-use', label: '快捷', icon: Zap },
   { key: 'skills', label: '技能', icon: Star },
   { key: 'achievement', label: '图鉴', icon: BookOpen },
   { key: 'wallet', label: '钱袋', icon: Wallet },
