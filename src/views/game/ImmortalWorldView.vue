@@ -39,13 +39,16 @@
       </div>
     </div>
 
-    <div v-if="isTab('home')" class="immortal-zone-grid relative z-10 mb-4">
-      <button v-for="zone in IMMORTAL_ZONES" :key="zone.key" class="zone-card" @click="switchTab(zone.key)">
-        <img class="zone-art" :src="zoneArt(zone.key)" :alt="`${zone.name}插画`" draggable="false" />
-        <span class="zone-card-shade"></span>
-        <span class="text-sm text-accent relative z-[1]">{{ zone.name }}</span>
-        <span class="text-[10px] text-muted leading-relaxed">{{ zone.desc }}</span>
-      </button>
+    <div v-if="isTab('home')" class="immortal-dossier relative z-10 mb-4">
+      <div class="dossier-head"><div><p class="text-xs text-accent">云阙仙录 · 成长履历</p><p class="text-[10px] text-muted">仙界大厅仅展示角色数据；各项功能请通过仙界地图进入。</p></div><span>{{ ascensionStore.immortalRealmInfo.icon }} {{ ascensionStore.immortalRealmInfo.name }}</span></div>
+      <div class="dossier-grid">
+        <div class="dossier-item"><span>功德</span><b>{{ ascensionStore.merit }}</b><small>仙职与仙体根基</small></div>
+        <div class="dossier-item"><span>仙玉</span><b>{{ ascensionStore.immortalJade }}</b><small>云阙通行货币</small></div>
+        <div class="dossier-item"><span>法则碎片</span><b>{{ ascensionStore.ruleFragments }}</b><small>高阶突破资材</small></div>
+        <div class="dossier-item"><span>仙器精魄</span><b>{{ ascensionStore.immortalEssence }}</b><small>六部位淬炼资源</small></div>
+        <div class="dossier-item"><span>仙体 / 仙骨 / 仙魂</span><b>Lv.{{ ascensionStore.immortalBodyLevel }} / {{ ascensionStore.immortalBoneLevel }} / {{ ascensionStore.immortalSoulLevel }}</b><small>三元仙身总览</small></div>
+        <div class="dossier-item"><span>当前裂隙战况</span><b>{{ ascensionStore.riftScore }} 次镇压</b><small>{{ ascensionStore.lastBattleText || '尚未留下战报' }}</small></div>
+      </div>
     </div>
 
     <div v-if="isTab('home')" class="border border-amber-200/20 rounded-xs p-3 mb-4 bg-black/10 relative z-10">
@@ -346,7 +349,6 @@ const officeInfo = computed(() => ascensionStore.officeInfo)
 const currentArt = computed(() => IMMORTAL_ARTS.find(art => art.id === ascensionStore.lastArtId) || IMMORTAL_ARTS[0]!)
 const immortalTab = computed(() => String(route.query.tab || 'home'))
 const isTab = (...keys: string[]) => keys.includes(immortalTab.value)
-const switchTab = (tab: string) => { void router.push({ path: '/game/immortal-world', query: { ...route.query, tab } }) }
 const sectionTitle = computed(() => ({
   home: '仙界大厅',
   gear: '仙器谱',
@@ -370,22 +372,6 @@ const ART = {
   market: '/assets/immortal/immortal-market.png',
   story: '/assets/immortal/story-gate.png'
 }
-const zoneArt = (key: string) => ({ realm: ART.story, cave: ART.cave, market: ART.market, trial: ART.trial, arena: ART.rival, rift: ART.rift, fate: ART.story, office: ART.market, story: ART.story, gear: ART.trial, arts: ART.trial, echo: ART.cave, edict: ART.story }[key] || ART.story)
-const IMMORTAL_ZONES = [
-  { key: 'realm', icon: '🌌', name: '仙阶突破', desc: '真仙、玄仙、地仙等仙阶成长' },
-  { key: 'cave', icon: '🏯', name: '仙界洞天', desc: '仙域经营、洞天维护与建设' },
-  { key: 'market', icon: '💎', name: '仙市兑换', desc: '功德、仙玉、法则资源转化' },
-  { key: 'trial', icon: '⚔️', name: '仙域试炼', desc: '挑战仙域敌人与获取材料' },
-  { key: 'gear', icon: '✦', name: '仙器谱', desc: '六部位仙器、淬炼与套装共鸣' },
-  { key: 'edict', icon: '🪬', name: '云阙天诏', desc: '每日与每周修行目标、领取天诏赏赐' },
-  { key: 'arena', icon: '🏆', name: '仙擂问道', desc: '斗法、连胜与赛季奖励' },
-  { key: 'fate', icon: '🔮', name: '命盘天命', desc: '命盘、道统与天命抉择' },
-  { key: 'rift', icon: '🕳️', name: '混沌裂隙', desc: '镇压裂隙获取高阶奖励' },
-  { key: 'office', icon: '📜', name: '仙职仙盟', desc: '仙职事务与仙盟协作' },
-  { key: 'story', icon: '📖', name: '仙界主线', desc: '云阙天门后的主线章节' },
-  { key: 'arts', icon: '✨', name: '仙术演武', desc: '切换仙术表现与战斗反馈' },
-  { key: 'echo', icon: '🌾', name: '凡界回响', desc: '飞升后反哺凡界系统' }
-]
 const exitAdminPreview = () => {
   ascensionStore.exitAdminPreview()
   router.replace('/')
@@ -547,8 +533,10 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 .immortal-artwork{border-radius:116px 116px 15px 15px;object-position:center 39%}.immortal-profile{position:relative;z-index:1;justify-content:flex-start!important;padding-top:8px}.profile-crown{max-width:510px}.immortal-profile>p.text-xl{font-size:25px;line-height:1.25;letter-spacing:.04em;text-shadow:0 0 18px rgba(255,222,130,.32)}
 .character-combat-deck{display:grid;grid-template-columns:132px minmax(190px,1fr) 170px;gap:9px;min-height:104px;padding:8px;border-top:1px solid rgba(255,229,154,.22);border-bottom:1px solid rgba(137,218,255,.17);background:linear-gradient(90deg,rgba(4,10,31,.28),rgba(120,206,255,.07),rgba(4,10,31,.18))}.combat-power{min-height:86px;border:0;border-right:1px solid rgba(255,226,138,.27);border-radius:0;background:transparent;box-shadow:none}.combat-power b{font-size:27px;letter-spacing:.03em}.combat-power small{color:rgba(255,226,138,.44);letter-spacing:.12em;font-size:7px}.combat-vitals{padding:6px 10px;border:0;border-radius:0;background:transparent}.vital-row{margin:1px 0 3px;font-size:10px}.vital-row span{display:flex;align-items:center;gap:5px;color:rgba(220,242,255,.72)}.vital-row b{font-size:12px}.vital-row b small{font-size:9px;opacity:.58}.vital-mark{width:6px;height:6px;border-radius:50%;display:inline-block}.hp-mark{background:#ff6576;box-shadow:0 0 8px #ff4f67}.qi-mark{background:#67dfff;box-shadow:0 0 8px #55d4ff}.vital-bar{height:7px;margin-bottom:9px;border:0;background:rgba(0,0,0,.46)}.combat-stats{gap:0;border-left:1px solid rgba(139,217,255,.17)}.combat-stats>div{border:0;border-radius:0;background:transparent}.combat-stats>div:nth-child(odd){border-right:1px solid rgba(139,217,255,.13)}.combat-stats>div:nth-child(-n+2){border-bottom:1px solid rgba(139,217,255,.13)}.combat-stats span{font-size:9px}.combat-stats b{font-size:13px;color:#d8f3ff}.profile-insight-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:0;border:1px solid rgba(154,222,255,.16);border-radius:5px;overflow:hidden}.profile-insight-grid>div{min-height:47px;padding:7px 8px;border:0!important;border-right:1px solid rgba(154,222,255,.12);border-radius:0;background:rgba(3,10,29,.24)}.profile-insight-grid>div:last-child{border-right:0!important}.profile-insight-grid b{margin-top:2px;font-size:10px}.immortal-record{grid-template-columns:150px 1fr;padding:13px 15px;border-left:3px solid rgba(255,226,138,.65);border-radius:0 7px 7px 0}.immortal-zone-grid{margin-top:4px}
 
+.immortal-dossier{overflow:hidden;border:1px solid rgba(148,218,255,.2);border-radius:9px;background:linear-gradient(112deg,rgba(7,16,47,.72),rgba(24,18,63,.54));box-shadow:0 10px 25px rgba(0,0,0,.18)}.dossier-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(148,218,255,.15);background:linear-gradient(90deg,rgba(103,213,255,.1),transparent)}.dossier-head>span{padding:3px 7px;border:1px solid rgba(255,225,129,.26);border-radius:999px;color:#ffe6a2;font-size:10px}.dossier-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.dossier-item{min-height:79px;padding:11px 13px;border-right:1px solid rgba(148,218,255,.12);border-bottom:1px solid rgba(148,218,255,.12);background:rgba(2,9,30,.16)}.dossier-item:nth-child(4){border-right:0}.dossier-item:nth-child(n+5){grid-column:span 2;border-bottom:0}.dossier-item:last-child{border-right:0}.dossier-item span,.dossier-item small{display:block;color:rgba(216,239,255,.55);font-size:9px}.dossier-item b{display:block;margin:3px 0;color:#d9f5ff;font-size:16px;line-height:1.25}.dossier-item:nth-child(n+5) b{color:#ffe4a0;font-size:12px}.dossier-item:last-child small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.58)}
+
 @media (max-width:700px){.immortal-hero{grid-template-columns:175px minmax(0,1fr);gap:12px;padding:14px}.hero-avatar.immortal-portrait-stage{width:175px;height:285px}.character-combat-deck{grid-template-columns:98px 1fr}.combat-stats{grid-column:1/-1;grid-template-columns:repeat(4,1fr);border-left:0;border-top:1px solid rgba(139,217,255,.17)}.combat-stats>div:nth-child(-n+2){border-bottom:0}.combat-stats>div:nth-child(odd){border-right:1px solid rgba(139,217,255,.13)}.profile-insight-grid{grid-template-columns:repeat(3,1fr)}.profile-insight-grid>div:nth-child(3){border-right:0!important}.profile-insight-grid>div:nth-child(-n+3){border-bottom:1px solid rgba(154,222,255,.12)!important}}
-@media (max-width:420px){.immortal-zone-grid{grid-template-columns:1fr}.immortal-hero{grid-template-columns:1fr;align-items:center}.hero-avatar.immortal-portrait-stage{width:178px;height:264px;justify-self:center}.immortal-profile{padding-top:0}.character-combat-deck{grid-template-columns:86px 1fr}.combat-power b{font-size:21px}.profile-insight-grid{grid-template-columns:repeat(2,1fr)}.profile-insight-grid>div:nth-child(2){border-right:0!important}.profile-insight-grid>div:nth-child(n){border-bottom:1px solid rgba(154,222,255,.12)!important}.profile-insight-grid>div:nth-last-child(-n+2){border-bottom:0!important}}
+@media (max-width:420px){.dossier-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dossier-item:nth-child(2n){border-right:0}.dossier-item:nth-child(n+5){grid-column:span 2;border-bottom:1px solid rgba(148,218,255,.12)}.dossier-item:last-child{border-bottom:0}.immortal-zone-grid{grid-template-columns:1fr}.immortal-hero{grid-template-columns:1fr;align-items:center}.hero-avatar.immortal-portrait-stage{width:178px;height:264px;justify-self:center}.immortal-profile{padding-top:0}.character-combat-deck{grid-template-columns:86px 1fr}.combat-power b{font-size:21px}.profile-insight-grid{grid-template-columns:repeat(2,1fr)}.profile-insight-grid>div:nth-child(2){border-right:0!important}.profile-insight-grid>div:nth-child(n){border-bottom:1px solid rgba(154,222,255,.12)!important}.profile-insight-grid>div:nth-last-child(-n+2){border-bottom:0!important}}
 
 .preview-badge{display:inline-flex;margin-left:6px;padding:1px 6px;border:1px solid rgba(255,226,138,.45);border-radius:999px;font-size:10px;color:#ffe28a;background:rgba(255,226,138,.12);box-shadow:0 0 12px rgba(255,226,138,.18)}
 </style>
