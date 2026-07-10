@@ -64,6 +64,12 @@
       <History :size="20" />
     </button>
 
+    <button v-if="floatingWelfare.enabled" class="floating-welfare-btn" @click="showFloatingWelfare = true">
+      <Gift :size="18" />
+      <span>{{ floatingWelfare.buttonText || '福利' }}</span>
+      <em v-if="claimableFloatingWelfareCount > 0">{{ claimableFloatingWelfareCount }}</em>
+    </button>
+
 
     <Transition name="panel-fade">
       <div v-if="showMailModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" @click.self="showMailModal = false">
@@ -86,6 +92,35 @@
             <p v-if="mail.content" class="text-sm whitespace-pre-wrap">{{ mail.content }}</p>
             <div class="text-xs text-muted">奖励：{{ mailRewardText(mail.rewards) }}</div>
             <Button v-if="!mail.claimed" class="w-full justify-center" @click="claimMail(mail)">领取奖励</Button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 悬浮福利弹窗 -->
+    <Transition name="panel-fade">
+      <div v-if="showFloatingWelfare" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[110] p-4" @click.self="showFloatingWelfare = false">
+        <div class="game-panel max-w-md w-full max-h-[82vh] overflow-y-auto space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-accent text-lg">{{ floatingWelfare.title || '桃源福利' }}</p>
+              <p class="text-xs text-muted leading-relaxed mt-1">{{ floatingWelfare.desc || '点击领取当前可用福利。' }}</p>
+            </div>
+            <Button class="py-0 px-2" @click="showFloatingWelfare = false">关闭</Button>
+          </div>
+          <div v-if="activeFloatingWelfareGifts.length === 0" class="text-sm text-muted border border-accent/15 rounded-xs p-3 text-center">当前暂无可用福利。</div>
+          <div v-for="gift in activeFloatingWelfareGifts" :key="gift.id" class="floating-welfare-card" :class="{ claimed: isFloatingGiftClaimed(gift) }">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="text-sm text-accent">{{ gift.title }}</p>
+                <p class="text-[10px] text-muted leading-relaxed mt-1">{{ gift.desc }}</p>
+              </div>
+              <span class="text-[10px] px-1 border border-accent/20 rounded-xs text-muted whitespace-nowrap">{{ floatingGiftResetText(gift) }}</span>
+            </div>
+            <p class="text-xs text-muted mt-2">奖励：{{ floatingRewardText(gift.rewards) }}</p>
+            <Button class="w-full justify-center mt-2" :disabled="isFloatingGiftClaimed(gift)" @click="claimFloatingWelfare(gift)">
+              {{ isFloatingGiftClaimed(gift) ? '已领取' : '领取福利' }}
+            </Button>
           </div>
         </div>
       </div>
@@ -527,6 +562,7 @@
   import { usePlayerStore } from '@/stores/usePlayerStore'
   import { useWarehouseStore } from '@/stores/useWarehouseStore'
   import { parseSaveData, useSaveStore } from '@/stores/useSaveStore'
+  import { useFloatingWelfareStore } from '@/stores/useFloatingWelfareStore'
   import { useFarmStore } from '@/stores/useFarmStore'
   import { useDialogs } from '@/composables/useDialogs'
   import type { MorningChoiceEvent } from '@/data/farmEvents'
@@ -544,7 +580,8 @@
   import { useGameClock } from '@/composables/useGameClock'
   import { useAudio } from '@/composables/useAudio'
   import type { Quality } from '@/types'
-  import { Moon, X, Map, Settings as SettingsIcon, Archive, ArrowDown, ArrowDownToLine, History, Trash2 } from 'lucide-vue-next'
+  import type { AttributeKey } from '@/stores/usePlayerStore'
+  import { Moon, X, Map, Settings as SettingsIcon, Archive, ArrowDown, ArrowDownToLine, History, Trash2, Gift } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import MobileMapMenu from '@/components/game/MobileMapMenu.vue'
@@ -574,6 +611,7 @@
   const farmStore = useFarmStore()
   const questStore = useQuestStore()
   const cultivationStore = useCultivationStore()
+  const floatingWelfareStore = useFloatingWelfareStore()
   const { switchToSeasonalBgm } = useAudio()
 
 
@@ -585,6 +623,69 @@
     showFloat(payload.title, 'success')
   }
   const addRewardLog = (title: string, lines: string[]) => addLog(`${title}：${lines.join('，')}。`)
+
+  type FloatingWelfareGift = { id: string; title: string; desc?: string; enabled?: boolean; reset?: 'once' | 'daily' | 'sevenDay'; rewards?: any }
+  const serverConfig = ref<any>({ floatingWelfare: { enabled: false, buttonText: '福利', title: '桃源福利', desc: '', gifts: [] } })
+  const showFloatingWelfare = ref(false)
+  const todayRealKey = () => new Date().toISOString().slice(0, 10)
+  const dateIndex = (key: string) => {
+    const t = Date.parse(`${key}T00:00:00.000Z`)
+    return Number.isFinite(t) ? Math.floor(t / 86400000) : Math.floor(Date.now() / 86400000)
+  }
+  const floatingWelfare = computed(() => serverConfig.value?.floatingWelfare || { enabled: false, gifts: [] })
+  const activeFloatingWelfareGifts = computed<FloatingWelfareGift[]>(() => Array.isArray(floatingWelfare.value?.gifts) ? floatingWelfare.value.gifts.filter((g: any) => g?.enabled !== false) : [])
+  const floatingGiftClaimKey = (gift: FloatingWelfareGift) => {
+    const date = todayRealKey()
+    if (gift.reset === 'daily') return `${gift.id}:daily:${date}`
+    if (gift.reset === 'sevenDay') {
+      const first = floatingWelfareStore.ensureFirstSeenDate(date)
+      const day = Math.max(1, Math.min(7, dateIndex(date) - dateIndex(first) + 1))
+      return `${gift.id}:sevenDay:${day}`
+    }
+    return `${gift.id}:once`
+  }
+  const isFloatingGiftClaimed = (gift: FloatingWelfareGift) => floatingWelfareStore.isClaimed(floatingGiftClaimKey(gift))
+  const claimableFloatingWelfareCount = computed(() => activeFloatingWelfareGifts.value.filter(g => !isFloatingGiftClaimed(g)).length)
+  const floatingGiftResetText = (gift: FloatingWelfareGift) => gift.reset === 'daily' ? '每日' : gift.reset === 'sevenDay' ? '七日' : '一次性'
+  const floatingRewardText = (rewards: any) => {
+    const parts: string[] = []
+    if (rewards?.money) parts.push(`铜钱+${rewards.money}`)
+    if (rewards?.spiritStone) parts.push(`灵石×${rewards.spiritStone}`)
+    if (rewards?.aura) parts.push(`灵气+${rewards.aura}`)
+    if (rewards?.cultivation) parts.push(`修为+${rewards.cultivation}`)
+    if (rewards?.mana) parts.push(`灵力+${rewards.mana}`)
+    if (rewards?.stamina) parts.push(`体力+${rewards.stamina}`)
+    const attr = rewards?.attributeExp || {}
+    const attrTotal = ['physique','strength','agility','perception'].reduce((sum, k) => sum + (Number(attr[k]) || 0), 0)
+    if (attrTotal) parts.push(`资质经验+${attrTotal}`)
+    for (const item of rewards?.items || []) parts.push(`${item.name || getItemName(item.itemId)}×${item.quantity || 1}`)
+    return parts.join('，') || '无'
+  }
+  const claimFloatingWelfare = async (gift: FloatingWelfareGift) => {
+    const key = floatingGiftClaimKey(gift)
+    if (floatingWelfareStore.isClaimed(key)) return
+    const rewards = gift.rewards || {}
+    const lines: string[] = []
+    if (rewards.money) { playerStore.earnMoney(Number(rewards.money) || 0); lines.push(`铜钱 +${Number(rewards.money) || 0}`) }
+    if (rewards.stamina) { playerStore.restoreStamina(Number(rewards.stamina) || 0); lines.push(`体力 +${Number(rewards.stamina) || 0}`) }
+    if (rewards.spiritStone) { inventoryStore.addItem('spirit_stone', Number(rewards.spiritStone) || 0); lines.push(`灵石 +${Number(rewards.spiritStone) || 0}`) }
+    if (rewards.aura) { cultivationStore.aura += Number(rewards.aura) || 0; lines.push(`灵气 +${Number(rewards.aura) || 0}`) }
+    if (rewards.cultivation) { const gain = Number(rewards.cultivation) || 0; const before = cultivationStore.cultivation; cultivationStore.cultivation = Math.min(cultivationStore.maxCultivation, cultivationStore.cultivation + gain); lines.push(`修为 +${cultivationStore.cultivation - before}`) }
+    if (rewards.mana) { const v = Number(rewards.mana) || 0; cultivationStore.mana = Math.min(cultivationStore.maxMana, cultivationStore.mana + v); lines.push(`灵力 +${v}`) }
+    const attr = rewards.attributeExp || {}
+    const attrGains: Partial<Record<AttributeKey, number>> = {}
+    for (const k of ['physique','strength','agility','perception'] as AttributeKey[]) if (Number(attr[k]) > 0) attrGains[k] = Number(attr[k])
+    if (Object.keys(attrGains).length) { playerStore.addAttributeExpBatch(attrGains); lines.push(`资质经验 +${Object.values(attrGains).reduce((a, b) => a + (Number(b) || 0), 0)}`) }
+    for (const item of rewards.items || []) { const qty = Number(item.quantity) || 1; inventoryStore.addItem(String(item.itemId), qty, item.quality || 'normal'); lines.push(`${item.name || getItemName(item.itemId)} ×${qty}`) }
+    floatingWelfareStore.markClaimed(key)
+    const text = lines.length ? lines : ['奖励已到账']
+    addLog(`领取${gift.title}：${text.join('，')}。`)
+    showRewardBurst({ title: gift.title || '福利已领取', desc: gift.desc || '奖励已放入当前存档。', emoji: '🎁', lines: text })
+    await autoSaveCurrent()
+  }
+  const loadServerConfig = async () => {
+    try { serverConfig.value = await accountApi('/api/config') } catch {}
+  }
 
   const offlineRewardKey = () => {
     const characterId = localStorage.getItem('taoyuan_active_character_id') || ''
@@ -949,7 +1050,7 @@
   })
 
   // 实时时钟生命周期
-  onMounted(() => { startClock(); startAccountAutoSave(); startOnlineStaminaRegen(); void loadCheckinStatus(); void loadMails(); void grantOfflineRewards(); void autoSaveCurrent() })
+  onMounted(() => { startClock(); startAccountAutoSave(); startOnlineStaminaRegen(); void loadServerConfig(); void loadCheckinStatus(); void loadMails(); void grantOfflineRewards(); void autoSaveCurrent() })
   onUnmounted(() => {
     stopClock()
     stopAccountAutoSave()
@@ -1427,4 +1528,45 @@
     padding: 0.55rem 0.7rem;
     box-shadow: 0 0 18px rgba(var(--color-accent-rgb, 255,180,0), 0.08);
   }
+</style>
+
+
+<style scoped>
+.floating-welfare-btn {
+  position: fixed;
+  right: 12px;
+  bottom: calc(calc(0.35rem * 10) + 144px + env(safe-area-inset-bottom, 0px));
+  z-index: 45;
+  min-width: 48px;
+  height: 40px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 2px solid var(--color-accent);
+  background: linear-gradient(135deg, rgba(200,164,92,.96), rgba(120,78,28,.96));
+  color: rgb(var(--color-bg));
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 0 16px rgba(200, 164, 92, .35);
+  font-size: 12px;
+  font-weight: 700;
+}
+.floating-welfare-btn em {
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  font-style: normal;
+}
+.floating-welfare-card {
+  border: 1px solid rgba(200,164,92,.24);
+  border-radius: 2px;
+  padding: 10px;
+  background: rgba(200,164,92,.04);
+}
+.floating-welfare-card.claimed { opacity: .58; }
 </style>

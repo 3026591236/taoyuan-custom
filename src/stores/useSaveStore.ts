@@ -33,6 +33,7 @@ import { useCultivationStore } from './useCultivationStore'
 import { useCombatStore } from './useCombatStore'
 import { useRetentionStore } from './useRetentionStore'
 import { useLongTermStore } from './useLongTermStore'
+import { useFloatingWelfareStore } from './useFloatingWelfareStore'
 
 const SAVE_KEY_PREFIX = 'taoyuanxiang_save_'
 const MAX_SLOTS = 3
@@ -157,6 +158,7 @@ export const useSaveStore = defineStore('save', () => {
       const combatStore = useCombatStore()
       const retentionStore = useRetentionStore()
       const longTermStore = useLongTermStore()
+      const floatingWelfareStore = useFloatingWelfareStore()
 
       const data = {
         game: gameStore.serialize(),
@@ -190,6 +192,7 @@ export const useSaveStore = defineStore('save', () => {
         combat: combatStore.serialize(),
         retention: retentionStore.serialize(),
         longTerm: longTermStore.serialize(),
+        floatingWelfare: floatingWelfareStore.serialize(),
         savedAt: new Date().toISOString()
       }
       localStorage.setItem(`${SAVE_KEY_PREFIX}${slot}`, encrypt(JSON.stringify(data)))
@@ -245,6 +248,7 @@ export const useSaveStore = defineStore('save', () => {
       const combatStore = useCombatStore()
       const retentionStore = useRetentionStore()
       const longTermStore = useLongTermStore()
+      const floatingWelfareStore = useFloatingWelfareStore()
 
       gameStore.deserialize(data.game)
       playerStore.deserialize(data.player)
@@ -277,6 +281,7 @@ export const useSaveStore = defineStore('save', () => {
       if (data.combat) combatStore.deserialize(data.combat)
       if (data.retention) retentionStore.deserialize(data.retention)
       if (data.longTerm) longTermStore.deserialize(data.longTerm)
+      if ((data as any).floatingWelfare) floatingWelfareStore.deserialize((data as any).floatingWelfare)
       longTermStore.touchLoginDay()
       activeSlot.value = slot
       return true

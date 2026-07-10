@@ -283,7 +283,19 @@ const defaultConfig = {
   aboutGithubUrl: 'https://github.com/setube/taoyuan', aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   iosDownloadUrl: '', androidDownloadUrl: '',
   sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: 'https://afdian.com/a/setube',
+  floatingWelfare: {
+    enabled: true,
+    buttonText: '福利',
+    title: '桃源福利',
+    desc: '管理员可在后台调整悬浮福利内容，奖励会直接进入当前存档。',
+    gifts: [
+      { id: 'newbie', type: 'newbie', title: '新手福利', desc: '新号起步补给，助你更快进入种田修仙循环。', enabled: true, reset: 'once', rewards: { money: 5000, spiritStone: 40, aura: 800, cultivation: 1200, items: [{ itemId: 'mana_recovery_pill', name: '回灵丹', quantity: 3 }, { itemId: 'qi_gathering_pill', name: '聚气丹', quantity: 2 }] } },
+      { id: 'daily', type: 'daily', title: '每日福利', desc: '每日登录可领，补充日常修行和商圈消耗。', enabled: true, reset: 'daily', rewards: { money: 1600, spiritStone: 8, aura: 240, cultivation: 360, items: [{ itemId: 'mana_recovery_pill', name: '回灵丹', quantity: 1 }] } },
+      { id: 'seven_day', type: 'seven_day', title: '七日福利', desc: '七日内每天可领一档，适合新玩家连续成长。', enabled: true, reset: 'sevenDay', rewards: { money: 3000, spiritStone: 18, aura: 560, cultivation: 800, items: [{ itemId: 'foundation_pill', name: '筑基丹', quantity: 1 }] } }
+    ]
+  },
   updateLogs: [
+    { date: "2026-07-10", title: "V2.1.8 悬浮福利活动后台", content: "游戏内新增可后台控制的悬浮福利按钮：管理员可在后台开关活动、修改按钮标题、说明和新手福利/每日福利/七日福利奖励；玩家侧点悬浮按钮即可领取铜钱、灵石、灵气、修为和物品，领取状态随存档保存，支持一次性、每日和七日周期，方便运营临时加福利或做开服活动。" },
     { date: "2026-07-10", title: "V2.1.7 商圈兼容与福利登塔平衡", content: "修复部分玩家因旧前端缓存导致商圈懒加载资源打不开的问题，线上部署改为保留历史资源以兼容旧缓存；活动中心每日活跃、七日豪礼和连续满勤奖励整体加量，补足灵石、灵气、丹药与中期材料；登仙塔怪物曲线下调并加入境界软化，避免玩家提升境界后反而被塔层数值压制，同时登塔胜利修为与灵气奖励提高。" },
     { date: "2026-07-10", title: "V2.1.6 排行榜名字特效", content: "排行榜前10名新增玩家名字特效：第1名金焰魁首、第2名银月流光、第3名赤铜战名分别使用不同光效与徽标；第4-10名统一星辉十杰渐变流光。让榜单竞争更有荣誉感和展示欲，同时保持原有排行接口与数据结构不变。" },
     { date: "2026-07-10", title: "V2.1.5 人物关系与世界反馈深化", content: "NPC页新增村庄回响/人情反馈，把全村平均好感、婚后天数、子女学识羁绊、公会贡献转化为每周可领取的世界反馈奖励。玩家完成村庄请求、主动来信、婚姻陪伴、子女长期事件和公会贡献后，桃源村会给出声望文案、家族经验、好感与铜钱回响，让人物关系和世界状态开始记住玩家行为。" },
@@ -356,80 +368,31 @@ const defaultConfig = {
     { date: "2026-07-06", title: "V1.2.7 初战妖兽引导修复", content: "修复修仙之途战斗胜利未计入修行志怪物击杀的问题；将初战凶兽任务改名为初战妖兽，并明确引导到地图 → 修仙之途 → 秘境，可通过红尘历练、秘境探索或登仙塔低层完成。" },
     { date: "2026-07-06", title: "V1.2.6 地图入口图标优化", content: "修仙地图中修仙之途入口统一为原版线性图标风格，去除表情图标；修仙市集简称为市集，限时活动简称为活动，让地图按钮更整齐清爽。" },
     { date: "2026-07-06", title: "V1.2.5 玩家独立邮箱", content: "邮件系统改为每个玩家独立存储邮件副本；全服邮件会拆分到每个玩家邮箱，定向补偿只进入目标玩家邮箱，领取状态也独立保存，避免共用邮件池造成显示混乱。" },
-    { date: '2026-07-06', title: 'V1.2.4 游戏内聊天', content: '新增世界频道聊天系统，登录后可在聊天面板发送和查看消息，支持实时轮询刷新。' },
-    { date: '2026-07-06', title: 'V1.2.3 排行差距与功法推荐', content: '排行榜增加距上一名/上榜差距提示，修仙页增加功法选择推荐，活动页增加每日签到联动提示。' },
-    { date: '2026-07-06', title: 'V1.2.2 战斗收益与活动中心', content: '战斗页增加区域产出说明与掉落用途标签，修仙页增加挂机收益估算，活动页升级为小型活动中心展示更多进行中目标。' },
-    { date: '2026-07-06', title: 'V1.2.1 引导与用途说明', content: '修行志目标增加地点提示，修仙市集商品显示用途标签，背包物品显示用途说明，角色页新增成长诊断建议。' },
-    { date: '2026-07-06', title: 'V1.2 全功能可玩性增强', content: '修行志扩展为全功能目标系统，新增钓鱼、挖矿、烹饪、收集、培育、功法、登塔、委托等长期与每日目标，并展示奖励内容，让每个玩法都有更明确的下一步。' },
-    { date: '2026-07-06', title: 'V1.1.8 时间控制按钮优化', content: '时间倍率控制移回剩余时间条旁，改为减速和加速两个按钮，避免占用金钱与灵石显示区域。' },
-    { date: '2026-07-06', title: 'V1.1.7 时间倍率控制', content: '顶部状态栏新增时间速度按钮，可在0.2、0.3、0.5、1、2、4、8倍之间切换，支持放慢节奏或快速推进一天。' },
-    { date: '2026-07-06', title: 'V1.1.6 顶部灵石显示', content: '在顶部金钱位置旁新增灵石余额显示，进入修仙市集购买功法、纳物符、乾坤袋时可直接查看当前灵石数量。' },
-    { date: '2026-07-06', title: 'V1.1.5 灵石购买修复', content: '修复修仙市集灵石商品购买弹窗仍显示铜钱、批量购买校验异常的问题；灵石商品现在显示灵石单价与总价，并按灵石余额购买。' },
-    { date: '2026-07-06', title: 'V1.1.4 修仙市集商品修复', content: '修复修仙市集入口只停留在普通商圈的问题，现在进入后会打开独立修仙市集，直接展示灵石、丹药、纳物符、乾坤袋与功法秘籍。' },
-    { date: '2026-07-06', title: 'V1.1.3 修仙市集入口', content: '新增地图「修仙之途 → 修仙市集」按钮，点击后直接进入商店并定位到修仙市集，方便购买功法秘籍、纳物符和乾坤袋。' },
-    { date: '2026-07-06', title: 'V1.1.2 限时活动入口', content: '新增独立「限时活动」页面和地图按钮，妖潮来袭可查看进度、前往秘境讨伐并直接领取活动奖励，活动说明同步写入新手教程。' },
-    { date: '2026-07-06', title: 'V1.1.1 教程与后台奖励完善', content: '新手教程补充天劫渡劫、功法市集和仙途七线说明；后台 GM 邮件奖励新增修为、灵气、灵力、灵石发放，玩家领取邮件后直接写入当前角色。' },
-
-      {
-        version: 'V1.1 七线补全',
-        date: '2026-07-05',
-        title: 'V1.1 七线补全',
-        content: '修行志新增七条长期目标：修仙主线剧情、装备套装追求、深层秘境首通、仙盟互助、限时妖潮活动、下一步变强引导和回访福利，让玩家从新手到中后期都有明确追求与奖励反馈。',
-        highlights: ['修仙主线目标', '装备套装追求', '深层秘境首通', '活动与回访福利']
-      },
-
-      {
-        version: 'V1.0.1 功法与灵石市集扩展',
-        date: '2026-07-05',
-        title: 'V1.0.1 功法与灵石市集扩展',
-        content: '修仙市集新增灵石兑换的纳物符、乾坤袋，可使用后永久扩展背包；新增青木长生诀、九霄雷诀、太虚归元功三门功法，购买秘籍后可学习并消耗灵气/修为参悟升级，提升修炼收益、战力和渡劫成功率。',
-        highlights: ['灵石市集扩容道具', '新增功法系统', '功法参悟升级', '渡劫成功率加成']
-      },
-      {
-        version: 'V1.0 天劫渡劫与挂机修仙',
-        date: '2026-07-05',
-        title: 'V1.0 天劫渡劫与挂机修仙',
-        content: '增强离线奖励，修仙后离线和在线挂机都会获得灵气、修为与元神经验；跨大境界突破加入天劫渡劫、成功率展示、雷劈像素角色特效与雷鸣音效；渡劫失败会扣修为灵力、伤元神并可能掉级；新增养魂丹、涅魂丹用于恢复伤势和元神。',
-        highlights: ['挂机修仙收益', '跨境界天劫', '雷劫特效音效', '元神伤势丹药']
-      },
-      {
-        version: 'V0.9.2 玩家强度提升',
-        date: '2026-07-05',
-        title: 'V0.9.2 玩家强度提升',
-        content: '提升资质成长带来的攻击、生命、身法和减伤收益；修复修行志根骨奖励字段错配；提高修行志目标奖励，让每日目标和七日成长的变强反馈更明显。',
-        highlights: ['资质战力增强', '修行志奖励提升', '根骨奖励修复']
-      },
-      {
-        version: 'V0.9.1 箱子制造与体力恢复修复',
-        date: '2026-07-05',
-        title: 'V0.9.1 箱子制造与体力恢复修复',
-        content: '修复工坊箱子满足材料仍无法制造的问题，增加材料扣除失败保护；新增体力缓慢恢复：在线每60秒自然恢复1点，游戏时间推进和体力行动也会折算恢复。',
-        highlights: ['修复箱子制造', '体力随时间缓慢恢复', '材料失败保护']
-      },
-    { date: '2026-07-05', title: 'V0.9 玩家爽感与回访优化', content: `• 新增回访离线收益：离线20分钟以上再次进入游戏，可获得铜钱、体力、灵石；修仙已解锁时额外获得修为和灵气，最多累计12小时。
-• 新增全局奖励弹窗，签到、邮件、今日目标、离线收益都会用更明显的奖励反馈展示。
-• 每日签到反馈强化：连续天数和获得物品会集中展示，让玩家每天回来更有仪式感。
-• 今日目标领取反馈强化，完成目标后会弹出奖励卡，提升成长正反馈。
-• 邮件奖励领取改为弹窗展示，补偿、活动奖励更清楚。` },
-    { date: '2026-07-05', title: 'V0.8 留存与上瘾循环优化', content: `• 主界面新增「今日目标/下一步」卡片，直接展示修行志当前目标、进度、奖励和一键领奖/前往。
-• 新增每日随机「今日机缘」，每天给种田、战斗、登塔、移动、修行或铜钱收益不同加成。
-• 修行志奖励反馈强化，完成后更容易看到可领取状态；财运机缘会提高今日目标铜钱奖励。
-• 登仙塔新增每5层/10层阶段宝箱，最高层刷新后提示可领取，宝箱奖励灵石、魂晶、法宝碎片等。
-• 首日体验更集中：把种田、地脉、修行志、修仙战斗串成更明确的下一步目标链。` },
-    { date: '2026-07-05', title: 'V0.6.11 登仙塔与实时爬塔榜', content: `• 秘境页新增「登仙塔」玩法：逐层自动挑战，胜利刷新个人最高层。
-• 每层消耗灵力与体力，层数越高敌人越强、奖励越丰厚。
-• 每5层出现精英，每10层出现镇塔首领。
-• 登塔奖励包含修为、灵气、灵石、魂晶、法宝碎片、灵蕴玉等。
-• 登仙塔页面新增实时爬塔榜，按玩家最新云档最高层排行展示。` },
-    { date: '2026-07-05', title: 'V0.6.10 元神/丹药/境界异常修复', content: `• 修复金丹境界表重复导致金丹后期显示/突破映射异常的问题。
-• 修复高级丹药被错误当作筑基丹生效的问题，造化丹、炼神丹、还虚丹等恢复各自正确效果。
-• 元神修炼页面显示与实际消耗对齐：修炼消耗灵气，经验上限显示正确。
-• 元神等级现在真实提升灵力上限，但不会直接影响境界突破条件。` },
-    { date: '2026-07-05', title: 'V0.6.9 玩家反馈系统', content: `• 首页「关于游戏」下新增功能反馈、BUG反馈、意见提交入口，设置页反馈入口保留。
-• 玩家提交的反馈会进入后台管理，可按类型与状态筛选查看。
-• 后台反馈管理中文化状态：待处理、已读、已解决、已关闭。` },
-    { date: '2026-07-03', title: '前后端分离重构', content: '后端Express+MySQL，前端nginx托管，数据全部存数据库' },
-    { date: '2026-07-03', title: '修仙 V0.5：秘境探索/炼器/门派/法宝', content: '⚔️秘境+🔨炼器+🏛️门派+🗡️法宝+🧘境界扩展' }
+    { date: "2026-07-06", title: "V1.2.4 游戏内聊天", content: "新增世界频道聊天系统，登录后可在聊天面板发送和查看消息，支持实时轮询刷新。" },
+    { date: "2026-07-06", title: "V1.2.3 排行差距与功法推荐", content: "排行榜增加距上一名/上榜差距提示，修仙页增加功法选择推荐，活动页增加每日签到联动提示。" },
+    { date: "2026-07-06", title: "V1.2.2 战斗收益与活动中心", content: "战斗页增加区域产出说明与掉落用途标签，修仙页增加挂机收益估算，活动页升级为小型活动中心展示更多进行中目标。" },
+    { date: "2026-07-06", title: "V1.2.1 引导与用途说明", content: "修行志目标增加地点提示，修仙市集商品显示用途标签，背包物品显示用途说明，角色页新增成长诊断建议。" },
+    { date: "2026-07-06", title: "V1.2 全功能可玩性增强", content: "修行志扩展为全功能目标系统，新增钓鱼、挖矿、烹饪、收集、培育、功法、登塔、委托等长期与每日目标，并展示奖励内容，让每个玩法都有更明确的下一步。" },
+    { date: "2026-07-06", title: "V1.1.8 时间控制按钮优化", content: "时间倍率控制移回剩余时间条旁，改为减速和加速两个按钮，避免占用金钱与灵石显示区域。" },
+    { date: "2026-07-06", title: "V1.1.7 时间倍率控制", content: "顶部状态栏新增时间速度按钮，可在0.2、0.3、0.5、1、2、4、8倍之间切换，支持放慢节奏或快速推进一天。" },
+    { date: "2026-07-06", title: "V1.1.6 顶部灵石显示", content: "在顶部金钱位置旁新增灵石余额显示，进入修仙市集购买功法、纳物符、乾坤袋时可直接查看当前灵石数量。" },
+    { date: "2026-07-06", title: "V1.1.5 灵石购买修复", content: "修复修仙市集灵石商品购买弹窗仍显示铜钱、批量购买校验异常的问题；灵石商品现在显示灵石单价与总价，并按灵石余额购买。" },
+    { date: "2026-07-06", title: "V1.1.4 修仙市集商品修复", content: "修复修仙市集入口只停留在普通商圈的问题，现在进入后会打开独立修仙市集，直接展示灵石、丹药、纳物符、乾坤袋与功法秘籍。" },
+    { date: "2026-07-06", title: "V1.1.3 修仙市集入口", content: "新增地图「修仙之途 → 修仙市集」按钮，点击后直接进入商店并定位到修仙市集，方便购买功法秘籍、纳物符和乾坤袋。" },
+    { date: "2026-07-06", title: "V1.1.2 限时活动入口", content: "新增独立「限时活动」页面和地图按钮，妖潮来袭可查看进度、前往秘境讨伐并直接领取活动奖励，活动说明同步写入新手教程。" },
+    { date: "2026-07-06", title: "V1.1.1 教程与后台奖励完善", content: "新手教程补充天劫渡劫、功法市集和仙途七线说明；后台 GM 邮件奖励新增修为、灵气、灵力、灵石发放，玩家领取邮件后直接写入当前角色。" },
+    { date: "2026-07-05", title: "V1.1 七线补全", content: "修行志新增七条长期目标：修仙主线剧情、装备套装追求、深层秘境首通、仙盟互助、限时妖潮活动、下一步变强引导和回访福利，让玩家从新手到中后期都有明确追求与奖励反馈。" },
+    { date: "2026-07-05", title: "V1.0.1 功法与灵石市集扩展", content: "修仙市集新增灵石兑换的纳物符、乾坤袋，可使用后永久扩展背包；新增青木长生诀、九霄雷诀、太虚归元功三门功法，购买秘籍后可学习并消耗灵气/修为参悟升级，提升修炼收益、战力和渡劫成功率。" },
+    { date: "2026-07-05", title: "V1.0 天劫渡劫与挂机修仙", content: "增强离线奖励，修仙后离线和在线挂机都会获得灵气、修为与元神经验；跨大境界突破加入天劫渡劫、成功率展示、雷劈像素角色特效与雷鸣音效；渡劫失败会扣修为灵力、伤元神并可能掉级；新增养魂丹、涅魂丹用于恢复伤势和元神。" },
+    { date: "2026-07-05", title: "V0.9.2 玩家强度提升", content: "提升资质成长带来的攻击、生命、身法和减伤收益；修复修行志根骨奖励字段错配；提高修行志目标奖励，让每日目标和七日成长的变强反馈更明显。" },
+    { date: "2026-07-05", title: "V0.9.1 箱子制造与体力恢复修复", content: "修复工坊箱子满足材料仍无法制造的问题，增加材料扣除失败保护；新增体力缓慢恢复：在线每60秒自然恢复1点，游戏时间推进和体力行动也会折算恢复。" },
+    { date: "2026-07-05", title: "V0.9 玩家爽感与回访优化", content: "• 新增回访离线收益：离线20分钟以上再次进入游戏，可获得铜钱、体力、灵石；修仙已解锁时额外获得修为和灵气，最多累计12小时。\n• 新增全局奖励弹窗，签到、邮件、今日目标、离线收益都会用更明显的奖励反馈展示。\n• 每日签到反馈强化：连续天数和获得物品会集中展示，让玩家每天回来更有仪式感。\n• 今日目标领取反馈强化，完成目标后会弹出奖励卡，提升成长正反馈。\n• 邮件奖励领取改为弹窗展示，补偿、活动奖励更清楚。" },
+    { date: "2026-07-05", title: "V0.8 留存与上瘾循环优化", content: "• 主界面新增「今日目标/下一步」卡片，直接展示修行志当前目标、进度、奖励和一键领奖/前往。\n• 新增每日随机「今日机缘」，每天给种田、战斗、登塔、移动、修行或铜钱收益不同加成。\n• 修行志奖励反馈强化，完成后更容易看到可领取状态；财运机缘会提高今日目标铜钱奖励。\n• 登仙塔新增每5层/10层阶段宝箱，最高层刷新后提示可领取，宝箱奖励灵石、魂晶、法宝碎片等。\n• 首日体验更集中：把种田、地脉、修行志、修仙战斗串成更明确的下一步目标链。" },
+    { date: "2026-07-05", title: "V0.6.11 登仙塔与实时爬塔榜", content: "• 秘境页新增「登仙塔」玩法：逐层自动挑战，胜利刷新个人最高层。\n• 每层消耗灵力与体力，层数越高敌人越强、奖励越丰厚。\n• 每5层出现精英，每10层出现镇塔首领。\n• 登塔奖励包含修为、灵气、灵石、魂晶、法宝碎片、灵蕴玉等。\n• 登仙塔页面新增实时爬塔榜，按玩家最新云档最高层排行展示。" },
+    { date: "2026-07-05", title: "V0.6.10 元神/丹药/境界异常修复", content: "• 修复金丹境界表重复导致金丹后期显示/突破映射异常的问题。\n• 修复高级丹药被错误当作筑基丹生效的问题，造化丹、炼神丹、还虚丹等恢复各自正确效果。\n• 元神修炼页面显示与实际消耗对齐：修炼消耗灵气，经验上限显示正确。\n• 元神等级现在真实提升灵力上限，但不会直接影响境界突破条件。" },
+    { date: "2026-07-05", title: "V0.6.9 玩家反馈系统", content: "• 首页「关于游戏」下新增功能反馈、BUG反馈、意见提交入口，设置页反馈入口保留。\n• 玩家提交的反馈会进入后台管理，可按类型与状态筛选查看。\n• 后台反馈管理中文化状态：待处理、已读、已解决、已关闭。" },
+    { date: "2026-07-03", title: "前后端分离重构", content: "后端Express+MySQL，前端nginx托管，数据全部存数据库" },
+    { date: "2026-07-03", title: "修仙 V0.5：秘境探索/炼器/门派/法宝", content: "⚔️秘境+🔨炼器+🏛️门派+🗡️法宝+🧘境界扩展" }
   ]
 }
 async function getConfig() {
@@ -1243,6 +1206,47 @@ app.post('/api/admin/users/:id/unban', async (req, res) => {
 app.post('/api/admin/users/:id/reset-password', async (req, res) => {
   try { const admin = await requireAdmin(req, res); if (!admin) return; const { password } = req.body; if (!password || password.length < 6) return send(res, 400, { error: '新密码至少6位' }); await pool.execute('UPDATE users SET password_hash=? WHERE id=?', [bcrypt.hashSync(password, 10), req.params.id]); if (req.params.id !== admin.id) await pool.execute('DELETE FROM sessions WHERE user_id=?', [req.params.id]); send(res, 200, { ok: true }) } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
+
+const sanitizeFloatingWelfare = (input, fallback = {}) => {
+  const src = input && typeof input === 'object' ? input : fallback
+  const rawGifts = Array.isArray(src?.gifts) ? src.gifts : Array.isArray(fallback?.gifts) ? fallback.gifts : []
+  const cleanRewards = (r = {}) => ({
+    money: Math.max(0, Math.min(999999999, Math.floor(Number(r.money) || 0))),
+    spiritStone: Math.max(0, Math.min(9999999, Math.floor(Number(r.spiritStone ?? r.spirit_stone) || 0))),
+    aura: Math.max(0, Math.min(999999999, Math.floor(Number(r.aura) || 0))),
+    cultivation: Math.max(0, Math.min(999999999, Math.floor(Number(r.cultivation) || 0))),
+    mana: Math.max(0, Math.min(9999999, Math.floor(Number(r.mana) || 0))),
+    stamina: Math.max(0, Math.min(999999, Math.floor(Number(r.stamina) || 0))),
+    attributeExp: r.attributeExp && typeof r.attributeExp === 'object' ? {
+      physique: Math.max(0, Math.min(999999, Math.floor(Number(r.attributeExp.physique) || 0))),
+      strength: Math.max(0, Math.min(999999, Math.floor(Number(r.attributeExp.strength) || 0))),
+      agility: Math.max(0, Math.min(999999, Math.floor(Number(r.attributeExp.agility) || 0))),
+      perception: Math.max(0, Math.min(999999, Math.floor(Number(r.attributeExp.perception) || 0)))
+    } : {},
+    items: Array.isArray(r.items) ? r.items.slice(0, 20).map(item => ({
+      itemId: String(item?.itemId || '').slice(0, 80),
+      name: String(item?.name || '').slice(0, 40),
+      quantity: Math.max(1, Math.min(99999, Math.floor(Number(item?.quantity) || 1))),
+      quality: ['normal','fine','excellent','supreme'].includes(String(item?.quality || 'normal')) ? String(item?.quality || 'normal') : 'normal'
+    })).filter(item => item.itemId) : []
+  })
+  return {
+    enabled: Boolean(src?.enabled),
+    buttonText: String(src?.buttonText || '福利').slice(0, 12),
+    title: String(src?.title || '桃源福利').slice(0, 30),
+    desc: String(src?.desc || '').slice(0, 200),
+    gifts: rawGifts.slice(0, 12).map((gift, idx) => ({
+      id: String(gift?.id || `gift_${idx + 1}`).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || `gift_${idx + 1}`,
+      type: ['newbie','daily','seven_day','custom'].includes(String(gift?.type || 'custom')) ? String(gift?.type || 'custom') : 'custom',
+      title: String(gift?.title || '福利礼包').slice(0, 30),
+      desc: String(gift?.desc || '').slice(0, 160),
+      enabled: gift?.enabled !== false,
+      reset: ['once','daily','sevenDay'].includes(String(gift?.reset || 'once')) ? String(gift?.reset || 'once') : 'once',
+      rewards: cleanRewards(gift?.rewards || {})
+    })).filter(gift => gift.title)
+  }
+}
+
 app.get('/api/admin/config', async (req, res) => {
   try { const admin = await requireAdmin(req, res); if (!admin) return; send(res, 200, await getConfig()) } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
@@ -1258,6 +1262,7 @@ app.put('/api/admin/config', async (req, res) => {
       iosDownloadUrl: String(body.iosDownloadUrl ?? cfg.iosDownloadUrl ?? '').slice(0, 1000), androidDownloadUrl: String(body.androidDownloadUrl ?? cfg.androidDownloadUrl ?? '').slice(0, 1000),
       sponsorAlipayImageUrl: String(body.sponsorAlipayImageUrl ?? cfg.sponsorAlipayImageUrl).slice(0, 1000), sponsorWechatImageUrl: String(body.sponsorWechatImageUrl ?? cfg.sponsorWechatImageUrl).slice(0, 1000),
       sponsorAfdianUrl: String(body.sponsorAfdianUrl ?? cfg.sponsorAfdianUrl).slice(0, 500),
+      floatingWelfare: sanitizeFloatingWelfare(body.floatingWelfare ?? cfg.floatingWelfare, cfg.floatingWelfare),
       registrationEnabled: Boolean(body.registrationEnabled), maintenanceMode: Boolean(body.maintenanceMode),
       updateLogs: Array.isArray(body.updateLogs) ? body.updateLogs.slice(0, 100).map(x => ({ date: String(x?.date || new Date().toISOString().slice(0, 10)).slice(0, 20), title: String(x?.title || '').slice(0, 80), content: String(x?.content || '').slice(0, 1000) })).filter(x => x.title || x.content) : cfg.updateLogs
     }

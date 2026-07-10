@@ -100,6 +100,104 @@
             </div>
           </div>
 
+          <div v-if="activeTab === 'welfare'" class="border border-accent/20 rounded-xs p-3 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 class="text-accent">悬浮福利活动</h2>
+                <p class="text-xs text-muted mt-1">玩家游戏内会看到一个悬浮按钮，点开后可领取这里配置的新手福利、每日福利、七日福利或自定义礼包。</p>
+              </div>
+              <button class="btn text-xs" @click="addFloatingGift">新增礼包</button>
+            </div>
+            <label class="flex items-center gap-2 text-sm"><input v-model="config.floatingWelfare.enabled" type="checkbox" /> 开启悬浮福利按钮</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div>
+                <label class="block text-sm">按钮文字</label>
+                <input v-model="config.floatingWelfare.buttonText" class="input" maxlength="12" placeholder="福利" />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm">弹窗标题</label>
+                <input v-model="config.floatingWelfare.title" class="input" maxlength="30" placeholder="桃源福利" />
+              </div>
+            </div>
+            <label class="block text-sm">弹窗说明</label>
+            <textarea v-model="config.floatingWelfare.desc" class="input min-h-20" maxlength="200" placeholder="给玩家看的活动说明" />
+
+            <div v-for="(gift, idx) in config.floatingWelfare.gifts" :key="idx" class="border border-accent/10 rounded-xs p-3 space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="text-sm text-accent">礼包 #{{ Number(idx) + 1 }}</div>
+                <button class="btn text-xs text-danger" @click="config.floatingWelfare.gifts.splice(idx, 1)">删除礼包</button>
+              </div>
+              <label class="flex items-center gap-2 text-sm"><input v-model="gift.enabled" type="checkbox" /> 启用该礼包</label>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <div>
+                  <label class="block text-sm">礼包ID</label>
+                  <input v-model="gift.id" class="input" placeholder="daily" />
+                </div>
+                <div>
+                  <label class="block text-sm">类型</label>
+                  <select v-model="gift.type" class="input">
+                    <option value="newbie">新手福利</option>
+                    <option value="daily">每日福利</option>
+                    <option value="seven_day">七日福利</option>
+                    <option value="custom">自定义</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm">重置方式</label>
+                  <select v-model="gift.reset" class="input">
+                    <option value="once">一次性</option>
+                    <option value="daily">每日一次</option>
+                    <option value="sevenDay">七日周期</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm">礼包标题</label>
+                  <input v-model="gift.title" class="input" placeholder="每日福利" />
+                </div>
+              </div>
+              <label class="block text-sm">礼包说明</label>
+              <textarea v-model="gift.desc" class="input min-h-16" placeholder="给玩家看的说明" />
+              <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+                <div><label class="block text-sm">铜钱</label><input v-model.number="gift.rewards.money" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">灵石</label><input v-model.number="gift.rewards.spiritStone" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">灵气</label><input v-model.number="gift.rewards.aura" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">修为</label><input v-model.number="gift.rewards.cultivation" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">灵力</label><input v-model.number="gift.rewards.mana" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">体力</label><input v-model.number="gift.rewards.stamina" class="input" type="number" min="0" /></div>
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div><label class="block text-sm">根骨经验</label><input v-model.number="gift.rewards.attributeExp.physique" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">力道经验</label><input v-model.number="gift.rewards.attributeExp.strength" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">身法经验</label><input v-model.number="gift.rewards.attributeExp.agility" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">悟性经验</label><input v-model.number="gift.rewards.attributeExp.perception" class="input" type="number" min="0" /></div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <label class="block text-sm">物品奖励</label>
+                  <button class="btn text-xs" @click="addFloatingGiftItem(gift)">增加物品</button>
+                </div>
+                <div v-for="(item, itemIdx) in gift.rewards.items" :key="itemIdx" class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                  <select v-model="item.itemId" class="input md:col-span-5" @change="syncFloatingItemName(item)">
+                    <option value="">请选择物品</option>
+                    <optgroup v-for="cat in categories" :key="cat" :label="cat">
+                      <option v-for="mi in ALL_ITEMS.filter(i => i.category === cat)" :key="mi.id" :value="mi.id">{{ mi.name }}</option>
+                    </optgroup>
+                  </select>
+                  <input v-model="item.name" class="input md:col-span-2" placeholder="显示名" />
+                  <input v-model.number="item.quantity" class="input md:col-span-2" type="number" min="1" placeholder="数量" />
+                  <select v-model="item.quality" class="input md:col-span-2">
+                    <option value="normal">普通</option>
+                    <option value="fine">优良</option>
+                    <option value="excellent">精品</option>
+                    <option value="supreme">极品</option>
+                  </select>
+                  <button class="btn text-xs text-danger justify-center" @click="gift.rewards.items.splice(itemIdx, 1)">删</button>
+                </div>
+              </div>
+            </div>
+            <button class="btn w-full justify-center" @click="saveConfig">保存悬浮福利配置</button>
+          </div>
+
           <div v-if="activeTab === 'about'" class="border border-accent/20 rounded-xs p-3 space-y-3">
             <h2 class="text-accent">关于游戏 / 赞助作者</h2>
             <p class="text-xs text-muted">这些内容会显示在首页“关于游戏”和“赞助作者”弹窗里。二维码图片地址留空时使用内置默认图片。</p>
@@ -374,11 +472,12 @@ const username = ref('')
 const password = ref('')
 const user = ref<any>(null)
 const keyword = ref('')
-const activeTab = ref<'basic' | 'about' | 'announcements' | 'updates' | 'players' | 'saveAudit' | 'ledger' | 'gm' | 'feedbacks'>('basic')
+const activeTab = ref<'basic' | 'about' | 'announcements' | 'welfare' | 'updates' | 'players' | 'saveAudit' | 'ledger' | 'gm' | 'feedbacks'>('basic')
 const adminTabs = [
   { key: 'basic', label: '基础配置' },
   { key: 'about', label: '关于/赞助' },
   { key: 'announcements', label: '全服公告' },
+  { key: 'welfare', label: '悬浮福利' },
   { key: 'updates', label: '更新记录' },
   { key: 'players', label: '玩家管理' },
   { key: 'saveAudit', label: '存档审计' },
@@ -388,7 +487,7 @@ const adminTabs = [
 ] as const
 const message = ref('')
 const messageType = ref<'ok' | 'error'>('ok')
-const config = reactive<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], aboutQqText: '', aboutQqUrl: '', aboutGithubUrl: '', aboutTapTapUrl: '', sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: '', iosDownloadUrl: '', androidDownloadUrl: '', registrationEnabled: true, maintenanceMode: false })
+const config = reactive<any>({ siteName: '桃源乡', announcement: '', announcementIntervalHours: 24, updateLogs: [], aboutQqText: '', aboutQqUrl: '', aboutGithubUrl: '', aboutTapTapUrl: '', sponsorAlipayImageUrl: '', sponsorWechatImageUrl: '', sponsorAfdianUrl: '', iosDownloadUrl: '', androidDownloadUrl: '', registrationEnabled: true, maintenanceMode: false, floatingWelfare: { enabled: false, buttonText: '福利', title: '桃源福利', desc: '', gifts: [] } })
 const overview = reactive<any>({ stats: { userCount: 0, saveCount: 0, sessionCount: 0 }, users: [] })
 const newWorldAnnouncement = ref('')
 const newWorldAnnouncementRepeatMinutes = ref(0)
@@ -440,7 +539,7 @@ async function api(path: string, options: RequestInit = {}) {
   return data
 }
 async function loadMe() { const data = await api('/api/me', { headers: headers() }); user.value = data.user }
-async function loadConfig() { Object.assign(config, await api(user.value?.role === 'admin' ? '/api/admin/config' : '/api/config', { headers: headers() })) }
+async function loadConfig() { Object.assign(config, await api(user.value?.role === 'admin' ? '/api/admin/config' : '/api/config', { headers: headers() })); normalizeFloatingWelfareConfig() }
 async function loadOverview() { if (user.value?.role === 'admin') Object.assign(overview, await api('/api/admin/overview', { headers: headers() })) }
 async function loadWorldAnnouncements() {
   if (user.value?.role !== 'admin') return
@@ -510,6 +609,31 @@ async function login() {
 async function register() {
   try { const data = await api('/api/auth/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username.value, password: password.value }) }); localStorage.setItem('taoyuan_account_token', data.token); user.value = data.user; await loadConfig(); await loadOverview(); await loadWorldAnnouncements(); setMsg(data.message || '注册成功') } catch (e: any) { setMsg(e.message, 'error') }
 }
+function ensureFloatingGiftShape(gift: any) {
+  gift.rewards ||= {}
+  gift.rewards.attributeExp ||= { physique: 0, strength: 0, agility: 0, perception: 0 }
+  gift.rewards.items ||= []
+  return gift
+}
+function addFloatingGift() {
+  config.floatingWelfare ||= { enabled: true, buttonText: '福利', title: '桃源福利', desc: '', gifts: [] }
+  config.floatingWelfare.gifts ||= []
+  config.floatingWelfare.gifts.push(ensureFloatingGiftShape({ id: `gift_${Date.now().toString(36)}`, type: 'custom', title: '自定义福利', desc: '', enabled: true, reset: 'once', rewards: { money: 0, spiritStone: 0, aura: 0, cultivation: 0, mana: 0, stamina: 0, attributeExp: { physique: 0, strength: 0, agility: 0, perception: 0 }, items: [] } }))
+}
+function addFloatingGiftItem(gift: any) {
+  ensureFloatingGiftShape(gift)
+  gift.rewards.items.push({ itemId: '', name: '', quantity: 1, quality: 'normal' })
+}
+function syncFloatingItemName(item: any) {
+  const found = ALL_ITEMS.find(i => i.id === item.itemId)
+  if (found && !item.name) item.name = found.name
+}
+function normalizeFloatingWelfareConfig() {
+  config.floatingWelfare ||= { enabled: false, buttonText: '福利', title: '桃源福利', desc: '', gifts: [] }
+  config.floatingWelfare.gifts ||= []
+  config.floatingWelfare.gifts.forEach(ensureFloatingGiftShape)
+}
+
 function addUpdateLog() {
   config.updateLogs ||= []
   config.updateLogs.unshift({ date: new Date().toISOString().slice(0, 10), title: '', content: '' })
