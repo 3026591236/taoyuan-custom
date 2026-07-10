@@ -27,11 +27,12 @@
         <p class="text-xl text-accent">{{ ascensionStore.immortalTitle || '初入仙门' }} · {{ ascensionStore.immortalRank }}</p>
         <p class="text-xs text-muted mt-1">{{ officeInfo.icon }} {{ officeInfo.name }}：{{ officeInfo.desc }}</p>
         <p class="text-[10px] text-accent mt-1">{{ ascensionStore.immortalRealmInfo.icon }} 当前仙阶：{{ ascensionStore.immortalRealmInfo.name }} · {{ ascensionStore.immortalRealmInfo.desc }}</p>
-        <div class="grid grid-cols-4 gap-1.5 mt-3 text-center">
+        <div class="grid grid-cols-5 gap-1.5 mt-3 text-center">
           <div class="stat"><b>{{ ascensionStore.merit }}</b><span>功德</span></div>
           <div class="stat"><b>{{ ascensionStore.immortalJade }}</b><span>仙玉</span></div>
           <div class="stat"><b>{{ ascensionStore.ruleFragments }}</b><span>法则</span></div>
           <div class="stat"><b>{{ ascensionStore.immortalPower }}</b><span>仙战力</span></div>
+          <div class="stat"><b>{{ ascensionStore.immortalEssence }}</b><span>器魄</span></div>
         </div>
       </div>
     </div>
@@ -55,6 +56,24 @@
           <p class="text-xs text-accent">{{ part.name }} Lv.{{ part.level }}</p>
           <p class="text-[10px] text-muted leading-relaxed">{{ part.desc }}</p>
         </div>
+      </div>
+    </div>
+
+    <div v-if="isTab('gear')" class="relative z-10 mb-4 immortal-gear-panel">
+      <div class="gear-banner">
+        <div><p class="text-xs text-accent">仙器谱 · 六部位共鸣</p><p class="text-[10px] text-muted mt-1">试炼与裂隙掉落仙器精魄；淬炼至 Lv.3 激活部位共鸣。</p></div>
+        <div class="gear-power"><b>+{{ ascensionStore.gearPower }}</b><span>仙器战力</span></div>
+      </div>
+      <p class="gear-resonance">{{ ascensionStore.gearResonance }}</p>
+      <div class="gear-grid">
+        <button v-for="gear in IMMORTAL_GEAR" :key="gear.id" class="gear-card" :class="`gear-${gear.id}`" @click="ascensionStore.upgradeImmortalGear(gear.id)">
+          <img :src="gear.art" :alt="gear.name" draggable="false" />
+          <span class="gear-shade"></span>
+          <span class="gear-level">Lv.{{ ascensionStore.gearLevels[gear.id] || 0 }}</span>
+          <span class="gear-name">{{ gear.name }}</span>
+          <span class="gear-desc">{{ gear.desc }}</span>
+          <span class="gear-cost">淬炼：器魄{{ 4 + (ascensionStore.gearLevels[gear.id] || 0) * 3 }} / 仙玉{{ 3 + (ascensionStore.gearLevels[gear.id] || 0) * 2 }}<template v-if="(ascensionStore.gearLevels[gear.id] || 0) >= 3"> / 法则{{ 1 + Math.floor(((ascensionStore.gearLevels[gear.id] || 0) - 3) / 2) }}</template></span>
+        </button>
       </div>
     </div>
 
@@ -292,7 +311,7 @@
 </template>
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { useAscensionStore, IMMORTAL_ARTS, IMMORTAL_TRIALS, IMMORTAL_OFFICES, IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS } from '@/stores/useAscensionStore'
+import { useAscensionStore, IMMORTAL_ARTS, IMMORTAL_GEAR, IMMORTAL_TRIALS, IMMORTAL_OFFICES, IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS } from '@/stores/useAscensionStore'
 import { addLog } from '@/composables/useGameLog'
 import { computed } from 'vue'
 const router = useRouter(); const route = useRoute(); const ascensionStore = useAscensionStore()
@@ -302,6 +321,7 @@ const isTab = (...keys: string[]) => keys.includes(immortalTab.value)
 const switchTab = (tab: string) => { void router.push({ path: '/game/immortal-world', query: { ...route.query, tab } }) }
 const sectionTitle = computed(() => ({
   home: '仙界大厅',
+  gear: '仙器谱',
   arts: '仙术演武',
   story: '仙界主线',
   realm: '仙阶突破',
@@ -322,12 +342,13 @@ const ART = {
   market: '/assets/immortal/immortal-market.png',
   story: '/assets/immortal/story-gate.png'
 }
-const zoneArt = (key: string) => ({ realm: ART.story, cave: ART.cave, market: ART.market, trial: ART.trial, arena: ART.rival, rift: ART.rift, fate: ART.story, office: ART.market, story: ART.story, arts: ART.trial, echo: ART.cave }[key] || ART.story)
+const zoneArt = (key: string) => ({ realm: ART.story, cave: ART.cave, market: ART.market, trial: ART.trial, arena: ART.rival, rift: ART.rift, fate: ART.story, office: ART.market, story: ART.story, gear: ART.trial, arts: ART.trial, echo: ART.cave }[key] || ART.story)
 const IMMORTAL_ZONES = [
   { key: 'realm', icon: '🌌', name: '仙阶突破', desc: '真仙、玄仙、地仙等仙阶成长' },
   { key: 'cave', icon: '🏯', name: '仙界洞天', desc: '仙域经营、洞天维护与建设' },
   { key: 'market', icon: '💎', name: '仙市兑换', desc: '功德、仙玉、法则资源转化' },
   { key: 'trial', icon: '⚔️', name: '仙域试炼', desc: '挑战仙域敌人与获取材料' },
+  { key: 'gear', icon: '✦', name: '仙器谱', desc: '六部位仙器、淬炼与套装共鸣' },
   { key: 'arena', icon: '🏆', name: '仙擂问道', desc: '斗法、连胜与赛季奖励' },
   { key: 'fate', icon: '🔮', name: '命盘天命', desc: '命盘、道统与天命抉择' },
   { key: 'rift', icon: '🕳️', name: '混沌裂隙', desc: '镇压裂隙获取高阶奖励' },
@@ -485,6 +506,7 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 
 /* V2.6.8 二次元仙界美术包 */
 .zone-card{isolation:isolate}.zone-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.52;z-index:-2;transition:.2s}.zone-card:hover .zone-art{opacity:.72;transform:scale(1.04)}.zone-card-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(135deg,rgba(5,10,30,.45),rgba(9,9,24,.9) 76%)}.immortal-scene-banner{position:relative;height:118px;overflow:hidden;border:1px solid rgba(255,226,138,.3);border-radius:5px;margin-bottom:8px;background:#0b1025;box-shadow:inset 0 0 20px rgba(0,0,0,.45),0 0 16px rgba(119,217,255,.08)}.immortal-scene-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,9,28,.16),rgba(5,9,28,.52));pointer-events:none}.immortal-scene-banner img{width:100%;height:100%;object-fit:cover;object-position:center 48%;display:block}.visual-trial-card{position:relative;min-height:122px;overflow:hidden;isolation:isolate}.combat-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:74% 42%;opacity:.42;z-index:-1;filter:saturate(1.08) contrast(1.06)}.visual-trial-card::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,11,28,.94) 0%,rgba(7,11,28,.67) 58%,rgba(7,11,28,.15) 100%)}.rival-art{object-position:78% 35%}.visual-rift-card{position:relative;overflow:hidden;isolation:isolate}.rift-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.42;z-index:-1;filter:saturate(1.14) contrast(1.08)}.visual-rift-card::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(135deg,rgba(7,8,25,.7),rgba(10,4,30,.9))}
+.immortal-gear-panel{padding:10px;border:1px solid rgba(255,226,138,.26);border-radius:8px;background:linear-gradient(145deg,rgba(10,18,45,.75),rgba(31,12,58,.62));box-shadow:inset 0 0 35px rgba(125,210,255,.06),0 0 24px rgba(255,226,138,.07)}.gear-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:76px;padding:12px;border:1px solid rgba(255,226,138,.25);border-radius:6px;background:linear-gradient(90deg,rgba(255,226,138,.12),rgba(104,207,255,.08))}.gear-power{text-align:right}.gear-power b{display:block;font-size:22px;color:#ffe28a;text-shadow:0 0 14px rgba(255,226,138,.6)}.gear-power span{font-size:10px;color:rgba(255,255,255,.55)}.gear-resonance{margin:8px 0;padding:6px 8px;border-left:2px solid #ffe28a;color:#bcecff;font-size:11px;background:rgba(255,226,138,.05)}.gear-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.gear-card{position:relative;display:flex;min-height:164px;overflow:hidden;flex-direction:column;align-items:flex-start;justify-content:flex-end;text-align:left;padding:9px;border:1px solid rgba(142,222,255,.26);border-radius:7px;background:#0b1027;isolation:isolate;transition:.22s}.gear-card:hover{transform:translateY(-2px);border-color:#ffe28a;box-shadow:0 0 22px rgba(255,226,138,.24)}.gear-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:-2;transition:.25s}.gear-card:hover img{transform:scale(1.08)}.gear-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(8,10,30,.05),rgba(6,8,27,.94) 78%)}.gear-level{position:absolute;right:7px;top:7px;padding:2px 6px;border:1px solid rgba(255,226,138,.58);border-radius:999px;color:#ffe28a;font-size:10px;background:rgba(11,12,35,.72)}.gear-name{color:#ffe28a;font-size:13px;text-shadow:0 0 10px rgba(255,226,138,.45)}.gear-desc{min-height:30px;margin-top:3px;color:rgba(235,245,255,.72);font-size:10px;line-height:1.35}.gear-cost{margin-top:5px;color:#9bdfff;font-size:10px;line-height:1.3}
 @media (max-width:420px){.immortal-zone-grid{grid-template-columns:1fr}.immortal-hero{align-items:flex-start}.immortal-portrait-stage{width:158px;height:236px}.immortal-artwork{inset:3px;width:calc(100% - 6px);height:calc(100% - 6px)}}
 
 .preview-badge{display:inline-flex;margin-left:6px;padding:1px 6px;border:1px solid rgba(255,226,138,.45);border-radius:999px;font-size:10px;color:#ffe28a;background:rgba(255,226,138,.12);box-shadow:0 0 12px rgba(255,226,138,.18)}
