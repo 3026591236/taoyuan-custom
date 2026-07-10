@@ -158,12 +158,12 @@
               <label class="block text-sm">礼包说明</label>
               <textarea v-model="gift.desc" class="input min-h-16" placeholder="给玩家看的说明" />
               <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
-                <div><label class="block text-sm">铜钱</label><input v-model.number="gift.rewards.money" class="input" type="number" min="0" /></div>
-                <div><label class="block text-sm">灵石</label><input v-model.number="gift.rewards.spiritStone" class="input" type="number" min="0" /></div>
-                <div><label class="block text-sm">灵气</label><input v-model.number="gift.rewards.aura" class="input" type="number" min="0" /></div>
-                <div><label class="block text-sm">修为</label><input v-model.number="gift.rewards.cultivation" class="input" type="number" min="0" /></div>
-                <div><label class="block text-sm">灵力</label><input v-model.number="gift.rewards.mana" class="input" type="number" min="0" /></div>
-                <div><label class="block text-sm">体力</label><input v-model.number="gift.rewards.stamina" class="input" type="number" min="0" /></div>
+                <div><label class="block text-sm">铜钱</label><input v-model.number="gift.rewards.money" class="input" type="number" min="0" max="50000" /></div>
+                <div><label class="block text-sm">灵石</label><input v-model.number="gift.rewards.spiritStone" class="input" type="number" min="0" max="300" /></div>
+                <div><label class="block text-sm">灵气</label><input v-model.number="gift.rewards.aura" class="input" type="number" min="0" max="50000" /></div>
+                <div><label class="block text-sm">修为</label><input v-model.number="gift.rewards.cultivation" class="input" type="number" min="0" max="100000" /></div>
+                <div><label class="block text-sm">灵力</label><input v-model.number="gift.rewards.mana" class="input" type="number" min="0" max="10000" /></div>
+                <div><label class="block text-sm">体力</label><input v-model.number="gift.rewards.stamina" class="input" type="number" min="0" max="500" /></div>
               </div>
               <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <div><label class="block text-sm">根骨经验</label><input v-model.number="gift.rewards.attributeExp.physique" class="input" type="number" min="0" /></div>
@@ -407,27 +407,27 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               <div>
                 <label class="block text-sm">铜钱</label>
-                <input v-model.number="gmMail.rewards.money" class="input" type="number" min="0" placeholder="0" />
+                <input v-model.number="gmMail.rewards.money" class="input" type="number" min="0" max="50000" placeholder="0" />
               </div>
               <div>
                 <label class="block text-sm">体力</label>
-                <input v-model.number="gmMail.rewards.stamina" class="input" type="number" min="0" placeholder="0" />
+                <input v-model.number="gmMail.rewards.stamina" class="input" type="number" min="0" max="500" placeholder="0" />
               </div>
               <div>
                 <label class="block text-sm">修为</label>
-                <input v-model.number="gmMail.rewards.cultivation" class="input" type="number" min="0" placeholder="0" />
+                <input v-model.number="gmMail.rewards.cultivation" class="input" type="number" min="0" max="100000" placeholder="0" />
               </div>
               <div>
                 <label class="block text-sm">灵气</label>
-                <input v-model.number="gmMail.rewards.aura" class="input" type="number" min="0" placeholder="0" />
+                <input v-model.number="gmMail.rewards.aura" class="input" type="number" min="0" max="50000" placeholder="0" />
               </div>
               <div>
                 <label class="block text-sm">灵力</label>
-                <input v-model.number="gmMail.rewards.mana" class="input" type="number" min="0" placeholder="0" />
+                <input v-model.number="gmMail.rewards.mana" class="input" type="number" min="0" max="10000" placeholder="0" />
               </div>
               <div>
                 <label class="block text-sm">灵石</label>
-                <input v-model.number="gmMail.rewards.spiritStone" class="input" type="number" min="0" placeholder="0" />
+                <input v-model.number="gmMail.rewards.spiritStone" class="input" type="number" min="0" max="300" placeholder="0" />
               </div>
             </div>
             <div class="space-y-2">

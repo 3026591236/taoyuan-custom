@@ -246,7 +246,9 @@
       refreshSlots()
       const info = saveStore.getSlots().find(s => s.slot === slot)
       const data = parseSaveData(raw)
-      await accountApi(`/api/saves/${slot}`, { method: 'PUT', headers: accountHeaders(), body: JSON.stringify({ raw, data, meta: info || {} }) })
+      const loadedAt = localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || ''
+      const result = await accountApi(`/api/saves/${slot}`, { method: 'PUT', headers: accountHeaders(), body: JSON.stringify({ raw, data, meta: { ...(info || {}), manualSaved: true, lastLoadedAt: loadedAt } }) })
+      if (result?.updatedAt) localStorage.setItem(`taoyuan_cloud_loaded_at_${slot}`, String(result.updatedAt))
       showFloat(`存档 ${slot + 1} 已保存到账号数据库。`, 'success')
     } catch (e: any) {
       showFloat(e.message || '保存到账号失败。', 'danger')

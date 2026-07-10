@@ -234,6 +234,20 @@ async function validateSaveProgression(user, req, { slot, summary, currentSaveRo
   return { error: '检测到异常存档写入，已拒绝保存。请刷新页面或联系管理员处理。', saveGuard: true, reasons }
 }
 
+
+function validateInitialCharacterSave(summary) {
+  const money = saveSummaryNumber(summary.money, 0)
+  const cultivation = saveSummaryNumber(summary.cultivation, 0)
+  const year = saveSummaryNumber(summary.year, 1)
+  const day = saveSummaryNumber(summary.day, 1)
+  const reasons = []
+  // 新建角色只能提交接近新号的初始存档，防止通过创建角色接口注入高资产/高修为存档。
+  if (money > 10000) reasons.push(`initial_money:${money}`)
+  if (cultivation > 1000) reasons.push(`initial_cultivation:${cultivation}`)
+  if (year > 1 || day > 2) reasons.push(`initial_time:${year}-${day}`)
+  return reasons
+}
+
 async function recordSaveAuditEvent(user, req, event = {}) {
   if (!user) return
   try {
@@ -374,6 +388,8 @@ const defaultConfig = {
     ]
   },
   updateLogs: [
+    {"date": "2026-07-10", "title": "V2.5.8 前端注入与后台奖励拦截", "content": "修复保存管理器手动上传未携带云档加载时间导致异常存档可绕过拦截的问题；后端保存接口始终读取当前云档做进度跳变校验；后台悬浮福利和GM邮件奖励统一清洗限额，阻断通过后台配置注入超大铜钱。"},
+    {"date": "2026-07-10", "title": "V2.5.8 前端注入存档拦截修复", "content": "修复保存管理器手动上传未携带云档加载时间导致异常存档可绕过拦截的问题；后端保存接口改为始终读取当前云档进行进度跳变校验，并限制新建角色初始存档边界。"},
     {"date": "2026-07-10", "title": "V2.5.7 快捷入口悬浮与异常角色重置", "content": "将“快捷用药”入口从地图随身区域移出，改为游戏内右侧悬浮按钮；按运营处理将角色“牛马在线”保留账号/角色名并回滚为新号初始状态。"},
     {"date": "2026-07-10", "title": "V2.5.6 快捷用药与时间禁锢丹", "content": "新增游戏侧边页“快捷用药”，汇总背包中可直接使用的食物、丹药与功能道具；新增体力丹，使用后体力+100且可临时超过上限，最多额外+500；新增时间禁锢丹，使用后暂停游戏时间流逝3小时现实时间；两种新丹药接入现有背包/丹药使用体系，并在修仙市集以较高灵石价格出售。"},
     {"date":"2026-07-10","title":"V2.5.5 云存档下载恢复","content":"修复禁用本地文件导入后，账号云存档下载继续游戏误提示存档损坏的问题；保留玩家手动导入/导出入口禁用，仅恢复云端下载写入本地槽位的内部能力。"},
@@ -488,6 +504,7 @@ async function getConfig() {
   const [rows] = await pool.execute('SELECT `key`, `value` FROM config')
   const cfg = { ...defaultConfig }
   for (const r of rows) { try { cfg[r.key] = JSON.parse(r.value) } catch { cfg[r.key] = r.value } }
+  cfg.floatingWelfare = sanitizeFloatingWelfare(cfg.floatingWelfare, defaultConfig.floatingWelfare)
   return cfg
 }
 async function setConfig(key, value) {
@@ -612,13 +629,18 @@ app.post('/api/characters', async (req, res) => {
     if (!name) { conn.release(); return send(res, 400, { error: '角色名不能为空' }) }
     if (!/^[\u4e00-\u9fa5a-zA-Z0-9_]{1,20}$/.test(name)) { conn.release(); return send(res, 400, { error: '角色名只能用中文/字母/数字/下划线' }) }
     const id = uuidv4()
-    await conn.beginTransaction()
-    await conn.execute('INSERT INTO characters (id, user_id, slot, name, gender) VALUES (?, ?, ?, ?, ?)', [id, user.id, slot, name, gender])
     const metaJson = safeStringify({ ...meta, playerName: name, gender })
     const dataJson = data ? JSON.stringify(data) : null
+    const summary = saveSummary(raw || dataJson || '', data, { ...meta, playerName: name, gender })
+    const initialReasons = validateInitialCharacterSave(summary)
+    if (initialReasons.length) {
+      await recordSaveAuditEvent(user, req, { eventType: 'character_create_guard', status: 'rejected', slot, characterId: id, playerName: name, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, detail: { ...summary, reasons: initialReasons } })
+      return send(res, 400, { error: '检测到异常初始存档，已拒绝创建。请刷新页面后重新创建角色。', saveGuard: true, reasons: initialReasons })
+    }
+    await conn.beginTransaction()
+    await conn.execute('INSERT INTO characters (id, user_id, slot, name, gender) VALUES (?, ?, ?, ?, ?)', [id, user.id, slot, name, gender])
     await conn.execute('INSERT INTO saves (user_id, character_id, slot, player_name, raw, data_json, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE character_id=VALUES(character_id), player_name=VALUES(player_name), raw=VALUES(raw), data_json=VALUES(data_json), meta_json=VALUES(meta_json)', [user.id, id, slot, name, raw || dataJson || '', dataJson || raw || '', metaJson])
     await conn.commit()
-    const summary = saveSummary(raw || dataJson || '', data, { ...meta, playerName: name, gender })
     await recordSaveAuditEvent(user, req, { eventType: 'character_create_save', status: 'ok', slot, characterId: id, playerName: name, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, detail: summary })
     send(res, 200, { ok: true, character: { id, slot, name, gender } })
   } catch (e) {
@@ -677,10 +699,10 @@ app.put('/api/saves/:slot', async (req, res) => {
     const dataJson = plainData ? JSON.stringify(plainData) : null
     const summary = saveSummary(raw || dataJson || '', plainData, meta || {})
     let currentSaveRow = null
-    if (clientLoadedAt && Number.isFinite(clientLoadedAt.getTime())) {
-      const [currentRows] = await pool.execute('SELECT updated_at, character_id, player_name, raw, data_json FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
-      if (currentRows.length) {
-        currentSaveRow = currentRows[0]
+    const [currentRows] = await pool.execute('SELECT updated_at, character_id, player_name, raw, data_json FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+    if (currentRows.length) {
+      currentSaveRow = currentRows[0]
+      if (clientLoadedAt && Number.isFinite(clientLoadedAt.getTime())) {
         const serverUpdatedAt = new Date(currentSaveRow.updated_at)
         // 同账号多端同时在线时，拒绝旧页面覆盖服务器上更新的存档。
         if (serverUpdatedAt.getTime() - clientLoadedAt.getTime() > 1500) {
@@ -816,7 +838,7 @@ app.get('/api/mails', async (req, res) => {
       id: m.id,
       title: m.title,
       content: m.content,
-      rewards: safeJsonParse(m.rewards, {}),
+      rewards: sanitizeRewardPayload(safeJsonParse(m.rewards, {})),
       from: m.from_name,
       createdAt: m.created_at,
       claimed: !!m.claimed
@@ -834,9 +856,10 @@ app.post('/api/mails/:id/claim', async (req, res) => {
     const mail = mailRows[0]
     if (mail.claimed) { await conn.rollback(); return send(res, 409, { error: '已领取' }) }
     await conn.execute('UPDATE user_mails SET claimed = 1, claimed_at = NOW() WHERE id = ? AND user_id = ?', [req.params.id, user.id])
-    const rewards = safeJsonParse(mail.rewards, {})
+    const rawRewards = safeJsonParse(mail.rewards, {})
+    const rewards = sanitizeRewardPayload(rawRewards)
     await conn.commit()
-    await recordEconomyEvent(user, req, { eventType: 'mail_claim', amount: Number(rewards.money || 0), source: 'mail', detail: { mailId: mail.id, legacyMailId: mail.legacy_mail_id, title: mail.title, rewards } })
+    await recordEconomyEvent(user, req, { eventType: 'mail_claim', amount: Number(rewards.money || 0), source: 'mail', detail: { mailId: mail.id, legacyMailId: mail.legacy_mail_id, title: mail.title, rewards, clamped: rewardClampInfo(rawRewards, rewards) } })
     send(res, 200, { ok: true, rewards })
   } catch (e) {
     try { await conn.rollback() } catch {}
@@ -1321,29 +1344,53 @@ app.post('/api/admin/users/:id/reset-password', async (req, res) => {
   try { const admin = await requireAdmin(req, res); if (!admin) return; const { password } = req.body; if (!password || password.length < 6) return send(res, 400, { error: '新密码至少6位' }); await pool.execute('UPDATE users SET password_hash=? WHERE id=?', [bcrypt.hashSync(password, 10), req.params.id]); if (req.params.id !== admin.id) await pool.execute('DELETE FROM sessions WHERE user_id=?', [req.params.id]); send(res, 200, { ok: true }) } catch (e) { send(res, 500, { error: '服务器错误' }) }
 })
 
+
+const ADMIN_REWARD_LIMITS = Object.freeze({
+  money: 50000,
+  spiritStone: 300,
+  aura: 50000,
+  cultivation: 100000,
+  mana: 10000,
+  stamina: 500,
+  attributeExp: 1000,
+  itemQuantity: 99,
+  itemKinds: 12
+})
+const clampRewardInt = (value, max, min = 0) => Math.max(min, Math.min(max, Math.floor(Number(value) || 0)))
+const sanitizeRewardPayload = (r = {}) => ({
+  money: clampRewardInt(r.money, ADMIN_REWARD_LIMITS.money),
+  spiritStone: clampRewardInt(r.spiritStone ?? r.spirit_stone, ADMIN_REWARD_LIMITS.spiritStone),
+  aura: clampRewardInt(r.aura, ADMIN_REWARD_LIMITS.aura),
+  cultivation: clampRewardInt(r.cultivation, ADMIN_REWARD_LIMITS.cultivation),
+  mana: clampRewardInt(r.mana, ADMIN_REWARD_LIMITS.mana),
+  stamina: clampRewardInt(r.stamina, ADMIN_REWARD_LIMITS.stamina),
+  attributeExp: r.attributeExp && typeof r.attributeExp === 'object' ? {
+    physique: clampRewardInt(r.attributeExp.physique, ADMIN_REWARD_LIMITS.attributeExp),
+    strength: clampRewardInt(r.attributeExp.strength, ADMIN_REWARD_LIMITS.attributeExp),
+    agility: clampRewardInt(r.attributeExp.agility, ADMIN_REWARD_LIMITS.attributeExp),
+    perception: clampRewardInt(r.attributeExp.perception, ADMIN_REWARD_LIMITS.attributeExp)
+  } : {},
+  items: Array.isArray(r.items) ? r.items.slice(0, ADMIN_REWARD_LIMITS.itemKinds).map(item => ({
+    itemId: String(item?.itemId || '').slice(0, 80),
+    name: String(item?.name || '').slice(0, 40),
+    quantity: clampRewardInt(item?.quantity, ADMIN_REWARD_LIMITS.itemQuantity, 1),
+    quality: ['normal','fine','excellent','supreme'].includes(String(item?.quality || 'normal')) ? String(item?.quality || 'normal') : 'normal'
+  })).filter(item => item.itemId) : []
+})
+const rewardClampInfo = (before = {}, after = {}) => {
+  const keys = ['money','spiritStone','aura','cultivation','mana','stamina']
+  const clamped = []
+  for (const k of keys) {
+    const src = k === 'spiritStone' ? (before.spiritStone ?? before.spirit_stone) : before[k]
+    if (Number(src || 0) !== Number(after[k] || 0)) clamped.push(k)
+  }
+  return clamped
+}
+
 const sanitizeFloatingWelfare = (input, fallback = {}) => {
   const src = input && typeof input === 'object' ? input : fallback
   const rawGifts = Array.isArray(src?.gifts) ? src.gifts : Array.isArray(fallback?.gifts) ? fallback.gifts : []
-  const cleanRewards = (r = {}) => ({
-    money: Math.max(0, Math.min(999999999, Math.floor(Number(r.money) || 0))),
-    spiritStone: Math.max(0, Math.min(9999999, Math.floor(Number(r.spiritStone ?? r.spirit_stone) || 0))),
-    aura: Math.max(0, Math.min(999999999, Math.floor(Number(r.aura) || 0))),
-    cultivation: Math.max(0, Math.min(999999999, Math.floor(Number(r.cultivation) || 0))),
-    mana: Math.max(0, Math.min(9999999, Math.floor(Number(r.mana) || 0))),
-    stamina: Math.max(0, Math.min(999999, Math.floor(Number(r.stamina) || 0))),
-    attributeExp: r.attributeExp && typeof r.attributeExp === 'object' ? {
-      physique: Math.max(0, Math.min(999999, Math.floor(Number(r.attributeExp.physique) || 0))),
-      strength: Math.max(0, Math.min(999999, Math.floor(Number(r.attributeExp.strength) || 0))),
-      agility: Math.max(0, Math.min(999999, Math.floor(Number(r.attributeExp.agility) || 0))),
-      perception: Math.max(0, Math.min(999999, Math.floor(Number(r.attributeExp.perception) || 0)))
-    } : {},
-    items: Array.isArray(r.items) ? r.items.slice(0, 20).map(item => ({
-      itemId: String(item?.itemId || '').slice(0, 80),
-      name: String(item?.name || '').slice(0, 40),
-      quantity: Math.max(1, Math.min(99999, Math.floor(Number(item?.quantity) || 1))),
-      quality: ['normal','fine','excellent','supreme'].includes(String(item?.quality || 'normal')) ? String(item?.quality || 'normal') : 'normal'
-    })).filter(item => item.itemId) : []
-  })
+  const cleanRewards = sanitizeRewardPayload
   return {
     enabled: Boolean(src?.enabled),
     buttonText: String(src?.buttonText || '福利').slice(0, 12),
@@ -1452,7 +1499,8 @@ app.post('/api/admin/mails', async (req, res) => {
     const target = req.body.target ?? req.body.to
     const cleanTitle = String(title || '').trim()
     if (!cleanTitle) return send(res, 400, { error: '标题必填' })
-    const rewardJson = JSON.stringify(rewards || {})
+    const cleanRewards = sanitizeRewardPayload(rewards || {})
+    const rewardJson = JSON.stringify(cleanRewards)
     let users = []
     if (!target || target === 'all') {
       const [rows] = await conn.execute('SELECT id FROM users WHERE disabled = 0')
@@ -1471,7 +1519,8 @@ app.post('/api/admin/mails', async (req, res) => {
       await conn.execute('INSERT INTO user_mails (id, user_id, title, content, rewards, from_name) VALUES (?, ?, ?, ?, ?, ?)', [id, u.id, cleanTitle, content || '', rewardJson, '系统'])
     }
     await conn.commit()
-    send(res, 200, { ok: true, id: ids[0], ids, count: ids.length })
+    await recordEconomyEvent(admin, req, { eventType: 'admin_mail_send', amount: Number(cleanRewards.money || 0), source: 'admin_mail', detail: { target: target || 'all', count: ids.length, rewards: cleanRewards, clamped: rewardClampInfo(rewards || {}, cleanRewards) } })
+    send(res, 200, { ok: true, id: ids[0], ids, count: ids.length, rewards: cleanRewards })
   } catch (e) {
     try { await conn.rollback() } catch {}
     console.error('admin send user mails err', e)
