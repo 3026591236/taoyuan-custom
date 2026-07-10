@@ -286,4 +286,135 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 .immortal-hero{display:flex;gap:14px;align-items:center;border:1px solid rgba(250,214,124,.22);background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border-radius:4px;padding:14px}.hero-avatar{position:relative;width:78px;height:96px;display:grid;place-items:center}.halo{position:absolute;width:70px;height:70px;border:2px double rgba(255,230,151,.8);border-radius:50%;box-shadow:0 0 18px rgba(255,223,126,.55),inset 0 0 18px rgba(120,200,255,.18);animation:pulse 1.6s ease-in-out}.immortal-body{position:relative;z-index:1;width:40px;height:58px;display:grid;place-items:center;color:#20150d;font-weight:700;background:linear-gradient(180deg,#fff6c4,#79d6ff 48%,#d5b1ff);clip-path:polygon(50% 0,78% 16%,88% 72%,50% 100%,12% 72%,22% 16%);box-shadow:0 0 16px rgba(255,255,255,.55)}.sword-light{position:absolute;right:7px;top:8px;width:4px;height:78px;background:linear-gradient(#fff,#8ddfff,transparent);transform:rotate(32deg);box-shadow:0 0 12px #9ee7ff}
 .stat,.body-card{border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:6px;background:rgba(0,0,0,.12)}.stat b{display:block;color:#ffe28a;font-size:12px}.stat span{color:rgba(255,255,255,.52);font-size:10px}.body-card{min-height:72px}.art-card,.office-card,.duty-card,.choice-card,.alliance-card,.rift-card,.fate-card{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:9px;background:rgba(0,0,0,.12);transition:.16s}.art-card:hover,.office-card:hover,.duty-card:hover,.art-card.active,.office-card.active,.duty-card.done{border-color:rgba(255,226,138,.58);background:rgba(255,226,138,.08);box-shadow:0 0 14px rgba(255,226,138,.12)}.battle-log{border:1px solid rgba(141,222,255,.28);background:linear-gradient(90deg,rgba(113,210,255,.1),rgba(255,226,138,.08));border-radius:3px;padding:10px;animation:pulse .8s ease-out}.trial-card,.realm-card{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.art-purple_thunder_seal .battle-log{border-color:rgba(190,140,255,.5);box-shadow:0 0 15px rgba(183,108,255,.18)}.art-solar_flame .battle-log{border-color:rgba(255,180,72,.5);box-shadow:0 0 15px rgba(255,130,44,.18)}.art-cloud_body .battle-log{border-color:rgba(190,245,255,.5);box-shadow:0 0 15px rgba(168,236,255,.18)}.pk-card{border-color:rgba(255,120,120,.22)}.cave-card,.echo-card,.market-card{min-height:120px}.mandate-card{border:1px solid rgba(141,222,255,.2);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.choice-card{min-height:74px;gap:3px;align-items:flex-start;text-align:left;border:1px solid rgba(250,214,124,.14);border-radius:3px;padding:7px;background:rgba(255,255,255,.035);transition:.16s}.choice-card:hover{border-color:rgba(255,226,138,.55);background:rgba(255,226,138,.08)}.story-card{border:1px solid rgba(255,226,138,.18);border-radius:3px;padding:10px;background:linear-gradient(135deg,rgba(255,226,138,.07),rgba(141,222,255,.04));position:relative;overflow:hidden}.story-card.done{border-color:rgba(105,232,162,.45);background:rgba(105,232,162,.07)}.story-card::after{content:'';position:absolute;inset:auto 0 0 0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,226,138,.5),transparent)}.lineage-card{min-height:104px}.alliance-card,.rift-card,.fate-card{min-height:126px;gap:5px;align-items:flex-start;text-align:left;border:1px solid rgba(141,222,255,.16);border-radius:3px;padding:9px;background:linear-gradient(135deg,rgba(141,222,255,.055),rgba(255,226,138,.035));transition:.16s}.alliance-card:hover,.rift-card:hover,.fate-card:hover{border-color:rgba(141,222,255,.45);transform:translateY(-1px);box-shadow:0 0 18px rgba(141,222,255,.08)}.realm-card{border:1px solid rgba(250,214,124,.16);border-radius:3px;padding:10px;background:rgba(0,0,0,.12)}.season-card{min-height:112px}.season-card.claimed{opacity:.62}.duty-card{min-height:110px}.duty-card.done{opacity:.72}
 @keyframes float{from{transform:translateY(0)}to{transform:translateY(-10px)}}@keyframes pulse{0%{transform:scale(.96);opacity:.72}60%{transform:scale(1.04);opacity:1}100%{transform:scale(1);opacity:1}}
+
+
+/* V2.6.5 仙界视觉强化：星穹、仙门、流光卡片 */
+.immortal-celestial-page{
+  position:relative;
+  isolation:isolate;
+  min-height:100%;
+  padding:10px;
+  border-radius:12px;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 18% 5%, rgba(255,230,150,.22), transparent 24%),
+    radial-gradient(circle at 85% 10%, rgba(135,210,255,.22), transparent 26%),
+    radial-gradient(circle at 50% 35%, rgba(168,120,255,.12), transparent 34%),
+    linear-gradient(180deg, rgba(8,11,30,.92), rgba(8,4,22,.96) 48%, rgba(2,8,18,.98));
+}
+.immortal-celestial-page::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  opacity:.72;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.85) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255,226,138,.8) 0 1px, transparent 1.6px),
+    linear-gradient(115deg, transparent 0 40%, rgba(120,210,255,.10) 45%, transparent 52% 100%);
+  background-size:72px 72px, 118px 118px, 100% 100%;
+  animation:celestialDrift 22s linear infinite;
+}
+.immortal-celestial-page::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,226,138,.22), transparent 42%),
+    linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+  mask-image:linear-gradient(#000, transparent 70%);
+}
+.immortal-celestial-page > .card:first-child,
+.immortal-celestial-page .page-hero,
+.immortal-celestial-page section:first-child{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(255,226,138,.42)!important;
+  box-shadow:0 0 36px rgba(255,226,138,.15), inset 0 0 28px rgba(110,190,255,.08);
+  background:
+    linear-gradient(135deg, rgba(255,226,138,.15), rgba(130,210,255,.08) 48%, rgba(135,80,255,.10)),
+    rgba(6,10,28,.72)!important;
+}
+.celestial-orbit-ring{
+  position:absolute;
+  right:-54px;
+  top:-72px;
+  width:210px;
+  height:210px;
+  border-radius:999px;
+  border:1px solid rgba(255,226,138,.32);
+  box-shadow:0 0 32px rgba(255,226,138,.18), inset 0 0 32px rgba(120,210,255,.12);
+  animation:celestialSpin 18s linear infinite;
+}
+.celestial-orbit-ring::before,.celestial-orbit-ring::after{
+  content:'';position:absolute;border-radius:999px;inset:34px;border:1px dashed rgba(135,210,255,.28)
+}
+.celestial-orbit-ring::after{inset:72px;border-color:rgba(255,255,255,.18)}
+.celestial-starfield{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 76% 18%, rgba(255,255,255,.9) 0 2px, transparent 3px),radial-gradient(circle at 63% 38%, rgba(255,226,138,.9) 0 1.5px, transparent 3px),radial-gradient(circle at 88% 58%, rgba(140,220,255,.9) 0 1.5px, transparent 3px);animation:twinkle 2.8s ease-in-out infinite alternate}
+.immortal-celestial-page .card,
+.immortal-celestial-page .art-card,
+.immortal-celestial-page .office-card,
+.immortal-celestial-page .duty-card,
+.immortal-celestial-page .choice-card,
+.immortal-celestial-page .alliance-card,
+.immortal-celestial-page .rift-card,
+.immortal-celestial-page .fate-card,
+.immortal-celestial-page .trial-card,
+.immortal-celestial-page .realm-card,
+.immortal-celestial-page .story-card,
+.immortal-celestial-page .mandate-card{
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:blur(10px);
+  border-color:rgba(255,226,138,.22)!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.immortal-celestial-page .art-card::before,
+.immortal-celestial-page .office-card::before,
+.immortal-celestial-page .duty-card::before,
+.immortal-celestial-page .choice-card::before,
+.immortal-celestial-page .alliance-card::before,
+.immortal-celestial-page .rift-card::before,
+.immortal-celestial-page .fate-card::before,
+.immortal-celestial-page .trial-card::before,
+.immortal-celestial-page .realm-card::before,
+.immortal-celestial-page .story-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(115deg, transparent 0 35%, rgba(255,255,255,.11) 45%, transparent 56% 100%);
+  transform:translateX(-120%);
+  transition:transform .65s ease;
+}
+.immortal-celestial-page .art-card:hover::before,
+.immortal-celestial-page .office-card:hover::before,
+.immortal-celestial-page .duty-card:hover::before,
+.immortal-celestial-page .choice-card:hover::before,
+.immortal-celestial-page .alliance-card:hover::before,
+.immortal-celestial-page .rift-card:hover::before,
+.immortal-celestial-page .fate-card:hover::before,
+.immortal-celestial-page .trial-card:hover::before,
+.immortal-celestial-page .realm-card:hover::before,
+.immortal-celestial-page .story-card:hover::before{transform:translateX(120%)}
+.immortal-celestial-page button.btn,
+.immortal-celestial-page .btn{
+  border-color:rgba(255,226,138,.42)!important;
+  background:linear-gradient(135deg, rgba(255,226,138,.22), rgba(116,203,255,.14))!important;
+  box-shadow:0 0 14px rgba(255,226,138,.12);
+}
+.immortal-celestial-page button.btn:not(:disabled):hover,
+.immortal-celestial-page .btn:not(:disabled):hover{
+  transform:translateY(-1px);
+  box-shadow:0 0 22px rgba(255,226,138,.24),0 0 18px rgba(116,203,255,.16);
+}
+.immortal-celestial-page .text-accent{ text-shadow:0 0 10px rgba(255,226,138,.42); }
+.immortal-celestial-page .battle-log{box-shadow:0 0 22px rgba(116,203,255,.16), inset 0 0 16px rgba(255,226,138,.06)}
+@keyframes celestialDrift{from{background-position:0 0,0 0,0 0}to{background-position:72px 72px,-118px 118px,0 0}}
+@keyframes celestialSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes twinkle{from{opacity:.45;filter:blur(.2px)}to{opacity:1;filter:blur(0)}}
+@media (prefers-reduced-motion:reduce){.immortal-celestial-page::before,.celestial-orbit-ring,.celestial-starfield{animation:none}.immortal-celestial-page *{transition:none!important}}
+
 </style>
