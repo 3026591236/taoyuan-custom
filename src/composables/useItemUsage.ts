@@ -67,6 +67,7 @@ export const useItemUsage = () => {
   const useItem = (itemId: string, quality: Quality = 'normal'): boolean => {
     if (CULTIVATION_PILL_IDS.has(itemId)) return cultivationStore.usePill(itemId as any)
     if (itemId === 'stamina_pill') {
+      if (gameStore.isPastBedtime) { addLog('已经凌晨2点了，强撑着服药也无法继续行动，请先休息。'); return false }
       const now = Date.now()
       const lastUse = Number(localStorage.getItem(staminaPillLastUseKey()) || 0)
       if (now - lastUse < STAMINA_PILL_COOLDOWN_MS) { addLog('体力丹药力尚未化开，请稍后再服用。'); return false }
@@ -78,9 +79,10 @@ export const useItemUsage = () => {
       if (!inventoryStore.removeItem(itemId, 1, quality)) return false
       const gained = playerStore.restoreStaminaOvercap(100, 500)
       if (gained <= 0) { addLog('体力已经达到体力丹可提升的上限。'); return false }
+      const time = gameStore.advanceTime(0.05)
       localStorage.setItem(staminaPillLastUseKey(), String(now))
       localStorage.setItem(usageKey, String(usedToday + 1))
-      addLog(`服用了体力丹，体力+${gained}（今日${usedToday + 1}/${STAMINA_PILL_DAY_LIMIT}，最多可临时超过上限500点）。`)
+      addLog(`服用了体力丹，体力+${gained}（今日${usedToday + 1}/${STAMINA_PILL_DAY_LIMIT}，最多可临时超过上限500点），炼化药力也耗去片刻。${time.message ? ` ${time.message}` : ''}`)
       return true
     }
     if (itemId === 'time_stasis_pill') {
