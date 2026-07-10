@@ -27,7 +27,6 @@
       <div class="flex items-center justify-between gap-3">
         <div>
           <p class="text-accent">{{ serverConfig.siteName || '桃源乡' }} · 自主更新版</p>
-          <p class="text-muted text-xs">{{ serverConfig.announcement }}</p>
           <p v-if="serverConfig.maintenanceMode" class="text-danger text-xs mt-1">服务器维护提示已开启。</p>
         </div>
         <div class="flex gap-2 shrink-0">
