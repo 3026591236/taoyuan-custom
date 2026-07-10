@@ -555,7 +555,7 @@
               :icon-size="12"
               @click="handleSetQuickUse(activeItem.itemId, activeItem.quality)"
             >
-              {{ inventoryStore.isQuickUseItem(activeItem.itemId, activeItem.quality) ? '取消快捷' : '设为快捷' }}
+              {{ inventoryStore.isQuickUseItem(activeItem.itemId, activeItem.quality) ? '移出快捷栏' : '加入快捷栏' }}
             </Button>
             <Button
               v-if="isUsable(activeItem.itemId)"
@@ -1290,7 +1290,7 @@
   const isQuickCandidate = (itemId: string): boolean => isUsable(itemId) || isEdible(itemId)
 
   const handleSetQuickUse = (itemId: string, quality: Quality) => {
-    if (inventoryStore.isQuickUseItem(itemId, quality)) inventoryStore.clearQuickUseItem()
+    if (inventoryStore.isQuickUseItem(itemId, quality)) inventoryStore.clearQuickUseItem(itemId, quality)
     else inventoryStore.setQuickUseItem(itemId, quality)
   }
 

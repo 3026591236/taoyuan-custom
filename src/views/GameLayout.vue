@@ -51,10 +51,39 @@
     <button class="mobile-map-btn" @click="showMobileMap = true">
       <Map :size="20" />
     </button>
-    <button class="quick-use-float-btn" title="快捷用药" @click="handleQuickUse">
+    <button class="quick-use-float-btn" title="快捷栏" @click="openQuickUsePicker">
       <Zap :size="18" />
       <span>快捷</span>
     </button>
+    <Transition name="panel-fade">
+      <div v-if="showQuickUsePicker" class="quick-use-picker-mask" @click.self="showQuickUsePicker = false">
+        <div class="quick-use-picker game-panel">
+          <button class="absolute top-2 right-2 text-muted hover:text-text" @click="showQuickUsePicker = false">
+            <X :size="14" />
+          </button>
+          <p class="text-sm text-accent mb-2">快捷使用</p>
+          <p class="text-[10px] text-muted mb-2">可在背包中加入最多5个快捷物品。</p>
+          <div class="grid grid-cols-5 gap-1.5">
+            <button
+              v-for="slot in quickUseSlots"
+              :key="slot.index"
+              class="quick-use-slot"
+              :class="slot.item ? 'filled' : ''"
+              @click="slot.item ? useQuickSlot(slot.item) : router.push('/game/inventory')"
+            >
+              <template v-if="slot.item">
+                <span class="truncate">{{ slot.name }}</span>
+                <em>×{{ slot.quantity }}</em>
+              </template>
+              <template v-else>
+                <span>空</span>
+                <em>设置</em>
+              </template>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
     <button class="mobile-setting-btn" @click="showSettings = true">
       <SettingsIcon :size="20" />
     </button>
@@ -914,31 +943,35 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
       addLog(`领取邮件失败：${e?.message || '请求失败'}`)
     }
   }
-  const handleQuickUse = async () => {
-    const quick = inventoryStore.quickUseItem
-    if (!quick) {
-      addLog('还没有设置快捷物品，请先在背包中选择可用物品并点“设为快捷”。')
-      router.push('/game/inventory')
-      return
-    }
-    const item = inventoryStore.items.find(i => i.itemId === quick.itemId && i.quality === quick.quality)
-    if (!item) {
-      inventoryStore.clearQuickUseItem()
-      addLog('快捷物品已用完，请在背包重新设置。')
-      router.push('/game/inventory')
-      return
-    }
-    const def = getItemById(quick.itemId)
-    const ok = isQuickUsableItem(quick.itemId)
-      ? itemUsage.useItem(quick.itemId, quick.quality)
-      : itemUsage.eatItem(quick.itemId, quick.quality)
+  const showQuickUsePicker = ref(false)
+  const quickUseSlots = computed(() => {
+    inventoryStore.compactQuickUseItems()
+    return Array.from({ length: 5 }, (_, index) => {
+      const quick = inventoryStore.quickUseItems[index]
+      const item = quick ? inventoryStore.items.find(i => i.itemId === quick.itemId && i.quality === quick.quality) : null
+      const def = quick ? getItemById(quick.itemId) : null
+      return { index, quick, item, name: def?.name || quick?.itemId || '空', quantity: item?.quantity || 0 }
+    })
+  })
+  const openQuickUsePicker = () => {
+    inventoryStore.compactQuickUseItems()
+    showQuickUsePicker.value = true
+  }
+  const useQuickSlot = async (item: { itemId: string; quality: any }) => {
+    const def = getItemById(item.itemId)
+    const ok = isQuickUsableItem(item.itemId)
+      ? itemUsage.useItem(item.itemId, item.quality)
+      : itemUsage.eatItem(item.itemId, item.quality)
     if (ok) {
-      if (!inventoryStore.items.some(i => i.itemId === quick.itemId && i.quality === quick.quality)) inventoryStore.clearQuickUseItem()
+      if (!inventoryStore.items.some(i => i.itemId === item.itemId && i.quality === item.quality)) inventoryStore.clearQuickUseItem(item.itemId, item.quality)
+      inventoryStore.compactQuickUseItems()
+      showQuickUsePicker.value = false
       await autoSaveCurrent()
     } else {
       addLog(`${def?.name || '快捷物品'}当前无法使用。`)
     }
   }
+
 
   const autoSaveCurrent = async () => {
     if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return
@@ -1602,6 +1635,33 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
   font-weight: 700;
 }
 .quick-use-float-btn:hover { filter: brightness(1.08); }
+.quick-use-picker-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.quick-use-picker { max-width: 340px; width: 100%; position: relative; }
+.quick-use-slot {
+  min-height: 56px;
+  border: 1px solid rgba(200,164,92,.28);
+  border-radius: 4px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--color-muted);
+  background: rgba(200,164,92,.04);
+  font-size: 11px;
+}
+.quick-use-slot.filled { color: var(--color-accent); background: rgba(200,164,92,.1); }
+.quick-use-slot em { font-size: 10px; color: var(--color-muted); font-style: normal; }
 
 .floating-welfare-btn {
   position: fixed;

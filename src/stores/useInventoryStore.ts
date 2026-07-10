@@ -71,25 +71,46 @@ export const useInventoryStore = defineStore('inventory', () => {
 
   const isFull = computed(() => items.value.length >= capacity.value)
 
-  /** 游戏内悬浮快捷使用的物品 */
-  const quickUseItem = ref<{ itemId: string; quality: Quality } | null>(null)
+  /** 游戏内悬浮快捷栏（最多5个物品） */
+  const quickUseItems = ref<{ itemId: string; quality: Quality }[]>([])
+
+  const compactQuickUseItems = () => {
+    quickUseItems.value = quickUseItems.value
+      .filter(q => q?.itemId && items.value.some(i => i.itemId === q.itemId && i.quality === q.quality))
+      .filter((q, idx, arr) => arr.findIndex(x => x.itemId === q.itemId && x.quality === q.quality) === idx)
+      .slice(0, 5)
+  }
 
   const setQuickUseItem = (itemId: string, quality: Quality = 'normal') => {
+    compactQuickUseItems()
     if (!items.value.some(i => i.itemId === itemId && i.quality === quality)) {
       showFloat('背包里没有这个物品。', 'danger')
       return false
     }
-    quickUseItem.value = { itemId, quality }
-    showFloat(`已设为快捷：${getItemById(itemId)?.name || itemId}`)
+    if (quickUseItems.value.some(q => q.itemId === itemId && q.quality === quality)) {
+      showFloat('该物品已在快捷栏。')
+      return true
+    }
+    if (quickUseItems.value.length >= 5) {
+      showFloat('快捷栏最多设置5个物品，请先取消一个。', 'danger')
+      return false
+    }
+    quickUseItems.value.push({ itemId, quality })
+    showFloat(`已加入快捷栏：${getItemById(itemId)?.name || itemId}`)
     return true
   }
 
-  const clearQuickUseItem = () => {
-    quickUseItem.value = null
-    showFloat('已取消快捷物品。')
+  const clearQuickUseItem = (itemId?: string, quality: Quality = 'normal') => {
+    if (!itemId) {
+      quickUseItems.value = []
+      showFloat('已清空快捷栏。')
+      return
+    }
+    quickUseItems.value = quickUseItems.value.filter(q => !(q.itemId === itemId && q.quality === quality))
+    showFloat('已从快捷栏移除。')
   }
 
-  const isQuickUseItem = (itemId: string, quality: Quality = 'normal') => quickUseItem.value?.itemId === itemId && quickUseItem.value?.quality === quality
+  const isQuickUseItem = (itemId: string, quality: Quality = 'normal') => quickUseItems.value.some(q => q.itemId === itemId && q.quality === quality)
 
 
   /** 临时背包（溢出缓冲区） */
@@ -1001,7 +1022,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       equippedShoeIndex: equippedShoeIndex.value,
       equipmentPresets: equipmentPresets.value,
       activePresetId: activePresetId.value,
-      quickUseItem: quickUseItem.value
+      quickUseItems: quickUseItems.value
     }
   }
 
@@ -1075,8 +1096,12 @@ export const useInventoryStore = defineStore('inventory', () => {
     // 装备方案（向后兼容旧存档）
     equipmentPresets.value = ((data as Record<string, unknown>).equipmentPresets as EquipmentPreset[] | undefined) ?? []
     activePresetId.value = ((data as Record<string, unknown>).activePresetId as string | null | undefined) ?? null
-    const quick = (data as Record<string, unknown>).quickUseItem as { itemId?: string; quality?: Quality } | null | undefined
-    quickUseItem.value = quick?.itemId && getItemById(quick.itemId) ? { itemId: quick.itemId, quality: quick.quality || 'normal' } : null
+    const rawQuickItems = (data as Record<string, unknown>).quickUseItems as { itemId?: string; quality?: Quality }[] | undefined
+    const oldQuick = (data as Record<string, unknown>).quickUseItem as { itemId?: string; quality?: Quality } | null | undefined
+    quickUseItems.value = (Array.isArray(rawQuickItems) ? rawQuickItems : oldQuick?.itemId ? [oldQuick] : [])
+      .filter(q => q?.itemId && getItemById(q.itemId))
+      .map(q => ({ itemId: String(q.itemId), quality: (q.quality || 'normal') as Quality }))
+      .slice(0, 5)
   }
 
   return {
@@ -1087,7 +1112,8 @@ export const useInventoryStore = defineStore('inventory', () => {
     equippedWeaponIndex,
     pendingUpgrade,
     isFull,
-    quickUseItem,
+    quickUseItems,
+    compactQuickUseItems,
     setQuickUseItem,
     clearQuickUseItem,
     isQuickUseItem,
