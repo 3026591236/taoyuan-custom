@@ -22,6 +22,7 @@ import { useCookingStore } from './useCookingStore'
 import { useFarmStore } from './useFarmStore'
 import { useAnimalStore } from './useAnimalStore'
 import { useFishPondStore } from './useFishPondStore'
+import { useGuildStore } from './useGuildStore'
 import { useFishingStore } from './useFishingStore'
 import { addLog } from '@/composables/useGameLog'
 
@@ -42,6 +43,7 @@ const CHILD_APTITUDE_NAMES: Record<ChildAptitude, string> = { farm: '灵田', an
 type VillageRequestId = 'village_feast' | 'clinic_herbs' | 'forge_delivery'
 type NpcLetterId = 'chen_spring' | 'liu_market' | 'lin_medicine'
 type ChildLongTermId = 'study_trip' | 'martial_drill' | 'family_archive'
+type WorldFeedbackId = 'village_reputation' | 'spouse_hearth' | 'children_growth' | 'sect_public_praise'
 const VILLAGE_REQUESTS: { id: VillageRequestId; title: string; desc: string; npcHint: string; itemId: string; itemName: string; quantity: number; friendship: number; money: number }[] = [
   { id: 'village_feast', title: '村宴备席', desc: '村里准备节令小宴，需要灵米撑场面。', npcHint: '陈伯会记得你帮村里备席。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 2, friendship: 18, money: 900 },
   { id: 'clinic_herbs', title: '医馆药篓', desc: '医馆缺基础草药，送去能提升村庄人情。', npcHint: '医馆与村民都会承你一份情。', itemId: 'herb', itemName: '草药', quantity: 5, friendship: 14, money: 650 },
@@ -58,6 +60,13 @@ const CHILD_LONG_TERM_EVENTS: { id: ChildLongTermId; title: string; desc: string
   { id: 'study_trip', title: '子女远学·村塾游历', desc: '送孩子去村塾和博物馆旁听，提升学识与家族见闻。', itemId: 'spirit_ink', itemName: '灵墨', quantity: 1, money: 1800, study: 18, bond: 8, legacy: 30 },
   { id: 'martial_drill', title: '子女护院·晨练', desc: '安排孩子跟随巡山弟子晨练，积累护院胆气。', itemId: 'spirit_bone', itemName: '灵骨', quantity: 1, money: 2200, study: 8, bond: 12, legacy: 38 },
   { id: 'family_archive', title: '族谱修订·家传札记', desc: '整理族谱与家传札记，让家族传承更像长期资产。', itemId: 'paper', itemName: '纸', quantity: 5, money: 1200, study: 12, bond: 16, legacy: 42 }
+]
+
+const WORLD_FEEDBACKS: { id: WorldFeedbackId; title: string; desc: string; requirement: string; rewardText: string }[] = [
+  { id: 'village_reputation', title: '村庄回响·人情渐暖', desc: '你常帮村里备席、送药、回信，桃源村开始把你当成真正的自家人。', requirement: '全村平均好感达到2心/500', rewardText: '铜钱+1600，全村好感+8，家传经验+18' },
+  { id: 'spouse_hearth', title: '家宅回响·灯火有人等', desc: '伴侣会根据婚后天数和日常照料给出回应，让婚姻不只是状态标签。', requirement: '结婚满7天', rewardText: '铜钱+1800，伴侣好感+28，家传经验+45' },
+  { id: 'children_growth', title: '后代回响·家学成章', desc: '子女的学识与羁绊沉淀为家族名望，村里会谈起这家的家风。', requirement: '任一子女学识+羁绊达到80', rewardText: '铜钱+2200，子女羁绊+8，家传经验+65' },
+  { id: 'sect_public_praise', title: '宗门回响·乡里传名', desc: '公会和宗门贡献会反哺村庄声望，战斗与社交开始互相回应。', requirement: '公会贡献达到300', rewardText: '铜钱+2600，全村好感+10，家传经验+35' }
 ]
 
 const FAMILY_COMMISSIONS = [
@@ -1034,6 +1043,74 @@ export const useNpcStore = defineStore('npc', () => {
     }
   }
 
+  const dayIndex = computed(() => {
+    const seasonIndex = ['spring', 'summer', 'autumn', 'winter'].indexOf(useGameStore().season)
+    return (useGameStore().year - 1) * 112 + Math.max(0, seasonIndex) * 28 + useGameStore().day
+  })
+
+  const weekKey = computed(() => `Y${useGameStore().year}-W${Math.floor((dayIndex.value - 1) / 7) + 1}`)
+
+  const villageFriendshipAvg = computed(() => Math.floor(npcStates.value.reduce((sum, s) => sum + s.friendship, 0) / Math.max(1, npcStates.value.length)))
+  const villageReputationText = computed(() => {
+    const avg = villageFriendshipAvg.value
+    if (avg >= 1800) return '桃源村声望：一呼百应 · 村民会主动谈起你的善举。'
+    if (avg >= 1000) return '桃源村声望：乡里熟人 · 委托与来信开始更频繁地回馈你。'
+    if (avg >= 500) return '桃源村声望：渐有名声 · 村民记得你帮过的忙。'
+    return '桃源村声望：初来乍到 · 多聊天、送礼、完成村庄请求可提升人情。'
+  })
+
+  const worldFeedbackCards = computed(() => {
+    const guild = useGuildStore()
+    const spouse = getSpouse()
+    const childReady = children.value.some(c => (((c as any).studyExp || 0) + ((c as any).legacyBond || 0)) >= 80)
+    const checks: Record<WorldFeedbackId, boolean> = {
+      village_reputation: villageFriendshipAvg.value >= 500,
+      spouse_hearth: !!spouse && daysMarried.value >= 7,
+      children_growth: childReady,
+      sect_public_praise: guild.contributionPoints >= 300
+    }
+    return WORLD_FEEDBACKS.map(f => ({
+      ...f,
+      done: checks[f.id],
+      claimed: familyCommissionClaimed.value.includes(`${weekKey.value}:feedback:${f.id}`)
+    }))
+  })
+
+  const claimWorldFeedback = (id: WorldFeedbackId): { success: boolean; message: string } => {
+    const card = worldFeedbackCards.value.find(c => c.id === id)
+    if (!card) return { success: false, message: '世界反馈不存在。' }
+    if (!card.done) return { success: false, message: `条件未达成：${card.requirement}` }
+    const key = `${weekKey.value}:feedback:${id}`
+    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '本周已经领取过这项回响。' }
+    const player = usePlayerStore()
+    if (id === 'village_reputation') {
+      player.earnMoney(1600)
+      for (const state of npcStates.value) state.friendship = Math.min(2500, state.friendship + 8)
+      addFamilyLegacyExp(18)
+    } else if (id === 'spouse_hearth') {
+      player.earnMoney(1800)
+      const spouse = getSpouse()
+      if (spouse) spouse.friendship = Math.min(2500, spouse.friendship + 28)
+      addFamilyLegacyExp(45)
+    } else if (id === 'children_growth') {
+      player.earnMoney(2200)
+      for (const child of children.value) {
+        if (child.stage !== 'baby') {
+          child.friendship += 8
+          ;(child as any).legacyBond = ((child as any).legacyBond || 0) + 8
+        }
+      }
+      addFamilyLegacyExp(65)
+    } else if (id === 'sect_public_praise') {
+      player.earnMoney(2600)
+      for (const state of npcStates.value) state.friendship = Math.min(2500, state.friendship + 10)
+      addFamilyLegacyExp(35)
+    }
+    familyCommissionClaimed.value.push(key)
+    addLog(`领取${card.title}：${card.rewardText}。`)
+    return { success: true, message: `领取「${card.title}」：${card.rewardText}。` }
+  }
+
   const familyCommissionCards = computed(() => {
     return FAMILY_COMMISSIONS.map(c => ({ ...c, claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:${c.id}`) }))
   })
@@ -1278,6 +1355,10 @@ export const useNpcStore = defineStore('npc', () => {
     familyLegacyExp,
     familyLegacyNeed,
     familyBonusText,
+    villageFriendshipAvg,
+    villageReputationText,
+    worldFeedbackCards,
+    claimWorldFeedback,
     familyCommissionCards,
     villageRequestCards,
     completeVillageRequest,

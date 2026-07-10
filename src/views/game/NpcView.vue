@@ -38,6 +38,25 @@
         </div>
       </section>
 
+      <section class="border border-accent/20 rounded-xs p-2 mb-3 bg-bg/40">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <p class="text-xs text-accent">村庄回响 / 人情反馈</p>
+            <p class="text-[10px] text-muted mt-0.5">{{ npcStore.villageReputationText }} 平均好感：{{ npcStore.villageFriendshipAvg }}</p>
+          </div>
+          <span class="text-[10px] text-muted">每周可领取一次</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div v-for="fb in npcStore.worldFeedbackCards" :key="fb.id" class="border border-accent/10 rounded-xs p-2" :class="fb.claimed ? 'opacity-60' : fb.done ? 'bg-accent/5' : ''">
+            <p class="text-xs text-accent">{{ fb.title }}</p>
+            <p class="text-[10px] text-muted leading-relaxed mt-1">{{ fb.desc }}</p>
+            <p class="text-[10px] text-warning mt-1">条件：{{ fb.requirement }}</p>
+            <p class="text-[10px] text-muted mt-1">奖励：{{ fb.rewardText }}</p>
+            <button class="mini-btn mt-2" :disabled="!fb.done || fb.claimed" @click="handleWorldFeedback(fb.id)">{{ fb.claimed ? '本周已回响' : fb.done ? '领取回响' : '未达成' }}</button>
+          </div>
+        </div>
+      </section>
+
       <!-- NPC 网格：移动端紧凑，桌面端详细 -->
       <div class="grid grid-cols-4 md:grid-cols-3 gap-1.5 md:gap-2">
         <div
@@ -581,6 +600,11 @@
 
   function handleNpcLetter(id: any) {
     const res = npcStore.completeNpcLetter(id)
+    addLog(res.message)
+  }
+
+  function handleWorldFeedback(id: any) {
+    const res = npcStore.claimWorldFeedback(id)
     addLog(res.message)
   }
 
