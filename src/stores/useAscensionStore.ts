@@ -7,7 +7,6 @@ import { getCombinedItemCount, removeCombinedItem } from '@/composables/useCombi
 import { addLog } from '@/composables/useGameLog'
 
 export const ASCENSION_REALM_INDEX = 27 // 大乘后期
-export const IMMORTAL_REALM_INDEX = 28 // 真仙
 export const ASCENSION_MONEY = 50000
 export const ASCENSION_MATERIALS = [
   { itemId: 'spirit_stone', name: '灵石', quantity: 200 },
@@ -25,7 +24,7 @@ export type ImmortalCaveId = 'star_platform' | 'merit_pool' | 'law_tablet' | 'sp
 export type MortalEchoId = 'sect_blessing' | 'family_blessing' | 'farm_blessing'
 export type ImmortalRivalId = 'sword_immortal' | 'thunder_general' | 'moon_fairy'
 export type ImmortalMarketId = 'jade_seed' | 'star_sand' | 'edict_scroll' | 'law_core'
-export type ImmortalRealmId = 'true_immortal' | 'earth_immortal' | 'sky_immortal' | 'gold_immortal'
+export type ImmortalRealmId = 'true_immortal' | 'xuan_immortal' | 'earth_immortal' | 'sky_immortal' | 'gold_immortal'
 export type ImmortalSeasonRewardId = 'arena_10' | 'arena_30' | 'arena_60'
 export type ImmortalLineageId = 'sword_dao' | 'thunder_dao' | 'harvest_dao' | 'fate_dao'
 export type ImmortalMandateId = 'heaven_river' | 'star_audit' | 'mortal_incense' | 'arena_invite'
@@ -87,9 +86,10 @@ export const IMMORTAL_MARKET: Array<{ id: ImmortalMarketId; name: string; icon: 
 ]
 export const IMMORTAL_REALMS: Array<{ id: ImmortalRealmId; name: string; icon: string; desc: string; meritCost: number; jadeCost: number; ruleCost: number; powerBonus: number; title: string }> = [
   { id: 'true_immortal', name: '真仙', icon: '☁️', desc: '初脱凡尘，掌仙术而未稳法则。', meritCost: 0, jadeCost: 0, ruleCost: 0, powerBonus: 0, title: '初入仙门' },
-  { id: 'earth_immortal', name: '地仙', icon: '⛰️', desc: '洞天落成，仙力可回响下界山河。', meritCost: 120, jadeCost: 32, ruleCost: 14, powerBonus: 380, title: '洞天地仙' },
-  { id: 'sky_immortal', name: '天仙', icon: '🌤️', desc: '仙职入册，可调度天庭事务与星河仙术。', meritCost: 260, jadeCost: 68, ruleCost: 32, powerBonus: 820, title: '云阙天仙' },
-  { id: 'gold_immortal', name: '太乙金仙', icon: '🌟', desc: '功德成轮，仙擂与法则试炼进入第二循环。', meritCost: 520, jadeCost: 128, ruleCost: 72, powerBonus: 1500, title: '太乙金仙' }
+  { id: 'xuan_immortal', name: '玄仙', icon: '🌘', desc: '玄光入体，法则根基初成。', meritCost: 80, jadeCost: 20, ruleCost: 8, powerBonus: 220, title: '玄光仙籍' },
+  { id: 'earth_immortal', name: '地仙', icon: '⛰️', desc: '洞天落成，仙力可回响下界山河。', meritCost: 180, jadeCost: 48, ruleCost: 22, powerBonus: 520, title: '洞天地仙' },
+  { id: 'sky_immortal', name: '天仙', icon: '🌤️', desc: '仙职入册，可调度天庭事务与星河仙术。', meritCost: 340, jadeCost: 86, ruleCost: 42, powerBonus: 960, title: '云阙天仙' },
+  { id: 'gold_immortal', name: '太乙金仙', icon: '🌟', desc: '功德成轮，仙擂与法则试炼进入第二循环。', meritCost: 650, jadeCost: 150, ruleCost: 86, powerBonus: 1700, title: '太乙金仙' }
 ]
 export const IMMORTAL_SEASON_REWARDS: Array<{ id: ImmortalSeasonRewardId; needScore: number; name: string; icon: string; desc: string; merit: number; jade: number; rule: number }> = [
   { id: 'arena_10', needScore: 10, name: '问道小成', icon: '🥉', desc: '仙擂赛季首段奖励，鼓励参与 PK。', merit: 30, jade: 8, rule: 3 },
@@ -249,7 +249,7 @@ export const useAscensionStore = defineStore('ascension', () => {
     const cultivation = useCultivationStore()
     playerStore.spendMoney(ASCENSION_MONEY)
     for (const mat of ASCENSION_MATERIALS) removeCombinedItem(mat.itemId, mat.quantity)
-    if (cultivation.realmIndex < IMMORTAL_REALM_INDEX) cultivation.realmIndex = IMMORTAL_REALM_INDEX
+    if (cultivation.realmIndex > ASCENSION_REALM_INDEX) cultivation.realmIndex = ASCENSION_REALM_INDEX
     ascended.value = true
     ascensionQuestActive.value = false
     ascensionQuestComplete.value = true

@@ -263,9 +263,7 @@ export const REALMS = [
   { name: '渡劫后期', maxCultivation: 6800000, maxMana: 40000, breakthroughCost: 680000 },
   { name: '大乘初期', maxCultivation: 11000000, maxMana: 58000, breakthroughCost: 960000 },
   { name: '大乘中期', maxCultivation: 18000000, maxMana: 82000, breakthroughCost: 1350000 },
-  { name: '大乘后期', maxCultivation: 30000000, maxMana: 120000, breakthroughCost: 1900000 },
-  { name: '真仙', maxCultivation: 50000000, maxMana: 180000, breakthroughCost: 2700000 },
-  { name: '玄仙', maxCultivation: 99999999, maxMana: 300000, breakthroughCost: 9999999 }
+  { name: '大乘后期', maxCultivation: 30000000, maxMana: 120000, breakthroughCost: 1900000 }
 ]
 
 
@@ -1730,7 +1728,7 @@ export const useCultivationStore = defineStore('cultivation', () => {
   const deserialize = (data?: Partial<ReturnType<typeof serialize>>) => {
     if (!data) return
     unlocked.value = data.unlocked ?? false
-    realmIndex.value = data.realmIndex ?? 0
+    realmIndex.value = Math.min(data.realmIndex ?? 0, REALMS.length - 1)
     cultivation.value = data.cultivation ?? 0
     aura.value = data.aura ?? 0
     mana.value = data.mana ?? 30

@@ -273,7 +273,17 @@ async function requireAdmin(req, res) {
 }
 
 // 境界列表 (V0.4: 30级)
-const REALMS = ['凡人','炼气一层','炼气二层','炼气三层','炼气四层','炼气五层','炼气六层','炼气七层','炼气八层','炼气九层','筑基初期','筑基中期','筑基后期','金丹初期','金丹中期','金丹后期','元婴初期','元婴中期','元婴后期','化神初期','化神中期','化神后期','渡劫初期','渡劫中期','渡劫后期','大乘初期','大乘中期','大乘后期','真仙','玄仙']
+const REALMS = ['凡人','炼气一层','炼气二层','炼气三层','炼气四层','炼气五层','炼气六层','炼气七层','炼气八层','炼气九层','筑基初期','筑基中期','筑基后期','金丹初期','金丹中期','金丹后期','元婴初期','元婴中期','元婴后期','化神初期','化神中期','化神后期','渡劫初期','渡劫中期','渡劫后期','大乘初期','大乘中期','大乘后期']
+const IMMORTAL_REALMS = [
+  { name: '真仙', powerBonus: 0 },
+  { name: '玄仙', powerBonus: 220 },
+  { name: '地仙', powerBonus: 520 },
+  { name: '天仙', powerBonus: 960 },
+  { name: '太乙金仙', powerBonus: 1700 }
+]
+const realmNameFromSave = (cu = {}, asc = {}) => asc?.ascended ? (IMMORTAL_REALMS[Math.max(0, Math.min(IMMORTAL_REALMS.length - 1, Number(asc.immortalRealmStage || 0)))]?.name || '真仙') : (REALMS[Math.max(0, Math.min(REALMS.length - 1, Number(cu.realmIndex ?? cu.realm ?? 0) || 0))] || '凡人')
+const realmSortIndexFromSave = (cu = {}, asc = {}) => asc?.ascended ? REALMS.length + Math.max(0, Math.min(IMMORTAL_REALMS.length - 1, Number(asc.immortalRealmStage || 0))) : Math.max(0, Math.min(REALMS.length - 1, Number(cu.realmIndex ?? cu.realm ?? 0) || 0))
+
 const REALM_STATS = [
   { name: '凡人', maxCultivation: 100, maxMana: 30 },
   { name: '炼气一层', maxCultivation: 220, maxMana: 45 },
@@ -302,9 +312,7 @@ const REALM_STATS = [
   { name: '渡劫后期', maxCultivation: 6800000, maxMana: 40000 },
   { name: '大乘初期', maxCultivation: 11000000, maxMana: 58000 },
   { name: '大乘中期', maxCultivation: 18000000, maxMana: 82000 },
-  { name: '大乘后期', maxCultivation: 30000000, maxMana: 120000 },
-  { name: '真仙', maxCultivation: 50000000, maxMana: 180000 },
-  { name: '玄仙', maxCultivation: 99999999, maxMana: 300000 }
+  { name: '大乘后期', maxCultivation: 30000000, maxMana: 120000 }
 ]
 
 const defaultConfig = {
@@ -327,6 +335,7 @@ const defaultConfig = {
     ]
   },
   updateLogs: [
+    {"date": "2026-07-10", "title": "V2.5.3 凡界仙界境界划分修正", "content": "修正境界设定：凡界主境界最高到大乘后期，真仙与玄仙移入飞升后的仙界仙阶；仙界仙阶调整为真仙→玄仙→地仙→天仙→太乙金仙。排行榜与战力计算同步识别仙界仙阶，旧存档若曾写入真仙/玄仙主境界，会兼容压回大乘后期并以仙界仙阶展示。"},
     {"date": "2026-07-10", "title": "V2.5.2 排行榜战力境界权重修复", "content": "修复排行榜战力和角色页战力口径不一致的问题：排行榜服务端不再按当前修为、当前灵气、当前灵力等临时资源计算战力，改为按境界上限、灵力上限、境界阶段权重和稳定养成底蕴计算；同步提高高境界基础权重，避免高境界玩家战力异常低于低境界玩家。"},
     {"date": "2026-07-10", "title": "V2.5.1 存档删除二次确认", "content": "首页账号角色列表新增“删除”按钮：玩家删除存档前会先看到不可恢复风险提示，并必须二次输入“删除存档”后才能确认；删除后会同步清除云端存档、角色槽位和本地缓存，释放角色名额，后台存档审计会记录删除事件。"},
     { date: "2026-07-10", title: "V2.2.1 战力突破稳定修复", content: "修复战力和战斗属性过度依赖当前修为、当前灵气、当前灵力的问题：突破成功会清空修为并消耗灵气，因此改为按境界上限、灵力上限与稳定底蕴计算战力/攻防/气血，避免玩家突破境界后战力反而下降。" },
@@ -648,8 +657,8 @@ app.put('/api/saves/:slot', async (req, res) => {
         const cu = plainData.cultivation || plainData.cultivationStore || (plainData.stores && plainData.stores.cultivation) || {}
         const g = plainData.game || plainData.gameStore || (plainData.stores && plainData.stores.game) || {}
         const playerName = (meta && meta.playerName) || p.playerName || p.name || '无名'
-        const realmIdx = cu.realmIndex != null ? cu.realmIndex : (cu.realm || 0)
-        const realmNameDisplay = cu.realmName || REALMS[realmIdx] || '凡人'
+        const asc = plainData && (plainData.ascension || plainData.ascensionStore || (plainData.stores && plainData.stores.ascension)) || {}
+        const realmNameDisplay = realmNameFromSave(cu, asc)
         await pool.execute(
           'INSERT INTO leaderboard (user_id, username, player_name, realm_name, cultivation, aura, money, game_year, game_season, game_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name=VALUES(player_name), realm_name=VALUES(realm_name), cultivation=VALUES(cultivation), aura=VALUES(aura), money=VALUES(money), game_year=VALUES(game_year), game_season=VALUES(game_season), game_day=VALUES(game_day)',
           [user.id, user.username, playerName, realmNameDisplay, cu.cultivation || 0, cu.aura || 0, p.money || (meta && meta.money) || 0, g.year || (meta && meta.year) || 1, g.season || (meta && meta.season) || '春', g.day || (meta && meta.day) || 1]
@@ -818,7 +827,7 @@ app.get("/api/check-char-name", async (req, res) => {
 })
 
 
-function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}) {
+function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}, asc = {}) {
   const num = v => Number(v || 0) || 0
   const artifacts = cu.artifacts || {}
   let artifactPower = 0
@@ -826,7 +835,7 @@ function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}) {
     if (v && typeof v === 'object') artifactPower += Math.floor(num(v.atk) * 12 + num(v.def) * 10 + num(v.aura) * 4 + num(v.cultivation) * 6)
   }
   const oldArtifactPower = ['glimmerHoe', 'spiritKettle', 'spiritRain'].filter(k => artifacts[k] === true).length * 80
-  const realmIndex = num(cu.realmIndex ?? cu.realm)
+  const realmIndex = Math.max(0, Math.min(REALM_STATS.length - 1, num(cu.realmIndex ?? cu.realm)))
   const rebirthCount = num(cu.rebirthCount)
   const realmStat = REALM_STATS[realmIndex] || REALM_STATS[0]
   const realmMaxCultivation = num(realmStat?.maxCultivation || 100)
@@ -887,7 +896,8 @@ function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}) {
   const auraFoundationPower = Math.floor(Math.log10(Math.max(1, aura) + 1) * 180)
   const cultivationPower = realmFoundationPower + auraFoundationPower
   const bodyPower = Math.floor(attrPower * 6 + hp * 1.5 + combatLevel * 180)
-  const systemPower = num(cu.fieldTier) * 120 + num(cu.caveTier) * 180 + num(cu.yuanShenLevel) * 260 + num(cu.destinedArtifactLevel) * 360 + daoGearPower + talismanPower + num(cu.beastBond) * 12 + num(cu.sectContribution) * 0.2 + num(cu.sectMerit) * 0.6 + sectSkillPower + sectIdentityPower + pathPower + manualPower
+  const immortalRealmPower = asc?.ascended ? (IMMORTAL_REALMS[Math.max(0, Math.min(IMMORTAL_REALMS.length - 1, Number(asc.immortalRealmStage || 0)))]?.powerBonus || 0) : 0
+  const systemPower = immortalRealmPower + num(cu.fieldTier) * 120 + num(cu.caveTier) * 180 + num(cu.yuanShenLevel) * 260 + num(cu.destinedArtifactLevel) * 360 + daoGearPower + talismanPower + num(cu.beastBond) * 12 + num(cu.sectContribution) * 0.2 + num(cu.sectMerit) * 0.6 + sectSkillPower + sectIdentityPower + pathPower + manualPower
   return Math.max(0, Math.floor(realmPower + cultivationPower + bodyPower + weaponPower + ringPower + artifactPower + oldArtifactPower + systemPower))
 }
 
@@ -960,16 +970,17 @@ app.get('/api/leaderboard', async (req, res) => {
       const p = (d && (d.player || d.playerStore || (d.stores && d.stores.player))) || {}
       const cu = (d && (d.cultivation || d.cultivationStore || (d.stores && d.stores.cultivation))) || {}
       const g = (d && (d.game || d.gameStore || (d.stores && d.stores.game))) || {}
-      const realmIdx = cu.realmIndex != null ? cu.realmIndex : (cu.realm || 0)
+      const asc = (d && (d.ascension || d.ascensionStore || (d.stores && d.stores.ascension))) || {}
+      const realmIdx = realmSortIndexFromSave(cu, asc)
       entries.push({
         userId: r.user_id,
         username: r.username,
         playerName: p.playerName || p.name || meta.playerName || r.player_name || '无名',
-        realmName: cu.realmName || r.cached_realm_name || REALMS[realmIdx] || '凡人',
-        realmIndex: Number(cu.realmIndex ?? cu.realm ?? 0) || 0,
+        realmName: realmNameFromSave(cu, asc) || r.cached_realm_name || '凡人',
+        realmIndex: realmIdx,
         rebirthCount: Number(cu.rebirthCount || 0) || 0,
         cultivation: Number(cu.cultivation ?? r.cached_cultivation ?? 0) || 0,
-        combatPower: calcCombatPowerFromSave(p, cu, (d && (d.inventory || d.inventoryStore || (d.stores && d.stores.inventory))) || {}, (d && (d.skill || d.skillStore || (d.stores && d.stores.skill))) || {}),
+        combatPower: calcCombatPowerFromSave(p, cu, (d && (d.inventory || d.inventoryStore || (d.stores && d.stores.inventory))) || {}, (d && (d.skill || d.skillStore || (d.stores && d.stores.skill))) || {}, asc),
         aura: Number(cu.aura ?? r.cached_aura ?? 0) || 0,
         money: Number(p.money ?? meta.money ?? r.cached_money ?? 0) || 0,
         year: Number(g.year ?? meta.year ?? r.cached_year ?? 1) || 1,
@@ -1022,13 +1033,14 @@ app.get('/api/tower-leaderboard', async (req, res) => {
       const cu = (d && (d.cultivation || d.cultivationStore || (d.stores && d.stores.cultivation))) || {}
       const floor = Number(combat.towerHighestFloor || 0) || 0
       if (floor <= 0) continue
-      const realmIdx = Number(cu.realmIndex ?? cu.realm ?? 0) || 0
+      const asc = (d && (d.ascension || d.ascensionStore || (d.stores && d.stores.ascension))) || {}
+      const realmIdx = realmSortIndexFromSave(cu, asc)
       entries.push({
         userId: r.user_id,
         username: r.username,
         playerName: p.playerName || p.name || meta.playerName || r.player_name || '无名',
         floor,
-        realmName: cu.realmName || REALMS[realmIdx] || '凡人',
+        realmName: realmNameFromSave(cu, asc) || '凡人',
         rebirthCount: Number(cu.rebirthCount || 0) || 0,
         updatedAt: r.updated_at
       })
