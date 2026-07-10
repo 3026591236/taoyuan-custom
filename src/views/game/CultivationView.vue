@@ -66,6 +66,10 @@
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">
       <Button class="justify-between" @click="cultivation.meditate"><span>打坐调息</span><span class="text-muted text-xs">修为/灵力</span></Button>
+      <Button class="justify-between" :class="cultivation.autoMeditateEnabled ? 'auto-active' : ''" @click="cultivation.toggleAutoMeditate">
+        <span>{{ cultivation.autoMeditateEnabled ? '停止后台打坐' : '后台自动打坐' }}</span>
+        <span class="text-muted text-xs">{{ cultivation.autoMeditateEnabled ? `已自动${cultivation.autoMeditateCount}次` : '切页继续' }}</span>
+      </Button>
       <Button class="justify-between" @click="cultivation.refineAura"><span>炼化灵气</span><span class="text-muted text-xs">灵气→修为</span></Button>
       <Button class="justify-between" @click="cultivation.meditateInSeclusion"><span>闭关参悟</span><span class="text-muted text-xs">顿悟/心魔</span></Button>
       <Button class="justify-between" :disabled="!cultivation.canBreakthrough" @click="handleBreakthrough"><span>{{ cultivation.isMajorBreakthrough ? '渡劫突破' : '尝试突破' }}</span><span class="text-muted text-xs">{{ cultivation.canBreakthrough ? (cultivation.isMajorBreakthrough ? `成功率${cultivation.tribulationSuccessPercent}%` : '消耗灵气') : cultivation.breakthroughRequirementText }}</span></Button>
@@ -73,6 +77,13 @@
     </div>
 
     <div v-if="cultivation.unlocked" class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs space-y-2">
+      <div v-if="cultivation.autoMeditateEnabled" class="auto-meditate-card">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-accent">🧘 后台自动打坐中</span>
+          <span class="text-[10px] text-muted">切换页面也继续</span>
+        </div>
+        <p class="text-[10px] text-muted leading-relaxed mt-1">会在后台定时消耗体力打坐，获得修为、灵力和灵气；体力不足时自动暂停。</p>
+      </div>
       <div class="flex items-center justify-between">
         <p class="text-accent">🧭 修行流派</p>
         <span class="text-[10px] text-muted">当前：{{ cultivation.currentCultivationPath.name }} · {{ cultivation.pathTitle }}</span>
@@ -392,6 +403,8 @@ const manaPercent = computed(() => Math.min(100, Math.round((cultivation.mana / 
 .bar-fill { height: 100%; background: var(--color-accent); transition: width .2s; }
 .bar-fill.mana { background: rgb(96,165,250); }
 .bar-fill.pulse { background: rgb(74, 222, 128); }
+.auto-active { border-color: rgba(74, 222, 128, .65) !important; box-shadow: 0 0 14px rgba(74, 222, 128, .18); }
+.auto-meditate-card { border: 1px solid rgba(74, 222, 128, .28); background: rgba(74, 222, 128, .06); border-radius: 2px; padding: 8px; }
 .tribulation-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 65%, rgba(255,255,255,.12), transparent 20%), rgba(3, 7, 18, .86); overflow: hidden; pointer-events: none; }
 .tribulation-cloud { position: absolute; top: 8%; width: 260px; height: 76px; background: #111827; border: 3px solid rgba(148,163,184,.55); box-shadow: 0 0 35px rgba(96,165,250,.28); image-rendering: pixelated; }
 .cloud-a { left: 12%; animation: cloudShake .2s steps(2) infinite; }

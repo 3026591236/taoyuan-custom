@@ -725,6 +725,22 @@
     await autoSaveCurrent()
   }
 
+  let backgroundMeditateTimer: number | null = null
+  const startBackgroundMeditation = () => {
+    if (backgroundMeditateTimer != null) return
+    backgroundMeditateTimer = window.setInterval(() => {
+      if (!gameStore.isGameStarted || !cultivationStore.autoMeditateEnabled) return
+      const changed = cultivationStore.runAutoMeditateTick()
+      if (changed || !cultivationStore.autoMeditateEnabled) void autoSaveCurrent()
+    }, 3000)
+  }
+  const stopBackgroundMeditation = () => {
+    if (backgroundMeditateTimer != null) {
+      window.clearInterval(backgroundMeditateTimer)
+      backgroundMeditateTimer = null
+    }
+  }
+
   let staminaRegenTimer: number | null = null
   const startOnlineStaminaRegen = () => {
     if (staminaRegenTimer != null) return
@@ -1050,11 +1066,12 @@
   })
 
   // 实时时钟生命周期
-  onMounted(() => { startClock(); startAccountAutoSave(); startOnlineStaminaRegen(); void loadServerConfig(); void loadCheckinStatus(); void loadMails(); void grantOfflineRewards(); void autoSaveCurrent() })
+  onMounted(() => { startClock(); startAccountAutoSave(); startOnlineStaminaRegen(); startBackgroundMeditation(); void loadServerConfig(); void loadCheckinStatus(); void loadMails(); void grantOfflineRewards(); void autoSaveCurrent() })
   onUnmounted(() => {
     stopClock()
     stopAccountAutoSave()
     stopOnlineStaminaRegen()
+    stopBackgroundMeditation()
     if (worldAnnouncementTimer != null) window.clearInterval(worldAnnouncementTimer)
     if (worldAnnouncementHideTimer != null) window.clearTimeout(worldAnnouncementHideTimer)
     void autoSaveCurrent()
