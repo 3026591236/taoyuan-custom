@@ -230,7 +230,9 @@ export const useCombatStore = defineStore('combat', () => {
   const playerAtk = computed(() => {
     const c = useCultivationStore()
     const p = usePlayerStore()
-    const base = 12 + (c.realmIndex || 0) * 9 + Math.floor((c.cultivation || 0) / 45) + (c.rebirthCount || 0) * 18
+    // V2.2.1：战斗属性按境界底蕴成长，不再依赖当前修为值，避免突破清空修为后攻击反降。
+    const realmFoundation = Math.floor(((c.maxCultivation || 0) as number) / 80)
+    const base = 12 + (c.realmIndex || 0) * 9 + realmFoundation + (c.rebirthCount || 0) * 18
     const beastBonus = c.beast === 'crane' ? Math.floor(base * (0.12 + Math.min(0.18, (c.beastBond || 0) / 3000))) : 0
     const artifactBonus = (c.destinedArtifactLevel || 0) * 8
     const tacticRate = battleTactic.value === 'burst' ? 1.18 : battleTactic.value === 'guard' ? 0.94 : battleTactic.value === 'treasure' ? 0.92 : 1
@@ -243,7 +245,8 @@ export const useCombatStore = defineStore('combat', () => {
     const p = usePlayerStore()
     const tacticRate = battleTactic.value === 'guard' ? 1.18 : battleTactic.value === 'burst' ? 0.92 : 1
     const buildRate = battleBuildInfo.value?.def ?? 1
-    return Math.floor((6 + (c.realmIndex || 0) * 4 + Math.floor((c.aura || 0) / 25) + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus + (c.beast === 'phoenix' ? Math.floor(4 + (c.beastBond || 0) / 80) : 0)) * (1 + (c.sectCombatDefenseBonusRate || 0)) * tacticRate * buildRate)
+    const auraFoundation = Math.floor(Math.log10(Math.max(1, (c.aura || 0) as number) + 1) * 8)
+    return Math.floor((6 + (c.realmIndex || 0) * 4 + auraFoundation + (c.rebirthCount || 0) * 10 + (c.yuanShenLevel || 0) * 3 + p.attributeSpeedBonus + (c.beast === 'phoenix' ? Math.floor(4 + (c.beastBond || 0) / 80) : 0)) * (1 + (c.sectCombatDefenseBonusRate || 0)) * tacticRate * buildRate)
   })
 
   const playerMaxHp = computed(() => {
@@ -251,7 +254,8 @@ export const useCombatStore = defineStore('combat', () => {
     const p = usePlayerStore()
     const tacticRate = battleTactic.value === 'guard' ? 1.1 : 1
     const buildRate = battleBuildInfo.value?.hp ?? 1
-    return Math.floor((120 + (c.realmIndex || 0) * 34 + (c.cultivation || 0) + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus) * (1 + (c.sectMaxHpBonusRate || 0)) * tacticRate * buildRate)
+    const cultivationFoundation = Math.floor(((c.maxCultivation || 0) as number) * 0.35)
+    return Math.floor((120 + (c.realmIndex || 0) * 34 + cultivationFoundation + (c.rebirthCount || 0) * 120 + (c.yuanShenLevel || 0) * 30 + p.attributeMaxHpBonus) * (1 + (c.sectMaxHpBonusRate || 0)) * tacticRate * buildRate)
   })
 
   const getDailyCount = (zoneId: string) => {
