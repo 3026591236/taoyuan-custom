@@ -15,21 +15,39 @@
     </div>
 
     <div v-if="isTab('home')" class="immortal-hero relative z-10 mb-4">
-      <div class="hero-avatar immortal-portrait" :key="ascensionStore.visualPulse">
-        <div class="portrait-aura aura-back"></div>
-        <div class="halo halo-outer"></div>
-        <div class="halo halo-inner"></div>
-        <div class="immortal-crown">✦</div>
-        <div class="immortal-head"></div>
-        <div class="immortal-hair hair-left"></div>
-        <div class="immortal-hair hair-right"></div>
-        <div class="immortal-robe"><span class="robe-core">仙</span><span class="robe-sash"></span></div>
-        <div class="immortal-sleeve sleeve-left"></div>
-        <div class="immortal-sleeve sleeve-right"></div>
-        <div class="sword-light sword-main"></div>
-        <div class="sword-light sword-echo"></div>
+      <div class="hero-avatar immortal-portrait-card" :key="ascensionStore.visualPulse" aria-label="仙界角色立绘">
+        <div class="portrait-moon"></div>
+        <div class="portrait-ring ring-a"></div>
+        <div class="portrait-ring ring-b"></div>
+        <div class="portrait-ribbon ribbon-left"></div>
+        <div class="portrait-ribbon ribbon-right"></div>
+        <svg class="immortal-figure" viewBox="0 0 180 260" role="img" aria-hidden="true">
+          <defs>
+            <linearGradient id="immortalHair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#d8efff"/><stop offset="1" stop-color="#8fb7ff" stop-opacity="0.35"/></linearGradient>
+            <linearGradient id="immortalRobe" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2a8"/><stop offset="0.38" stop-color="#eafcff"/><stop offset="0.68" stop-color="#77d8ff"/><stop offset="1" stop-color="#c7a2ff"/></linearGradient>
+            <linearGradient id="immortalGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff7bd"/><stop offset="1" stop-color="#e1a73b"/></linearGradient>
+            <filter id="immortalGlow"><feGaussianBlur stdDeviation="3.2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <path class="figure-shadow" d="M28 232 C54 204 126 204 152 232 C126 252 54 252 28 232Z" fill="#79dfff" opacity=".22"/>
+          <path d="M86 28 C58 55 42 95 44 142 C45 185 29 213 17 236 C54 220 74 196 82 150 C86 102 84 61 86 28Z" fill="url(#immortalHair)" opacity=".86"/>
+          <path d="M94 28 C122 55 138 95 136 142 C135 185 151 213 163 236 C126 220 106 196 98 150 C94 102 96 61 94 28Z" fill="url(#immortalHair)" opacity=".86"/>
+          <path d="M90 17 L102 39 L128 43 L109 61 L114 88 L90 75 L66 88 L71 61 L52 43 L78 39Z" fill="url(#immortalGold)" filter="url(#immortalGlow)"/>
+          <circle cx="90" cy="68" r="23" fill="#ffe1bd" stroke="#fff2b0" stroke-width="2"/>
+          <path d="M60 96 C75 82 105 82 120 96 L145 214 C123 237 57 237 35 214Z" fill="url(#immortalRobe)" stroke="#fff1a6" stroke-width="2.2" filter="url(#immortalGlow)"/>
+          <path d="M72 100 C58 128 45 157 24 179 C44 185 67 176 84 150Z" fill="#e9fbff" opacity=".86" stroke="#b8efff"/>
+          <path d="M108 100 C122 128 135 157 156 179 C136 185 113 176 96 150Z" fill="#e9fbff" opacity=".86" stroke="#b8efff"/>
+          <path d="M50 151 C76 164 104 164 130 151" stroke="#fff0a8" stroke-width="8" stroke-linecap="round" opacity=".86"/>
+          <path d="M88 101 C78 135 75 180 70 220" stroke="#ffffff" stroke-width="2" opacity=".55"/>
+          <path d="M94 101 C104 135 107 180 112 220" stroke="#ffffff" stroke-width="2" opacity=".55"/>
+          <path d="M139 31 L146 192" stroke="#eafcff" stroke-width="5" stroke-linecap="round" filter="url(#immortalGlow)"/>
+          <path d="M139 31 L146 192" stroke="#7ee5ff" stroke-width="2" stroke-linecap="round"/>
+          <path d="M138 29 L149 29 L143 12Z" fill="#fff7bd" filter="url(#immortalGlow)"/>
+          <circle cx="68" cy="62" r="3" fill="#5c2b25" opacity=".75"/><circle cx="112" cy="62" r="3" fill="#5c2b25" opacity=".75"/>
+          <path d="M80 78 C87 84 95 84 102 78" fill="none" stroke="#9d5649" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+        </svg>
         <div class="portrait-cloud cloud-left"></div>
         <div class="portrait-cloud cloud-right"></div>
+        <div class="portrait-title-glow">仙身显化</div>
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-xl text-accent">{{ ascensionStore.immortalTitle || '初入仙门' }} · {{ ascensionStore.immortalRank }}</p>
@@ -473,8 +491,8 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 
 
 .immortal-zone-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.zone-card{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;min-height:92px;border:1px solid rgba(255,226,138,.22);border-radius:4px;padding:10px;background:linear-gradient(135deg,rgba(255,226,138,.09),rgba(116,203,255,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.06);transition:.16s}.zone-card:hover{border-color:rgba(255,226,138,.58);transform:translateY(-1px);box-shadow:0 0 18px rgba(255,226,138,.13)}.zone-icon{font-size:22px;filter:drop-shadow(0 0 8px rgba(255,226,138,.35))}
-.immortal-portrait{width:116px;height:148px;overflow:visible}.portrait-aura{position:absolute;inset:8px;border-radius:999px;background:radial-gradient(circle,rgba(255,245,179,.36),rgba(123,214,255,.12) 48%,transparent 72%);filter:blur(4px);animation:pulse 2.2s ease-in-out infinite}.halo-outer{width:106px;height:106px;border-color:rgba(255,230,151,.85);animation:celestialSpin 12s linear infinite}.halo-inner{width:78px;height:78px;border-style:dashed;border-color:rgba(144,224,255,.7);animation:celestialSpin 8s linear infinite reverse}.immortal-crown{position:absolute;top:14px;z-index:5;color:#fff0a8;font-size:20px;text-shadow:0 0 12px rgba(255,226,138,.9)}.immortal-head{position:absolute;top:36px;z-index:4;width:24px;height:28px;border-radius:50% 50% 45% 45%;background:linear-gradient(180deg,#fff6d2,#ffd7b3);box-shadow:0 0 14px rgba(255,240,170,.55)}.immortal-hair{position:absolute;top:32px;z-index:3;width:24px;height:70px;background:linear-gradient(180deg,#f9fbff,#b6dbff 70%,transparent);filter:drop-shadow(0 0 8px rgba(157,220,255,.45))}.hair-left{left:37px;border-radius:60% 20% 70% 30%;transform:rotate(10deg)}.hair-right{right:37px;border-radius:20% 60% 30% 70%;transform:rotate(-10deg)}.immortal-robe{position:absolute;top:58px;z-index:4;width:54px;height:72px;display:grid;place-items:center;color:#321c06;font-weight:900;background:linear-gradient(180deg,#fff7bf 0%,#74dcff 46%,#c899ff 100%);clip-path:polygon(50% 0,86% 22%,96% 78%,50% 100%,4% 78%,14% 22%);box-shadow:0 0 22px rgba(255,255,255,.65),inset 0 0 15px rgba(255,226,138,.35)}.robe-core{font-size:20px;text-shadow:0 0 8px rgba(255,255,255,.6)}.robe-sash{position:absolute;width:70px;height:8px;background:linear-gradient(90deg,transparent,#fff0a8,#87e7ff,transparent);transform:rotate(-18deg);box-shadow:0 0 10px rgba(255,226,138,.7)}.immortal-sleeve{position:absolute;top:70px;z-index:2;width:44px;height:44px;background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(117,216,255,.24));filter:drop-shadow(0 0 10px rgba(151,226,255,.5))}.sleeve-left{left:17px;clip-path:polygon(100% 0,0 45%,85% 100%)}.sleeve-right{right:17px;clip-path:polygon(0 0,100% 45%,15% 100%)}.sword-main{right:5px;top:10px;height:118px;width:5px}.sword-echo{left:12px;top:26px;height:92px;width:3px;transform:rotate(-28deg);opacity:.55}.portrait-cloud{position:absolute;bottom:10px;width:52px;height:18px;border-radius:999px;background:rgba(255,255,255,.18);filter:blur(.2px);box-shadow:0 0 12px rgba(255,255,255,.14)}.cloud-left{left:2px}.cloud-right{right:0}
-@media (max-width:420px){.immortal-zone-grid{grid-template-columns:1fr}.immortal-hero{align-items:flex-start}.immortal-portrait{width:98px;height:132px;transform:scale(.92);transform-origin:left center}}
+.immortal-portrait-card{position:relative;width:132px;height:176px;display:grid;place-items:center;overflow:visible;border:1px solid rgba(255,226,138,.28);border-radius:16px;background:radial-gradient(circle at 50% 20%,rgba(255,245,184,.18),transparent 42%),linear-gradient(180deg,rgba(6,13,34,.72),rgba(14,8,34,.42));box-shadow:0 0 28px rgba(255,226,138,.16),inset 0 0 24px rgba(125,220,255,.08)}.portrait-moon{position:absolute;top:8px;width:102px;height:102px;border-radius:999px;background:radial-gradient(circle,rgba(255,244,178,.38),rgba(138,219,255,.11) 58%,transparent 72%);box-shadow:0 0 34px rgba(255,226,138,.22)}.portrait-ring{position:absolute;border-radius:999px;border:1px solid rgba(255,226,138,.46);box-shadow:0 0 18px rgba(255,226,138,.12)}.ring-a{top:18px;width:116px;height:72px;transform:rotate(-18deg);animation:celestialSpin 13s linear infinite}.ring-b{top:28px;width:96px;height:62px;border-style:dashed;border-color:rgba(135,226,255,.45);transform:rotate(24deg);animation:celestialSpin 10s linear infinite reverse}.immortal-figure{position:absolute;z-index:4;left:50%;bottom:13px;width:138px;height:200px;transform:translateX(-50%);filter:drop-shadow(0 0 14px rgba(134,225,255,.24)) drop-shadow(0 0 18px rgba(255,226,138,.18))}.portrait-ribbon{position:absolute;z-index:2;top:60px;width:72px;height:130px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(119,219,255,.08),transparent);filter:blur(.1px);opacity:.8}.ribbon-left{left:0;transform:rotate(22deg);clip-path:polygon(52% 0,100% 12%,44% 100%,0 88%)}.ribbon-right{right:0;transform:rotate(-22deg);clip-path:polygon(48% 0,0 12%,56% 100%,100% 88%)}.portrait-cloud{position:absolute;z-index:5;bottom:13px;width:62px;height:20px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,246,192,.22),rgba(134,225,255,.14));box-shadow:0 0 14px rgba(255,255,255,.12)}.cloud-left{left:6px}.cloud-right{right:5px}.portrait-title-glow{position:absolute;z-index:6;bottom:-10px;padding:2px 8px;border:1px solid rgba(255,226,138,.38);border-radius:999px;background:rgba(8,10,28,.82);color:#ffe28a;font-size:10px;letter-spacing:.12em;box-shadow:0 0 14px rgba(255,226,138,.18)}
+@media (max-width:420px){.immortal-zone-grid{grid-template-columns:1fr}.immortal-hero{align-items:flex-start}.immortal-portrait-card{width:116px;height:158px}.immortal-figure{width:124px;height:182px}}
 
 .preview-badge{display:inline-flex;margin-left:6px;padding:1px 6px;border:1px solid rgba(255,226,138,.45);border-radius:999px;font-size:10px;color:#ffe28a;background:rgba(255,226,138,.12);box-shadow:0 0 12px rgba(255,226,138,.18)}
 </style>
