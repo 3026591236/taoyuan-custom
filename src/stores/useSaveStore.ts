@@ -296,9 +296,24 @@ export const useSaveStore = defineStore('save', () => {
     return true
   }
 
-  /** 本地文件导入/导出已禁用，防止绕过账号云存档审计。 */
+  /** 本地文件导出已禁用，防止绕过账号云存档审计。 */
   const exportSave = (_slot: number): boolean => false
-  const importSave = (_slot: number, _fileContent: string): boolean => false
+
+  /**
+   * 内部恢复存档：仅供账号云存档/WebDAV 下载写入本地槽位使用。
+   * 文件导入入口已从 UI 移除，避免玩家手动导入本地篡改存档。
+   */
+  const importSave = (slot: number, fileContent: string): boolean => {
+    if (slot < 0 || slot >= MAX_SLOTS) return false
+    try {
+      const data = parseSaveData(fileContent)
+      if (!data) return false
+      localStorage.setItem(`${SAVE_KEY_PREFIX}${slot}`, fileContent)
+      return true
+    } catch {
+      return false
+    }
+  }
 
   return { activeSlot, getSlots, assignNewSlot, saveToSlot, autoSave, loadFromSlot, deleteSlot, exportSave, importSave }
 })
