@@ -228,6 +228,8 @@
     { key: 'cave', label: '仙界洞天', icon: '🏔️' },
     { key: 'market', label: '仙市兑换', icon: '💎' },
     { key: 'trial', label: '仙域试炼', icon: '⚔️' },
+    { key: 'gear', label: '仙器谱', icon: '✦' },
+    { key: 'edict', label: '云阙天诏', icon: '🪬' },
     { key: 'arena', label: '仙擂问道', icon: '🏆' },
     { key: 'fate', label: '命盘天命', icon: '🔮' },
     { key: 'rift', label: '混沌裂隙', icon: '🕳️' },
