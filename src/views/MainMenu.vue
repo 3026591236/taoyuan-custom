@@ -116,7 +116,7 @@
           <h2 class="text-danger text-lg mb-2 text-center">删除存档</h2>
           <div class="border border-danger/30 rounded-xs p-3 text-xs leading-relaxed space-y-2">
             <p class="text-text">你正在删除角色「<span class="text-accent">{{ deleteSaveTarget.name }}</span>」的存档。</p>
-            <p class="text-danger">此操作会删除云端存档和本地缓存，删除后无法恢复。建议确认已经导出备份后再继续。</p>
+            <p class="text-danger">此操作会删除云端存档和本地缓存，删除后无法恢复。请确认不再需要该角色后再继续。</p>
           </div>
           <label class="text-xs text-muted mt-3 mb-1 block">二次确认：请输入 <span class="text-danger">删除存档</span></label>
           <input v-model="deleteSaveConfirmText" class="input" placeholder="删除存档" @click.stop />
@@ -451,7 +451,7 @@
             <p class="text-text">3. 网络通信</p>
             <p>账号登录、角色创建、云存档、排行榜、签到、邮件等功能会与服务器通信，以保证退出后数据可恢复、角色名唯一和跨设备继续游戏。</p>
             <p class="text-text">4. 数据安全</p>
-            <p>清除浏览器数据或更换设备可能导致存档丢失，建议定期使用导出功能备份存档。</p>
+            <p>登录账号后存档会保存到服务器数据库；更换设备时请使用账号云存档继续游戏。</p>
             <p class="text-text">5. 第三方服务</p>
             <p>
               本游戏使用的第三方统计服务有其独立的隐私政策，我们不对其数据处理方式负责。游戏中的外部链接指向的第三方网站亦不受本协议约束。

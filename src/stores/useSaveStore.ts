@@ -1,8 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import CryptoJS from 'crypto-js'
-import { saveAs } from 'file-saver'
-import { useGameStore, SEASON_NAMES } from './useGameStore'
+import { useGameStore } from './useGameStore'
 import { usePlayerStore } from './usePlayerStore'
 import { useInventoryStore } from './useInventoryStore'
 import { useFarmStore } from './useFarmStore'
@@ -38,7 +37,6 @@ import { useFloatingWelfareStore } from './useFloatingWelfareStore'
 const SAVE_KEY_PREFIX = 'taoyuanxiang_save_'
 const MAX_SLOTS = 3
 const ENCRYPTION_KEY = 'taoyuanxiang_2024_secret'
-const SAVE_FILE_EXT = '.tyx'
 
 /** 加密 JSON 字符串 */
 const encrypt = (json: string): string => {
@@ -298,36 +296,9 @@ export const useSaveStore = defineStore('save', () => {
     return true
   }
 
-  /** 导出存档为加密文件 */
-  const exportSave = (slot: number): boolean => {
-    try {
-      const raw = localStorage.getItem(`${SAVE_KEY_PREFIX}${slot}`)
-      if (!raw) return false
-      const blob = new Blob([raw], { type: 'application/octet-stream' })
-      const info = getSlots().find(s => s.slot === slot)
-      const name = info?.exists
-        ? `桃源乡_存档${slot + 1}_第${info.year}年${SEASON_NAMES[info.season as keyof typeof SEASON_NAMES] ?? info.season}第${info.day}天`
-        : `桃源乡_存档${slot + 1}`
-      saveAs(blob, `${name}${SAVE_FILE_EXT}`)
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  /** 从文件导入存档到指定槽位 */
-  const importSave = (slot: number, fileContent: string): boolean => {
-    if (slot < 0 || slot >= MAX_SLOTS) return false
-    try {
-      // 验证文件内容可解密
-      const data = parseSaveData(fileContent)
-      if (!data) return false
-      localStorage.setItem(`${SAVE_KEY_PREFIX}${slot}`, fileContent)
-      return true
-    } catch {
-      return false
-    }
-  }
+  /** 本地文件导入/导出已禁用，防止绕过账号云存档审计。 */
+  const exportSave = (_slot: number): boolean => false
+  const importSave = (_slot: number, _fileContent: string): boolean => false
 
   return { activeSlot, getSlots, assignNewSlot, saveToSlot, autoSave, loadFromSlot, deleteSlot, exportSave, importSave }
 })

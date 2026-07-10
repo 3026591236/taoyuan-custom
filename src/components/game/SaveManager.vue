@@ -89,15 +89,6 @@
                   {{ accountBusy ? '处理中...' : '账号下载' }}
                 </Button>
                 <Button
-                  v-if="!Capacitor.isNativePlatform()"
-                  :icon="Download"
-                  :icon-size="12"
-                  class="text-center !rounded-none justify-center text-sm"
-                  @click="handleExport(info.slot)"
-                >
-                  导出存档
-                </Button>
-                <Button
                   :icon="Trash2"
                   :icon-size="12"
                   class="btn-danger !rounded-none text-center justify-center text-sm"
@@ -133,12 +124,6 @@
         </div>
       </div>
 
-      <!-- 导入存档 -->
-      <template v-if="!Capacitor.isNativePlatform()">
-        <Button :icon="Upload" class="text-center justify-center text-sm w-full" @click="triggerImport">导入存档</Button>
-        <input ref="fileInputRef" type="file" accept=".tyx" class="hidden" @change="handleImportFile" />
-      </template>
-
       <!-- 删除存档确认弹窗 -->
       <Transition name="panel-fade">
         <div
@@ -162,14 +147,13 @@
 
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { X, FolderOpen, Settings, Download, Trash2, Upload, CloudUpload, CloudDownload } from 'lucide-vue-next'
+  import { X, FolderOpen, Settings, Download, Trash2, CloudUpload, CloudDownload } from 'lucide-vue-next'
   import Button from '@/components/game/Button.vue'
   import Divider from '@/components/game/Divider.vue'
   import { SEASON_NAMES } from '@/stores/useGameStore'
   import { parseSaveData, useSaveStore } from '@/stores/useSaveStore'
   import { showFloat } from '@/composables/useGameLog'
   import { useWebdav } from '@/composables/useWebdav'
-  import { Capacitor } from '@capacitor/core'
 
   defineProps<{ allowLoad?: boolean }>()
   const emit = defineEmits<{ close: []; load: [slot: number]; change: [] }>()
@@ -187,12 +171,6 @@
     slots.value = saveStore.getSlots()
   }
 
-  const handleExport = (slot: number) => {
-    if (!saveStore.exportSave(slot)) {
-      showFloat('导出失败。', 'danger')
-    }
-  }
-
   const deleteTargetSlot = ref<number | null>(null)
 
   const handleDelete = (slot: number) => {
@@ -207,34 +185,6 @@
       deleteTargetSlot.value = null
       menuOpen.value = null
     }
-  }
-
-  const fileInputRef = ref<HTMLInputElement | null>(null)
-
-  const triggerImport = () => {
-    fileInputRef.value?.click()
-  }
-
-  const handleImportFile = (e: Event) => {
-    const input = e.target as HTMLInputElement
-    const file = input.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const content = reader.result as string
-      const emptySlot = slots.value.find(s => !s.exists)
-      if (!emptySlot) {
-        showFloat('存档槽位已满，请先删除一个旧存档。')
-      } else if (saveStore.importSave(emptySlot.slot, content)) {
-        refreshSlots()
-        emit('change')
-        showFloat(`已导入到存档 ${emptySlot.slot + 1}。`, 'success')
-      } else {
-        showFloat('存档文件无效或已损坏。', 'danger')
-      }
-      input.value = ''
-    }
-    reader.readAsText(file)
   }
 
   const handleUpload = async (slot: number) => {

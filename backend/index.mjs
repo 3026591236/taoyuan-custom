@@ -195,6 +195,45 @@ function saveSummary(raw, data, meta = {}) {
     itemKinds: Array.isArray(items) ? items.length : (items && typeof items === 'object' ? Object.keys(items).length : null)
   }
 }
+
+function saveSummaryNumber(value, fallback = 0) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+async function validateSaveProgression(user, req, { slot, summary, currentSaveRow, plainData, meta, saveCharacterId, playerName }) {
+  if (!currentSaveRow || !currentSaveRow.data_json || !plainData) return null
+  const prev = safeJsonParse(currentSaveRow.data_json, null)
+  if (!prev) return null
+  const prevSummary = saveSummary(currentSaveRow.raw || currentSaveRow.data_json || '', prev, {})
+  const prevMoney = saveSummaryNumber(prevSummary.money, 0)
+  const nextMoney = saveSummaryNumber(summary.money, prevMoney)
+  const prevCultivation = saveSummaryNumber(prevSummary.cultivation, 0)
+  const nextCultivation = saveSummaryNumber(summary.cultivation, prevCultivation)
+  const prevDay = saveSummaryNumber(prevSummary.day, 1)
+  const nextDay = saveSummaryNumber(summary.day, prevDay)
+  const dayDelta = Math.max(0, nextDay - prevDay)
+  const moneyDelta = nextMoney - prevMoney
+  const cultivationDelta = nextCultivation - prevCultivation
+  const reasons = []
+
+  // 正常玩法可以在结算、邮件、活动里增长，但分钟级直接写入千万/十亿级资产应拒绝。
+  // 按游戏节奏给足宽限：单次保存最多允许 100万 + 每推进1天 100万 铜钱；修为最多允许 200万 + 每天 200万。
+  if (moneyDelta > 1000000 + dayDelta * 1000000) reasons.push(`money_jump:${prevMoney}->${nextMoney}`)
+  if (cultivationDelta > 2000000 + dayDelta * 2000000) reasons.push(`cultivation_jump:${prevCultivation}->${nextCultivation}`)
+  if (nextMoney >= 100000000 && moneyDelta > 10000000) reasons.push(`money_ceiling_jump:${prevMoney}->${nextMoney}`)
+  if (!reasons.length) return null
+
+  await recordSaveAuditEvent(user, req, {
+    eventType: 'save_guard', status: 'rejected', slot,
+    characterId: currentSaveRow.character_id || saveCharacterId,
+    playerName: currentSaveRow.player_name || playerName || summary.playerName,
+    rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash,
+    clientLoadedAt: meta?.lastLoadedAt || null, serverUpdatedAt: currentSaveRow.updated_at,
+    detail: { ...summary, previous: { money: prevMoney, cultivation: prevCultivation, day: prevDay }, reasons }
+  })
+  return { error: '检测到异常存档写入，已拒绝保存。请刷新页面或联系管理员处理。', saveGuard: true, reasons }
+}
+
 async function recordSaveAuditEvent(user, req, event = {}) {
   if (!user) return
   try {
@@ -335,6 +374,7 @@ const defaultConfig = {
     ]
   },
   updateLogs: [
+    {"date": "2026-07-10", "title": "V2.5.4 存档安全与异常资产修复", "content": "禁用玩家本地文件导入/导出存档入口，保留账号云存档保存/下载；服务端新增异常写档拦截，拒绝分钟级大额铜钱或修为跳变，防止客户端篡改云档；修正角色“牛马在线”异常铜钱与修为。"},
     {"date": "2026-07-10", "title": "V2.5.3 凡界仙界境界划分修正", "content": "修正境界设定：凡界主境界最高到大乘后期，真仙与玄仙移入飞升后的仙界仙阶；仙界仙阶调整为真仙→玄仙→地仙→天仙→太乙金仙。排行榜与战力计算同步识别仙界仙阶，旧存档若曾写入真仙/玄仙主境界，会兼容压回大乘后期并以仙界仙阶展示。"},
     {"date": "2026-07-10", "title": "V2.5.2 排行榜战力境界权重修复", "content": "修复排行榜战力和角色页战力口径不一致的问题：排行榜服务端不再按当前修为、当前灵气、当前灵力等临时资源计算战力，改为按境界上限、灵力上限、境界阶段权重和稳定养成底蕴计算；同步提高高境界基础权重，避免高境界玩家战力异常低于低境界玩家。"},
     {"date": "2026-07-10", "title": "V2.5.1 存档删除二次确认", "content": "首页账号角色列表新增“删除”按钮：玩家删除存档前会先看到不可恢复风险提示，并必须二次输入“删除存档”后才能确认；删除后会同步清除云端存档、角色槽位和本地缓存，释放角色名额，后台存档审计会记录删除事件。"},
@@ -635,7 +675,7 @@ app.put('/api/saves/:slot', async (req, res) => {
     const summary = saveSummary(raw || dataJson || '', plainData, meta || {})
     let currentSaveRow = null
     if (clientLoadedAt && Number.isFinite(clientLoadedAt.getTime())) {
-      const [currentRows] = await pool.execute('SELECT updated_at, character_id, player_name FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
+      const [currentRows] = await pool.execute('SELECT updated_at, character_id, player_name, raw, data_json FROM saves WHERE user_id = ? AND slot = ? LIMIT 1', [user.id, slot])
       if (currentRows.length) {
         currentSaveRow = currentRows[0]
         const serverUpdatedAt = new Date(currentSaveRow.updated_at)
@@ -646,6 +686,8 @@ app.put('/api/saves/:slot', async (req, res) => {
         }
       }
     }
+    const guardResult = await validateSaveProgression(user, req, { slot, summary, currentSaveRow, plainData, meta, saveCharacterId, playerName })
+    if (guardResult) return send(res, 400, guardResult)
     await pool.execute(
       'INSERT INTO saves (user_id, character_id, slot, player_name, raw, data_json, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE character_id=COALESCE(VALUES(character_id), character_id), player_name=COALESCE(VALUES(player_name), player_name), raw=VALUES(raw), data_json=VALUES(data_json), meta_json=VALUES(meta_json)',
       [user.id, saveCharacterId, slot, playerName || null, raw || dataJson || '', dataJson || raw || '', metaJson]
