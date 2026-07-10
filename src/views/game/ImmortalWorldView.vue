@@ -38,8 +38,9 @@
 
     <div v-if="isTab('home')" class="immortal-zone-grid relative z-10 mb-4">
       <button v-for="zone in IMMORTAL_ZONES" :key="zone.key" class="zone-card" @click="switchTab(zone.key)">
-        <span class="zone-icon">{{ zone.icon }}</span>
-        <span class="text-sm text-accent">{{ zone.name }}</span>
+        <img class="zone-art" :src="zoneArt(zone.key)" :alt="`${zone.name}插画`" draggable="false" />
+        <span class="zone-card-shade"></span>
+        <span class="text-sm text-accent relative z-[1]">{{ zone.name }}</span>
         <span class="text-[10px] text-muted leading-relaxed">{{ zone.desc }}</span>
       </button>
     </div>
@@ -72,6 +73,7 @@
 
     <div v-if="isTab('story')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙界主线</p><span class="text-[10px] text-muted">章节 {{ ascensionStore.storyProgress }}/{{ IMMORTAL_STORY_CHAPTERS.length }}</span></div>
+      <div class="immortal-scene-banner story-scene"><img :src="ART.story" alt="云阙天门主线场景" /></div>
       <div class="space-y-2">
         <div v-for="chapter in IMMORTAL_STORY_CHAPTERS" :key="chapter.id" class="story-card" :class="ascensionStore.storyClaimed[chapter.id] ? 'done' : ''">
           <div class="flex items-start justify-between gap-2">
@@ -138,8 +140,9 @@
     <div v-if="isTab('rift')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">混沌裂隙</p><span class="text-[10px] text-muted">镇压次数 +{{ ascensionStore.riftScore }}</span></div>
       <div class="grid grid-cols-2 gap-2">
-        <button v-for="rift in CHAOS_RIFTS" :key="rift.id" class="rift-card" @click="ascensionStore.challengeChaosRift(rift.id)">
-          <span class="text-sm text-accent">{{ rift.icon }} {{ rift.name }}</span>
+        <button v-for="rift in CHAOS_RIFTS" :key="rift.id" class="rift-card visual-rift-card" @click="ascensionStore.challengeChaosRift(rift.id)">
+          <img class="rift-art" :src="ART.rift" :alt="`${rift.name}怪物`" draggable="false" />
+          <span class="text-sm text-accent relative z-[1]">{{ rift.name }}</span>
           <span class="text-[10px] text-muted leading-relaxed">{{ rift.desc }}</span>
           <span class="text-[10px]" :class="ascensionStore.immortalPower >= rift.needPower ? 'text-success' : 'text-danger'">建议仙战力 {{ rift.needPower }}｜当前 {{ ascensionStore.immortalPower }}</span>
           <span class="text-[10px] text-warning">奖励 功德{{ rift.rewardMerit }} / 仙玉{{ rift.rewardJade }} / 法则{{ rift.rewardRule }}</span>
@@ -162,6 +165,7 @@
 
     <div v-if="isTab('cave')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙界洞天经营</p><span class="text-[10px] text-muted">稳定 {{ ascensionStore.caveHeavenStability }}% · 战力倍率 {{ Math.round(ascensionStore.caveHeavenStabilityRate * 100) }}%</span></div>
+      <div class="immortal-scene-banner cave-scene"><img :src="ART.cave" alt="仙界洞天场景" /></div>
       <div class="grid grid-cols-2 gap-2 mb-2">
         <button v-for="node in IMMORTAL_CAVE_NODES" :key="node.id" class="body-card market-card" @click="ascensionStore.upgradeCaveNode(node.id)">
           <span class="text-sm text-accent">{{ node.icon }} {{ node.name }} Lv.{{ ascensionStore.caveLevels[node.id] || 0 }}</span>
@@ -188,6 +192,7 @@
 
     <div v-if="isTab('market')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙市兑换</p><span class="text-[10px] text-muted">资源转化，不复制凡界商店</span></div>
+      <div class="immortal-scene-banner market-scene"><img :src="ART.market" alt="仙市场景" /></div>
       <div class="grid grid-cols-2 gap-2">
         <div v-for="goods in IMMORTAL_MARKET" :key="goods.id" class="body-card market-card">
           <p class="text-xs text-accent">{{ goods.icon }} {{ goods.name }}</p>
@@ -202,8 +207,9 @@
     <div v-if="isTab('trial')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙域试炼</p><span class="text-[10px] text-muted">奖励功德 / 仙玉 / 法则碎片</span></div>
       <div class="grid grid-cols-1 gap-2">
-        <div v-for="trial in IMMORTAL_TRIALS" :key="trial.id" class="trial-card">
-          <div class="min-w-0">
+        <div v-for="trial in IMMORTAL_TRIALS" :key="trial.id" class="trial-card visual-trial-card">
+          <img class="combat-art enemy-art" :src="ART.trial" :alt="`${trial.enemy}首领`" draggable="false" />
+          <div class="min-w-0 relative z-[1]">
             <p class="text-sm text-accent">{{ trial.icon }} {{ trial.name }}</p>
             <p class="text-[10px] text-muted">{{ trial.realm }} · {{ trial.enemy }} · 难度 {{ trial.difficulty }} · 已胜 {{ ascensionStore.trialWins[trial.id] || 0 }} 次</p>
             <p class="text-[10px] text-muted leading-relaxed mt-1">{{ trial.desc }}</p>
@@ -217,8 +223,9 @@
     <div v-if="isTab('arena')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">仙擂问道 · PK</p><span class="text-[10px] text-muted">{{ ascensionStore.pkRecord }}</span></div>
       <div class="grid grid-cols-1 gap-2">
-        <div v-for="rival in IMMORTAL_RIVALS" :key="rival.id" class="trial-card pk-card">
-          <div class="min-w-0">
+        <div v-for="rival in IMMORTAL_RIVALS" :key="rival.id" class="trial-card pk-card visual-trial-card">
+          <img class="combat-art rival-art" :src="ART.rival" :alt="`${rival.name}立绘`" draggable="false" />
+          <div class="min-w-0 relative z-[1]">
             <p class="text-sm text-accent">{{ rival.icon }} {{ rival.name }}</p>
             <p class="text-[10px] text-muted">{{ rival.style }} · 战力 {{ rival.power }} · 连胜加成 {{ ascensionStore.pkStreak * 35 }}</p>
             <p class="text-[10px] text-muted leading-relaxed mt-1">{{ rival.desc }}</p>
@@ -307,6 +314,15 @@ const sectionTitle = computed(() => ({
   rift: '混沌裂隙',
   echo: '凡界回响'
 }[immortalTab.value] || '仙界大厅'))
+const ART = {
+  trial: '/assets/immortal/trial-enemy.png',
+  rival: '/assets/immortal/arena-rival.png',
+  rift: '/assets/immortal/rift-beast.png',
+  cave: '/assets/immortal/cave-heaven.png',
+  market: '/assets/immortal/immortal-market.png',
+  story: '/assets/immortal/story-gate.png'
+}
+const zoneArt = (key: string) => ({ realm: ART.story, cave: ART.cave, market: ART.market, trial: ART.trial, arena: ART.rival, rift: ART.rift, fate: ART.story, office: ART.market, story: ART.story, arts: ART.trial, echo: ART.cave }[key] || ART.story)
 const IMMORTAL_ZONES = [
   { key: 'realm', icon: '🌌', name: '仙阶突破', desc: '真仙、玄仙、地仙等仙阶成长' },
   { key: 'cave', icon: '🏯', name: '仙界洞天', desc: '仙域经营、洞天维护与建设' },
@@ -466,6 +482,9 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 
 .immortal-zone-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.zone-card{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;min-height:92px;border:1px solid rgba(255,226,138,.22);border-radius:4px;padding:10px;background:linear-gradient(135deg,rgba(255,226,138,.09),rgba(116,203,255,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.06);transition:.16s}.zone-card:hover{border-color:rgba(255,226,138,.58);transform:translateY(-1px);box-shadow:0 0 18px rgba(255,226,138,.13)}.zone-icon{font-size:22px;filter:drop-shadow(0 0 8px rgba(255,226,138,.35))}
 .immortal-portrait-stage{position:relative;width:190px;height:268px;display:grid;place-items:center;overflow:visible;border:1px solid rgba(255,226,138,.36);border-radius:22px;background:radial-gradient(circle at 50% 18%,rgba(255,244,179,.28),transparent 34%),radial-gradient(circle at 45% 66%,rgba(125,227,255,.18),transparent 46%),linear-gradient(180deg,rgba(5,11,35,.86),rgba(23,10,48,.58));box-shadow:0 0 38px rgba(255,226,138,.2),0 0 42px rgba(101,214,255,.09),inset 0 0 30px rgba(255,255,255,.06)}.immortal-gate{position:absolute;border-radius:999px;border:1px solid rgba(255,226,138,.35);box-shadow:0 0 30px rgba(255,226,138,.15),inset 0 0 26px rgba(116,203,255,.09)}.gate-back{top:18px;width:166px;height:166px;background:radial-gradient(circle,rgba(255,226,138,.12),transparent 65%)}.gate-front{top:44px;width:126px;height:126px;border-style:dashed;border-color:rgba(140,226,255,.42);animation:celestialSpin 16s linear infinite}.portrait-orbit{position:absolute;border-radius:999px;border:1px solid rgba(255,255,255,.22)}.orbit-a{top:49px;width:172px;height:76px;transform:rotate(-18deg);animation:celestialSpin 14s linear infinite}.orbit-b{top:70px;width:154px;height:62px;transform:rotate(20deg);border-color:rgba(255,226,138,.34);animation:celestialSpin 12s linear infinite reverse}.orbit-c{top:92px;width:120px;height:48px;transform:rotate(-8deg);border-color:rgba(126,232,255,.28)}.portrait-star{position:absolute;width:4px;height:4px;border-radius:999px;background:#fff7bf;box-shadow:0 0 10px #ffe28a}.star-a{left:24px;top:42px}.star-b{right:25px;top:78px}.star-c{left:34px;bottom:80px}.immortal-artwork{position:absolute;z-index:5;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:cover;object-position:center 42%;border-radius:20px;filter:saturate(1.1) contrast(1.04) drop-shadow(0 0 16px rgba(126,232,255,.25)) drop-shadow(0 0 22px rgba(255,226,138,.18))}.portrait-cloud{position:absolute;z-index:7;bottom:18px;height:22px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,246,192,.24),rgba(134,225,255,.16));box-shadow:0 0 16px rgba(255,255,255,.13);backdrop-filter:blur(2px)}.cloud-left{left:12px;width:72px}.cloud-mid{left:54px;width:86px;bottom:8px}.cloud-right{right:12px;width:72px}.portrait-nameplate{position:absolute;z-index:9;bottom:-14px;padding:3px 12px;border:1px solid rgba(255,226,138,.48);border-radius:999px;background:linear-gradient(135deg,rgba(20,15,40,.95),rgba(10,28,46,.92));color:#ffe28a;font-size:11px;letter-spacing:.16em;box-shadow:0 0 18px rgba(255,226,138,.22)}
+
+/* V2.6.8 二次元仙界美术包 */
+.zone-card{isolation:isolate}.zone-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.52;z-index:-2;transition:.2s}.zone-card:hover .zone-art{opacity:.72;transform:scale(1.04)}.zone-card-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(135deg,rgba(5,10,30,.45),rgba(9,9,24,.9) 76%)}.immortal-scene-banner{position:relative;height:118px;overflow:hidden;border:1px solid rgba(255,226,138,.3);border-radius:5px;margin-bottom:8px;background:#0b1025;box-shadow:inset 0 0 20px rgba(0,0,0,.45),0 0 16px rgba(119,217,255,.08)}.immortal-scene-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,9,28,.16),rgba(5,9,28,.52));pointer-events:none}.immortal-scene-banner img{width:100%;height:100%;object-fit:cover;object-position:center 48%;display:block}.visual-trial-card{position:relative;min-height:122px;overflow:hidden;isolation:isolate}.combat-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:74% 42%;opacity:.42;z-index:-1;filter:saturate(1.08) contrast(1.06)}.visual-trial-card::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,11,28,.94) 0%,rgba(7,11,28,.67) 58%,rgba(7,11,28,.15) 100%)}.rival-art{object-position:78% 35%}.visual-rift-card{position:relative;overflow:hidden;isolation:isolate}.rift-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.42;z-index:-1;filter:saturate(1.14) contrast(1.08)}.visual-rift-card::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(135deg,rgba(7,8,25,.7),rgba(10,4,30,.9))}
 @media (max-width:420px){.immortal-zone-grid{grid-template-columns:1fr}.immortal-hero{align-items:flex-start}.immortal-portrait-stage{width:158px;height:236px}.immortal-artwork{inset:3px;width:calc(100% - 6px);height:calc(100% - 6px)}}
 
 .preview-badge{display:inline-flex;margin-left:6px;padding:1px 6px;border:1px solid rgba(255,226,138,.45);border-radius:999px;font-size:10px;color:#ffe28a;background:rgba(255,226,138,.12);box-shadow:0 0 12px rgba(255,226,138,.18)}
