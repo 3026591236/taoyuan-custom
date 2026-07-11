@@ -359,23 +359,43 @@
             manual.cultivationCost *
             Math.max(1, cultivation.manuals[manual.key] || 1)
           }}
+          <template v-if="(cultivation.manuals[manual.key] || 0) >= 4">
+            / 玉简×{{ Math.ceil((cultivation.manuals[manual.key] || 1) / 2) }}
+          </template>
         </p>
-        <Button
-          class="w-full justify-center"
-          :disabled="
-            !cultivation.manuals[manual.key] ||
-            cultivation.manuals[manual.key] >= manual.maxLevel
-          "
-          @click="handleUpgradeManual(manual.key)"
-        >
-          {{
-            !cultivation.manuals[manual.key]
-              ? "先在市集购买秘籍"
-              : cultivation.manuals[manual.key] >= manual.maxLevel
-                ? "功法圆满"
-                : "参悟升级"
-          }}
-        </Button>
+        <div class="grid grid-cols-2 gap-1">
+          <Button
+            class="w-full justify-center"
+            :disabled="
+              !cultivation.manuals[manual.key] ||
+              cultivation.manuals[manual.key] >= manual.maxLevel
+            "
+            @click="handleUpgradeManual(manual.key)"
+          >
+            {{
+              !cultivation.manuals[manual.key]
+                ? "先购秘籍"
+                : cultivation.manuals[manual.key] >= manual.maxLevel
+                  ? "功法圆满"
+                  : "参悟升级"
+            }}
+          </Button>
+          <Button
+            class="w-full justify-center"
+            :disabled="
+              !cultivation.manuals[manual.key] ||
+              cultivation.manualInsightRemaining <= 0
+            "
+            @click="handleStudyJadeSlip(manual.key)"
+          >
+            玉简参悟
+          </Button>
+        </div>
+        <p class="text-[10px] text-muted">
+          玉简参悟：每日{{ cultivation.manualInsightLimit }}次，剩余{{
+            cultivation.manualInsightRemaining
+          }}次；消耗玉简与灵气，转化为顿悟、修为、灵力并压低心魔。
+        </p>
       </div>
     </div>
     <div
@@ -922,6 +942,11 @@ const handleBreakthrough = () => {
 
 const handleUpgradeManual = (key: CultivationManualKey) => {
   const result = cultivation.upgradeManual(key);
+  addLog(result.message);
+};
+
+const handleStudyJadeSlip = (key: CultivationManualKey) => {
+  const result = cultivation.studyJadeSlip(key);
   addLog(result.message);
 };
 const confirmRebirth = () => {

@@ -146,6 +146,17 @@
                 · {{ setName(affixFor(gear.slot)?.setId) }}</span
               >
             </p>
+            <p v-if="secondaryAffixFor(gear.slot)" class="text-muted">
+              副词条：<span
+                :class="affixRarityClass(secondaryAffixFor(gear.slot)?.rarity)"
+              >
+                {{ secondaryAffixFor(gear.slot)?.rarity || "普通" }}·{{
+                  secondaryAffixFor(gear.slot)?.name
+                }}
+              </span>
+              Lv.{{ secondaryAffixFor(gear.slot)?.level }} ·
+              {{ secondaryAffixFor(gear.slot)?.desc }}
+            </p>
             <p v-else class="text-muted">
               暂无词条，可消耗灵石洗练出随机方向；连续8次未出稀有会触发保底。
             </p>
@@ -167,6 +178,20 @@
                 @click="toggleAffixLock(gear.slot)"
               >
                 {{ affixFor(gear.slot)?.locked ? "解锁词条" : "锁定词条" }}
+              </button>
+              <button
+                class="btn justify-center text-xs col-span-2"
+                :disabled="
+                  !affixFor(gear.slot) ||
+                  spiritStoneCount < 18 ||
+                  blueprintCount <
+                    (affixFor(gear.slot)?.rarity === '绝品' ? 2 : 1)
+                "
+                @click="rerollSecondaryAffix(gear.slot)"
+              >
+                副词条洗练（灵石×18 / 图纸×{{
+                  affixFor(gear.slot)?.rarity === "绝品" ? 2 : 1
+                }}）
               </button>
             </div>
             <p class="text-muted">
@@ -258,8 +283,10 @@ const slotNames: Record<string, string> = {
   amulet: "护符",
 };
 const spiritStoneCount = computed(() => inv.getItemCount("spirit_stone"));
+const blueprintCount = computed(() => inv.getItemCount("forge_blueprint"));
 
 const affixFor = (slot: string) => longTerm.gearAffixes[slot]?.[0];
+const secondaryAffixFor = (slot: string) => longTerm.gearAffixes[slot]?.[1];
 const setName = (id?: string) =>
   (
     ({ demon: "镇魔套装", spirit: "聚灵套装", sea: "瀚海套装" }) as Record<
@@ -323,6 +350,12 @@ const toggleAffixLock = (slot: string) => {
 
 const rerollAffix = (slot: string) => {
   const res = longTerm.rerollGearAffix(slot);
+  addLog(res.message);
+  showFloat(res.message, res.success ? "success" : "danger");
+};
+
+const rerollSecondaryAffix = (slot: string) => {
+  const res = longTerm.rerollSecondaryAffix(slot);
   addLog(res.message);
   showFloat(res.message, res.success ? "success" : "danger");
 };

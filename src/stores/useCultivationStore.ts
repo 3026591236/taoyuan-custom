@@ -1379,6 +1379,8 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const autoMeditateCount = ref(0);
   const lessonDailyKey = ref("");
   const lessonDailyDone = ref<CultivationLessonId[]>([]);
+  const manualInsightDailyKey = ref("");
+  const manualInsightDailyCount = ref(0);
   const insight = ref(0);
   const heartDemon = ref(0);
   const cultivationPath = ref<CultivationPathId>("balanced");
@@ -2693,8 +2695,12 @@ export const useCultivationStore = defineStore("cultivation", () => {
     if (level <= 0) return { success: false, message: `尚未习得${def.name}。` };
     if (level >= def.maxLevel)
       return { success: false, message: `${def.name}已修至圆满。` };
+    const jadeNeed = level >= 4 ? Math.ceil(level / 2) : 0;
     const auraNeed = def.auraCost * level;
     const cultivationNeed = def.cultivationCost * level;
+    const inventory = useInventoryStore();
+    if (jadeNeed > 0 && inventory.getItemCount("jade_slip") < jadeNeed)
+      return { success: false, message: `高层功法突破需要玉简×${jadeNeed}。` };
     if (aura.value < auraNeed || cultivation.value < cultivationNeed)
       return {
         success: false,
@@ -2702,12 +2708,74 @@ export const useCultivationStore = defineStore("cultivation", () => {
       };
     aura.value -= auraNeed;
     cultivation.value -= cultivationNeed;
+    if (jadeNeed > 0) inventory.removeItem("jade_slip", jadeNeed);
     manuals.value[key] = level + 1;
-    addLog(`参悟${def.name}，功法提升至${manuals.value[key]}层。`);
+    addLog(
+      `参悟${def.name}，功法提升至${manuals.value[key]}层${jadeNeed ? `，消耗玉简×${jadeNeed}` : ""}。`,
+    );
     showFloat(`${def.name}+1`, "success");
     return {
       success: true,
       message: `${def.name}提升至${manuals.value[key]}层。`,
+    };
+  };
+
+  const resetManualInsightDaily = () => {
+    const key = gameDayKey();
+    if (manualInsightDailyKey.value !== key) {
+      manualInsightDailyKey.value = key;
+      manualInsightDailyCount.value = 0;
+    }
+  };
+
+  const manualInsightLimit = computed(
+    () => 3 + Math.min(3, Math.floor(sectRank.value / 2)),
+  );
+  const manualInsightRemaining = computed(() => {
+    resetManualInsightDaily();
+    return Math.max(
+      0,
+      manualInsightLimit.value - manualInsightDailyCount.value,
+    );
+  });
+
+  const studyJadeSlip = (
+    key: CultivationManualKey,
+  ): { success: boolean; message: string } => {
+    if (!unlocked.value)
+      return { success: false, message: "启蒙灵田后才能参悟玉简。" };
+    const def = CULTIVATION_MANUALS[key];
+    const level = manuals.value[key] ?? 0;
+    if (!def || level <= 0)
+      return { success: false, message: "需先习得对应功法。" };
+    resetManualInsightDaily();
+    if (manualInsightDailyCount.value >= manualInsightLimit.value)
+      return { success: false, message: "今日玉简参悟次数已用尽。" };
+    const inventory = useInventoryStore();
+    const jadeNeed = level >= 6 ? 2 : 1;
+    const auraNeed = 180 + level * 90;
+    if (inventory.getItemCount("jade_slip") < jadeNeed)
+      return { success: false, message: `玉简不足，需要×${jadeNeed}。` };
+    if (aura.value < auraNeed)
+      return { success: false, message: `灵气不足，需要${auraNeed}。` };
+    inventory.removeItem("jade_slip", jadeNeed);
+    aura.value -= auraNeed;
+    manualInsightDailyCount.value++;
+    const insightGain = 3 + Math.floor(level / 2);
+    const cultivationGain = 180 + level * 70 + realmIndex.value * 12;
+    const manaGain = 12 + level * 3;
+    const demonClear = Math.min(heartDemon.value, 3 + Math.floor(level / 2));
+    insight.value = Math.min(100, insight.value + insightGain);
+    addCultivation(cultivationGain, 0.22);
+    mana.value = Math.min(maxMana.value, mana.value + manaGain);
+    heartDemon.value = Math.max(0, heartDemon.value - demonClear);
+    addLog(
+      `研读玉简参悟${def.name}：消耗玉简×${jadeNeed}、灵气${auraNeed}，顿悟+${insightGain}，修为+${cultivationGain}，灵力+${manaGain}${demonClear ? `，心魔-${demonClear}` : ""}。`,
+    );
+    showFloat(`玉简参悟：${def.name}`, "success");
+    return {
+      success: true,
+      message: `${def.name}参悟完成，今日剩余${manualInsightRemaining.value}次。`,
     };
   };
 
@@ -3755,6 +3823,8 @@ export const useCultivationStore = defineStore("cultivation", () => {
     cultivationPath: cultivationPath.value,
     lessonDailyKey: lessonDailyKey.value,
     lessonDailyDone: lessonDailyDone.value,
+    manualInsightDailyKey: manualInsightDailyKey.value,
+    manualInsightDailyCount: manualInsightDailyCount.value,
     spiritMealLastDaily: spiritMealLastDaily.value,
     artifacts: artifacts.value,
     foundationPillBlessing: foundationPillBlessing.value,
@@ -4013,6 +4083,10 @@ export const useCultivationStore = defineStore("cultivation", () => {
     autoMeditateCount,
     lessonDailyKey,
     lessonDailyDone,
+    manualInsightDailyKey,
+    manualInsightDailyCount,
+    manualInsightLimit,
+    manualInsightRemaining,
     realmName,
     maxCultivation,
     maxMana,
@@ -4057,6 +4131,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     unlockTalisman,
     learnManual,
     upgradeManual,
+    studyJadeSlip,
     setCultivationPath,
     unlock,
     meditate,
