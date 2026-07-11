@@ -205,6 +205,10 @@ export const useAscensionStore = defineStore('ascension', () => {
   const lastArtId = ref<ImmortalArtId>('starfall_sword')
   const lastBattleText = ref('仙光初凝，尚未发动仙术。')
   const visualPulse = ref(0)
+  const caveHeavenFx = ref<{ type: 'harvest'|'upgrade'|'maintain'|'expedition'; title: string; icon: string; text: string } | null>(null)
+  let caveHeavenFxTimer: ReturnType<typeof setTimeout> | undefined
+  const triggerCaveHeavenFx = (type: 'harvest'|'upgrade'|'maintain'|'expedition', title: string, icon: string, text: string) => { if (caveHeavenFxTimer) clearTimeout(caveHeavenFxTimer); caveHeavenFx.value = { type, title, icon, text }; caveHeavenFxTimer = window.setTimeout(() => { caveHeavenFx.value = null }, 2600) }
+  const clearCaveHeavenFx = () => { if (caveHeavenFxTimer) clearTimeout(caveHeavenFxTimer); caveHeavenFx.value = null }
   // 瞬时演出状态不入档，避免刷新后残留突破特效
   const immortalBreakthroughFx = ref<{ name: string; icon: string; stage: number } | null>(null)
   const immortalBreakthroughPhase = ref<'charge' | 'tribulation' | 'ascend' | 'reveal'>('charge')
@@ -409,6 +413,7 @@ export const useAscensionStore = defineStore('ascension', () => {
     immortalJade.value -= jadeCost
     ruleFragments.value -= ruleCost
     caveLevels.value[id] = level + 1
+    triggerCaveHeavenFx('upgrade', `${node.name} 晋升`, node.icon, `仙府灵脉升至 Lv.${level + 1}`)
     visualPulse.value++
     caveHeavenStability.value = Math.min(115, caveHeavenStability.value + 10)
     lastBattleText.value = `${node.icon} 洞天「${node.name}」升至 Lv.${level + 1}，仙战力 +${node.powerPerLevel}，洞天稳定+10。`
@@ -623,6 +628,7 @@ export const useAscensionStore = defineStore('ascension', () => {
     if ((caveLevels.value[mission.needNode] || 0) < 1) { addLog(`${mission.name}需要先将「${IMMORTAL_CAVE_NODES.find(n => n.id === mission.needNode)?.name}」升级至Lv.1。`); return false }
     const reward = caveExpeditionReward(id)
     expeditionClaimed.value[id] = key; advanceCelestialEdict('daily_expedition'); merit.value += reward.merit; immortalJade.value += reward.jade; ruleFragments.value += reward.rule; immortalEssence.value += reward.essence
+    triggerCaveHeavenFx('expedition', `${mission.name} 归航`, '⛵', '仙舟穿过云海，带回洞天所需仙材')
     visualPulse.value++; lastBattleText.value = `✦ 洞天派遣「${mission.name}」归来：功德+${reward.merit}、仙玉+${reward.jade}、法则+${reward.rule}、仙器精魄+${reward.essence}。`
     addLog(lastBattleText.value); return true
   }
@@ -685,6 +691,7 @@ export const useAscensionStore = defineStore('ascension', () => {
     if (y.merit + y.jade + y.rule + y.essence <= 0) { addLog('洞天尚未建成可供收取的仙府节点。'); return false }
     caveHeavenHarvestKey.value = todayKey(); merit.value += y.merit; immortalJade.value += y.jade; ruleFragments.value += y.rule; immortalEssence.value += y.essence
     if (y.dew) useInventoryStore().addItem('immortal_dew', y.dew)
+    triggerCaveHeavenFx('harvest', '洞天灵机汇聚', '✦', '仙露、功德与法则自灵脉中涌现')
     visualPulse.value++; lastBattleText.value = `🏔️ 洞天灵机收取：功德+${y.merit}、仙玉+${y.jade}、法则+${y.rule}、仙器精魄+${y.essence}${y.dew ? `、仙露+${y.dew}` : ''}。`
     addLog(lastBattleText.value); return true
   }
@@ -697,6 +704,7 @@ export const useAscensionStore = defineStore('ascension', () => {
     immortalJade.value -= cost.jade
     ruleFragments.value -= cost.rule
     caveHeavenStability.value = 110
+    triggerCaveHeavenFx('maintain', '周天大阵复苏', '☯', '法则归位，洞天灵脉重新稳定')
     caveHeavenMaintenanceKey.value = todayKey()
     lastBattleText.value = `🏔️ 洞天维护完成：功德-${cost.merit}、仙玉-${cost.jade}、法则-${cost.rule}，洞天稳定恢复。`
     addLog(lastBattleText.value)
@@ -800,5 +808,5 @@ export const useAscensionStore = defineStore('ascension', () => {
     if (ascended.value && (immortalHp.value <= 0 || immortalQi.value <= 0)) restoreImmortalCombat(true)
     celestialEdictProgress.value = { daily_trial: { key: '', value: 0, claimed: false }, daily_rift: { key: '', value: 0, claimed: false }, daily_expedition: { key: '', value: 0, claimed: false }, weekly_gear: { key: '', value: 0, claimed: false }, ...(data?.celestialEdictProgress ?? {}) }
   }
-  return { IMMORTAL_GEAR, IMMORTAL_EDICTS, IMMORTAL_EXPEDITIONS, IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalEssence, gearLevels, gearPower, gearResonance, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, immortalHp, immortalQi, immortalMaxHp, immortalMaxQi, immortalAttack, immortalDefense, immortalCritRate, immortalDamageReduction, immortalHpRate, immortalQiRate, trialWins, lastArtId, lastBattleText, visualPulse, immortalBreakthroughFx, immortalBreakthroughPhase, clearImmortalBreakthroughFx, dutyDone, caveLevels, caveHeavenStability, caveHeavenStabilityRate, caveHeavenMaintenanceCost, caveHeavenNeedsMaintenance, caveHeavenYield, caveHeavenHarvestedToday, claimCaveHeavenYield, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, immortalLineage, mandateProgress, mandateDone, allianceProgress, riftClears, riftBossHp, riftBossShield, riftBossTurns, expeditionClaimed, fatePlateLevels, storyClaimed, celestialEdictProgress, celestialEdicts, adminPreviewMode, cavePower, caveResonanceLevel, caveResonance, caveExpeditionReward, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, lineageInfo, fatePlatePower, allianceScore, riftScore, riftBossInfo, storyState, storyProgress, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, maintainCaveHeaven, dailyCaveHeavenUpdate, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, chooseLineage, resolveMandate, coordinateAlliance, challengeChaosRift, dispatchImmortalExpedition, claimCelestialEdict, upgradeImmortalGear, upgradeFatePlate, claimStoryChapter, enterAdminPreview, exitAdminPreview, serialize, deserialize }
+  return { IMMORTAL_GEAR, IMMORTAL_EDICTS, IMMORTAL_EXPEDITIONS, IMMORTAL_DUTIES, IMMORTAL_CAVE_NODES, MORTAL_ECHOES, IMMORTAL_RIVALS, IMMORTAL_MARKET, IMMORTAL_REALMS, IMMORTAL_SEASON_REWARDS, IMMORTAL_LINEAGES, IMMORTAL_MANDATES, IMMORTAL_ALLIANCES, CHAOS_RIFTS, FATE_PLATES, IMMORTAL_STORY_CHAPTERS, ascended, ascensionQuestActive, ascensionQuestComplete, inImmortalWorld, immortalTitle, immortalOffice, merit, immortalJade, ruleFragments, immortalEssence, gearLevels, gearPower, gearResonance, immortalBodyLevel, immortalBoneLevel, immortalSoulLevel, immortalHp, immortalQi, immortalMaxHp, immortalMaxQi, immortalAttack, immortalDefense, immortalCritRate, immortalDamageReduction, immortalHpRate, immortalQiRate, trialWins, lastArtId, lastBattleText, visualPulse, caveHeavenFx, clearCaveHeavenFx, immortalBreakthroughFx, immortalBreakthroughPhase, clearImmortalBreakthroughFx, dutyDone, caveLevels, caveHeavenStability, caveHeavenStabilityRate, caveHeavenMaintenanceCost, caveHeavenNeedsMaintenance, caveHeavenYield, caveHeavenHarvestedToday, claimCaveHeavenYield, echoBlessings, pkWins, pkLosses, pkStreak, immortalRealmStage, marketPurchases, seasonClaimed, immortalLineage, mandateProgress, mandateDone, allianceProgress, riftClears, riftBossHp, riftBossShield, riftBossTurns, expeditionClaimed, fatePlateLevels, storyClaimed, celestialEdictProgress, celestialEdicts, adminPreviewMode, cavePower, caveResonanceLevel, caveResonance, caveExpeditionReward, pkRecord, immortalRealmInfo, nextImmortalRealm, immortalRealmPowerBonus, seasonScore, lineageInfo, fatePlatePower, allianceScore, riftScore, riftBossInfo, storyState, storyProgress, canAscend, ascensionMaterialsReady, ascensionMaterials, ascensionMoneyCost, immortalRank, immortalPower, bodyProfile, officeInfo, triggerAscensionQuest, performAscension, enterImmortalWorld, returnToWorld, chooseOffice, castImmortalArt, challengeTrial, completeDuty, upgradeCaveNode, maintainCaveHeaven, dailyCaveHeavenUpdate, sendMortalEcho, challengeRival, buyImmortalMarket, breakthroughImmortalRealm, claimSeasonReward, chooseLineage, resolveMandate, coordinateAlliance, challengeChaosRift, dispatchImmortalExpedition, claimCelestialEdict, upgradeImmortalGear, upgradeFatePlate, claimStoryChapter, enterAdminPreview, exitAdminPreview, serialize, deserialize }
 })
