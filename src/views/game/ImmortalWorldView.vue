@@ -696,6 +696,48 @@
           </button>
         </div>
       </div>
+      <div class="hunt-panel merit-shop-panel">
+        <div class="relic-head">
+          <div>
+            <p class="text-xs text-accent">功勋兑换 · 镇狱宝库</p>
+            <span>赛季功勋可持续兑换资源；不重置总功勋，只扣除可用功勋</span>
+          </div>
+          <b
+            >可用 {{ ascensionStore.riftMeritAvailable }} / 累计
+            {{ ascensionStore.riftSeasonScore }}</b
+          >
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            v-for="goods in ascensionStore.riftMeritShop"
+            :key="goods.id"
+            class="hunt-card merit-shop-card"
+            :class="
+              ascensionStore.riftMeritAvailable >= goods.costScore &&
+              goods.state.count < goods.weeklyLimit
+                ? 'ready'
+                : ''
+            "
+            @click="ascensionStore.buyRiftMeritGoods(goods.id)"
+          >
+            <span class="text-xs text-accent"
+              >{{ goods.icon }} {{ goods.name }}</span
+            >
+            <span class="text-[10px] text-muted">{{ goods.desc }}</span>
+            <span class="text-[10px] text-warning"
+              >消耗功勋 {{ goods.costScore }}｜本周 {{ goods.state.count }}/{{
+                goods.weeklyLimit
+              }}</span
+            >
+            <span class="text-[10px] text-success"
+              >功德+{{ goods.reward.merit }} 仙玉+{{
+                goods.reward.jade
+              }}
+              法则+{{ goods.reward.rule }} 器魄+{{ goods.reward.essence }}</span
+            >
+          </button>
+        </div>
+      </div>
       <div class="relic-panel">
         <div class="relic-head">
           <div>
@@ -3959,3 +4001,5 @@ i
 em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#69e8a2,#ffe28a)}
 .season-rift-panel{border-color:rgba(105,232,162,.26);background:linear-gradient(135deg,rgba(105,232,162,.08),rgba(255,226,138,.05))}.season-reward-card{min-height:118px}.season-reward-card.ready{border-color:rgba(105,232,162,.72);box-shadow:0
 0 14px rgba(105,232,162,.16)}
+.merit-shop-panel{border-color:rgba(126,225,255,.28);background:linear-gradient(135deg,rgba(126,225,255,.08),rgba(167,139,250,.05))}.merit-shop-card{min-height:112px}.merit-shop-card.ready{border-color:rgba(126,225,255,.72);box-shadow:0
+0 14px rgba(126,225,255,.16)}

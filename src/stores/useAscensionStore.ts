@@ -146,6 +146,8 @@ export type RiftHuntId =
   | "hunt_relic_master";
 export type RiftSeasonRewardId =
   "rift_season_30" | "rift_season_80" | "rift_season_160" | "rift_season_300";
+export type RiftMeritShopId =
+  "rift_supply" | "rift_fragment_cache" | "rift_law_core" | "rift_stabilizer";
 export const IMMORTAL_EDICTS: Array<{
   id: ImmortalEdictId;
   name: string;
@@ -1150,6 +1152,73 @@ export const RIFT_SEASON_REWARDS: Array<{
   },
 ];
 
+export const RIFT_MERIT_SHOP: Array<{
+  id: RiftMeritShopId;
+  name: string;
+  icon: string;
+  desc: string;
+  costScore: number;
+  weeklyLimit: number;
+  reward: {
+    merit: number;
+    jade: number;
+    rule: number;
+    essence: number;
+    stability?: number;
+    fragments?: Partial<Record<RiftBossRelicId, number>>;
+  };
+}> = [
+  {
+    id: "rift_supply",
+    name: "猎榜补给匣",
+    icon: "🎁",
+    desc: "把赛季功勋换成基础裂隙养成资源。",
+    costScore: 24,
+    weeklyLimit: 3,
+    reward: { merit: 40, jade: 8, rule: 4, essence: 8 },
+  },
+  {
+    id: "rift_fragment_cache",
+    name: "遗珍碎片匣",
+    icon: "🧩",
+    desc: "补齐四大首领遗珍碎片，减少单一首领卡点。",
+    costScore: 42,
+    weeklyLimit: 2,
+    reward: {
+      merit: 20,
+      jade: 6,
+      rule: 4,
+      essence: 10,
+      fragments: { void_tide: 1, fallen_star: 1, demon_gate: 1, law_maze: 1 },
+    },
+  },
+  {
+    id: "rift_law_core",
+    name: "裂隙法则核",
+    icon: "💠",
+    desc: "将功勋沉淀为法则与仙器精魄，支撑遗珍高阶炼化。",
+    costScore: 58,
+    weeklyLimit: 2,
+    reward: { merit: 30, jade: 12, rule: 16, essence: 18 },
+  },
+  {
+    id: "rift_stabilizer",
+    name: "镇狱稳界令",
+    icon: "🛡️",
+    desc: "消耗高额功勋稳固洞天，降低深层裂隙压力。",
+    costScore: 90,
+    weeklyLimit: 1,
+    reward: {
+      merit: 80,
+      jade: 20,
+      rule: 18,
+      essence: 24,
+      stability: 10,
+      fragments: { demon_gate: 1, law_maze: 1 },
+    },
+  },
+];
+
 export const FATE_PLATES: Array<{
   id: FatePlateId;
   name: string;
@@ -1679,6 +1748,15 @@ export const useAscensionStore = defineStore("ascension", () => {
     rift_season_160: false,
     rift_season_300: false,
   });
+  const riftMeritSpent = ref(0);
+  const riftMeritShopPurchases = ref<
+    Record<RiftMeritShopId, { key: string; count: number }>
+  >({
+    rift_supply: { key: "", count: 0 },
+    rift_fragment_cache: { key: "", count: 0 },
+    rift_law_core: { key: "", count: 0 },
+    rift_stabilizer: { key: "", count: 0 },
+  });
   const expeditionClaimed = ref<Record<ImmortalExpeditionId, string>>({
     cloud_patrol: "",
     star_mining: "",
@@ -2013,6 +2091,9 @@ export const useAscensionStore = defineStore("ascension", () => {
     );
     return riftScore.value * 10 + relicLevels * 14 + huntClaimed;
   });
+  const riftMeritAvailable = computed(() =>
+    Math.max(0, riftSeasonScore.value - riftMeritSpent.value),
+  );
   const riftSeasonRank = computed(() =>
     riftSeasonScore.value >= 300
       ? "裂隙猎尊"
@@ -2148,6 +2229,56 @@ export const useAscensionStore = defineStore("ascension", () => {
     riftSeasonClaimed.value[id] = true;
     visualPulse.value++;
     lastBattleText.value = `${reward.icon} 裂隙赛季功勋「${reward.name}」领取：功德+${reward.reward.merit}、仙玉+${reward.reward.jade}、法则+${reward.reward.rule}、仙器精魄+${reward.reward.essence}。`;
+    addLog(lastBattleText.value);
+    return true;
+  };
+
+  const riftShopState = (id: RiftMeritShopId) => {
+    const current = riftMeritShopPurchases.value[id] || { key: "", count: 0 };
+    const key = edictKey("weekly");
+    return current.key === key ? current : { key, count: 0 };
+  };
+  const riftMeritShop = computed(() =>
+    RIFT_MERIT_SHOP.map((goods) => ({
+      ...goods,
+      state: riftShopState(goods.id),
+    })),
+  );
+  const buyRiftMeritGoods = (id: RiftMeritShopId): boolean => {
+    const goods = RIFT_MERIT_SHOP.find((item) => item.id === id);
+    if (!goods) return false;
+    const state = riftShopState(id);
+    if (state.count >= goods.weeklyLimit) {
+      addLog(`${goods.name}本周已兑完。`);
+      return false;
+    }
+    if (riftMeritAvailable.value < goods.costScore) {
+      addLog(
+        `${goods.name}需要裂隙功勋${goods.costScore}，当前可用${riftMeritAvailable.value}。`,
+      );
+      return false;
+    }
+    riftMeritSpent.value += goods.costScore;
+    riftMeritShopPurchases.value[id] = {
+      key: state.key,
+      count: state.count + 1,
+    };
+    merit.value += goods.reward.merit;
+    immortalJade.value += goods.reward.jade;
+    ruleFragments.value += goods.reward.rule;
+    immortalEssence.value += goods.reward.essence;
+    if (goods.reward.stability)
+      caveHeavenStability.value = Math.min(
+        120,
+        caveHeavenStability.value + goods.reward.stability,
+      );
+    for (const [key, qty] of Object.entries(goods.reward.fragments || {})) {
+      const relicId = key as RiftBossRelicId;
+      riftRelicFragments.value[relicId] =
+        (riftRelicFragments.value[relicId] || 0) + Number(qty || 0);
+    }
+    visualPulse.value++;
+    lastBattleText.value = `${goods.icon} 兑换「${goods.name}」：消耗裂隙功勋${goods.costScore}，获得功德+${goods.reward.merit}、仙玉+${goods.reward.jade}、法则+${goods.reward.rule}、仙器精魄+${goods.reward.essence}${goods.reward.stability ? `、洞天稳定+${goods.reward.stability}` : ""}。`;
     addLog(lastBattleText.value);
     return true;
   };
@@ -3034,6 +3165,8 @@ export const useAscensionStore = defineStore("ascension", () => {
           riftRelicFragments: riftRelicFragments.value,
           riftHuntProgress: riftHuntProgress.value,
           riftSeasonClaimed: riftSeasonClaimed.value,
+          riftMeritSpent: riftMeritSpent.value,
+          riftMeritShopPurchases: riftMeritShopPurchases.value,
           expeditionClaimed: expeditionClaimed.value,
           fatePlateLevels: fatePlateLevels.value,
           storyClaimed: storyClaimed.value,
@@ -3308,6 +3441,14 @@ export const useAscensionStore = defineStore("ascension", () => {
       rift_season_300: false,
       ...(data?.riftSeasonClaimed ?? {}),
     };
+    riftMeritSpent.value = Number(data?.riftMeritSpent ?? 0);
+    riftMeritShopPurchases.value = {
+      rift_supply: { key: "", count: 0 },
+      rift_fragment_cache: { key: "", count: 0 },
+      rift_law_core: { key: "", count: 0 },
+      rift_stabilizer: { key: "", count: 0 },
+      ...(data?.riftMeritShopPurchases ?? {}),
+    };
     expeditionClaimed.value = {
       cloud_patrol: "",
       star_mining: "",
@@ -3364,6 +3505,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     RIFT_BOSS_RELICS,
     RIFT_HUNTS,
     RIFT_SEASON_REWARDS,
+    RIFT_MERIT_SHOP,
     FATE_PLATES,
     IMMORTAL_STORY_CHAPTERS,
     ascended,
@@ -3429,6 +3571,8 @@ export const useAscensionStore = defineStore("ascension", () => {
     riftRelicFragments,
     riftHuntProgress,
     riftSeasonClaimed,
+    riftMeritSpent,
+    riftMeritShopPurchases,
     expeditionClaimed,
     fatePlateLevels,
     storyClaimed,
@@ -3453,6 +3597,8 @@ export const useAscensionStore = defineStore("ascension", () => {
     riftHunts,
     riftSeasonScore,
     riftSeasonRank,
+    riftMeritAvailable,
+    riftMeritShop,
     riftBossInfo,
     storyState,
     storyProgress,
@@ -3487,6 +3633,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     upgradeRiftRelic,
     claimRiftHunt,
     claimRiftSeasonReward,
+    buyRiftMeritGoods,
     dispatchImmortalExpedition,
     claimCelestialEdict,
     upgradeImmortalGear,
