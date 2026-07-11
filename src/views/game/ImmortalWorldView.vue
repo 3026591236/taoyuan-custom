@@ -644,6 +644,58 @@
           </button>
         </div>
       </div>
+      <div class="hunt-panel season-rift-panel">
+        <div class="relic-head">
+          <div>
+            <p class="text-xs text-accent">裂隙赛季功勋</p>
+            <span
+              >根据裂隙镇压、猎榜领取、遗珍炼化累计功勋，形成长期段位奖励</span
+            >
+          </div>
+          <b
+            >{{ ascensionStore.riftSeasonRank }} ·
+            {{ ascensionStore.riftSeasonScore }}</b
+          >
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            v-for="reward in RIFT_SEASON_REWARDS"
+            :key="reward.id"
+            class="hunt-card season-reward-card"
+            :class="
+              ascensionStore.riftSeasonClaimed[reward.id]
+                ? 'done'
+                : ascensionStore.riftSeasonScore >= reward.needScore
+                  ? 'ready'
+                  : ''
+            "
+            @click="ascensionStore.claimRiftSeasonReward(reward.id)"
+          >
+            <span class="text-xs text-accent"
+              >{{ reward.icon }} {{ reward.name }}</span
+            >
+            <span class="text-[10px] text-muted">{{ reward.desc }}</span>
+            <i
+              ><em
+                :style="{
+                  width: `${Math.min(100, (ascensionStore.riftSeasonScore / reward.needScore) * 100)}%`,
+                }"
+              ></em
+            ></i>
+            <span class="text-[10px] text-warning"
+              >需要功勋 {{ reward.needScore }}｜当前
+              {{ ascensionStore.riftSeasonScore }}</span
+            >
+            <span class="text-[10px] text-success">{{
+              ascensionStore.riftSeasonClaimed[reward.id]
+                ? "已领取"
+                : ascensionStore.riftSeasonScore >= reward.needScore
+                  ? "点击领取赛季赏"
+                  : "继续追猎"
+            }}</span>
+          </button>
+        </div>
+      </div>
       <div class="relic-panel">
         <div class="relic-head">
           <div>
@@ -1236,6 +1288,7 @@ import {
   CHAOS_RIFTS,
   RIFT_BOSS_RELICS,
   RIFT_HUNTS,
+  RIFT_SEASON_REWARDS,
   FATE_PLATES,
   IMMORTAL_STORY_CHAPTERS,
 } from "@/stores/useAscensionStore";
@@ -3904,3 +3957,5 @@ const returnToWorld = () => {
 i{display:block;width:100%;height:5px;border-radius:999px;background:rgba(0,0,0,.42);overflow:hidden}.hunt-card
 i
 em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#69e8a2,#ffe28a)}
+.season-rift-panel{border-color:rgba(105,232,162,.26);background:linear-gradient(135deg,rgba(105,232,162,.08),rgba(255,226,138,.05))}.season-reward-card{min-height:118px}.season-reward-card.ready{border-color:rgba(105,232,162,.72);box-shadow:0
+0 14px rgba(105,232,162,.16)}
