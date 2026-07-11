@@ -138,6 +138,12 @@ export const IMMORTAL_GEAR: Array<{
 
 export type ImmortalEdictId =
   "daily_trial" | "daily_rift" | "daily_expedition" | "weekly_gear";
+export type RiftHuntId =
+  | "hunt_void_tide"
+  | "hunt_fallen_star"
+  | "hunt_demon_gate"
+  | "hunt_law_maze"
+  | "hunt_relic_master";
 export const IMMORTAL_EDICTS: Array<{
   id: ImmortalEdictId;
   name: string;
@@ -979,6 +985,97 @@ export const RIFT_BOSS_RELICS: Array<{
   },
 ];
 
+export const RIFT_HUNTS: Array<{
+  id: RiftHuntId;
+  name: string;
+  period: "daily" | "weekly";
+  desc: string;
+  target: number;
+  riftId?: ChaosRiftId;
+  reward: {
+    merit: number;
+    jade: number;
+    rule: number;
+    essence: number;
+    fragments?: Partial<Record<RiftBossRelicId, number>>;
+  };
+}> = [
+  {
+    id: "hunt_void_tide",
+    name: "猎榜·界鲸巡潮",
+    period: "daily",
+    desc: "击杀虚潮界鲸，稳定虚空潮汐。",
+    target: 1,
+    riftId: "void_tide",
+    reward: {
+      merit: 42,
+      jade: 8,
+      rule: 4,
+      essence: 6,
+      fragments: { void_tide: 1 },
+    },
+  },
+  {
+    id: "hunt_fallen_star",
+    name: "猎榜·坠星破核",
+    period: "daily",
+    desc: "击杀坠星古傀，回收星骸核心。",
+    target: 1,
+    riftId: "fallen_star",
+    reward: {
+      merit: 38,
+      jade: 12,
+      rule: 5,
+      essence: 7,
+      fragments: { fallen_star: 1 },
+    },
+  },
+  {
+    id: "hunt_demon_gate",
+    name: "周猎·净魔封门",
+    period: "weekly",
+    desc: "累计击杀隙门心魔，封住天魔隙门。",
+    target: 2,
+    riftId: "demon_gate",
+    reward: {
+      merit: 120,
+      jade: 22,
+      rule: 14,
+      essence: 18,
+      fragments: { demon_gate: 2 },
+    },
+  },
+  {
+    id: "hunt_law_maze",
+    name: "周猎·逆律校准",
+    period: "weekly",
+    desc: "累计击杀逆律天眼，校准法则迷宫。",
+    target: 2,
+    riftId: "law_maze",
+    reward: {
+      merit: 110,
+      jade: 28,
+      rule: 20,
+      essence: 20,
+      fragments: { law_maze: 2 },
+    },
+  },
+  {
+    id: "hunt_relic_master",
+    name: "周猎·遗珍炼成",
+    period: "weekly",
+    desc: "本周炼化任意首领遗珍，推进裂隙套装。",
+    target: 2,
+    reward: {
+      merit: 160,
+      jade: 30,
+      rule: 18,
+      essence: 26,
+      fragments: { void_tide: 1, fallen_star: 1, demon_gate: 1, law_maze: 1 },
+    },
+  },
+];
+
 export const FATE_PLATES: Array<{
   id: FatePlateId;
   name: string;
@@ -1493,6 +1590,15 @@ export const useAscensionStore = defineStore("ascension", () => {
     demon_gate: 0,
     law_maze: 0,
   });
+  const riftHuntProgress = ref<
+    Record<RiftHuntId, { key: string; value: number; claimed: boolean }>
+  >({
+    hunt_void_tide: { key: "", value: 0, claimed: false },
+    hunt_fallen_star: { key: "", value: 0, claimed: false },
+    hunt_demon_gate: { key: "", value: 0, claimed: false },
+    hunt_law_maze: { key: "", value: 0, claimed: false },
+    hunt_relic_master: { key: "", value: 0, claimed: false },
+  });
   const expeditionClaimed = ref<Record<ImmortalExpeditionId, string>>({
     cloud_patrol: "",
     star_mining: "",
@@ -1866,6 +1972,50 @@ export const useAscensionStore = defineStore("ascension", () => {
     celestialEdictProgress.value[id] = { ...state, claimed: true };
     visualPulse.value++;
     lastBattleText.value = `天诏「${edict.name}」完成：功德+${edict.reward.merit}、仙玉+${edict.reward.jade}、法则+${edict.reward.rule}、仙器精魄+${edict.reward.essence}。`;
+    addLog(lastBattleText.value);
+    return true;
+  };
+  const riftHuntState = (id: RiftHuntId) => {
+    const hunt = RIFT_HUNTS.find((item) => item.id === id)!;
+    const current = riftHuntProgress.value[id] || {
+      key: "",
+      value: 0,
+      claimed: false,
+    };
+    const key = edictKey(hunt.period);
+    return current.key === key ? current : { key, value: 0, claimed: false };
+  };
+  const riftHunts = computed(() =>
+    RIFT_HUNTS.map((hunt) => ({ ...hunt, state: riftHuntState(hunt.id) })),
+  );
+  const advanceRiftHunt = (riftId: ChaosRiftId | "relic", amount = 1) => {
+    for (const hunt of RIFT_HUNTS) {
+      if (riftId !== "relic" && hunt.riftId !== riftId) continue;
+      if (riftId === "relic" && hunt.id !== "hunt_relic_master") continue;
+      const state = riftHuntState(hunt.id);
+      riftHuntProgress.value[hunt.id] = {
+        ...state,
+        value: Math.min(999, state.value + amount),
+      };
+    }
+  };
+  const claimRiftHunt = (id: RiftHuntId): boolean => {
+    const hunt = RIFT_HUNTS.find((item) => item.id === id);
+    if (!hunt) return false;
+    const state = riftHuntState(id);
+    if (state.claimed || state.value < hunt.target) return false;
+    merit.value += hunt.reward.merit;
+    immortalJade.value += hunt.reward.jade;
+    ruleFragments.value += hunt.reward.rule;
+    immortalEssence.value += hunt.reward.essence;
+    for (const [key, qty] of Object.entries(hunt.reward.fragments || {})) {
+      const relicId = key as RiftBossRelicId;
+      riftRelicFragments.value[relicId] =
+        (riftRelicFragments.value[relicId] || 0) + Number(qty || 0);
+    }
+    riftHuntProgress.value[id] = { ...state, claimed: true };
+    visualPulse.value++;
+    lastBattleText.value = `裂隙猎榜「${hunt.name}」完成：功德+${hunt.reward.merit}、仙玉+${hunt.reward.jade}、法则+${hunt.reward.rule}、仙器精魄+${hunt.reward.essence}。`;
     addLog(lastBattleText.value);
     return true;
   };
@@ -2385,6 +2535,7 @@ export const useAscensionStore = defineStore("ascension", () => {
       const fragGain = 1 + (oldClears >= 4 && Math.random() < 0.35 ? 1 : 0);
       riftRelicFragments.value[id] =
         (riftRelicFragments.value[id] || 0) + fragGain;
+      advanceRiftHunt(id);
       const essenceGain =
         5 +
         Math.floor(rift.risk / 8) +
@@ -2493,6 +2644,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     immortalEssence.value -= essenceCost;
     riftRelics.value[id] = level + 1;
     advanceCelestialEdict("weekly_gear");
+    advanceRiftHunt("relic");
     visualPulse.value++;
     lastBattleText.value = `${relic.icon} 首领遗珍「${relic.name}」炼化至Lv.${level + 1}：仙战力+${relic.power}，${relic.bonus}。`;
     addLog(lastBattleText.value);
@@ -2748,6 +2900,7 @@ export const useAscensionStore = defineStore("ascension", () => {
           riftBossTurns: riftBossTurns.value,
           riftRelics: riftRelics.value,
           riftRelicFragments: riftRelicFragments.value,
+          riftHuntProgress: riftHuntProgress.value,
           expeditionClaimed: expeditionClaimed.value,
           fatePlateLevels: fatePlateLevels.value,
           storyClaimed: storyClaimed.value,
@@ -2813,6 +2966,13 @@ export const useAscensionStore = defineStore("ascension", () => {
       fallen_star: 4,
       demon_gate: 4,
       law_maze: 4,
+    };
+    riftHuntProgress.value = {
+      hunt_void_tide: { key: edictKey("daily"), value: 1, claimed: false },
+      hunt_fallen_star: { key: edictKey("daily"), value: 1, claimed: false },
+      hunt_demon_gate: { key: edictKey("weekly"), value: 2, claimed: false },
+      hunt_law_maze: { key: edictKey("weekly"), value: 2, claimed: false },
+      hunt_relic_master: { key: edictKey("weekly"), value: 2, claimed: false },
     };
     fatePlateLevels.value = {
       merit_orbit: 4,
@@ -2994,6 +3154,14 @@ export const useAscensionStore = defineStore("ascension", () => {
       law_maze: 0,
       ...(data?.riftRelicFragments ?? {}),
     };
+    riftHuntProgress.value = {
+      hunt_void_tide: { key: "", value: 0, claimed: false },
+      hunt_fallen_star: { key: "", value: 0, claimed: false },
+      hunt_demon_gate: { key: "", value: 0, claimed: false },
+      hunt_law_maze: { key: "", value: 0, claimed: false },
+      hunt_relic_master: { key: "", value: 0, claimed: false },
+      ...(data?.riftHuntProgress ?? {}),
+    };
     expeditionClaimed.value = {
       cloud_patrol: "",
       star_mining: "",
@@ -3048,6 +3216,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     IMMORTAL_ALLIANCES,
     CHAOS_RIFTS,
     RIFT_BOSS_RELICS,
+    RIFT_HUNTS,
     FATE_PLATES,
     IMMORTAL_STORY_CHAPTERS,
     ascended,
@@ -3111,6 +3280,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     riftBossTurns,
     riftRelics,
     riftRelicFragments,
+    riftHuntProgress,
     expeditionClaimed,
     fatePlateLevels,
     storyClaimed,
@@ -3132,6 +3302,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     riftScore,
     riftRelicPower,
     riftRelicSetBonus,
+    riftHunts,
     riftBossInfo,
     storyState,
     storyProgress,
@@ -3164,6 +3335,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     coordinateAlliance,
     challengeChaosRift,
     upgradeRiftRelic,
+    claimRiftHunt,
     dispatchImmortalExpedition,
     claimCelestialEdict,
     upgradeImmortalGear,

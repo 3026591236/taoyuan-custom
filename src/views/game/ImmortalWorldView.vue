@@ -592,6 +592,58 @@
           >
         </button>
       </div>
+      <div class="hunt-panel">
+        <div class="relic-head">
+          <div>
+            <p class="text-xs text-accent">裂隙猎榜 · 首领悬赏</p>
+            <span>每日/每周追猎目标，串联首领击杀、遗珍炼化与裂隙套装</span>
+          </div>
+          <b>{{ RIFT_HUNTS.length }} 项</b>
+        </div>
+        <div class="grid grid-cols-1 gap-2">
+          <button
+            v-for="hunt in ascensionStore.riftHunts"
+            :key="hunt.id"
+            class="hunt-card"
+            :class="
+              hunt.state.claimed
+                ? 'done'
+                : hunt.state.value >= hunt.target
+                  ? 'ready'
+                  : ''
+            "
+            @click="ascensionStore.claimRiftHunt(hunt.id)"
+          >
+            <span class="text-xs text-accent"
+              >{{ hunt.period === "daily" ? "每日" : "每周" }} ·
+              {{ hunt.name }}</span
+            >
+            <span class="text-[10px] text-muted">{{ hunt.desc }}</span>
+            <i
+              ><em
+                :style="{
+                  width: `${Math.min(100, (hunt.state.value / hunt.target) * 100)}%`,
+                }"
+              ></em
+            ></i>
+            <span class="text-[10px] text-warning"
+              >进度 {{ hunt.state.value }}/{{ hunt.target }}｜奖励 功德+{{
+                hunt.reward.merit
+              }}
+              仙玉+{{ hunt.reward.jade }} 法则+{{ hunt.reward.rule }} 器魄+{{
+                hunt.reward.essence
+              }}</span
+            >
+            <span class="text-[10px] text-success">{{
+              hunt.state.claimed
+                ? "已领取"
+                : hunt.state.value >= hunt.target
+                  ? "点击领取猎榜赏"
+                  : "继续镇压首领"
+            }}</span>
+          </button>
+        </div>
+      </div>
       <div class="relic-panel">
         <div class="relic-head">
           <div>
@@ -1183,6 +1235,7 @@ import {
   IMMORTAL_ALLIANCES,
   CHAOS_RIFTS,
   RIFT_BOSS_RELICS,
+  RIFT_HUNTS,
   FATE_PLATES,
   IMMORTAL_STORY_CHAPTERS,
 } from "@/stores/useAscensionStore";
@@ -2326,6 +2379,7 @@ const returnToWorld = () => {
   border-color: rgba(255, 72, 92, 0.7) !important;
   box-shadow: 0 0 22px rgba(255, 55, 80, 0.27) !important;
 }
+.hunt-panel,
 .relic-panel {
   margin-top: 10px;
   padding: 10px;
@@ -2357,6 +2411,7 @@ const returnToWorld = () => {
   margin-bottom: 7px;
   color: #69e8a2;
 }
+.hunt-card,
 .relic-card {
   display: flex;
   min-height: 112px;
@@ -2370,6 +2425,7 @@ const returnToWorld = () => {
   background: rgba(3, 10, 28, 0.5);
   transition: 0.18s;
 }
+.hunt-card:hover,
 .relic-card:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 226, 138, 0.68);
@@ -3842,3 +3898,9 @@ const returnToWorld = () => {
   }
 }
 </style>
+
+.hunt-card.done{opacity:.62;border-color:rgba(105,232,162,.38)}.hunt-card.ready{border-color:rgba(255,226,138,.72);box-shadow:0
+0 14px rgba(255,226,138,.16)}.hunt-card
+i{display:block;width:100%;height:5px;border-radius:999px;background:rgba(0,0,0,.42);overflow:hidden}.hunt-card
+i
+em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#69e8a2,#ffe28a)}
