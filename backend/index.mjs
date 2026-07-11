@@ -388,6 +388,7 @@ const defaultConfig = {
     ]
   },
   updateLogs: [
+    {"date":"2026-07-11","title":"V2.9.0 今日全服巡检修复","content":"今日全服巡检覆盖代码、物品、丹药、加成与构建链路，并修复真实引用缺口：补齐石料/黏土物品定义，避免小屋维护与博物馆彩陶修复消耗不存在物品；成就奖励 compost 改为基础肥料；职业委托“鱼鲜备货”从泛称 fish 改为鲫鱼；每日签到第5天不存在的草莓种子改为萝卜种子。同步修正星陨铁、炼器图纸和教程中装备升星仍为后续的旧文案。"},
     {"date":"2026-07-11","title":"V2.8.9 15转装备升星","content":"横向补齐炼器与转生闭环：15转解锁装备升星，炼器页新增装备升星模块。灵剑、法衣、云靴、护符需先淬炼至满阶，再消耗星陨铁、法宝碎片、灵石与铜钱升星，高星额外消耗炼器图纸。升星提升修仙装备战力与渡劫稳定，并重置灵韧，让星陨铁、炼器图纸、法宝碎片等既有材料进入长期消耗循环；转生页15转说明同步从“后续”改为已实装。"},
     {"date":"2026-07-11","title":"V2.8.8 本命法宝主动威能","content":"横向补齐本命法宝闭环：本命法宝不再只是被动战力养成，新增每日主动威能。七星剑可发动七星斩念，获得修为与灵气并削减心魔；太极镜可发动太极护心，回转灵力、修复洞府稳定并缓解元神伤势；青莲灯可发动青莲照心，获得悟道与灵气并净化心魔。主动威能按法宝等级提升每日次数与效果，消耗灵力，直接接入已有本命法宝页，不新增入口。"},
     {"date":"2026-07-11","title":"V2.8.7 宗门副本与长老试炼","content":"本次从仙界线横向巡检已有玩法，优先补齐宗门系统闭环：宗门页新增宗门副本·长老试炼，不新增凡界地图入口。亲传弟子可按所入宗门挑战剑冢镇妖、丹霞药境、天罡符阵，消耗宗门贡献并根据职位、试剑台等底蕴结算功勋、灵气和专属材料；长老候补可每日挑战长老试炼，获得玉简、法宝碎片、功勋与灵气。宗门宝库秘境材料匣说明同步调整，宗门职位从“后续接副本”改为已接入副本闭环。"},
@@ -812,7 +813,7 @@ function checkinItemsForStreak(streak) {
   if (day === 2) items.push({ itemId: 'basic_fertilizer', quantity: 3 })
   if (day === 3) items.push({ itemId: 'seed_potato', quantity: 4 })
   if (day === 4) items.push({ itemId: 'quality_fertilizer', quantity: 2 })
-  if (day === 5) items.push({ itemId: 'seed_strawberry', quantity: 3 })
+  if (day === 5) items.push({ itemId: 'seed_radish', quantity: 4 })
   if (day === 6) items.push({ itemId: 'ancient_seed', quantity: 1 })
   if (day === 7) items.push({ itemId: 'quality_fertilizer', quantity: 5 }, { itemId: 'seed_watermelon', quantity: 3 })
   return items

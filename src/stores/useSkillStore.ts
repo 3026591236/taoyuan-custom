@@ -36,7 +36,7 @@ export const useSkillStore = defineStore('skill', () => {
   const professionOrdersDone = ref<string[]>([])
   const PROFESSION_ORDERS: { id: ProfessionOrderId; name: string; desc: string; skill: SkillType; itemId: string; itemName: string; quantity: number; money: number; exp: number }[] = [
     { id: 'chef_supply', name: '灶台供餐', desc: '提交蕴灵稻，为村庄、宗门和家族提供日常膳食。', skill: 'farming', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 3, money: 1600, exp: 65 },
-    { id: 'angler_stock', name: '鱼鲜备货', desc: '提交鱼肉，补足商圈与家宴消耗。', skill: 'fishing', itemId: 'fish', itemName: '鱼', quantity: 5, money: 1200, exp: 55 },
+    { id: 'angler_stock', name: '鱼鲜备货', desc: '提交鲫鱼，补足商圈与家宴消耗。', skill: 'fishing', itemId: 'crucian', itemName: '鲫鱼', quantity: 5, money: 1200, exp: 55 },
     { id: 'miner_refine', name: '矿材精炼', desc: '提交铁锭，支撑修仙装备和公会工程。', skill: 'mining', itemId: 'iron_bar', itemName: '铁锭', quantity: 3, money: 1500, exp: 60 },
     { id: 'forager_bundle', name: '山野药篓', desc: '提交草药，为炼丹、医馆与反馈补偿储备材料。', skill: 'foraging', itemId: 'herb', itemName: '草药', quantity: 6, money: 1100, exp: 58 }
   ]

@@ -779,7 +779,7 @@ export const SPIRIT_STONE_EXCHANGES: SpiritStoneExchangeRecipe[] = [
     itemName: "炼器图纸",
     quantity: 1,
     spiritStones: 10,
-    desc: "暂未用于淬炼的古法残图，可先折成灵石，后续再扩展词条玩法。",
+    desc: "古法残图可在15转装备升星高星阶段消耗，富余时也可折成灵石。",
   },
   {
     id: "artifact_shard",
@@ -2894,6 +2894,27 @@ export const useCultivationStore = defineStore("cultivation", () => {
       aura.value += 300;
       addLog(`服下一枚灵芝培元丹，修为增长${actualCultivation}，灵气+300。`);
       showFloat(`修为+${actualCultivation} 灵气+300`, "success");
+    } else if (pillId === "snow_lotus_pill") {
+      inventory.removeItem(pillId, 1);
+      const clear = Math.min(18, heartDemon.value);
+      heartDemon.value = Math.max(0, heartDemon.value - clear);
+      insight.value += 8;
+      aura.value += 180;
+      addLog(
+        `服下一枚雪莲清心丹，悟道+8，灵气+180${clear ? `，心魔-${clear}` : "，心境澄明"}。`,
+      );
+      showFloat(clear ? `心魔-${clear} 悟道+8` : "悟道+8", "success");
+    } else if (pillId === "ice_soul_pill") {
+      inventory.removeItem(pillId, 1);
+      const manaGain = Math.min(maxMana.value - mana.value, 90);
+      mana.value = Math.min(maxMana.value, mana.value + 90);
+      const clear = Math.min(28, heartDemon.value);
+      heartDemon.value = Math.max(0, heartDemon.value - clear);
+      const healed = recoverYuanShenInjury(1);
+      addLog(
+        `服下一枚冰魄护魂丹，灵力+${manaGain}${clear ? `，心魔-${clear}` : ""}${healed ? `，元神伤势-${healed}` : ""}。`,
+      );
+      showFloat(`灵力+${manaGain}${clear ? ` 心魔-${clear}` : ""}`, "success");
     } else if (pillId === "good_fortune_pill") {
       inventory.removeItem(pillId, 1);
       const leveled = addYuanShenExp(900);
