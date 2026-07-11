@@ -1219,6 +1219,12 @@ export const useCultivationStore = defineStore("cultivation", () => {
     cloud_boots: 100,
     tribulation_amulet: 100,
   });
+  const daoGearStars = ref<Record<DaoGearId, number>>({
+    immortal_sword: 0,
+    dharma_robe: 0,
+    cloud_boots: 0,
+    tribulation_amulet: 0,
+  });
   const lastAlchemyQuality = ref<{
     pillId: PillId;
     quality: AlchemyQuality;
@@ -1592,8 +1598,8 @@ export const useCultivationStore = defineStore("cultivation", () => {
       (sum, gear) =>
         sum +
         Math.floor(
-          (daoGear.value[gear.id] || 0) *
-            gear.powerPerLevel *
+          ((daoGear.value[gear.id] || 0) * gear.powerPerLevel +
+            (daoGearStars.value[gear.id] || 0) * gear.powerPerLevel * 0.55) *
             daoGearDurabilityRate(gear.id),
         ),
       0,
@@ -1605,8 +1611,10 @@ export const useCultivationStore = defineStore("cultivation", () => {
       DAO_GEAR.reduce(
         (sum, gear) =>
           sum +
-          (daoGear.value[gear.id] || 0) *
-            gear.tribulationPerLevel *
+          ((daoGear.value[gear.id] || 0) * gear.tribulationPerLevel +
+            (daoGearStars.value[gear.id] || 0) *
+              gear.tribulationPerLevel *
+              0.45) *
             daoGearDurabilityRate(gear.id),
         0,
       ),
@@ -1663,6 +1671,74 @@ export const useCultivationStore = defineStore("cultivation", () => {
     return Math.max(3000, base + realmBonus + caveBonus - diminishing);
   });
   const daoGearLevel = (id: DaoGearId) => daoGear.value[id] || 0;
+  const daoGearStarLevel = (id: DaoGearId) => daoGearStars.value[id] || 0;
+  const daoGearStarUnlocked = computed(() => rebirthCount.value >= 15);
+  const daoGearStarCost = (id: DaoGearId) => {
+    const gear = DAO_GEAR.find((g) => g.id === id);
+    if (!gear) return null;
+    const star = daoGearStars.value[id] || 0;
+    return {
+      star,
+      nextStar: star + 1,
+      starIron: 1 + star,
+      blueprint: star >= 2 ? 1 : 0,
+      artifactShard: 2 + star,
+      spiritStone: 18 + star * 8,
+      money: 18000 + star * 9000,
+    };
+  };
+  const canStarDaoGear = (id: DaoGearId) => {
+    if (!daoGearStarUnlocked.value) return false;
+    const gear = DAO_GEAR.find((g) => g.id === id);
+    const cost = daoGearStarCost(id);
+    if (!gear || !cost) return false;
+    if ((daoGear.value[id] || 0) < gear.maxLevel) return false;
+    if ((daoGearStars.value[id] || 0) >= 5) return false;
+    const inv = useInventoryStore();
+    const player = usePlayerStore();
+    return (
+      inv.getItemCount("star_iron") >= cost.starIron &&
+      inv.getItemCount("artifact_shard") >= cost.artifactShard &&
+      inv.getItemCount("spirit_stone") >= cost.spiritStone &&
+      inv.getItemCount("forge_blueprint") >= cost.blueprint &&
+      player.money >= cost.money
+    );
+  };
+  const starDaoGear = (id: DaoGearId) => {
+    if (!daoGearStarUnlocked.value) {
+      showFloat("15转后解锁装备升星。", "danger");
+      return false;
+    }
+    const gear = DAO_GEAR.find((g) => g.id === id);
+    const cost = daoGearStarCost(id);
+    if (!gear || !cost) return false;
+    if ((daoGear.value[id] || 0) < gear.maxLevel) {
+      showFloat(`${gear.name}需先淬炼至${gear.maxLevel}阶。`, "danger");
+      return false;
+    }
+    if ((daoGearStars.value[id] || 0) >= 5) {
+      showFloat(`${gear.name}已升星圆满。`, "accent");
+      return false;
+    }
+    const inv = useInventoryStore();
+    const player = usePlayerStore();
+    if (!canStarDaoGear(id)) {
+      showFloat("升星材料不足。", "danger");
+      return false;
+    }
+    if (!player.spendMoney(cost.money)) return false;
+    inv.removeItem("star_iron", cost.starIron);
+    inv.removeItem("artifact_shard", cost.artifactShard);
+    inv.removeItem("spirit_stone", cost.spiritStone);
+    if (cost.blueprint > 0) inv.removeItem("forge_blueprint", cost.blueprint);
+    daoGearStars.value = { ...daoGearStars.value, [id]: cost.nextStar };
+    daoGearDurability.value = { ...daoGearDurability.value, [id]: 100 };
+    addLog(
+      `装备升星：消耗星陨铁×${cost.starIron}、法宝碎片×${cost.artifactShard}${cost.blueprint ? `、炼器图纸×${cost.blueprint}` : ""}、灵石×${cost.spiritStone}，将${gear.name}提升至${cost.nextStar}星。`,
+    );
+    showFloat(`${gear.name}升至${cost.nextStar}星`, "success");
+    return true;
+  };
   const canForgeDaoGear = (id: DaoGearId) => {
     const gear = DAO_GEAR.find((g) => g.id === id);
     if (!gear) return false;
@@ -3652,6 +3728,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     alchemyUnlocked: alchemyUnlocked.value,
     daoGear: daoGear.value,
     daoGearDurability: daoGearDurability.value,
+    daoGearStars: daoGearStars.value,
     insight: insight.value,
     heartDemon: heartDemon.value,
     cultivationPath: cultivationPath.value,
@@ -3739,6 +3816,16 @@ export const useCultivationStore = defineStore("cultivation", () => {
         cloud_boots: Number(oldDur.cloud_boots ?? 100),
         tribulation_amulet: Number(oldDur.tribulation_amulet ?? 100),
       };
+      const oldStars = ((data as any).daoGearStars ?? {}) as Record<
+        string,
+        number
+      >;
+      daoGearStars.value = {
+        immortal_sword: Number(oldStars.immortal_sword || 0),
+        dharma_robe: Number(oldStars.dharma_robe || 0),
+        cloud_boots: Number(oldStars.cloud_boots || 0),
+        tribulation_amulet: Number(oldStars.tribulation_amulet || 0),
+      };
     }
     insight.value = (data as any).insight ?? 0;
     heartDemon.value = (data as any).heartDemon ?? 0;
@@ -3822,12 +3909,18 @@ export const useCultivationStore = defineStore("cultivation", () => {
     combatPower,
     daoGear,
     daoGearDurability,
+    daoGearStars,
     daoGearDurabilityRate,
     daoGearMaintenanceCost,
     maintainDaoGear,
     daoGearPower,
     daoGearTribulationBonus,
     daoGearLevel,
+    daoGearStarLevel,
+    daoGearStarUnlocked,
+    daoGearStarCost,
+    canStarDaoGear,
+    starDaoGear,
     canForgeDaoGear,
     forgeDaoGear,
     fieldTier,
