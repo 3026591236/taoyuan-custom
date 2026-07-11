@@ -133,11 +133,11 @@ export const IMMORTAL_ALLIANCES: Array<{ id: ImmortalAllianceId; name: string; i
   { id: 'star_forge', name: '星炉匠盟', icon: '🔥', desc: '合炼星砂仙器，偏向洞天建设与法则碎片。', costMerit: 18, costJade: 14, rewardRule: 8, rewardEcho: 0, rewardSeason: 4 },
   { id: 'mortal_bridge', name: '凡缘桥盟', icon: '🌉', desc: '组织仙凡互济，强化宗门、家族、灵田回响。', costMerit: 36, costJade: 4, rewardRule: 2, rewardEcho: 3, rewardSeason: 5 }
 ]
-export const CHAOS_RIFTS: Array<{ id: ChaosRiftId; name: string; icon: string; desc: string; needPower: number; rewardMerit: number; rewardJade: number; rewardRule: number; risk: number }> = [
-  { id: 'void_tide', name: '虚空潮汐', icon: '🌌', desc: '混沌潮汐冲刷仙界边境，考验综合仙战力。', needPower: 180, rewardMerit: 45, rewardJade: 10, rewardRule: 6, risk: 18 },
-  { id: 'fallen_star', name: '坠星残域', icon: '☄️', desc: '坠落星骸中藏有仙玉与小法则核。', needPower: 260, rewardMerit: 35, rewardJade: 18, rewardRule: 8, risk: 24 },
-  { id: 'demon_gate', name: '天魔隙门', icon: '👹', desc: '天魔窥伺飞升者道心，胜者可涨仙擂气势。', needPower: 360, rewardMerit: 70, rewardJade: 12, rewardRule: 10, risk: 32 },
-  { id: 'law_maze', name: '法则迷宫', icon: '🧩', desc: '迷宫内法则倒错，适合冲刺仙阶突破。', needPower: 480, rewardMerit: 60, rewardJade: 16, rewardRule: 18, risk: 38 }
+export const CHAOS_RIFTS: Array<{ id: ChaosRiftId; name: string; icon: string; bossName: string; desc: string; needPower: number; rewardMerit: number; rewardJade: number; rewardRule: number; risk: number; weakness: ImmortalArtId; phaseNames: [string, string, string]; loot: Array<{ itemId: string; name: string; quantity: number; chance: number }> }> = [
+  { id: 'void_tide', name: '虚空潮汐', icon: '🌌', bossName: '虚潮界鲸', desc: '混沌潮汐冲刷仙界边境，首领会蓄潮回血，适合用云篆护体稳住仙身。', needPower: 180, rewardMerit: 45, rewardJade: 10, rewardRule: 6, risk: 18, weakness: 'cloud_body', phaseNames: ['潮涌', '裂浪', '归墟'], loot: [{ itemId: 'void_dust', name: '太虚尘', quantity: 1, chance: .55 }, { itemId: 'immortal_dew', name: '仙露', quantity: 1, chance: .35 }] },
+  { id: 'fallen_star', name: '坠星残域', icon: '☄️', bossName: '坠星古傀', desc: '坠落星骸中藏有仙玉与小法则核，首领护甲厚重，星河落刃可击穿核心。', needPower: 260, rewardMerit: 35, rewardJade: 18, rewardRule: 8, risk: 24, weakness: 'starfall_sword', phaseNames: ['星壳', '核燃', '陨灭'], loot: [{ itemId: 'star_iron', name: '星陨铁', quantity: 1, chance: .68 }, { itemId: 'artifact_shard', name: '法宝碎片', quantity: 2, chance: .38 }] },
+  { id: 'demon_gate', name: '天魔隙门', icon: '👹', bossName: '隙门心魔', desc: '天魔窥伺飞升者道心，首领会侵蚀仙力，太阳真火可净化魔念。', needPower: 360, rewardMerit: 70, rewardJade: 12, rewardRule: 10, risk: 32, weakness: 'solar_flame', phaseNames: ['诱念', '噬魂', '魔门'], loot: [{ itemId: 'demon_core', name: '妖丹', quantity: 2, chance: .6 }, { itemId: 'spirit_bone', name: '灵骨', quantity: 1, chance: .42 }] },
+  { id: 'law_maze', name: '法则迷宫', icon: '🧩', bossName: '逆律天眼', desc: '迷宫内法则倒错，首领护盾会重组，紫霄雷印可直接破除法则锁链。', needPower: 480, rewardMerit: 60, rewardJade: 16, rewardRule: 18, risk: 38, weakness: 'purple_thunder_seal', phaseNames: ['错位', '重构', '天罚'], loot: [{ itemId: 'thunder_essence', name: '雷精', quantity: 1, chance: .58 }, { itemId: 'lingyun_jade', name: '灵蕴玉', quantity: 1, chance: .45 }] }
 ]
 export const FATE_PLATES: Array<{ id: FatePlateId; name: string; icon: string; desc: string; costRule: number; costJade: number; power: number; bonus: string }> = [
   { id: 'merit_orbit', name: '功德星轨', icon: '✨', desc: '将天命功德沉入命盘，提升治理类收益。', costRule: 12, costJade: 8, power: 26, bonus: '天命功德抉择额外收益' },
@@ -594,31 +594,57 @@ export const useAscensionStore = defineStore('ascension', () => {
     const clears = riftClears.value[id] || 0
     const maxHp = rift.needPower * 5 + clears * rift.needPower
     const maxShield = Math.floor(maxHp * 0.2)
-    return { maxHp, maxShield, hp: Math.min(riftBossHp.value[id] ?? maxHp, maxHp), shield: Math.min(riftBossShield.value[id] ?? maxShield, maxShield), turns: riftBossTurns.value[id] || 0 }
+    const hp = Math.min(riftBossHp.value[id] ?? maxHp, maxHp)
+    const shield = Math.min(riftBossShield.value[id] ?? maxShield, maxShield)
+    const hpRate = maxHp ? hp / maxHp : 1
+    const phase = hpRate <= .32 ? 2 : hpRate <= .66 ? 1 : 0
+    const dungeonRank = clears >= 8 ? '无尽' : clears >= 4 ? '深层' : clears >= 1 ? '进阶' : '初探'
+    return { maxHp, maxShield, hp, shield, turns: riftBossTurns.value[id] || 0, phase, phaseName: rift.phaseNames[phase], weakness: rift.weakness, dungeonRank }
+  }
+  const rollRiftLoot = (id: ChaosRiftId, clears: number) => {
+    const rift = CHAOS_RIFTS.find(r => r.id === id)!
+    const inventoryStore = useInventoryStore()
+    const drops: string[] = []
+    for (const item of rift.loot) {
+      const chance = Math.min(.92, item.chance + Math.min(.18, clears * .025))
+      if (Math.random() < chance) {
+        const qty = item.quantity + (clears >= 5 && Math.random() < .35 ? 1 : 0)
+        inventoryStore.addItem(item.itemId, qty)
+        drops.push(`${item.name}+${qty}`)
+      }
+    }
+    return drops
   }
   const challengeChaosRift = (id: ChaosRiftId): boolean => {
     const rift = CHAOS_RIFTS.find(r => r.id === id)
     if (!rift || !ascended.value) return false
     if (immortalHp.value <= 0 || immortalQi.value <= 0) restoreImmortalCombat(true)
     const state = riftBossInfo(id); const art = IMMORTAL_ARTS.find(a => a.id === lastArtId.value) || IMMORTAL_ARTS[0]!
-    const qiCost = art.id === 'purple_thunder_seal' ? 22 : art.id === 'solar_flame' ? 18 : art.id === 'starfall_sword' ? 20 : 14
+    const weakHit = art.id === rift.weakness
+    const qiCost = Math.max(8, (art.id === 'purple_thunder_seal' ? 22 : art.id === 'solar_flame' ? 18 : art.id === 'starfall_sword' ? 20 : 14) - (weakHit ? 3 : 0))
     if (immortalQi.value < qiCost) { lastBattleText.value = `仙力不足：施展${art.name}需要仙力${qiCost}。`; addLog(lastBattleText.value); return false }
     immortalQi.value -= qiCost
     const weaponLv = gearLevels.value.weapon || 0; const plateLv = fatePlateLevels.value.battle_orbit || 0
-    const styleBonus = art.id === 'purple_thunder_seal' ? 140 + state.shield * .28 : art.id === 'solar_flame' ? 105 + state.turns * 36 : art.id === 'starfall_sword' ? 120 + pkStreak.value * 15 : 75 + Math.floor(immortalBodyLevel.value * 12)
-    const critical = Math.random() * 100 < immortalCritRate.value
-    const rawDamage = Math.max(45, Math.floor(immortalAttack.value * 2.15 + immortalPower.value * .07 + art.basePower * 1.25 + weaponLv * 35 + plateLv * 20 + styleBonus + Math.random() * 55) * (critical ? 1.65 : 1))
+    const phaseBonus = state.phase === 2 ? 85 : state.phase === 1 ? 35 : 0
+    const styleBonus = art.id === 'purple_thunder_seal' ? 140 + state.shield * .32 : art.id === 'solar_flame' ? 105 + state.turns * 42 : art.id === 'starfall_sword' ? 120 + pkStreak.value * 18 : 75 + Math.floor(immortalBodyLevel.value * 14)
+    const critical = Math.random() * 100 < immortalCritRate.value + (weakHit ? 10 : 0)
+    const weakBonus = weakHit ? 1.28 : 1
+    const rawDamage = Math.max(45, Math.floor((immortalAttack.value * 2.15 + immortalPower.value * .07 + art.basePower * 1.25 + weaponLv * 35 + plateLv * 20 + styleBonus + phaseBonus + Math.random() * 55) * weakBonus) * (critical ? 1.65 : 1))
     const fury = state.turns >= 4 ? Math.floor(rift.risk * 1.4) : 0; let shield = state.shield; let hp = state.hp
-    let text = `${rift.icon} ${art.name}斩入「${rift.name}」：造成 ${rawDamage} 仙伤${critical ? '（暴击）' : ''}，仙力-${qiCost}。`
+    let text = `${rift.icon} ${state.dungeonRank}·${rift.bossName}【${state.phaseName}】遭到${art.name}压制：造成 ${rawDamage} 仙伤${critical ? '（暴击）' : ''}${weakHit ? '，命中首领弱点' : ''}，仙力-${qiCost}。`
     if (shield > 0) { const broken = Math.min(shield, rawDamage); shield -= broken; const overflow = rawDamage - broken; hp -= overflow; text += overflow > 0 ? ` 护盾碎裂，余波造成${overflow}伤害！` : ` 先削去护盾${broken}。` } else hp -= rawDamage
-    const turns = state.turns + 1; visualPulse.value++
-    if (hp <= 0) { const essenceGain = 5 + Math.floor(rift.risk / 8) + Math.floor(turns / 2); merit.value += rift.rewardMerit; immortalJade.value += rift.rewardJade; ruleFragments.value += rift.rewardRule; immortalEssence.value += essenceGain; pkStreak.value += id === 'demon_gate' ? 1 : 0; riftClears.value[id] = (riftClears.value[id] || 0) + 1; const next = riftBossInfo(id); riftBossHp.value[id] = next.maxHp; riftBossShield.value[id] = next.maxShield; riftBossTurns.value[id] = 0; immortalQi.value = Math.min(immortalMaxQi.value, immortalQi.value + 18); lastBattleText.value = `${text} ✦ 首领崩解！镇压成功，功德+${rift.rewardMerit}、仙玉+${rift.rewardJade}、法则+${rift.rewardRule}、仙器精魄+${essenceGain}。`; addLog(lastBattleText.value); return true }
-    riftBossHp.value[id] = Math.max(1, hp); riftBossShield.value[id] = shield; riftBossTurns.value[id] = turns; advanceCelestialEdict('daily_rift')
-    const backlash = Math.min(ruleFragments.value, Math.max(0, Math.floor((rift.risk + fury) / 18))); if (backlash) ruleFragments.value -= backlash
-    const bossAttack = Math.max(28, Math.floor((rift.needPower * .42 + turns * 16) * (fury ? 1.35 : 1))); const received = Math.max(8, Math.floor(bossAttack * (100 - immortalDamageReduction.value) / (100 + immortalDefense.value * .45)))
-    immortalHp.value = Math.max(0, immortalHp.value - received); immortalQi.value = Math.min(immortalMaxQi.value, immortalQi.value + 7 + Math.floor(immortalSoulLevel.value * .5))
-    if (immortalHp.value <= 0) { lastBattleText.value = `⚠ ${rift.name}击穿你的仙身，承伤${received}，本轮镇压失败；首领进度保留。`; addLog(lastBattleText.value); return false }
-    lastBattleText.value = `${text} 你承受${received}伤害，气血${immortalHp.value}/${immortalMaxHp.value}，仙力恢复至${immortalQi.value}/${immortalMaxQi.value}。首领剩余仙躯 ${Math.max(1,hp)}/${state.maxHp}${shield ? `，护盾${shield}/${state.maxShield}` : '，护盾已破'}。${fury ? ` ⚠ 已狂暴，法则反噬-${backlash}。` : ' 再次施放仙术以完成镇压。'}`; addLog(lastBattleText.value); return false
+    const turns = state.turns + 1; visualPulse.value++; advanceCelestialEdict('daily_rift')
+    if (hp <= 0) { const oldClears = riftClears.value[id] || 0; const essenceGain = 5 + Math.floor(rift.risk / 8) + Math.floor(turns / 2) + Math.floor(oldClears / 3); const loot = rollRiftLoot(id, oldClears); merit.value += rift.rewardMerit; immortalJade.value += rift.rewardJade; ruleFragments.value += rift.rewardRule; immortalEssence.value += essenceGain; pkStreak.value += id === 'demon_gate' ? 1 : 0; riftClears.value[id] = oldClears + 1; const next = riftBossInfo(id); riftBossHp.value[id] = next.maxHp; riftBossShield.value[id] = next.maxShield; riftBossTurns.value[id] = 0; immortalQi.value = Math.min(immortalMaxQi.value, immortalQi.value + 18 + (weakHit ? 8 : 0)); lastBattleText.value = `${text} ✦ 首领崩解！镇压成功，功德+${rift.rewardMerit}、仙玉+${rift.rewardJade}、法则+${rift.rewardRule}、仙器精魄+${essenceGain}${loot.length ? `，掉落${loot.join('、')}` : ''}。下一轮裂隙层数加深。`; addLog(lastBattleText.value); return true }
+    const newPhase = hp / state.maxHp <= .32 ? 2 : hp / state.maxHp <= .66 ? 1 : 0
+    if (state.phase !== newPhase && shield <= 0) shield = Math.max(shield, Math.floor(state.maxShield * .28))
+    riftBossHp.value[id] = Math.max(1, hp); riftBossShield.value[id] = shield; riftBossTurns.value[id] = turns
+    const backlash = Math.min(ruleFragments.value, Math.max(0, Math.floor((rift.risk + fury + state.phase * 6) / 18))); if (backlash) ruleFragments.value -= backlash
+    const phaseAttack = state.phase === 2 ? 1.38 : state.phase === 1 ? 1.16 : 1
+    const bossAttack = Math.max(28, Math.floor((rift.needPower * .42 + turns * 16) * (fury ? 1.35 : 1) * phaseAttack)); const received = Math.max(8, Math.floor(bossAttack * (100 - immortalDamageReduction.value) / (100 + immortalDefense.value * .45)))
+    const qiDrain = id === 'demon_gate' && state.phase >= 1 ? Math.min(12, immortalQi.value) : 0
+    immortalHp.value = Math.max(0, immortalHp.value - received); immortalQi.value = Math.min(immortalMaxQi.value, immortalQi.value - qiDrain + 7 + Math.floor(immortalSoulLevel.value * .5) + (art.id === 'cloud_body' ? 4 : 0))
+    if (immortalHp.value <= 0) { lastBattleText.value = `⚠ ${rift.bossName}击穿你的仙身，承伤${received}，本轮镇压失败；首领仙躯与护盾进度保留。`; addLog(lastBattleText.value); return false }
+    lastBattleText.value = `${text} 你承受${received}伤害${qiDrain ? `，仙力被侵蚀-${qiDrain}` : ''}，气血${immortalHp.value}/${immortalMaxHp.value}，仙力${immortalQi.value}/${immortalMaxQi.value}。首领剩余仙躯 ${Math.max(1,hp)}/${state.maxHp}${shield ? `，护盾${shield}/${state.maxShield}` : '，护盾已破'}。${fury ? ` ⚠ 已狂暴，法则反噬-${backlash}。` : ` 当前阶段：${state.phaseName}，弱点仙术：${IMMORTAL_ARTS.find(a => a.id === rift.weakness)?.name ?? '未知'}。`}`; addLog(lastBattleText.value); return false
   }
   const dispatchImmortalExpedition = (id: ImmortalExpeditionId): boolean => {
     const mission = IMMORTAL_EXPEDITIONS.find(item => item.id === id)
