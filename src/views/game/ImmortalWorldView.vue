@@ -40,17 +40,14 @@
     </div>
 
     <div v-if="isTab('home')" class="immortal-dossier relative z-10 mb-4">
-      <div class="dossier-head"><div><p class="text-xs text-accent">云阙仙录 · 成长履历</p><p class="text-[10px] text-muted">仙界大厅仅展示角色数据；各项功能请通过仙界地图进入。</p></div><span>{{ ascensionStore.immortalRealmInfo.icon }} {{ ascensionStore.immortalRealmInfo.name }}</span></div>
-      <div class="dossier-grid">
-        <div class="dossier-item"><span>功德</span><b>{{ ascensionStore.merit }}</b><small>仙职与仙体根基</small></div>
-        <div class="dossier-item"><span>仙玉</span><b>{{ ascensionStore.immortalJade }}</b><small>云阙通行货币</small></div>
-        <div class="dossier-item"><span>法则碎片</span><b>{{ ascensionStore.ruleFragments }}</b><small>高阶突破资材</small></div>
-        <div class="dossier-item"><span>仙器精魄</span><b>{{ ascensionStore.immortalEssence }}</b><small>六部位淬炼资源</small></div>
-        <div class="dossier-item"><span>仙体 / 仙骨 / 仙魂</span><b>Lv.{{ ascensionStore.immortalBodyLevel }} / {{ ascensionStore.immortalBoneLevel }} / {{ ascensionStore.immortalSoulLevel }}</b><small>三元仙身总览</small></div>
-        <div class="dossier-item"><span>当前裂隙战况</span><b>{{ ascensionStore.riftScore }} 次镇压</b><small>{{ ascensionStore.lastBattleText || '尚未留下战报' }}</small></div>
+      <div class="dossier-resource-row">
+        <span><i>功德</i><b>{{ ascensionStore.merit }}</b></span><span><i>仙玉</i><b>{{ ascensionStore.immortalJade }}</b></span><span><i>法则</i><b>{{ ascensionStore.ruleFragments }}</b></span><span><i>器魄</i><b>{{ ascensionStore.immortalEssence }}</b></span>
+      </div>
+      <div class="dossier-summary-row">
+        <div><span>三元仙身</span><b>仙体 <em>Lv.{{ ascensionStore.immortalBodyLevel }}</em>　仙骨 <em>Lv.{{ ascensionStore.immortalBoneLevel }}</em>　仙魂 <em>Lv.{{ ascensionStore.immortalSoulLevel }}</em></b></div>
+        <div><span>仙界战绩</span><b>裂隙镇压 <em>{{ ascensionStore.riftScore }}</em> 次　斗法 {{ ascensionStore.pkRecord }}</b></div>
       </div>
     </div>
-
     <div v-if="isTab('home')" class="border border-amber-200/20 rounded-xs p-3 mb-4 bg-black/10 relative z-10">
       <div class="flex items-center justify-between mb-2">
         <p class="text-xs text-accent">仙身三元 · 道果档案</p>
@@ -538,5 +535,5 @@ const returnToWorld = () => { ascensionStore.returnToWorld(); router.push('/game
 .preview-badge{display:inline-flex;margin-left:6px;padding:1px 6px;border:1px solid rgba(255,226,138,.45);border-radius:999px;font-size:10px;color:#ffe28a;background:rgba(255,226,138,.12);box-shadow:0 0 12px rgba(255,226,138,.18)}
 @media (max-width:700px){.immortal-hero{padding:17px 13px}.hero-avatar.immortal-portrait-stage{width:218px;height:300px}.character-combat-deck{grid-template-columns:102px 1fr}.combat-stats{grid-column:1/-1;grid-template-columns:repeat(4,1fr);border-left:0;border-top:1px solid rgba(139,217,255,.17)}.combat-stats>div:nth-child(-n+2){border-bottom:0}.profile-insight-grid{grid-template-columns:repeat(3,1fr)}.profile-insight-grid>div:nth-child(3){border-right:0!important}.profile-insight-grid>div:nth-child(-n+3){border-bottom:1px solid rgba(154,222,255,.12)!important}}
 @media (max-width:420px){.hero-avatar.immortal-portrait-stage{width:188px;height:270px}.immortal-profile>p.text-xl{font-size:22px}.character-combat-deck{grid-template-columns:88px 1fr}.combat-power b{font-size:21px}.profile-insight-grid{grid-template-columns:repeat(2,1fr)}.profile-insight-grid>div:nth-child(2){border-right:0!important}.profile-insight-grid>div:nth-child(n){border-bottom:1px solid rgba(154,222,255,.12)!important}.profile-insight-grid>div:nth-last-child(-n+2){border-bottom:0!important}}
-
+.immortal-dossier{overflow:hidden;border-top:1px solid rgba(255,226,138,.24);border-bottom:1px solid rgba(148,218,255,.18);border-radius:0;background:linear-gradient(90deg,transparent,rgba(102,197,255,.07),transparent);box-shadow:none}.dossier-resource-row{display:grid;grid-template-columns:repeat(4,1fr);padding:10px 6px 9px}.dossier-resource-row span{display:flex;align-items:baseline;justify-content:center;gap:7px;border-right:1px solid rgba(148,218,255,.15)}.dossier-resource-row span:last-child{border-right:0}.dossier-resource-row i{font-style:normal;color:rgba(216,239,255,.54);font-size:10px}.dossier-resource-row b{color:#e6f8ff;font-size:16px;font-weight:600}.dossier-summary-row{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid rgba(148,218,255,.12);background:rgba(2,8,27,.2)}.dossier-summary-row>div{display:flex;align-items:center;gap:12px;padding:9px 14px}.dossier-summary-row>div+div{border-left:1px solid rgba(148,218,255,.12)}.dossier-summary-row span{flex:none;color:rgba(255,226,151,.66);font-size:10px}.dossier-summary-row b{color:rgba(226,244,255,.8);font-size:11px;font-weight:400;white-space:nowrap}.dossier-summary-row em{font-style:normal;color:#ffe5a1;font-size:12px;font-weight:600}@media (max-width:520px){.dossier-resource-row{padding:8px 2px}.dossier-resource-row span{gap:3px;flex-direction:column;align-items:center}.dossier-resource-row b{font-size:14px}.dossier-summary-row{grid-template-columns:1fr}.dossier-summary-row>div+div{border-left:0;border-top:1px solid rgba(148,218,255,.12)}.dossier-summary-row>div{justify-content:space-between;padding:8px 10px}.dossier-summary-row b{font-size:10px}.dossier-summary-row em{font-size:11px}}
 </style>
