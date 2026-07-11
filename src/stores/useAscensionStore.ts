@@ -148,6 +148,74 @@ export type RiftSeasonRewardId =
   "rift_season_30" | "rift_season_80" | "rift_season_160" | "rift_season_300";
 export type RiftMeritShopId =
   "rift_supply" | "rift_fragment_cache" | "rift_law_core" | "rift_stabilizer";
+export type RiftAffixId =
+  | "tide_surge"
+  | "starfall_storm"
+  | "demon_whisper"
+  | "law_reversal"
+  | "stabilized_domain";
+export const RIFT_AFFIXES: Array<{
+  id: RiftAffixId;
+  name: string;
+  icon: string;
+  desc: string;
+  favor: ImmortalArtId;
+  damageRate: number;
+  riskDelta: number;
+  rewardRate: number;
+}> = [
+  {
+    id: "tide_surge",
+    name: "虚潮涨落",
+    icon: "🌊",
+    desc: "虚潮翻涌，云体护身能借势反制，裂隙奖励略增。",
+    favor: "cloud_body",
+    damageRate: 1.12,
+    riskDelta: 3,
+    rewardRate: 1.08,
+  },
+  {
+    id: "starfall_storm",
+    name: "坠星乱流",
+    icon: "☄️",
+    desc: "星砂乱流切割护盾，星河落刃更容易撕开首领仙躯。",
+    favor: "starfall_sword",
+    damageRate: 1.15,
+    riskDelta: 5,
+    rewardRate: 1.12,
+  },
+  {
+    id: "demon_whisper",
+    name: "心魔低语",
+    icon: "😈",
+    desc: "天魔干扰仙识，曜阳真火可焚净低语，功勋收益提升。",
+    favor: "solar_flame",
+    damageRate: 1.18,
+    riskDelta: 8,
+    rewardRate: 1.16,
+  },
+  {
+    id: "law_reversal",
+    name: "逆律回环",
+    icon: "🌀",
+    desc: "法则倒转导致反噬更强，紫霄雷印可校准逆律核心。",
+    favor: "purple_thunder_seal",
+    damageRate: 1.2,
+    riskDelta: 10,
+    rewardRate: 1.22,
+  },
+  {
+    id: "stabilized_domain",
+    name: "镇狱稳界",
+    icon: "🛡️",
+    desc: "镇狱宝库余威稳固裂隙，所有仙术稳定发挥，反噬降低。",
+    favor: "cloud_body",
+    damageRate: 1.08,
+    riskDelta: -6,
+    rewardRate: 1.06,
+  },
+];
+
 export const IMMORTAL_EDICTS: Array<{
   id: ImmortalEdictId;
   name: string;
@@ -2094,6 +2162,11 @@ export const useAscensionStore = defineStore("ascension", () => {
   const riftMeritAvailable = computed(() =>
     Math.max(0, riftSeasonScore.value - riftMeritSpent.value),
   );
+  const activeRiftAffix = computed(() => {
+    const dayIndex = Math.floor(Date.now() / 86_400_000);
+    const weeklyShift = Math.floor(dayIndex / 7);
+    return RIFT_AFFIXES[(dayIndex + weeklyShift) % RIFT_AFFIXES.length]!;
+  });
   const riftSeasonRank = computed(() =>
     riftSeasonScore.value >= 300
       ? "裂隙猎尊"
@@ -2702,6 +2775,7 @@ export const useAscensionStore = defineStore("ascension", () => {
       phaseName: rift.phaseNames[phase],
       weakness: rift.weakness,
       dungeonRank,
+      affix: activeRiftAffix.value,
     };
   };
   const rollRiftLoot = (id: ChaosRiftId, clears: number) => {
@@ -2731,6 +2805,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     const art =
       IMMORTAL_ARTS.find((a) => a.id === lastArtId.value) || IMMORTAL_ARTS[0]!;
     const weakHit = art.id === rift.weakness;
+    const affixHit = art.id === state.affix.favor;
     const qiCost = Math.max(
       8,
       (art.id === "purple_thunder_seal"
@@ -2739,7 +2814,9 @@ export const useAscensionStore = defineStore("ascension", () => {
           ? 18
           : art.id === "starfall_sword"
             ? 20
-            : 14) - (weakHit ? 3 : 0),
+            : 14) -
+        (weakHit ? 3 : 0) -
+        (affixHit ? 2 : 0),
     );
     if (immortalQi.value < qiCost) {
       lastBattleText.value = `仙力不足：施展${art.name}需要仙力${qiCost}。`;
@@ -2761,6 +2838,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     const critical =
       Math.random() * 100 < immortalCritRate.value + (weakHit ? 10 : 0);
     const weakBonus = weakHit ? 1.28 : 1;
+    const affixBonus = affixHit ? state.affix.damageRate : 1;
     const rawDamage = Math.max(
       45,
       Math.floor(
@@ -2772,13 +2850,14 @@ export const useAscensionStore = defineStore("ascension", () => {
           styleBonus +
           phaseBonus +
           Math.random() * 55) *
-          weakBonus,
+          weakBonus *
+          affixBonus,
       ) * (critical ? 1.65 : 1),
     );
     const fury = state.turns >= 4 ? Math.floor(rift.risk * 1.4) : 0;
     let shield = state.shield;
     let hp = state.hp;
-    let text = `${rift.icon} ${state.dungeonRank}·${rift.bossName}【${state.phaseName}】遭到${art.name}压制：造成 ${rawDamage} 仙伤${critical ? "（暴击）" : ""}${weakHit ? "，命中首领弱点" : ""}，仙力-${qiCost}。`;
+    let text = `${rift.icon} ${state.dungeonRank}·${rift.bossName}【${state.phaseName}】遭到${art.name}压制：造成 ${rawDamage} 仙伤${critical ? "（暴击）" : ""}${weakHit ? "，命中首领弱点" : ""}${affixHit ? `，顺应${state.affix.name}` : ""}，仙力-${qiCost}。`;
     if (shield > 0) {
       const broken = Math.min(shield, rawDamage);
       shield -= broken;
@@ -2805,10 +2884,18 @@ export const useAscensionStore = defineStore("ascension", () => {
         Math.floor(turns / 2) +
         Math.floor(oldClears / 3);
       const loot = rollRiftLoot(id, oldClears);
-      merit.value += rift.rewardMerit;
-      immortalJade.value += rift.rewardJade;
-      ruleFragments.value += rift.rewardRule;
-      immortalEssence.value += essenceGain;
+      const affixRewardRate = state.affix.rewardRate;
+      const meritGain = Math.floor(rift.rewardMerit * affixRewardRate);
+      const jadeGain = Math.floor(rift.rewardJade * affixRewardRate);
+      const ruleGain = Math.max(
+        1,
+        Math.floor(rift.rewardRule * affixRewardRate),
+      );
+      const boostedEssenceGain = Math.floor(essenceGain * affixRewardRate);
+      merit.value += meritGain;
+      immortalJade.value += jadeGain;
+      ruleFragments.value += ruleGain;
+      immortalEssence.value += boostedEssenceGain;
       pkStreak.value += id === "demon_gate" ? 1 : 0;
       riftClears.value[id] = oldClears + 1;
       const next = riftBossInfo(id);
@@ -2819,7 +2906,7 @@ export const useAscensionStore = defineStore("ascension", () => {
         immortalMaxQi.value,
         immortalQi.value + 18 + (weakHit ? 8 : 0),
       );
-      lastBattleText.value = `${text} ✦ 首领崩解！镇压成功，功德+${rift.rewardMerit}、仙玉+${rift.rewardJade}、法则+${rift.rewardRule}、仙器精魄+${essenceGain}${loot.length ? `，掉落${loot.join("、")}` : ""}，${relic.fragmentName}+${fragGain}。下一轮裂隙层数加深，可在首领遗珍中炼化遗物。`;
+      lastBattleText.value = `${text} ✦ 首领崩解！${state.affix.icon}${state.affix.name}结算，功德+${meritGain}、仙玉+${jadeGain}、法则+${ruleGain}、仙器精魄+${boostedEssenceGain}${loot.length ? `，掉落${loot.join("、")}` : ""}，${relic.fragmentName}+${fragGain}。下一轮裂隙层数加深，可在首领遗珍中炼化遗物。`;
       addLog(lastBattleText.value);
       return true;
     }
@@ -2842,7 +2929,9 @@ export const useAscensionStore = defineStore("ascension", () => {
       ruleFragments.value,
       Math.max(
         0,
-        Math.floor((rift.risk + fury + state.phase * 6) / 18) - relicGuard,
+        Math.floor(
+          (rift.risk + state.affix.riskDelta + fury + state.phase * 6) / 18,
+        ) - relicGuard,
       ),
     );
     if (backlash) ruleFragments.value -= backlash;
@@ -3506,6 +3595,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     RIFT_HUNTS,
     RIFT_SEASON_REWARDS,
     RIFT_MERIT_SHOP,
+    RIFT_AFFIXES,
     FATE_PLATES,
     IMMORTAL_STORY_CHAPTERS,
     ascended,
@@ -3597,6 +3687,7 @@ export const useAscensionStore = defineStore("ascension", () => {
     riftHunts,
     riftSeasonScore,
     riftSeasonRank,
+    activeRiftAffix,
     riftMeritAvailable,
     riftMeritShop,
     riftBossInfo,

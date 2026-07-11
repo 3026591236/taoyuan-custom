@@ -517,6 +517,45 @@
           >镇压次数 +{{ ascensionStore.riftScore }}</span
         >
       </div>
+      <div class="hunt-panel affix-panel">
+        <div class="relic-head">
+          <div>
+            <p class="text-xs text-accent">裂隙轮值词缀</p>
+            <span
+              >每日/每周混沌波动改变首领战环境，顺应用指定仙术可获得伤害与奖励加成</span
+            >
+          </div>
+          <b
+            >{{ ascensionStore.activeRiftAffix.icon }}
+            {{ ascensionStore.activeRiftAffix.name }}</b
+          >
+        </div>
+        <div class="affix-current">
+          <span>{{ ascensionStore.activeRiftAffix.desc }}</span>
+          <span
+            >推荐仙术：{{
+              IMMORTAL_ARTS.find(
+                (a) => a.id === ascensionStore.activeRiftAffix.favor,
+              )?.name
+            }}</span
+          >
+          <span
+            >奖励倍率 ×{{ ascensionStore.activeRiftAffix.rewardRate }}｜反噬修正
+            {{ ascensionStore.activeRiftAffix.riskDelta >= 0 ? "+" : ""
+            }}{{ ascensionStore.activeRiftAffix.riskDelta }}</span
+          >
+        </div>
+        <div class="affix-list">
+          <span
+            v-for="affix in RIFT_AFFIXES"
+            :key="affix.id"
+            :class="
+              affix.id === ascensionStore.activeRiftAffix.id ? 'active' : ''
+            "
+            >{{ affix.icon }} {{ affix.name }}</span
+          >
+        </div>
+      </div>
       <div class="grid grid-cols-2 gap-2">
         <button
           v-for="rift in CHAOS_RIFTS"
@@ -552,6 +591,8 @@
               >弱点：{{
                 IMMORTAL_ARTS.find((a) => a.id === rift.weakness)?.name
               }}</span
+            ><span
+              >词缀：{{ ascensionStore.riftBossInfo(rift.id).affix.name }}</span
             >
           </div>
           <div class="boss-bars">
@@ -1331,6 +1372,7 @@ import {
   RIFT_BOSS_RELICS,
   RIFT_HUNTS,
   RIFT_SEASON_REWARDS,
+  RIFT_AFFIXES,
   FATE_PLATES,
   IMMORTAL_STORY_CHAPTERS,
 } from "@/stores/useAscensionStore";
@@ -4003,3 +4045,10 @@ em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90
 0 14px rgba(105,232,162,.16)}
 .merit-shop-panel{border-color:rgba(126,225,255,.28);background:linear-gradient(135deg,rgba(126,225,255,.08),rgba(167,139,250,.05))}.merit-shop-card{min-height:112px}.merit-shop-card.ready{border-color:rgba(126,225,255,.72);box-shadow:0
 0 14px rgba(126,225,255,.16)}
+.affix-panel{border-color:rgba(167,139,250,.32);background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(126,225,255,.05))}.affix-current{display:grid;gap:.25rem;padding:.55rem
+.7rem;border:1px solid
+rgba(255,255,255,.1);border-radius:.75rem;background:rgba(0,0,0,.18);font-size:.68rem;color:var(--muted)}.affix-list{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}.affix-list
+span{padding:.22rem .48rem;border:1px solid
+rgba(255,255,255,.1);border-radius:999px;font-size:.62rem;color:var(--muted)}.affix-list
+span.active{border-color:rgba(167,139,250,.75);color:var(--accent);box-shadow:0
+0 12px rgba(167,139,250,.18)}
