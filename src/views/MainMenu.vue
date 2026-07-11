@@ -695,10 +695,9 @@
   }
   const continueCharacter = async (character: any) => {
     if (!character) return
-    await loadAccountSaves()
-    const save = accountSaves.value.find(s => s.characterId === character.id || Number(s.slot) === Number(character.slot))
-    if (save) await downloadCloudSaveToLocal(save.slot)
-    else showFloat('角色存在，但还没有存档数据。请联系管理员。', 'danger')
+    // 角色列表和存档摘要可能因网络请求先后不同步；继续游戏应以服务端 slot 实际存档为准。
+    // downloadCloudSaveToLocal 会在账号校验后直接读取云端，避免已有存档被前端摘要误判为不存在。
+    await downloadCloudSaveToLocal(Number(character.slot))
   }
   const downloadCloudSaveToLocal = async (slot: number) => {
     showAnnouncement.value = false
