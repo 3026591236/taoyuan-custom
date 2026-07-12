@@ -56,7 +56,20 @@
         <div class="realm-particles" aria-hidden="true">
           <span v-for="i in 12" :key="i"></span>
         </div>
+        <div class="immortal-lotus-array" aria-hidden="true"></div>
+        <div
+          class="immortal-ribbon-flow ribbon-flow-a"
+          aria-hidden="true"
+        ></div>
+        <div
+          class="immortal-ribbon-flow ribbon-flow-b"
+          aria-hidden="true"
+        ></div>
+        <div class="immortal-star-rain" aria-hidden="true">
+          <span v-for="i in 18" :key="`rain-${i}`"></span>
+        </div>
         <div class="realm-foreground-aura" aria-hidden="true"></div>
+        <div class="immortal-gilded-frame" aria-hidden="true"></div>
         <div class="realm-sigil">{{ realmVisual.sigil }}</div>
         <div class="immortal-artwork-motion" aria-hidden="true">
           <img
@@ -5425,6 +5438,367 @@ const returnToWorld = () => {
   .immortal-artwork-motion::before,
   .immortal-artwork-motion .immortal-artwork,
   .immortal-artwork-motion::after {
+    animation: none;
+  }
+}
+
+/* V3.0.0 仙界大厅豪华花哨特效：金紫青法环、莲花阵、星河雨、飘带流光 */
+.hero-avatar.immortal-portrait-stage {
+  border-color: rgba(255, 233, 153, 0.82);
+  background:
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(255, 244, 179, 0.38),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 28% 72%,
+      rgba(183, 109, 255, 0.24),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 74% 66%,
+      rgba(76, 220, 255, 0.22),
+      transparent 36%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(7, 10, 36, 0.98),
+      rgba(40, 18, 86, 0.86) 52%,
+      rgba(8, 31, 63, 0.95)
+    );
+  box-shadow:
+    0 0 0 1px rgba(255, 246, 188, 0.28),
+    0 0 34px rgba(255, 216, 115, 0.34),
+    0 0 66px rgba(157, 92, 255, 0.22),
+    0 22px 46px rgba(0, 0, 0, 0.46),
+    inset 0 0 42px rgba(137, 231, 255, 0.2);
+}
+.hero-avatar.immortal-portrait-stage::before,
+.hero-avatar.immortal-portrait-stage::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 30px;
+  inset: -3px;
+}
+.hero-avatar.immortal-portrait-stage::before {
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 232, 138, 0.1),
+    rgba(92, 224, 255, 0.62),
+    rgba(197, 113, 255, 0.45),
+    rgba(255, 226, 138, 0.72),
+    rgba(92, 224, 255, 0.42),
+    rgba(255, 232, 138, 0.1)
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 2px;
+  animation: immortalFrameSpin 8s linear infinite;
+  opacity: 0.9;
+}
+.hero-avatar.immortal-portrait-stage::after {
+  inset: 8px;
+  border: 1px solid rgba(255, 245, 190, 0.28);
+  box-shadow:
+    inset 0 0 32px rgba(255, 235, 157, 0.18),
+    inset 0 0 60px rgba(100, 225, 255, 0.12);
+  animation: immortalFramePulse 3.6s ease-in-out infinite;
+}
+.immortal-gate.gate-back {
+  z-index: 4;
+  border-width: 2px;
+  border-color: rgba(255, 229, 144, 0.52);
+  background: radial-gradient(
+    circle,
+    rgba(255, 226, 138, 0.22),
+    rgba(132, 92, 255, 0.12) 48%,
+    transparent 70%
+  );
+  box-shadow:
+    0 0 36px rgba(255, 222, 128, 0.35),
+    inset 0 0 28px rgba(120, 225, 255, 0.18);
+  animation:
+    celestialSpin 18s linear infinite,
+    immortalGatePulse 4.2s ease-in-out infinite;
+}
+.immortal-gate.gate-front {
+  z-index: 9;
+  border-width: 2px;
+  border-color: rgba(117, 234, 255, 0.72);
+  box-shadow: 0 0 24px rgba(82, 221, 255, 0.48);
+  animation: celestialSpin 9s linear infinite reverse;
+}
+.portrait-orbit {
+  z-index: 10;
+  border-color: rgba(255, 245, 190, 0.44);
+  box-shadow:
+    0 0 18px rgba(255, 226, 138, 0.24),
+    inset 0 0 18px rgba(113, 225, 255, 0.12);
+}
+.immortal-lotus-array {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  bottom: 28px;
+  width: 78%;
+  height: 122px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 50% 78%,
+      rgba(255, 236, 164, 0.5),
+      transparent 54%
+    ),
+    repeating-conic-gradient(
+      from 18deg,
+      rgba(255, 224, 134, 0.42) 0 9deg,
+      transparent 9deg 18deg
+    ),
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(113, 230, 255, 0.22),
+      transparent 68%
+    );
+  border-radius: 50%;
+  filter: blur(0.2px) drop-shadow(0 0 18px rgba(255, 226, 138, 0.34));
+  mix-blend-mode: screen;
+  opacity: 0.78;
+  animation: immortalLotusBloom 4.8s ease-in-out infinite;
+}
+.immortal-ribbon-flow {
+  position: absolute;
+  z-index: 14;
+  left: 8%;
+  top: 18%;
+  width: 84%;
+  height: 58%;
+  pointer-events: none;
+  border-radius: 48%;
+  mix-blend-mode: screen;
+  opacity: 0.72;
+  filter: blur(0.3px) drop-shadow(0 0 10px rgba(255, 232, 150, 0.42));
+}
+.ribbon-flow-a {
+  border-top: 2px solid rgba(255, 231, 142, 0.76);
+  border-bottom: 1px solid rgba(99, 231, 255, 0.42);
+  transform: rotate(-18deg);
+  animation: immortalRibbonDriftA 5.2s ease-in-out infinite;
+}
+.ribbon-flow-b {
+  border-top: 1px solid rgba(202, 126, 255, 0.58);
+  border-bottom: 2px solid rgba(255, 245, 188, 0.52);
+  transform: rotate(22deg);
+  animation: immortalRibbonDriftB 6s ease-in-out infinite;
+}
+.immortal-star-rain {
+  position: absolute;
+  z-index: 13;
+  inset: -18px 2px 0;
+  overflow: hidden;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.immortal-star-rain span {
+  position: absolute;
+  left: calc((var(--i, 1) * 37px) % 100%);
+  top: -18px;
+  width: 4px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 248, 196, 0.95),
+    rgba(116, 230, 255, 0.16),
+    transparent
+  );
+  box-shadow: 0 0 12px rgba(255, 231, 142, 0.58);
+  opacity: 0.8;
+  transform: rotate(18deg);
+  animation: immortalStarFall 2.8s linear infinite;
+  animation-delay: calc(var(--i, 1) * -0.17s);
+}
+.immortal-star-rain span:nth-child(1) {
+  --i: 1;
+}
+.immortal-star-rain span:nth-child(2) {
+  --i: 2;
+}
+.immortal-star-rain span:nth-child(3) {
+  --i: 3;
+}
+.immortal-star-rain span:nth-child(4) {
+  --i: 4;
+}
+.immortal-star-rain span:nth-child(5) {
+  --i: 5;
+}
+.immortal-star-rain span:nth-child(6) {
+  --i: 6;
+}
+.immortal-star-rain span:nth-child(7) {
+  --i: 7;
+}
+.immortal-star-rain span:nth-child(8) {
+  --i: 8;
+}
+.immortal-star-rain span:nth-child(9) {
+  --i: 9;
+}
+.immortal-star-rain span:nth-child(10) {
+  --i: 10;
+}
+.immortal-star-rain span:nth-child(11) {
+  --i: 11;
+}
+.immortal-star-rain span:nth-child(12) {
+  --i: 12;
+}
+.immortal-star-rain span:nth-child(13) {
+  --i: 13;
+}
+.immortal-star-rain span:nth-child(14) {
+  --i: 14;
+}
+.immortal-star-rain span:nth-child(15) {
+  --i: 15;
+}
+.immortal-star-rain span:nth-child(16) {
+  --i: 16;
+}
+.immortal-star-rain span:nth-child(17) {
+  --i: 17;
+}
+.immortal-star-rain span:nth-child(18) {
+  --i: 18;
+}
+.realm-foreground-aura {
+  background:
+    radial-gradient(
+      ellipse at 50% 12%,
+      rgba(255, 245, 188, 0.28),
+      transparent 36%
+    ),
+    radial-gradient(
+      ellipse at 50% 70%,
+      rgba(99, 232, 255, 0.26),
+      transparent 54%
+    ),
+    conic-gradient(
+      from 80deg,
+      transparent,
+      rgba(255, 226, 138, 0.24),
+      rgba(161, 92, 255, 0.18),
+      transparent 62%
+    );
+  box-shadow:
+    inset 0 0 52px rgba(255, 231, 142, 0.12),
+    0 0 42px rgba(102, 225, 255, 0.18);
+  animation: immortalAuraLuxury 4.4s ease-in-out infinite;
+}
+.immortal-artwork-motion::after {
+  background: linear-gradient(
+    110deg,
+    transparent 8%,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(255, 247, 196, 0.72) 45%,
+    rgba(112, 229, 255, 0.34) 54%,
+    rgba(205, 128, 255, 0.2) 61%,
+    transparent 72%
+  );
+  animation: immortalLightSweep 2.9s ease-in-out infinite;
+}
+@keyframes immortalFrameSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes immortalFramePulse {
+  50% {
+    opacity: 0.58;
+    box-shadow:
+      inset 0 0 42px rgba(255, 235, 157, 0.26),
+      inset 0 0 76px rgba(100, 225, 255, 0.18);
+  }
+}
+@keyframes immortalGatePulse {
+  50% {
+    filter: brightness(1.35) saturate(1.25);
+    transform: scale(1.035);
+  }
+}
+@keyframes immortalLotusBloom {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(0.9);
+    opacity: 0.48;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.16);
+    opacity: 0.9;
+  }
+}
+@keyframes immortalRibbonDriftA {
+  0%,
+  100% {
+    transform: translate3d(-8px, 0, 0) rotate(-18deg) scale(0.98);
+    opacity: 0.52;
+  }
+  50% {
+    transform: translate3d(12px, -18px, 0) rotate(-11deg) scale(1.05);
+    opacity: 0.92;
+  }
+}
+@keyframes immortalRibbonDriftB {
+  0%,
+  100% {
+    transform: translate3d(10px, 4px, 0) rotate(22deg) scale(0.96);
+    opacity: 0.46;
+  }
+  50% {
+    transform: translate3d(-12px, -14px, 0) rotate(15deg) scale(1.08);
+    opacity: 0.86;
+  }
+}
+@keyframes immortalStarFall {
+  0% {
+    transform: translate3d(0, -28px, 0) rotate(18deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(-42px, 580px, 0) rotate(18deg);
+    opacity: 0;
+  }
+}
+@keyframes immortalAuraLuxury {
+  0%,
+  100% {
+    opacity: 0.58;
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  50% {
+    opacity: 0.96;
+    filter: hue-rotate(18deg) brightness(1.22);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .immortal-lotus-array,
+  .immortal-ribbon-flow,
+  .immortal-star-rain span,
+  .hero-avatar.immortal-portrait-stage::before,
+  .hero-avatar.immortal-portrait-stage::after {
     animation: none;
   }
 }
