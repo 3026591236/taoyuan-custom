@@ -2196,6 +2196,51 @@ const returnToWorld = () => {
     filter: blur(0);
   }
 }
+
+.immortal-artwork-motion::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 6% 16% 4%;
+  border-radius: 44% 44% 28% 28%;
+  background: linear-gradient(
+    115deg,
+    transparent 10%,
+    rgba(255, 255, 255, 0) 38%,
+    rgba(255, 246, 190, 0.48) 47%,
+    rgba(126, 232, 255, 0.24) 53%,
+    transparent 66%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translateX(-42%) skewX(-8deg);
+  animation: immortalLightSweep 3.6s ease-in-out infinite;
+}
+@keyframes immortalLightSweep {
+  0%,
+  18%,
+  100% {
+    opacity: 0;
+    transform: translateX(-46%) skewX(-8deg);
+  }
+  42% {
+    opacity: 0.86;
+  }
+  68% {
+    opacity: 0;
+    transform: translateX(46%) skewX(-8deg);
+  }
+}
+@media (max-width: 420px) {
+  .immortal-artwork-motion .immortal-artwork {
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: 100%;
+    height: 100%;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .immortal-celestial-page::before,
   .celestial-orbit-ring,
@@ -5199,50 +5244,196 @@ const returnToWorld = () => {
     line-height: 1.6;
   }
 }
-</style>
 
-.hunt-card.done{opacity:.62;border-color:rgba(105,232,162,.38)}.hunt-card.ready{border-color:rgba(255,226,138,.72);box-shadow:0
-0 14px rgba(255,226,138,.16)}.hunt-card
-i{display:block;width:100%;height:5px;border-radius:999px;background:rgba(0,0,0,.42);overflow:hidden}.hunt-card
-i
-em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#69e8a2,#ffe28a)}
-.season-rift-panel{border-color:rgba(105,232,162,.26);background:linear-gradient(135deg,rgba(105,232,162,.08),rgba(255,226,138,.05))}.season-reward-card{min-height:118px}.season-reward-card.ready{border-color:rgba(105,232,162,.72);box-shadow:0
-0 14px rgba(105,232,162,.16)}
-.merit-shop-panel{border-color:rgba(126,225,255,.28);background:linear-gradient(135deg,rgba(126,225,255,.08),rgba(167,139,250,.05))}.merit-shop-card{min-height:112px}.merit-shop-card.ready{border-color:rgba(126,225,255,.72);box-shadow:0
-0 14px rgba(126,225,255,.16)}
-.affix-panel{border-color:rgba(167,139,250,.32);background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(126,225,255,.05))}.affix-current{display:grid;gap:.25rem;padding:.55rem
-.7rem;border:1px solid
-rgba(255,255,255,.1);border-radius:.75rem;background:rgba(0,0,0,.18);font-size:.68rem;color:var(--muted)}.affix-list{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}.affix-list
-span{padding:.22rem .48rem;border:1px solid
-rgba(255,255,255,.1);border-radius:999px;font-size:.62rem;color:var(--muted)}.affix-list
-span.active{border-color:rgba(167,139,250,.75);color:var(--accent);box-shadow:0
-0 12px rgba(167,139,250,.18)} /* V2.9.8
+/* V2.9.8 修复：把误写到 style 外的样式移回 style 内 */
+.hunt-card.done {
+  opacity: 0.62;
+  border-color: rgba(105, 232, 162, 0.38);
+}
+.hunt-card.ready {
+  border-color: rgba(255, 226, 138, 0.72);
+  box-shadow: 0 0 14px rgba(255, 226, 138, 0.16);
+}
+.hunt-card i {
+  display: block;
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  overflow: hidden;
+}
+.hunt-card i em {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #69e8a2, #ffe28a);
+}
+.season-rift-panel {
+  border-color: rgba(105, 232, 162, 0.26);
+  background: linear-gradient(
+    135deg,
+    rgba(105, 232, 162, 0.08),
+    rgba(255, 226, 138, 0.05)
+  );
+}
+.season-reward-card {
+  min-height: 118px;
+}
+.season-reward-card.ready {
+  border-color: rgba(105, 232, 162, 0.72);
+  box-shadow: 0 0 14px rgba(105, 232, 162, 0.16);
+}
+.merit-shop-panel {
+  border-color: rgba(126, 225, 255, 0.28);
+  background: linear-gradient(
+    135deg,
+    rgba(126, 225, 255, 0.08),
+    rgba(167, 139, 250, 0.05)
+  );
+}
+.merit-shop-card {
+  min-height: 112px;
+}
+.merit-shop-card.ready {
+  border-color: rgba(126, 225, 255, 0.72);
+  box-shadow: 0 0 14px rgba(126, 225, 255, 0.16);
+}
+.affix-panel {
+  border-color: rgba(167, 139, 250, 0.32);
+  background: linear-gradient(
+    135deg,
+    rgba(167, 139, 250, 0.1),
+    rgba(126, 225, 255, 0.05)
+  );
+}
+.affix-current {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.affix-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.affix-list span {
+  padding: 0.22rem 0.48rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+.affix-list span.active {
+  border-color: rgba(167, 139, 250, 0.75);
+  color: var(--accent);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.18);
+} /* V2.9.8
 动态仙身：立绘独立悬浮，光效与舞台不参与裁切 */
-.hero-avatar.immortal-portrait-stage { isolation: isolate; }
-.immortal-artwork-motion { position: absolute; z-index: 7; inset: -30px -16px
--12px; display: flex; align-items: flex-end; justify-content: center;
-pointer-events: none; transform-origin: 50% 84%; animation:
-immortalPortraitFloat 5.8s ease-in-out infinite; will-change: transform, filter;
-} .immortal-artwork-motion::before { content: ""; position: absolute; z-index:
--1; left: 50%; bottom: 7%; width: 68%; height: 34%; border-radius: 50%;
-transform: translateX(-50%) scale(0.9); background: radial-gradient(ellipse,
-rgba(161, 231, 255, 0.34), rgba(255, 223, 130, 0.16) 35%, transparent 72%);
-filter: blur(9px); opacity: 0.72; animation: immortalAuraPulse 5.8s ease-in-out
-infinite; } .immortal-artwork-motion .immortal-artwork { position: relative;
-inset: auto; display: block; width: 100%; height: 100%; max-width: none;
-max-height: none; object-fit: contain; object-position: center bottom;
-border-radius: 0; animation: immortalRobeBreath 5.8s ease-in-out infinite;
-will-change: transform, filter; } @keyframes immortalPortraitFloat { 0%, 100% {
-transform: translate3d(0, 0, 0) rotate(-0.25deg); filter: drop-shadow(0 16px
-20px rgba(0, 0, 0, 0.28)); } 25% { transform: translate3d(-3px, -9px, 0)
-rotate(0.45deg); } 50% { transform: translate3d(1px, -15px, 0) rotate(-0.1deg);
-filter: drop-shadow(0 24px 26px rgba(72, 196, 255, 0.26)); } 75% { transform:
-translate3d(4px, -7px, 0) rotate(-0.48deg); } } @keyframes immortalRobeBreath {
-0%, 100% { transform: scale(0.992); filter: saturate(1.08) brightness(1); } 50%
-{ transform: scale(1.018); filter: saturate(1.18) brightness(1.08); } }
-@keyframes immortalAuraPulse { 0%, 100% { transform: translateX(-50%)
-scale(0.86); opacity: 0.48; } 50% { transform: translateX(-50%) scale(1.16);
-opacity: 0.98; } } @media (max-width: 700px) { .immortal-artwork-motion { inset:
--20px -12px -8px; } } @media (prefers-reduced-motion: reduce) {
-.immortal-artwork-motion, .immortal-artwork-motion::before,
-.immortal-artwork-motion .immortal-artwork { animation: none; } }
+.hero-avatar.immortal-portrait-stage {
+  isolation: isolate;
+}
+.immortal-artwork-motion {
+  position: absolute;
+  z-index: 7;
+  inset: -42px -24px -18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  transform-origin: 50% 84%;
+  animation: immortalPortraitFloat 3.6s ease-in-out infinite;
+  will-change: transform, filter;
+}
+.immortal-artwork-motion::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  bottom: 7%;
+  width: 68%;
+  height: 34%;
+  border-radius: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background: radial-gradient(
+    ellipse,
+    rgba(161, 231, 255, 0.34),
+    rgba(255, 223, 130, 0.16) 35%,
+    transparent 72%
+  );
+  filter: blur(9px);
+  opacity: 0.72;
+  animation: immortalAuraPulse 3.6s ease-in-out infinite;
+}
+.immortal-artwork-motion .immortal-artwork {
+  position: relative;
+  inset: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: center bottom;
+  border-radius: 0;
+  animation: immortalRobeBreath 3.6s ease-in-out infinite;
+  will-change: transform, filter;
+}
+@keyframes immortalPortraitFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.25deg);
+    filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.28));
+  }
+  25% {
+    transform: translate3d(-12px, -22px, 0) rotate(0.45deg);
+  }
+  50% {
+    transform: translate3d(5px, -34px, 0) rotate(-0.1deg);
+    filter: drop-shadow(0 24px 26px rgba(72, 196, 255, 0.26));
+  }
+  75% {
+    transform: translate3d(14px, -18px, 0) rotate(-0.48deg);
+  }
+}
+@keyframes immortalRobeBreath {
+  0%,
+  100% {
+    transform: scale(0.965);
+    filter: saturate(1.08) brightness(1);
+  }
+  50% {
+    transform: scale(1.055);
+    filter: saturate(1.18) brightness(1.08);
+  }
+}
+@keyframes immortalAuraPulse {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(0.86);
+    opacity: 0.58;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.16);
+    opacity: 1;
+  }
+}
+@media (max-width: 700px) {
+  .immortal-artwork-motion {
+    inset: -20px -12px -8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .immortal-artwork-motion,
+  .immortal-artwork-motion::before,
+  .immortal-artwork-motion .immortal-artwork,
+  .immortal-artwork-motion::after {
+    animation: none;
+  }
+}
+</style>
