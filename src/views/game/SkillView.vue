@@ -2,13 +2,13 @@
   <div>
     <h3 class="text-accent text-sm mb-3">
       <Star :size="14" class="inline" />
-      技能
+      百艺
     </h3>
     <div class="border border-accent/20 rounded-xs p-3 mb-3 bg-accent/5">
       <div class="flex items-center justify-between mb-2">
         <p class="text-xs text-accent">生活职业委托</p>
         <span class="text-[10px] text-muted"
-          >每日一次 · 消耗产物换技能经验</span
+          >每日一次 · 消耗产物换百艺经验</span
         >
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -41,7 +41,7 @@
 
     <div class="border border-water/20 rounded-xs p-3 mb-3 bg-water/5">
       <div class="flex items-center justify-between mb-2">
-        <p class="text-xs text-water">生活技能大师委托</p>
+        <p class="text-xs text-water">生活百艺大师委托</p>
         <span class="text-[10px] text-muted">Lv7+解锁 · 消耗高阶材料</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -190,31 +190,31 @@ const SKILL_ICONS: Record<SkillType, Component> = {
 };
 
 const SKILL_NAMES: Record<SkillType, string> = {
-  farming: "农耕",
+  farming: "灵耕",
   foraging: "采集",
-  fishing: "钓鱼",
-  mining: "挖矿",
+  fishing: "垂钓",
+  mining: "采玄矿",
   combat: "战斗",
 };
 
 const SKILL_DESCS: Record<SkillType, string> = {
-  farming: "种植作物、收获农产品。等级越高，作物品质越好。",
+  farming: "种植灵植、收获农产品。等级越高，灵植品质越好。",
   foraging: "采集野外资源、伐木。等级越高，采集品质越好。",
-  fishing: "在各水域钓鱼。等级越高，钓鱼成功率越高。",
-  mining: "在矿洞中采矿和战斗。等级越高，矿石产出越多。",
-  combat: "与矿洞中的怪物战斗。等级越高，生命值上限越高。",
+  fishing: "在各水域垂钓。等级越高，垂钓成功率越高。",
+  mining: "在玄矿幽脉中采玄矿和战斗。等级越高，矿石产出越多。",
+  combat: "与玄矿幽脉中的怪物战斗。等级越高，生命值上限越高。",
 };
 
 const SKILL_LEVEL_BONUS: Record<SkillType, string> = {
-  farming: "作物品质概率提升",
+  farming: "灵植品质概率提升",
   foraging: "采集品质概率提升",
-  fishing: "钓鱼成功率提升",
+  fishing: "垂钓成功率提升",
   mining: "矿石产出提升",
   combat: "生命值上限+5",
 };
 
 const PERK_DESCS: Record<SkillPerk5 | SkillPerk10, string> = {
-  harvester: "作物售价+10%",
+  harvester: "灵植售价+10%",
   rancher: "畜产品售价+20%",
   lumberjack: "采集时25%概率额外获得木材",
   herbalist: "采集物发现概率+20%",
@@ -259,7 +259,7 @@ const PERK_NAMES: Record<SkillPerk5 | SkillPerk10, string> = {
   defender: "守护者",
   intensive: "精耕",
   artisan: "匠人",
-  coopmaster: "牧场主",
+  coopmaster: "灵牧苑主",
   shepherd: "牧羊人",
   botanist: "植物学家",
   alchemist: "炼金师",

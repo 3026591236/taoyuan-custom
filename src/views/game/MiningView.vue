@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-accent text-sm">
         <Mountain :size="14" class="inline" />
-        {{ miningStore.isInSkullCavern ? "骷髅矿穴" : "云隐矿洞" }}
+        {{ miningStore.isInSkullCavern ? "幽骨矿窟" : "云隐玄矿幽脉" }}
       </h3>
       <Button class="py-0 px-1" :icon="Map" @click="showMapModal = true" />
     </div>
@@ -11,7 +11,7 @@
       {{ tutorialHint }}
     </p>
 
-    <!-- 骷髅矿穴 -->
+    <!-- 幽骨矿窟 -->
     <div
       v-if="miningStore.isSkullCavernUnlocked()"
       class="border border-accent/20 rounded-xs p-3 mb-4"
@@ -19,7 +19,7 @@
       <div class="flex items-center justify-between mb-1">
         <p class="text-sm text-danger">
           <Skull :size="14" class="inline" />
-          骷髅矿穴
+          幽骨矿窟
         </p>
         <span
           v-if="miningStore.skullCavernBestFloor > 0"
@@ -106,7 +106,7 @@
       </div>
     </div>
 
-    <!-- 进入矿洞 -->
+    <!-- 进入玄矿幽脉 -->
     <div
       class="border border-accent/20 rounded-xs px-3 py-2 mb-4 flex items-center justify-between cursor-pointer hover:bg-accent/5"
       @click="
@@ -143,7 +143,7 @@
       </div>
     </div>
 
-    <!-- 矿洞地图弹窗 -->
+    <!-- 玄矿幽脉地图弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showMapModal"
@@ -154,7 +154,7 @@
           <div class="flex items-center justify-between mb-2">
             <p class="text-sm text-accent">
               <Map :size="14" class="inline" />
-              矿洞地图
+              玄矿幽脉地图
             </p>
             <Button
               class="py-0 px-1"
@@ -248,12 +248,12 @@
             }}
           </p>
 
-          <!-- 进入矿洞（前线） -->
+          <!-- 进入玄矿幽脉（前线） -->
           <div
             class="flex items-center justify-between border border-accent/30 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5 mb-2"
             @click="handleEnterMine(undefined)"
           >
-            <span class="text-xs text-accent">进入矿洞</span>
+            <span class="text-xs text-accent">进入玄矿幽脉</span>
             <span class="text-xs text-muted"
               >第{{ miningStore.safePointFloor + 1 }}层</span
             >
@@ -283,7 +283,7 @@
             </div>
           </div>
 
-          <!-- 骷髅矿穴 -->
+          <!-- 幽骨矿窟 -->
           <div v-if="miningStore.isSkullCavernUnlocked()">
             <div
               class="flex items-center justify-between border border-danger/30 rounded-xs px-3 py-1.5 mb-2 cursor-pointer hover:bg-danger/5"
@@ -291,13 +291,13 @@
             >
               <span class="text-xs text-danger">
                 <Skull :size="12" class="inline" />
-                进入骷髅矿穴
+                进入幽骨矿窟
               </span>
               <span class="text-xs text-muted"
                 >第{{ miningStore.skullSafePointFloor + 1 }}层</span
               >
             </div>
-            <!-- 骷髅矿穴安全点楼层 -->
+            <!-- 幽骨矿窟安全点楼层 -->
             <div
               v-if="skullElevatorFloors.length > 0"
               class="max-h-48 overflow-y-auto grid-cols-5 grid m"
@@ -316,7 +316,7 @@
       </div>
     </Transition>
 
-    <!-- 矿洞探索弹窗 -->
+    <!-- 玄矿幽脉探索弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="miningStore.isExploring && !miningStore.inCombat"
@@ -488,7 +488,9 @@
             >
               <span class="text-xs text-danger">
                 <LogOut :size="12" class="inline" />
-                {{ miningStore.isInSkullCavern ? "离开骷髅矿穴" : "离开矿洞" }}
+                {{
+                  miningStore.isInSkullCavern ? "离开幽骨矿窟" : "离开玄矿幽脉"
+                }}
               </span>
             </div>
           </div>
@@ -846,7 +848,7 @@
       </div>
     </Transition>
 
-    <!-- 离开矿洞确认弹窗 -->
+    <!-- 离开玄矿幽脉确认弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showLeaveConfirm"
@@ -857,7 +859,7 @@
           <p class="text-sm text-accent mb-2">确认离开</p>
           <p class="text-xs text-muted mb-3">
             确定要离开{{
-              miningStore.isInSkullCavern ? "骷髅矿穴" : "矿洞"
+              miningStore.isInSkullCavern ? "幽骨矿窟" : "玄矿幽脉"
             }}吗？{{ leaveHint }}
           </p>
           <div class="flex space-x-1.5">
@@ -937,7 +939,7 @@
             <BookMarked :size="24" class="text-muted/30" />
             <p class="text-xs text-muted mt-1">暂无方案</p>
             <p class="text-[10px] text-muted/60 mt-0.5">
-              前往背包装备页创建方案
+              前往纳戒装备页创建方案
             </p>
           </div>
         </div>
@@ -967,9 +969,7 @@
                   ? 'cursor-pointer hover:bg-accent/5'
                   : ''
               "
-              @click="
-                viewPresetEquip('weapon', detailPreset?.weaponDefId)
-              "
+              @click="viewPresetEquip('weapon', detailPreset?.weaponDefId)"
             >
               <span class="text-xs text-muted">武器</span>
               <span
@@ -992,9 +992,7 @@
                   ? 'cursor-pointer hover:bg-accent/5'
                   : ''
               "
-              @click="
-                viewPresetEquip('ring', detailPreset?.ringSlot1DefId)
-              "
+              @click="viewPresetEquip('ring', detailPreset?.ringSlot1DefId)"
             >
               <span class="text-xs text-muted">戒指1</span>
               <span
@@ -1017,9 +1015,7 @@
                   ? 'cursor-pointer hover:bg-accent/5'
                   : ''
               "
-              @click="
-                viewPresetEquip('ring', detailPreset?.ringSlot2DefId)
-              "
+              @click="viewPresetEquip('ring', detailPreset?.ringSlot2DefId)"
             >
               <span class="text-xs text-muted">戒指2</span>
               <span
@@ -1040,9 +1036,7 @@
               :class="
                 detailPreset.hatDefId ? 'cursor-pointer hover:bg-accent/5' : ''
               "
-              @click="
-                viewPresetEquip('hat', detailPreset?.hatDefId)
-              "
+              @click="viewPresetEquip('hat', detailPreset?.hatDefId)"
             >
               <span class="text-xs text-muted">帽子</span>
               <span
@@ -1061,9 +1055,7 @@
               :class="
                 detailPreset.shoeDefId ? 'cursor-pointer hover:bg-accent/5' : ''
               "
-              @click="
-                viewPresetEquip('shoe', detailPreset?.shoeDefId)
-              "
+              @click="viewPresetEquip('shoe', detailPreset?.shoeDefId)"
             >
               <span class="text-xs text-muted">鞋子</span>
               <span
@@ -1190,7 +1182,7 @@ const { startBattleBgm, resumeNormalBgm } = useAudio();
 const tutorialHint = computed(() => {
   if (!tutorialStore.enabled || gameStore.year > 1) return null;
   if (achievementStore.stats.highestMineFloor === 0)
-    return "矿洞是6x6的网格，点击格子探索。遇到矿石可以开采，遇到怪物需要战斗。找到楼梯可下一层。";
+    return "玄矿幽脉是6x6的网格，点击格子探索。遇到矿石可以开采，遇到怪物需要战斗。找到楼梯可下一层。";
   return null;
 });
 
@@ -1236,7 +1228,7 @@ const onUseQtyInput = (e: Event) => {
   pendingUseQty.value = Math.max(1, Math.min(max, val));
 };
 
-/** 离开矿洞确认 */
+/** 离开玄矿幽脉确认 */
 const showLeaveConfirm = ref(false);
 
 // 战斗动画状态
@@ -1313,12 +1305,12 @@ const availableCombatItems = computed(() => {
   const items: { itemId: string; name: string; desc: string; count: number }[] =
     [];
 
-  // 公会徽章
+  // 仙盟徽章
   const badgeCount = inventoryStore.getItemCount("guild_badge");
   if (badgeCount > 0) {
     items.push({
       itemId: "guild_badge",
-      name: "公会徽章",
+      name: "仙盟徽章",
       desc: "攻击力永久+3",
       count: badgeCount,
     });
@@ -1414,7 +1406,7 @@ const zoneName = computed(() => {
   return floor ? ZONE_NAMES[floor.zone] : "";
 });
 
-/** 矿洞地图区域数据 */
+/** 玄矿幽脉地图区域数据 */
 const mineZones = computed(() => {
   const zones = [
     { id: "shallow", name: "浅矿·土石洞穴", start: 1, end: 20, bossFloor: 20 },
@@ -1477,7 +1469,7 @@ const remainingMonsters = computed(() => {
   return miningStore.totalMonstersOnFloor - miningStore.monstersDefeatedCount;
 });
 
-/** 是否显示电梯（有可返回楼层或骷髅矿穴已解锁） */
+/** 是否显示电梯（有可返回楼层或幽骨矿窟已解锁） */
 const hasElevator = computed(
   () => elevatorZones.value.length > 0 || miningStore.isSkullCavernUnlocked(),
 );
@@ -1531,7 +1523,7 @@ const elevatorZones = computed(() => {
     .filter((z) => z.floors.length > 0);
 });
 
-/** 离开矿洞提示文案 */
+/** 离开玄矿幽脉提示文案 */
 const leaveHint = computed(() => {
   if (miningStore.isInSkullCavern) {
     const floorData = miningStore.getActiveFloorData();
@@ -1545,7 +1537,7 @@ const leaveHint = computed(() => {
   return "当前进度不会保留。";
 });
 
-/** 骷髅矿穴可选安全点楼层（排除最高安全点，因为主按钮已默认从那里开始） */
+/** 幽骨矿窟可选安全点楼层（排除最高安全点，因为主按钮已默认从那里开始） */
 const skullElevatorFloors = computed(() => {
   return miningStore
     .getUnlockedSkullSafePoints()
@@ -1867,15 +1859,15 @@ const EFFECT_NAMES: Record<EquipmentEffectType, string> = {
   vampiric: "吸血",
   max_hp_bonus: "最大HP",
   stamina_reduction: "体力消耗",
-  mining_stamina: "采矿体力",
+  mining_stamina: "采玄矿体力",
   farming_stamina: "农作体力",
-  fishing_stamina: "钓鱼体力",
-  crop_quality_bonus: "作物品质",
-  crop_growth_bonus: "作物生长",
+  fishing_stamina: "垂钓体力",
+  crop_quality_bonus: "灵植品质",
+  crop_growth_bonus: "灵植生长",
   fish_quality_bonus: "鱼类品质",
-  fishing_calm: "钓鱼稳定",
+  fishing_calm: "垂钓稳定",
   sell_price_bonus: "售价加成",
-  shop_discount: "商店折扣",
+  shop_discount: "万象铺折扣",
   gift_friendship: "送礼好感",
   monster_drop_bonus: "掉落率",
   exp_bonus: "经验加成",
@@ -1936,7 +1928,10 @@ const viewPresetDetail = (id: string) => {
   showPresetDetailModal.value = true;
 };
 
-const viewPresetEquip = (kind: "weapon" | "ring" | "hat" | "shoe", defId?: string | null) => {
+const viewPresetEquip = (
+  kind: "weapon" | "ring" | "hat" | "shoe",
+  defId?: string | null,
+) => {
   if (!defId) return;
   viewEquipProperty(kind, defId);
 };

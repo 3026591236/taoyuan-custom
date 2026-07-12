@@ -1,37 +1,37 @@
-import { ref } from 'vue'
-import Qmsg from 'qmsg'
+import { ref } from "vue";
+import Qmsg from "qmsg";
 
-export type FloatColor = 'danger' | 'success' | 'accent' | 'water'
+export type FloatColor = "danger" | "success" | "accent" | "water";
 
 export interface QmsgConfigOptions {
-  position: string
-  timeout: number
-  maxNums: number
-  isLimitWidth: boolean
-  limitWidthNum: number
-  limitWidthWrap: 'no-wrap' | 'wrap' | 'ellipsis'
-  animation: boolean
-  autoClose: boolean
-  showClose: boolean
-  showIcon: boolean
-  showReverse: boolean
+  position: string;
+  timeout: number;
+  maxNums: number;
+  isLimitWidth: boolean;
+  limitWidthNum: number;
+  limitWidthWrap: "no-wrap" | "wrap" | "ellipsis";
+  animation: boolean;
+  autoClose: boolean;
+  showClose: boolean;
+  showIcon: boolean;
+  showReverse: boolean;
 }
 
 // 配置 Qmsg 全局样式
 Qmsg.config({
-  position: 'top',
+  position: "top",
   showIcon: false,
   maxNums: 5,
   timeout: 2500,
   isHTML: true,
-  useShadowRoot: false
-})
+  useShadowRoot: false,
+});
 
 /** 动态更新 Qmsg 全部通知配置 */
 export const applyQmsgConfig = (opts: QmsgConfigOptions) => {
   Qmsg.config({
     isHTML: true,
-    position: opts.position as 'top',
+    position: opts.position as "top",
     timeout: opts.timeout,
     maxNums: opts.maxNums,
     isLimitWidth: opts.isLimitWidth,
@@ -42,76 +42,76 @@ export const applyQmsgConfig = (opts: QmsgConfigOptions) => {
     showClose: opts.showClose,
     showIcon: opts.showIcon,
     showReverse: opts.showReverse,
-    useShadowRoot: false
-  })
-}
+    useShadowRoot: false,
+  });
+};
 
 // 天赋检查回调 — 由 useDialogs 注册以避免循环导入
-let _perkChecker: (() => void) | null = null
+let _perkChecker: (() => void) | null = null;
 
 /** 注册天赋检查回调（useDialogs 初始化时调用） */
 export const _registerPerkChecker = (fn: () => void) => {
-  _perkChecker = fn
-}
+  _perkChecker = fn;
+};
 
 // === 日志历史记录（内存中，不存档，刷新页面清空） ===
 
 export interface LogEntry {
-  msg: string
-  dayLabel: string
+  msg: string;
+  dayLabel: string;
 }
 
 /** 全部日志历史 */
-export const logHistory = ref<LogEntry[]>([])
+export const logHistory = ref<LogEntry[]>([]);
 
 /** 天数标签获取器 — 由 GameLayout 注册以避免循环导入 */
-let _dayLabelGetter: (() => string) | null = null
+let _dayLabelGetter: (() => string) | null = null;
 
 /** 注册天数标签获取器（GameLayout 初始化时调用） */
 export const _registerDayLabelGetter = (fn: () => string) => {
-  _dayLabelGetter = fn
-}
+  _dayLabelGetter = fn;
+};
 
 /** 添加日志消息（显示为 toast 通知，同时记录到历史） */
 export const addLog = (msg: string) => {
-  Qmsg.info(msg)
-  const dayLabel = _dayLabelGetter?.() ?? ''
-  logHistory.value.push({ msg, dayLabel })
-  _perkChecker?.()
-}
+  Qmsg.info(msg);
+  const dayLabel = _dayLabelGetter?.() ?? "";
+  logHistory.value.push({ msg, dayLabel });
+  _perkChecker?.();
+};
 
 /** 显示浮动文本反馈（显示为 toast 通知） */
-export const showFloat = (text: string, color: FloatColor = 'accent') => {
+export const showFloat = (text: string, color: FloatColor = "accent") => {
   switch (color) {
-    case 'danger':
-      Qmsg.error(text, { timeout: 1500 })
-      break
-    case 'success':
-      Qmsg.success(text, { timeout: 1500 })
-      break
-    case 'accent':
-      Qmsg.warning(text, { timeout: 1500 })
-      break
-    case 'water':
-      Qmsg.info(text, { timeout: 1500 })
-      break
+    case "danger":
+      Qmsg.error(text, { timeout: 1500 });
+      break;
+    case "success":
+      Qmsg.success(text, { timeout: 1500 });
+      break;
+    case "accent":
+      Qmsg.warning(text, { timeout: 1500 });
+      break;
+    case "water":
+      Qmsg.info(text, { timeout: 1500 });
+      break;
   }
-}
+};
 
 /** 重置日志（新游戏） */
 export const resetLogs = () => {
-  Qmsg.closeAll()
-}
+  Qmsg.closeAll();
+};
 
 /** 清空全部日志历史 */
 export const clearAllLogs = () => {
-  logHistory.value = []
-}
+  logHistory.value = [];
+};
 
 /** 清空指定天的日志 */
 export const clearDayLogs = (dayLabel: string) => {
-  logHistory.value = logHistory.value.filter(e => e.dayLabel !== dayLabel)
-}
+  logHistory.value = logHistory.value.filter((e) => e.dayLabel !== dayLabel);
+};
 
 export const useGameLog = () => {
   return {
@@ -120,6 +120,6 @@ export const useGameLog = () => {
     resetLogs,
     clearAllLogs,
     clearDayLogs,
-    logHistory
-  }
-}
+    logHistory,
+  };
+};

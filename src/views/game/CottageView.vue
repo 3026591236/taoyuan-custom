@@ -7,7 +7,7 @@
           :size="14"
           class="inline"
         />
-        小屋
+        仙居
       </span>
       <button
         class="text-muted hover:text-accent transition-colors"
@@ -466,7 +466,7 @@
         </Button>
       </div>
       <p class="text-xs text-muted mb-2">
-        雇佣好感度≥4心的村民帮忙打理农场，每日支付工资。
+        雇佣好感度≥4心的集民帮忙打理灵田，每日支付工资。
       </p>
 
       <!-- 当前雇工 -->
@@ -883,7 +883,7 @@
             v-if="spouseGiftableItems.length === 0"
             class="py-4 text-center text-xs text-muted"
           >
-            背包中没有可赠送的物品
+            纳戒中没有可赠送的物品
           </div>
         </div>
       </div>
@@ -907,8 +907,8 @@
             />
           </div>
 
-          <!-- 任务选择 -->
-          <p class="text-xs text-muted mb-1">选择任务</p>
+          <!-- 委托选择 -->
+          <p class="text-xs text-muted mb-1">选择委托</p>
           <div class="grid grid-cols-4 gap-1 mb-3">
             <button
               v-for="(label, key) in npcStore.HELPER_TASK_NAMES"
@@ -978,7 +978,7 @@
             v-if="!hireConfirmNpc && hireableNpcs.length === 0"
             class="text-xs text-muted text-center py-3"
           >
-            没有可雇佣的村民（需好感≥4心，且非伴侣/知己）
+            没有可雇佣的集民（需好感≥4心，且非伴侣/知己）
           </p>
         </div>
       </div>

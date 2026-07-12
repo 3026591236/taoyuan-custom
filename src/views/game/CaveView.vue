@@ -192,7 +192,7 @@
     <Divider title label="💎 灵石坊" />
     <div class="game-panel p-3 space-y-2">
       <p class="text-xs text-muted leading-relaxed">
-        灵石目前是背包材料：秘境会掉落，炼器会消耗，普通出售仍换铜钱；多余修仙材料可在这里折换成灵石。为避免数值膨胀，灵石炼气有每日次数限制，且同日连续转化成本递增、收益略降。
+        灵石目前是纳戒材料：秘境会掉落，炼器会消耗，普通出售仍换铜钱；多余修仙材料可在这里折换成灵石。为避免数值膨胀，灵石炼气有每日次数限制，且同日连续转化成本递增、收益略降。
       </p>
       <div class="border border-accent/20 rounded-xs p-3 space-y-2 bg-black/10">
         <div class="flex flex-wrap items-center justify-between gap-2">

@@ -75,7 +75,7 @@ export const usePlayerStore = defineStore("player", () => {
   const hp = ref(BASE_MAX_HP);
   const baseMaxHp = ref(BASE_MAX_HP);
 
-  // 角色资质：让种田、修行和战斗都能稳定沉淀到可见属性上。
+  // 角色资质：让灵田经营、修行和战斗都能稳定沉淀到可见属性上。
   const attributes =
     ref<Record<AttributeKey, AttributeState>>(createAttributes());
 
@@ -170,7 +170,7 @@ export const usePlayerStore = defineStore("player", () => {
       Math.floor(attributeDefenseBonus.value * 1000),
   );
 
-  /** 计算当前最大 HP（基础 + 战斗等级 + 专精加成 + 仙缘加成 + 公会加成 + 角色资质） */
+  /** 计算当前最大 HP（基础 + 战斗等级 + 专精加成 + 仙缘加成 + 仙盟加成 + 角色资质） */
   const getMaxHp = (): number => {
     const skillStore = useSkillStore();
     let bonus =
@@ -185,7 +185,7 @@ export const usePlayerStore = defineStore("player", () => {
       useHiddenNpcStore().getBondBonusByType("spirit_shield");
     const spiritHpBonus =
       spiritShield?.type === "spirit_shield" ? spiritShield.hpBonus : 0;
-    // 公会加成：生命护符永久 + 等级被动
+    // 仙盟加成：生命护符永久 + 等级被动
     const guildHpBonus = useMiningStore().guildBonusMaxHp;
     const guildLevelHpBonus = useGuildStore().getGuildHpBonus();
     return (

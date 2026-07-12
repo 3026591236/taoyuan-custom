@@ -618,7 +618,7 @@
       </div>
     </Transition>
 
-    <!-- 农场选择弹窗 -->
+    <!-- 灵田洞天选择弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showFarmSelect"
@@ -634,7 +634,7 @@
             <X :size="14" />
           </button>
           <p class="text-accent text-sm mb-3 text-center shrink-0">
-            选择你的田庄类型
+            选择你的灵田洞天
           </p>
           <div class="flex-1 overflow-y-auto min-h-0">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -662,7 +662,7 @@
           </div>
         </div>
 
-        <!-- 田庄确认弹窗 -->
+        <!-- 灵田洞天确认弹窗 -->
         <Transition name="panel-fade">
           <div
             v-if="showFarmConfirm"
@@ -1294,11 +1294,11 @@ const handleNewGame = async () => {
     charGender.value,
   );
   gameStore.startNewGame(selectedMap.value);
-  // 标准农场初始6×6，其余4×4
+  // 标准灵田初始6×6，其余4×4
   farmStore.resetFarm(selectedMap.value === "standard" ? 6 : 4);
   // 新手赠送：10个青菜种子
   inventoryStore.addItem("seed_cabbage", 10);
-  // 草地农场：免费鸡舍 + 2只鸡
+  // 草地灵田：免费鸡舍 + 2只鸡
   if (selectedMap.value === "meadowlands") {
     const coop = animalStore.buildings.find((b) => b.type === "coop");
     if (coop) {
@@ -1370,7 +1370,7 @@ const handleNewGame = async () => {
   const tutorialStore = useTutorialStore();
   if (tutorialStore.enabled) {
     addLog(
-      "柳村长说：「欢迎来到万象仙乡！背包里有白菜种子，去农场开垦土地、播种吧。」",
+      "柳村长说：「欢迎来到万象仙乡！背包里有白菜种子，去灵田开垦土地、播种吧。」",
     );
     tutorialStore.markTipShown("tip_welcome");
   }

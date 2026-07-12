@@ -2,17 +2,17 @@
   <div>
     <h3 class="text-accent text-sm mb-3">
       <Fish :size="14" class="inline" />
-      {{ currentLocationName }}钓鱼
+      {{ currentLocationName }}垂钓
     </h3>
     <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">
       {{ tutorialHint }}
     </p>
 
-    <!-- 钓鱼地点 -->
+    <!-- 垂钓地点 -->
     <div class="border border-accent/20 rounded-xs p-3 mb-4">
       <p class="text-sm text-accent mb-2">
         <MapPin :size="14" class="inline" />
-        钓鱼地点
+        垂钓地点
       </p>
       <div class="grid grid-cols-3 gap-1">
         <div
@@ -98,10 +98,10 @@
       </div>
     </div>
 
-    <!-- 钓鱼操作 -->
+    <!-- 垂钓操作 -->
     <div class="border border-accent/20 rounded-xs p-3 mb-4">
       <div class="flex items-center justify-between mb-2">
-        <p class="text-sm text-accent">钓鱼</p>
+        <p class="text-sm text-accent">垂钓</p>
         <span class="text-xs text-muted"
           >{{ playerStore.stamina }}/{{ playerStore.maxStamina }} 体力</span
         >
@@ -118,9 +118,9 @@
       </div>
     </div>
 
-    <!-- 钓鱼结果 -->
+    <!-- 垂钓结果 -->
     <div class="border border-accent/20 rounded-xs p-3 mb-4">
-      <p class="text-sm text-accent mb-2">钓鱼结果</p>
+      <p class="text-sm text-accent mb-2">垂钓结果</p>
       <div
         v-if="lastResult"
         class="border border-accent/10 rounded-xs px-3 py-1.5"
@@ -136,10 +136,10 @@
       </div>
     </div>
 
-    <!-- 当前可钓鱼类 -->
+    <!-- 当前可垂钓类 -->
     <div class="border border-accent/20 rounded-xs p-3 mb-4">
       <div class="flex items-center justify-between mb-2">
-        <p class="text-sm text-accent">当前可钓鱼类</p>
+        <p class="text-sm text-accent">当前可垂钓类</p>
         <span class="text-xs text-muted"
           >{{ fishingStore.availableFish.length }}种</span
         >
@@ -292,7 +292,7 @@
             v-if="availableBaits.length > 0"
             class="border border-accent/10 rounded-xs p-2"
           >
-            <p class="text-[10px] text-muted mb-1">背包中的鱼饵</p>
+            <p class="text-[10px] text-muted mb-1">纳戒中的鱼饵</p>
             <div class="flex flex-col space-y-1">
               <div
                 v-for="b in availableBaits"
@@ -310,9 +310,9 @@
             class="flex flex-col items-center justify-center py-4 text-muted"
           >
             <Target :size="28" class="text-muted/30 mb-2" />
-            <p class="text-xs">背包中没有鱼饵</p>
+            <p class="text-xs">纳戒中没有鱼饵</p>
             <p class="text-[10px] text-muted/60 mt-0.5">
-              可在商店购买或加工制造
+              可在万象铺购买或加工制造
             </p>
           </div>
         </div>
@@ -359,7 +359,7 @@
             v-if="availableTackles.length > 0"
             class="border border-accent/10 rounded-xs p-2"
           >
-            <p class="text-[10px] text-muted mb-1">背包中的浮漂</p>
+            <p class="text-[10px] text-muted mb-1">纳戒中的浮漂</p>
             <div class="flex flex-col space-y-1">
               <div
                 v-for="t in availableTackles"
@@ -377,16 +377,16 @@
             class="flex flex-col items-center justify-center py-4 text-muted"
           >
             <MapPin :size="28" class="text-muted/30 mb-2" />
-            <p class="text-xs">背包中没有浮漂</p>
+            <p class="text-xs">纳戒中没有浮漂</p>
             <p class="text-[10px] text-muted/60 mt-0.5">
-              可在商店购买或加工制造
+              可在万象铺购买或加工制造
             </p>
           </div>
         </div>
       </div>
     </Transition>
 
-    <!-- 钓鱼游戏弹窗 -->
+    <!-- 垂钓游戏弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showFishingModal && miniGameParams"
@@ -402,7 +402,7 @@
           </button>
           <p class="text-sm text-accent mb-2">
             <Fish :size="14" class="inline" />
-            钓鱼
+            垂钓
           </p>
           <!-- 放弃确认 -->
           <div
@@ -414,7 +414,7 @@
               <Button class="text-danger" @click="handleConfirmClose"
                 >确认放弃</Button
               >
-              <Button @click="showCloseConfirm = false">继续钓鱼</Button>
+              <Button @click="showCloseConfirm = false">继续垂钓</Button>
             </div>
           </div>
           <FishingMiniGame
@@ -425,7 +425,7 @@
       </div>
     </Transition>
 
-    <!-- 钓鱼结果弹窗 -->
+    <!-- 垂钓结果弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="catchResult"
@@ -631,7 +631,7 @@ const tutorialStore = useTutorialStore();
 const tutorialHint = computed(() => {
   if (!tutorialStore.enabled || gameStore.year > 1) return null;
   if (achievementStore.stats.totalFishCaught === 0)
-    return "选择一个钓点后点击「开始钓鱼」。鱼上钩后需要完成小游戏来捕获。";
+    return "选择一个钓点后点击「开始垂钓」。鱼上钩后需要完成小游戏来捕获。";
   return null;
 });
 
@@ -661,7 +661,7 @@ const catchResult = ref<{
 
 // === Computed ===
 
-/** 钓鱼耗时（小时），受工具和技能减免 */
+/** 垂钓耗时（小时），受工具和百艺减免 */
 const fishTime = computed(() => {
   const baseMin = ACTION_TIME_COSTS.fishStart * 60;
   const toolTier = inventoryStore.getTool("fishingRod")?.tier ?? "basic";
@@ -678,7 +678,7 @@ const fishTime = computed(() => {
 
 const fishTimeLabel = computed(() => `${Math.round(fishTime.value * 60)}分钟`);
 
-/** 淘金耗时（小时），受工具和技能减免 */
+/** 淘金耗时（小时），受工具和百艺减免 */
 const panTime = computed(() => {
   const baseMin = ACTION_TIME_COSTS.pan * 60;
   const toolTier = inventoryStore.getTool("pan")?.tier ?? "basic";
@@ -858,12 +858,12 @@ const handleUnequipTackle = () => {
 
 const handleStartFishing = () => {
   if (gameStore.isPastBedtime) {
-    addLog("太晚了，没法钓鱼了。");
+    addLog("太晚了，没法垂钓了。");
     handleEndDay();
     return;
   }
   if (!inventoryStore.isToolAvailable("fishingRod")) {
-    addLog("鱼竿正在升级中，无法钓鱼。");
+    addLog("鱼竿正在升级中，无法垂钓。");
     return;
   }
   const result = fishingStore.startFishing();
@@ -959,8 +959,8 @@ const handleConfirmClose = () => {
   showCloseConfirm.value = false;
   showFishingModal.value = false;
   miniGameParams.value = null;
-  lastResult.value = "放弃了钓鱼，鱼跑掉了。";
-  addLog("放弃了钓鱼，鱼跑掉了。");
+  lastResult.value = "放弃了垂钓，鱼跑掉了。";
+  addLog("放弃了垂钓，鱼跑掉了。");
 };
 
 // === Crab Pots ===

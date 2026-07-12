@@ -41,7 +41,7 @@ export const SHOES: ShoeDef[] = [
   {
     id: "miner_boots",
     name: "矿工靴",
-    description: "厚底铁头靴，矿洞探索更加安全。",
+    description: "厚底铁头靴，玄矿幽脉探索更加安全。",
     effects: [
       { type: "mining_stamina", value: 0.1 },
       { type: "defense_bonus", value: 0.05 },
@@ -245,11 +245,11 @@ export const SHOES: ShoeDef[] = [
     shopPrice: null,
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "矿洞宝箱",
+    obtainSource: "玄矿幽脉宝箱",
     sellPrice: 300,
   },
 
-  // ===== 新增商店鞋子（绸缎庄）=====
+  // ===== 新增万象铺鞋子（绸缎庄）=====
   {
     id: "cotton_shoes",
     name: "棉鞋",
@@ -266,8 +266,8 @@ export const SHOES: ShoeDef[] = [
   },
   {
     id: "fishing_waders",
-    name: "钓鱼靴",
-    description: "防水长靴，钓鱼时更加从容。",
+    name: "垂钓靴",
+    description: "防水长靴，垂钓时更加从容。",
     effects: [
       { type: "fishing_stamina", value: 0.1 },
       { type: "fishing_calm", value: 0.03 },
@@ -381,7 +381,7 @@ export const SHOES: ShoeDef[] = [
   {
     id: "crystal_treads",
     name: "晶矿踏靴",
-    description: "水晶层怪物碎片凝成的矿靴，采矿效率提升。",
+    description: "水晶层怪物碎片凝成的矿靴，采玄矿效率提升。",
     effects: [
       { type: "ore_bonus", value: 1 },
       { type: "mining_stamina", value: 0.06 },
@@ -405,15 +405,15 @@ export const SHOES: ShoeDef[] = [
     shopPrice: null,
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "矿洞宝箱",
+    obtainSource: "玄矿幽脉宝箱",
     sellPrice: 450,
   },
 
-  // === 公会专属 ===
+  // === 仙盟专属 ===
   {
     id: "guild_war_boots",
-    name: "公会战靴",
-    description: "冒险家公会精英成员的战斗靴，轻便且坚韧。",
+    name: "仙盟战靴",
+    description: "冒险家仙盟精英成员的战斗靴，轻便且坚韧。",
     effects: [
       { type: "attack_bonus", value: 2 },
       { type: "defense_bonus", value: 0.05 },
@@ -422,10 +422,10 @@ export const SHOES: ShoeDef[] = [
     shopPrice: null,
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "公会商店",
+    obtainSource: "仙盟万象铺",
     sellPrice: 800,
   },
-  // === 竹林野兽材料制作 ===
+  // === 青篁秘林野兽材料制作 ===
   {
     id: "bear_pelt_boots",
     name: "熊皮靴",
@@ -458,7 +458,7 @@ export const CRAFTABLE_SHOES: ShoeDef[] = SHOES.filter(
   (s) => s.recipe !== null,
 );
 
-/** 怪物掉落鞋子（按矿洞区域） */
+/** 怪物掉落鞋子（按玄矿幽脉区域） */
 export const MONSTER_DROP_SHOES: Record<
   string,
   { shoeId: string; chance: number }[]
@@ -479,7 +479,7 @@ export const BOSS_DROP_SHOES: Record<number, string> = {
   120: "abyss_dragon_treads",
 };
 
-/** 宝箱掉落鞋子（按矿洞区域） */
+/** 宝箱掉落鞋子（按玄矿幽脉区域） */
 export const TREASURE_DROP_SHOES: Record<
   string,
   { shoeId: string; chance: number }[]

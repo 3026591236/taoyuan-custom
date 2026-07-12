@@ -19,7 +19,7 @@
       <Tent :size="48" class="text-accent/30" />
       <p class="text-sm text-muted">商路尚未开通</p>
       <p class="text-xs text-muted/60 text-center max-w-60">
-        需要击败矿洞第120层BOSS并支付{{ HANHAI_UNLOCK_COST }}文修路费
+        需要击败玄矿幽脉第120层BOSS并支付{{ HANHAI_UNLOCK_COST }}文修路费
       </p>
       <Button
         v-if="bossDefeated"
@@ -33,7 +33,7 @@
         金钱不足（需要{{ HANHAI_UNLOCK_COST }}文）
       </p>
       <p v-if="!bossDefeated" class="text-xs text-danger">
-        需先击败矿洞第120层BOSS
+        需先击败玄矿幽脉第120层BOSS
       </p>
     </div>
 
@@ -46,7 +46,7 @@
           :class="{ '!bg-accent !text-bg': activeTab === 'shop' }"
           @click="activeTab = 'shop'"
         >
-          驿站商店
+          驿站万象铺
         </Button>
         <Button
           class="flex-1 justify-center"
@@ -71,7 +71,7 @@
         </Button>
       </div>
 
-      <!-- 驿站商店 -->
+      <!-- 驿站万象铺 -->
       <template v-if="activeTab === 'shop'">
         <div class="flex flex-col space-y-1 max-h-80 overflow-y-auto">
           <!-- 固定商品 -->
@@ -240,7 +240,7 @@
         </div>
         <div v-else class="text-xs text-muted text-center mb-3">店铺已满级</div>
 
-        <!-- 积分兑换商店 -->
+        <!-- 积分兑换万象铺 -->
         <div class="mb-2">
           <p class="text-xs text-accent mb-1 flex items-center space-x-1">
             <Gift :size="12" />
@@ -1227,7 +1227,7 @@
           </button>
           <p class="text-sm text-accent mb-2">上架物品</p>
           <p class="text-xs text-muted mb-2">
-            选择背包中的物品放到通商摊位售卖
+            选择纳戒中的物品放到通商摊位售卖
           </p>
           <div class="flex flex-col space-y-1 max-h-60 overflow-y-auto">
             <div
@@ -1258,7 +1258,7 @@
             v-if="sellableItems.length === 0"
             class="text-xs text-muted text-center py-4"
           >
-            背包中没有可售物品
+            纳戒中没有可售物品
           </p>
         </div>
       </div>
@@ -1944,7 +1944,7 @@ const qualityColor = (quality: string): string => {
   return "";
 };
 
-/** 背包中可上架的物品（有售价的物品） */
+/** 纳戒中可上架的物品（有售价的物品） */
 const sellableItems = computed(() => {
   const result: {
     id: string;
@@ -1968,7 +1968,7 @@ const sellableItems = computed(() => {
   return result;
 });
 
-/** 计算积分预览（含钱袋加成） */
+/** 计算积分预览（含财库加成） */
 const calcPreviewPoints = (inv: {
   sellPrice: number;
   quality: string;

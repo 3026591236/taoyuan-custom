@@ -13,8 +13,8 @@
     >
       {{
         shopStore.currentShopId === "cultivation-market"
-          ? "返回商圈"
-          : "返回商圈"
+          ? "返回万象市集"
+          : "返回万象市集"
       }}
     </Button>
 
@@ -46,11 +46,11 @@
           折扣生效中：所有购物价格 -{{ discountPercent }}%
         </p>
 
-        <!-- ====== 商圈总览 ====== -->
+        <!-- ====== 万象市集总览 ====== -->
         <template v-if="!shopStore.currentShopId">
           <h3 class="text-accent text-sm mb-3">
             <Store :size="14" class="inline" />
-            桃源商圈
+            桃源万象市集
           </h3>
           <p class="text-muted text-xs mb-3">点击商铺进入选购。</p>
 
@@ -61,7 +61,7 @@
               旅行商人 · 限时特卖
             </h4>
             <p class="text-muted text-xs mb-2">
-              旅行商人今天在桃源村摆摊，带来了稀有货物！
+              旅行商人今天在万象集摆摊，带来了稀有货物！
             </p>
             <div class="flex flex-col space-y-2">
               <div
@@ -253,10 +253,10 @@
         <template v-else-if="shopStore.currentShopId === 'wanwupu'">
           <ShopHeader name="万物铺" npc="陈伯" />
 
-          <!-- 当季种子 -->
+          <!-- 当季灵种 -->
           <h4 class="text-accent text-sm mb-2 mt-3">
             <Sprout :size="14" class="inline" />
-            当季种子
+            当季灵种
           </h4>
           <div class="flex flex-col space-y-2">
             <div
@@ -265,7 +265,7 @@
               class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-2 cursor-pointer hover:bg-accent/5"
               @click="
                 openBatchBuyModal(
-                  seed.cropName + '种子',
+                  seed.cropName + '灵种',
                   `${seed.season.map((s) => SEASON_NAMES[s]).join('/')}季 · ${seed.growthDays}天成熟 → 售${seed.sellPrice}文`,
                   discounted(seed.price),
                   () => handleBuySeed(seed.seedId),
@@ -278,7 +278,7 @@
             >
               <div>
                 <p class="text-sm">
-                  {{ seed.cropName }}种子
+                  {{ seed.cropName }}灵种
                   <span v-if="seed.regrowth" class="text-success text-xs ml-1"
                     >[多茬]</span
                   >
@@ -300,7 +300,7 @@
               class="flex flex-col items-center justify-center py-4 text-muted"
             >
               <Sprout :size="24" class="text-muted/30 mb-2" />
-              <p class="text-xs">本季没有种子出售</p>
+              <p class="text-xs">本季没有灵种出售</p>
             </div>
           </div>
 
@@ -310,13 +310,13 @@
             杂货
           </h4>
           <div class="flex flex-col space-y-2">
-            <!-- 背包扩容 -->
+            <!-- 纳戒扩容 -->
             <div
               v-if="inventoryStore.capacity < 60"
               class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-2 cursor-pointer hover:bg-accent/5"
               @click="
                 openBuyModal(
-                  '背包扩容',
+                  '纳戒扩容',
                   `当前${inventoryStore.capacity}格 → ${inventoryStore.capacity + 4}格`,
                   discounted(bagPrice),
                   handleBuyBag,
@@ -325,7 +325,7 @@
               "
             >
               <div>
-                <p class="text-sm">背包扩容</p>
+                <p class="text-sm">纳戒扩容</p>
                 <p class="text-muted text-xs">
                   当前{{ inventoryStore.capacity }}格 →
                   {{ inventoryStore.capacity + 4 }}格
@@ -345,7 +345,7 @@
               @click="
                 openBuyModal(
                   '仓库扩建',
-                  `箱子槽位 ${warehouseStore.maxChests} → ${warehouseStore.maxChests + 1}`,
+                  `储物匣槽位 ${warehouseStore.maxChests} → ${warehouseStore.maxChests + 1}`,
                   discounted(warehouseExpandPrice),
                   handleBuyWarehouseExpand,
                   () => playerStore.money >= discounted(warehouseExpandPrice),
@@ -355,7 +355,7 @@
               <div>
                 <p class="text-sm">仓库扩建</p>
                 <p class="text-muted text-xs">
-                  箱子槽位 {{ warehouseStore.maxChests }} →
+                  储物匣槽位 {{ warehouseStore.maxChests }} →
                   {{ warehouseStore.maxChests + 1 }}
                 </p>
               </div>
@@ -364,13 +364,13 @@
               >
             </div>
 
-            <!-- 农场扩建 -->
+            <!-- 灵田扩建 -->
             <div
               v-if="farmExpandInfo"
               class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-2 cursor-pointer hover:bg-accent/5"
               @click="
                 openBuyModal(
-                  '农场扩建',
+                  '灵田扩建',
                   `${farmStore.farmSize}×${farmStore.farmSize} → ${farmExpandInfo!.newSize}×${farmExpandInfo!.newSize}`,
                   discounted(farmExpandInfo!.price),
                   handleBuyFarmExpand,
@@ -379,7 +379,7 @@
               "
             >
               <div>
-                <p class="text-sm">农场扩建</p>
+                <p class="text-sm">灵田扩建</p>
                 <p class="text-muted text-xs">
                   {{ farmStore.farmSize }}×{{ farmStore.farmSize }} →
                   {{ farmExpandInfo.newSize }}×{{ farmExpandInfo.newSize }}
@@ -1134,7 +1134,7 @@
             class="flex flex-col items-center justify-center py-4 text-muted"
           >
             <Package :size="100" class="text-muted/30 my-4" />
-            <p class="text-xs">背包中没有可出售的物品</p>
+            <p class="text-xs">纳戒中没有可出售的物品</p>
           </div>
         </div>
       </div>
@@ -1197,7 +1197,7 @@
         <div class="game-panel max-w-xs w-full">
           <p class="text-sm text-accent mb-2">确认一键出售</p>
           <p class="text-xs text-muted mb-3">
-            将出售背包中所有未锁定的非种子物品（共{{
+            将出售纳戒中所有未锁定的非灵种物品（共{{
               sellableItems.length
             }}种），确定继续？
           </p>
@@ -1615,7 +1615,7 @@ const achievementStore = useAchievementStore();
 const tutorialHint = computed(() => {
   if (!tutorialStore.enabled || gameStore.year > 1) return null;
   if (achievementStore.stats.totalCropsHarvested === 0)
-    return "万物铺出售各种种子，购买后去农场种植。上方可以切换「买入」和「卖出」。";
+    return "万物铺出售各种灵种，购买后去灵田种植。上方可以切换「买入」和「卖出」。";
   return null;
 });
 
@@ -1653,7 +1653,7 @@ const trendColor = (trend: MarketTrend): string => {
   return "text-muted/40";
 };
 
-// 每次进入商圈页面，重置到商圈总览（避免跳过营业时间检查）
+// 每次进入万象市集页面，重置到万象市集总览（避免跳过营业时间检查）
 shopStore.currentShopId = null;
 
 // === 移动端切换 ===
@@ -1932,8 +1932,8 @@ const handleModalSell = (count: number) => {
 // === 折扣系统 ===
 
 const CULTIVATION_USAGE: Record<string, string> = {
-  storage_talisman: "扩背包+1",
-  cosmos_bag: "扩背包+4",
+  storage_talisman: "扩纳戒+1",
+  cosmos_bag: "扩纳戒+4",
   wood_scripture: "功法·长生诀",
   thunder_scripture: "功法·雷诀",
   void_scripture: "功法·归元功",
@@ -2015,7 +2015,7 @@ const handleBuyFromTraveler = (
     showFloat(`-${actualPrice}文`, "danger");
     addLog(`从旅行商人处购买了${name}。(-${actualPrice}文)`);
   } else {
-    addLog("铜钱不足或背包已满。");
+    addLog("铜钱不足或纳戒已满。");
   }
 };
 
@@ -2044,10 +2044,10 @@ const handleBuyBag = () => {
     return;
   }
   if (inventoryStore.expandCapacity()) {
-    addLog(`背包扩容至${inventoryStore.capacity}格！(-${actualPrice}文)`);
+    addLog(`纳戒扩容至${inventoryStore.capacity}格！(-${actualPrice}文)`);
   } else {
     playerStore.earnMoney(actualPrice);
-    addLog("背包已满级。");
+    addLog("纳戒已满级。");
   }
 };
 
@@ -2064,7 +2064,7 @@ const handleBuyWarehouseExpand = () => {
   }
   if (warehouseStore.expandMaxChests()) {
     addLog(
-      `仓库扩建至${warehouseStore.maxChests}个箱子槽位！(-${actualPrice}文)`,
+      `仓库扩建至${warehouseStore.maxChests}个储物匣槽位！(-${actualPrice}文)`,
     );
   } else {
     playerStore.earnMoney(actualPrice);
@@ -2082,10 +2082,10 @@ const handleBuyFarmExpand = () => {
   }
   const newSize = farmStore.expandFarm();
   if (newSize) {
-    addLog(`农场扩建至${newSize}×${newSize}！(-${actualPrice}文)`);
+    addLog(`灵田扩建至${newSize}×${newSize}！(-${actualPrice}文)`);
   } else {
     playerStore.earnMoney(actualPrice);
-    addLog("农场已满级。");
+    addLog("灵田已满级。");
   }
 };
 
@@ -2113,7 +2113,7 @@ const handleBuySapling = (
   }
   if (!inventoryStore.addItem(saplingId)) {
     playerStore.earnMoney(actualPrice);
-    addLog("背包已满，无法购买。");
+    addLog("纳戒已满，无法购买。");
     return;
   }
   addLog(`购买了${treeName}苗。(-${actualPrice}文)`);
@@ -2127,7 +2127,7 @@ const handleBuyHay = () => {
   }
   if (!inventoryStore.addItem("hay")) {
     playerStore.earnMoney(actualPrice);
-    addLog("背包已满，无法购买。");
+    addLog("纳戒已满，无法购买。");
     return;
   }
   addLog(`购买了干草。(-${actualPrice}文)`);
@@ -2142,9 +2142,9 @@ const handleBatchBuySeed = (seedId: string, count: number) => {
   if (shopStore.buySeed(seedId, count)) {
     sfxBuy();
     showFloat(`-${unitPrice * count}文`, "danger");
-    addLog(`购买了${count}个${seed.cropName}种子。(-${unitPrice * count}文)`);
+    addLog(`购买了${count}个${seed.cropName}灵种。(-${unitPrice * count}文)`);
   } else {
-    addLog("铜钱不足或背包已满。");
+    addLog("铜钱不足或纳戒已满。");
   }
 };
 
@@ -2160,7 +2160,7 @@ const handleBatchBuyItem = (
     showFloat(`-${unitPrice * count}文`, "danger");
     addLog(`购买了${count}个${name}。(-${unitPrice * count}文)`);
   } else {
-    addLog("铜钱不足或背包已满。");
+    addLog("铜钱不足或纳戒已满。");
   }
 };
 
@@ -2204,8 +2204,8 @@ const handleBatchBuyMarketItem = (item: ShopItemEntry, count: number) => {
   } else {
     addLog(
       currency === "spirit_stone"
-        ? "灵石不足或背包已满。"
-        : "铜钱不足或背包已满。",
+        ? "灵石不足或纳戒已满。"
+        : "铜钱不足或纳戒已满。",
     );
   }
 };
@@ -2231,7 +2231,7 @@ const handleBatchBuySapling = (
     showFloat(`-${unitPrice * bought}文`, "danger");
     addLog(`购买了${bought}个${treeName}苗。(-${unitPrice * bought}文)`);
   } else {
-    addLog("铜钱不足或背包已满。");
+    addLog("铜钱不足或纳戒已满。");
   }
 };
 
@@ -2252,7 +2252,7 @@ const handleBatchBuyFromTraveler = (
     showFloat(`-${unitPrice * bought}文`, "danger");
     addLog(`从旅行商人处购买了${bought}个${name}。(-${unitPrice * bought}文)`);
   } else {
-    addLog("铜钱不足或背包已满。");
+    addLog("铜钱不足或纳戒已满。");
   }
 };
 
@@ -2303,15 +2303,15 @@ const RING_EFFECT_LABELS: Record<RingEffectType, string> = {
   vampiric: "吸血",
   max_hp_bonus: "生命",
   stamina_reduction: "全局体力减免",
-  mining_stamina: "挖矿体力减免",
-  farming_stamina: "农耕体力减免",
-  fishing_stamina: "钓鱼体力减免",
-  crop_quality_bonus: "作物品质",
+  mining_stamina: "采玄矿体力减免",
+  farming_stamina: "灵耕体力减免",
+  fishing_stamina: "垂钓体力减免",
+  crop_quality_bonus: "灵植品质",
   crop_growth_bonus: "生长加速",
   fish_quality_bonus: "鱼品质",
   fishing_calm: "鱼速降低",
   sell_price_bonus: "售价加成",
-  shop_discount: "商店折扣",
+  shop_discount: "万象铺折扣",
   gift_friendship: "送礼好感",
   monster_drop_bonus: "怪物掉落",
   exp_bonus: "经验加成",
@@ -2343,7 +2343,7 @@ const handleCraftRing = (defId: string) => {
   }
 };
 
-// === 帽子/鞋子商店 ===
+// === 帽子/鞋子万象铺 ===
 
 const formatEffectLabel = (eff: {
   type: RingEffectType;
@@ -2507,7 +2507,7 @@ const handleBuyItem = (itemId: string, price: number, name: string) => {
   if (shopStore.buyItem(itemId, price)) {
     addLog(`购买了${name}。(-${actualPrice}文)`);
   } else {
-    addLog("铜钱不足或背包已满。");
+    addLog("铜钱不足或纳戒已满。");
   }
 };
 
@@ -2537,7 +2537,7 @@ const SELL_FILTER_CATEGORIES: ItemCategory[] = [
 ];
 
 const SELL_CATEGORY_NAMES: Partial<Record<ItemCategory, string>> = {
-  crop: "作物",
+  crop: "灵植",
   fruit: "水果",
   fish: "鱼类",
   animal_product: "畜产",

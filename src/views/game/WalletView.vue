@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-1">
       <div class="flex items-center space-x-1.5 text-sm text-accent">
         <Wallet :size="14" />
-        <span>钱袋</span>
+        <span>财库</span>
       </div>
       <span class="text-xs text-muted"
         >{{ unlockedCount }}/{{ WALLET_ITEMS.length }}</span

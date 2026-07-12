@@ -69,7 +69,7 @@ export const useCookingStore = defineStore("cooking", () => {
     const recipe = getRecipeById(recipeId);
     if (!recipe) return false;
     if (!unlockedRecipes.value.includes(recipeId)) return false;
-    // 检查技能等级门槛
+    // 检查百艺等级门槛
     if (recipe.requiredSkill) {
       const skill = skillStore.getSkill(recipe.requiredSkill.type);
       if (skill.level < recipe.requiredSkill.level) return false;
@@ -141,7 +141,7 @@ export const useCookingStore = defineStore("cooking", () => {
       removeCombinedItem(ing.itemId, ing.quantity * maxPossible);
     }
 
-    // 添加食物到背包
+    // 添加食物到纳戒
     inventoryStore.addItem(`food_${recipe.id}`, maxPossible, resultQuality);
     for (let i = 0; i < maxPossible; i++) {
       useAchievementStore().recordRecipeCooked();
@@ -163,7 +163,7 @@ export const useCookingStore = defineStore("cooking", () => {
   ): { success: boolean; message: string } => {
     const foodItemId = `food_${recipeId}`;
     if (!inventoryStore.removeItem(foodItemId, 1, quality)) {
-      return { success: false, message: "背包中没有这个食物。" };
+      return { success: false, message: "纳戒中没有这个食物。" };
     }
 
     const recipe = getRecipeById(recipeId);

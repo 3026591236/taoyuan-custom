@@ -241,7 +241,7 @@ export const PONDABLE_FISH: PondableFishDef[] = [
       qualityGene: 20,
     }),
   },
-  // 矿洞
+  // 玄矿幽脉
   {
     fishId: "cave_blindfish",
     name: "洞穴盲鱼",

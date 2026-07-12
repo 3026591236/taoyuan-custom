@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-1">
       <div class="flex items-center space-x-1.5 text-sm text-accent">
         <BookOpen :size="14" />
-        <span>图鉴与成就</span>
+        <span>图鉴与功业</span>
       </div>
       <span class="text-xs text-muted"
         >{{ achievementStore.perfectionPercent }}%</span
@@ -24,7 +24,7 @@
         :class="{ '!bg-accent !text-bg': tab === 'achievements' }"
         @click="tab = 'achievements'"
       >
-        成就
+        功业
       </Button>
       <Button
         class="flex-1 justify-center"
@@ -233,7 +233,7 @@
       </div>
     </Transition>
 
-    <!-- 成就列表 -->
+    <!-- 功业列表 -->
     <template v-if="tab === 'achievements'">
       <p class="text-xs text-muted mb-2">
         已完成 {{ achievementStore.completedAchievements.length }}/{{
@@ -260,7 +260,7 @@
       </div>
     </template>
 
-    <!-- 成就详情弹窗 -->
+    <!-- 功业详情弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="activeAchievement"
@@ -348,7 +348,7 @@
       </div>
     </Transition>
 
-    <!-- 祠堂任务板 -->
+    <!-- 祠堂委托板 -->
     <template v-if="tab === 'bundles'">
       <div class="flex flex-col space-y-1.5 max-h-72 overflow-y-auto">
         <div
@@ -392,7 +392,7 @@
       </div>
     </template>
 
-    <!-- 祠堂任务详情弹窗 -->
+    <!-- 祠堂委托详情弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="activeBundle"
@@ -598,7 +598,7 @@
         <ScrollText :size="48" class="text-accent/30" />
         <p class="text-sm text-muted">尚未收集到秘密笔记</p>
         <p class="text-xs text-muted/60 text-center max-w-60">
-          在挖矿、钓鱼、采集时有概率获得秘密笔记
+          在采玄矿、垂钓、采集时有概率获得秘密笔记
         </p>
       </div>
       <template v-else>
@@ -709,13 +709,13 @@
       </div>
       <div class="grid grid-cols-2 gap-x-3 gap-y-0.5">
         <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">作物收获</span>
+          <span class="text-xs text-muted">灵植收获</span>
           <span class="text-xs">{{
             achievementStore.stats.totalCropsHarvested
           }}</span>
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">钓鱼</span>
+          <span class="text-xs text-muted">垂钓</span>
           <span class="text-xs">{{
             achievementStore.stats.totalFishCaught
           }}</span>
@@ -733,7 +733,7 @@
           >
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">矿洞最深</span>
+          <span class="text-xs text-muted">玄矿幽脉最深</span>
           <span class="text-xs"
             >{{ achievementStore.stats.highestMineFloor }}层</span
           >
@@ -919,13 +919,13 @@ watch(selectedCategory, () => {
   if (collectionRef.value) collectionRef.value.scrollTop = 0;
 });
 
-/** 成就详情弹窗 */
+/** 功业详情弹窗 */
 const activeAchievement = ref<AchievementDef | null>(null);
 
-/** 祠堂任务弹窗 */
+/** 祠堂委托弹窗 */
 const activeBundle = ref<CommunityBundleDef | null>(null);
 
-/** 祠堂任务完成进度文本 */
+/** 祠堂委托完成进度文本 */
 const getBundleProgress = (bundle: CommunityBundleDef): string => {
   const done = bundle.requiredItems.filter(
     (r) => getSubmittedCount(bundle.id, r.itemId) >= r.quantity,
@@ -1003,15 +1003,15 @@ const EFFECT_NAMES: Record<string, string> = {
   vampiric: "吸血",
   max_hp_bonus: "最大HP",
   stamina_reduction: "体力消耗降低",
-  mining_stamina: "采矿体力降低",
-  farming_stamina: "农耕体力降低",
-  fishing_stamina: "钓鱼体力降低",
-  crop_quality_bonus: "作物品质",
-  crop_growth_bonus: "作物生长加速",
+  mining_stamina: "采玄矿体力降低",
+  farming_stamina: "灵耕体力降低",
+  fishing_stamina: "垂钓体力降低",
+  crop_quality_bonus: "灵植品质",
+  crop_growth_bonus: "灵植生长加速",
   fish_quality_bonus: "鱼类品质",
   fishing_calm: "鱼温顺度",
   sell_price_bonus: "售价加成",
-  shop_discount: "商店折扣",
+  shop_discount: "万象铺折扣",
   gift_friendship: "送礼好感",
   monster_drop_bonus: "怪物掉落",
   exp_bonus: "经验加成",
@@ -1068,9 +1068,9 @@ const getCategoryColor = (category: ItemCategory): string => {
 // === 出货收集 ===
 
 const CATEGORY_NAMES: Record<string, string> = {
-  seed: "种子",
-  crop: "农作物",
-  hybrid: "杂交作物",
+  seed: "灵种",
+  crop: "农灵植",
+  hybrid: "杂交灵植",
   fish: "鱼类",
   animal_product: "畜产品",
   processed: "加工品",
@@ -1096,7 +1096,7 @@ const CATEGORY_NAMES: Record<string, string> = {
   shoe: "鞋子",
 };
 
-/** 可出货的类别（排除种子、机器、工具类） */
+/** 可出货的类别（排除灵种、机器、工具类） */
 const SHIPPABLE_CATEGORIES = [
   "crop",
   "fish",
@@ -1142,7 +1142,7 @@ const getSubmittedCount = (bundleId: string, itemId: string): number => {
   return achievementStore.getBundleProgress(bundleId)[itemId] ?? 0;
 };
 
-/** 计算成就进度百分比（用于进度条） */
+/** 计算功业进度百分比（用于进度条） */
 const getProgressPercent = (a: (typeof ACHIEVEMENTS)[number]): number => {
   if (isCompleted(a.id)) return 100;
   const c = a.condition;

@@ -24,9 +24,9 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     chests.value.some((c) => c.tier === "void"),
   );
 
-  // ---- 箱子管理 ----
+  // ---- 储物匣管理 ----
 
-  /** 创建箱子 */
+  /** 创建储物匣 */
   const addChest = (tier: ChestTier, label?: string): boolean => {
     if (chests.value.length >= maxChests.value) return false;
     const def = CHEST_DEFS[tier];
@@ -40,7 +40,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     return true;
   };
 
-  /** 删除空箱子 */
+  /** 删除空储物匣 */
   const removeChest = (chestId: string): boolean => {
     const idx = chests.value.findIndex((c) => c.id === chestId);
     if (idx === -1) return false;
@@ -49,7 +49,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     return true;
   };
 
-  /** 重命名箱子 */
+  /** 重命名储物匣 */
   const renameChest = (chestId: string, label: string): boolean => {
     const trimmed = label.trim();
     if (!trimmed || trimmed.length > 8) return false;
@@ -59,19 +59,19 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     return true;
   };
 
-  /** 获取箱子引用 */
+  /** 获取储物匣引用 */
   const getChest = (chestId: string): Chest | undefined => {
     return chests.value.find((c) => c.id === chestId);
   };
 
-  /** 获取箱子容量 */
+  /** 获取储物匣容量 */
   const getChestCapacity = (chestId: string): number => {
     const chest = chests.value.find((c) => c.id === chestId);
     if (!chest) return 0;
     return CHEST_DEFS[chest.tier].capacity;
   };
 
-  /** 箱子是否已满 */
+  /** 储物匣是否已满 */
   const isChestFull = (chestId: string): boolean => {
     const chest = chests.value.find((c) => c.id === chestId);
     if (!chest) return true;
@@ -80,7 +80,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
 
   // ---- 物品操作 ----
 
-  /** 直接往箱子加物品（内部/自动路由用） */
+  /** 直接往储物匣加物品（内部/自动路由用） */
   const addItemToChest = (
     chestId: string,
     itemId: string,
@@ -114,7 +114,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     return remaining <= 0;
   };
 
-  /** 直接从箱子移除物品 */
+  /** 直接从储物匣移除物品 */
   const removeItemFromChest = (
     chestId: string,
     itemId: string,
@@ -148,7 +148,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     return true;
   };
 
-  /** 查询箱子内物品数量 */
+  /** 查询储物匣内物品数量 */
   const getChestItemCount = (
     chestId: string,
     itemId: string,
@@ -165,9 +165,9 @@ export const useWarehouseStore = defineStore("warehouse", () => {
       .reduce((sum, i) => sum + i.quantity, 0);
   };
 
-  // ---- 存取操作（背包 ↔ 箱子）----
+  // ---- 存取操作（纳戒 ↔ 储物匣）----
 
-  /** 从背包存入箱子，返回实际存入数量（0 = 失败） */
+  /** 从纳戒存入储物匣，返回实际存入数量（0 = 失败） */
   const depositToChest = (
     chestId: string,
     itemId: string,
@@ -178,7 +178,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     const chest = chests.value.find((c) => c.id === chestId);
     if (!chest) return 0;
 
-    // 计算箱子可容纳数量
+    // 计算储物匣可容纳数量
     const cap = CHEST_DEFS[chest.tier].capacity;
     let canStore = 0;
     for (const slot of chest.items) {
@@ -201,7 +201,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     return actual;
   };
 
-  /** 从箱子取出到背包 */
+  /** 从储物匣取出到纳戒 */
   const withdrawFromChest = (
     chestId: string,
     itemId: string,
@@ -216,7 +216,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     const actual = Math.min(quantity, available);
     if (actual <= 0) return false;
 
-    // 先从箱子移除，再加入背包（addItem 会溢出到临时背包，避免物品复制）
+    // 先从储物匣移除，再加入纳戒（addItem 会溢出到临时纳戒，避免物品复制）
     removeItemFromChest(chestId, itemId, actual, quality);
     inv.addItem(itemId, actual, quality);
     return true;
@@ -224,7 +224,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
 
   // ---- 仓库扩容 ----
 
-  /** 扩容仓库（增加箱子槽位） */
+  /** 扩容仓库（增加储物匣槽位） */
   const expandMaxChests = (): boolean => {
     if (maxChests.value >= MAX_CHESTS_CAP) return false;
     maxChests.value += 1;
@@ -238,7 +238,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     const chest = chests.value.find((c) => c.id === chestId);
     if (!chest || chest.tier !== "void") return false;
 
-    // 清除同角色的其他箱子
+    // 清除同角色的其他储物匣
     if (role !== "none") {
       for (const c of chests.value) {
         if (c.id !== chestId && c.tier === "void" && c.voidRole === role) {
@@ -271,9 +271,9 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     return chests.value.filter((c) => c.tier === "void");
   };
 
-  // ---- 箱子排序 ----
+  // ---- 储物匣排序 ----
 
-  /** 移动箱子位置（上移/下移） */
+  /** 移动储物匣位置（上移/下移） */
   const moveChest = (chestId: string, direction: "up" | "down"): boolean => {
     const idx = chests.value.findIndex((c) => c.id === chestId);
     if (idx === -1) return false;
@@ -319,7 +319,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     supreme: 3,
   };
 
-  /** 一键整理箱子（按分类→物品ID→品质排序，合并同类栈） */
+  /** 一键整理储物匣（按分类→物品ID→品质排序，合并同类栈） */
   const sortChest = (chestId: string) => {
     const chest = getChest(chestId);
     if (!chest || chest.items.length === 0) return;
@@ -382,7 +382,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
         getItemById(i.itemId),
       );
       if (oldItems.length > 0) {
-        // 金箱容量36，超出时分多个箱子
+        // 金箱容量36，超出时分多个储物匣
         const goldCap = CHEST_DEFS.gold.capacity;
         const migratedChests: Chest[] = [];
         for (let i = 0; i < oldItems.length; i += goldCap) {
@@ -398,7 +398,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
           });
         }
         chests.value = migratedChests;
-        // 确保箱子槽位足够容纳迁移的箱子
+        // 确保储物匣槽位足够容纳迁移的储物匣
         if (maxChests.value < migratedChests.length) {
           maxChests.value = migratedChests.length;
         }
@@ -409,7 +409,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
       chests.value = (data.chests as Chest[]) ?? [];
     }
 
-    // 兼容旧存档：如果有箱子但未标记解锁，自动解锁
+    // 兼容旧存档：如果有储物匣但未标记解锁，自动解锁
     if (!unlocked.value && chests.value.length > 0) unlocked.value = true;
   };
 

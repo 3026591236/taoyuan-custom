@@ -229,7 +229,7 @@ export const useHiddenNpcStore = defineStore("hiddenNpc", () => {
     if (!inventoryStore.removeItem(itemId, 1, quality)) {
       return {
         success: false,
-        message: "背包中没有此物品。",
+        message: "纳戒中没有此物品。",
         affinityChange: 0,
       };
     }
@@ -285,7 +285,7 @@ export const useHiddenNpcStore = defineStore("hiddenNpc", () => {
 
     switch (def.interactionType) {
       case "meditation": {
-        // 参悟：缘分增加 = 总技能等级 × 3
+        // 参悟：缘分增加 = 总百艺等级 × 3
         const totalLevels =
           skillStore.getSkill("farming").level +
           skillStore.getSkill("foraging").level +
@@ -314,7 +314,7 @@ export const useHiddenNpcStore = defineStore("hiddenNpc", () => {
         break;
       }
       case "cultivation": {
-        // 修炼：成功率 = 挖矿×5 + 采集×5，成功+40，失败+10
+        // 修炼：成功率 = 采玄矿×5 + 采集×5，成功+40，失败+10
         const successRate =
           skillStore.getSkill("mining").level * 5 +
           skillStore.getSkill("foraging").level * 5;
@@ -603,7 +603,7 @@ export const useHiddenNpcStore = defineStore("hiddenNpc", () => {
         }
         case "crop_blessing": {
           if (Math.random() < b.chance) {
-            messages.push(`${def.name}的祝福降临在田地上。`);
+            messages.push(`${def.name}的祝福降临在灵畦上。`);
           }
           break;
         }

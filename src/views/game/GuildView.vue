@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-1">
       <div class="flex items-center space-x-1.5 text-sm text-accent">
         <Swords :size="14" />
-        <span>冒险家公会 Lv.{{ guildStore.guildLevel }}</span>
+        <span>冒险家仙盟 Lv.{{ guildStore.guildLevel }}</span>
       </div>
       <div class="flex items-center space-x-2 text-xs">
         <span class="text-muted">
@@ -31,7 +31,7 @@
         class="flex-1 justify-center"
         :class="{ '!bg-accent !text-bg': tab === 'shop' }"
         @click="tab = 'shop'"
-        >商店</Button
+        >万象铺</Button
       >
       <Button
         class="flex-1 justify-center"
@@ -47,7 +47,7 @@
       >
     </div>
 
-    <!-- 讨伐任务 -->
+    <!-- 讨伐委托 -->
     <div v-if="tab === 'goals'">
       <!-- 空状态 -->
       <div
@@ -57,7 +57,7 @@
         <Swords :size="48" class="text-accent/30" />
         <p class="text-sm text-muted">尚未讨伐任何怪物</p>
         <p class="text-xs text-muted/60 text-center max-w-60">
-          前往矿洞击败怪物，完成讨伐目标可领取奖励
+          前往玄矿幽脉击败怪物，完成讨伐目标可领取奖励
         </p>
       </div>
 
@@ -386,7 +386,7 @@
       </div>
     </Transition>
 
-    <!-- 公会商店 -->
+    <!-- 仙盟万象铺 -->
     <div v-if="tab === 'shop'" class="flex flex-col space-y-2">
       <div
         v-for="item in GUILD_SHOP_ITEMS"
@@ -430,7 +430,7 @@
             class="text-xs text-danger mt-0.5"
           >
             <Lock :size="10" class="inline" />
-            公会 Lv.{{ item.unlockGuildLevel }} 解锁
+            仙盟 Lv.{{ item.unlockGuildLevel }} 解锁
           </p>
           <p
             v-if="item.dailyLimit && guildStore.isShopItemUnlocked(item.itemId)"
@@ -475,7 +475,7 @@
       </div>
     </div>
 
-    <!-- 商店购买弹窗 -->
+    <!-- 万象铺购买弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="shopModalItem"
@@ -694,7 +694,7 @@
             class="text-xs text-danger mb-2"
           >
             <Lock :size="10" class="inline" />
-            公会 Lv.{{ shopModalItem.unlockGuildLevel }} 解锁
+            仙盟 Lv.{{ shopModalItem.unlockGuildLevel }} 解锁
           </p>
           <Button
             v-else
@@ -718,11 +718,11 @@
       </div>
     </Transition>
 
-    <!-- 公会周常远征 -->
+    <!-- 仙盟周常远征 -->
     <div v-if="tab === 'weekly'" class="flex flex-col space-y-2">
       <div class="border border-accent/20 rounded-xs p-3 bg-accent/5">
         <div class="flex items-center justify-between mb-2">
-          <p class="text-xs text-accent">公会协作工程</p>
+          <p class="text-xs text-accent">仙盟协作工程</p>
           <span class="text-[10px] text-muted">{{
             guildStore.guildProjectBonusText
           }}</span>
@@ -776,7 +776,7 @@
         </Button>
       </div>
       <p class="text-[10px] text-muted">
-        每7个游戏日重置，奖励贡献点、公会经验和灵石。
+        每7个游戏日重置，奖励贡献点、仙盟经验和灵石。
       </p>
     </div>
 
@@ -789,7 +789,7 @@
         <BookOpen :size="48" class="text-accent/30" />
         <p class="text-sm text-muted">图鉴尚无记录</p>
         <p class="text-xs text-muted/60 text-center max-w-60">
-          在矿洞中遭遇怪物后，它们的信息将记录在此
+          在玄矿幽脉中遭遇怪物后，它们的信息将记录在此
         </p>
       </div>
       <template v-else>
@@ -955,7 +955,7 @@
           >
         </div>
         <div class="flex items-center justify-between">
-          <span class="text-xs text-muted">公会等级</span>
+          <span class="text-xs text-muted">仙盟等级</span>
           <span class="text-xs text-accent"
             >Lv.{{ guildStore.guildLevel }}</span
           >
@@ -1132,7 +1132,10 @@ const onDonateInput = (e: Event) => {
 
 const increaseDonateQuantity = () => {
   if (!donateModalItem.value) return;
-  donateQuantity.value = Math.min(donateModalItem.value.count, donateQuantity.value + 1);
+  donateQuantity.value = Math.min(
+    donateModalItem.value.count,
+    donateQuantity.value + 1,
+  );
 };
 
 const setDonateQuantityToMax = () => {
@@ -1221,7 +1224,7 @@ const ZONE_FILTERS = [
   { key: "shadow", label: "暗影" },
   { key: "abyss", label: "深渊" },
   { key: "boss", label: "BOSS" },
-  { key: "skull", label: "骷髅矿穴" },
+  { key: "skull", label: "幽骨矿窟" },
 ];
 
 const filteredGoals = computed(() => {
@@ -1237,7 +1240,7 @@ const isGoalClaimed = (monsterId: string): boolean => {
   return guildStore.claimedGoals.includes(monsterId);
 };
 
-/** 怪物图鉴：合并普通怪+BOSS+骷髅矿穴 */
+/** 怪物图鉴：合并普通怪+BOSS+幽骨矿窟 */
 const allMonsters = computed<MonsterDef[]>(() => {
   const list: MonsterDef[] = [];
   for (const m of Object.values(MONSTERS)) {
@@ -1257,7 +1260,7 @@ const monsterGroups = computed(() => [
   { label: "普通怪物", monsters: Object.values(MONSTERS) as MonsterDef[] },
   { label: "BOSS", monsters: Object.values(BOSS_MONSTERS) as MonsterDef[] },
   {
-    label: "骷髅矿穴",
+    label: "幽骨矿窟",
     monsters: Object.values(SKULL_CAVERN_MONSTERS) as MonsterDef[],
   },
 ]);

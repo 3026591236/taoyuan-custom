@@ -52,7 +52,7 @@
             />
           </div>
         </div>
-        <!-- HP（矿洞或受伤时显示） -->
+        <!-- HP（玄矿幽脉或受伤时显示） -->
         <div v-if="showHpBar" class="flex items-center space-x-1">
           <span
             :class="{
@@ -131,7 +131,7 @@ const staminaBarColor = computed(() => {
   return "bg-success";
 });
 
-/** HP 条是否显示：在矿洞中或HP不满 */
+/** HP 条是否显示：在玄矿幽脉中或HP不满 */
 const showHpBar = computed(() => {
   return (
     gameStore.currentLocationGroup === "mine" ||

@@ -15,7 +15,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "treasure",
     title: "矿工的遗书",
     content:
-      "我把毕生积蓄藏在矿洞第20层的一个隐秘角落……如果你能找到这封信，这些钱就归你了。",
+      "我把毕生积蓄藏在玄矿幽脉第20层的一个隐秘角落……如果你能找到这封信，这些钱就归你了。",
     usable: true,
     reward: { money: 500 },
   },
@@ -38,16 +38,16 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 5,
     type: "treasure",
-    title: "竹林秘图",
+    title: "青篁秘林秘图",
     content:
-      "在竹林最茂密的地方，有一块苔藓覆盖的石头，翻开它就能找到一块上好的翡翠。",
+      "在青篁秘林最茂密的地方，有一块苔藓覆盖的石头，翻开它就能找到一块上好的翡翠。",
     usable: true,
     reward: { items: [{ itemId: "jade", quantity: 1 }] },
   },
   {
     id: 6,
     type: "tip",
-    title: "钓鱼心得",
+    title: "垂钓心得",
     content:
       "满月的夜晚，水中的鱼儿格外活跃。如果你想钓到稀有的鱼，不妨在月圆之夜试试。",
     usable: false,
@@ -65,7 +65,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "story",
     title: "桃源志·下",
     content:
-      "隐士去世后，村民们世代守护着这片土地。他们定下规矩：不许砍伐桃花林，不许污染溪水。万象仙乡就这样安静地度过了百年时光。",
+      "隐士去世后，集民们世代守护着这片土地。他们定下规矩：不许砍伐桃花林，不许污染溪水。万象仙乡就这样安静地度过了百年时光。",
     usable: false,
   },
   {
@@ -82,7 +82,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "tip",
     title: "采集笔记",
     content:
-      "下雨天的时候，山野间会出现一些平时罕见的采集物。雨后的竹林尤其值得一看。",
+      "下雨天的时候，山野间会出现一些平时罕见的采集物。雨后的青篁秘林尤其值得一看。",
     usable: false,
   },
   {
@@ -95,9 +95,9 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 12,
     type: "treasure",
-    title: "矿洞暗号",
+    title: "玄矿幽脉暗号",
     content:
-      "矿洞暗河层的尽头，有一个被水冲刷出来的洞穴。里面藏着一块珍贵的月光石。",
+      "玄矿幽脉暗河层的尽头，有一个被水冲刷出来的洞穴。里面藏着一块珍贵的月光石。",
     usable: true,
     reward: { items: [{ itemId: "moonstone", quantity: 1 }] },
   },
@@ -114,7 +114,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "tip",
     title: "种植心得",
     content:
-      "作物的品质受到很多因素影响：土地肥力、浇水频率、季节适宜度……甚至每天的运势都可能有影响。",
+      "灵植的品质受到很多因素影响：土地肥力、浇水频率、季节适宜度……甚至每天的运势都可能有影响。",
     usable: false,
   },
   {
@@ -136,16 +136,17 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 17,
     type: "story",
-    title: "公会往事",
+    title: "仙盟往事",
     content:
-      "冒险家公会最初只是猎人们聚集的小屋。后来矿洞里的怪物越来越多，猎人们组建了公会，专门负责清剿怪物、保护村民。",
+      "冒险家仙盟最初只是猎人们聚集的仙居。后来玄矿幽脉里的怪物越来越多，猎人们组建了仙盟，专门负责清剿怪物、保护集民。",
     usable: false,
   },
   {
     id: 18,
     type: "tip",
-    title: "雷暴矿洞",
-    content: "闪电天气进入矿洞时，据说矿石的品质会更高。或许是电流激活了什么……",
+    title: "雷暴玄矿幽脉",
+    content:
+      "闪电天气进入玄矿幽脉时，据说矿石的品质会更高。或许是电流激活了什么……",
     usable: false,
   },
   {
@@ -161,16 +162,16 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "treasure",
     title: "桃花林宝藏",
     content:
-      "在桃花林最古老的那棵桃树下，埋着一颗远古种子。据说是建村隐士留下的。",
+      "在桃花林最古老的那棵桃树下，埋着一颗远古灵种。据说是建村隐士留下的。",
     usable: true,
     reward: { items: [{ itemId: "ancient_seed", quantity: 1 }] },
   },
   {
     id: 21,
     type: "story",
-    title: "博物馆秘闻",
+    title: "藏珍阁秘闻",
     content:
-      "博物馆原本是村里的祠堂。后来有学者建议把村民们挖到的化石和古物集中保存，祠堂便改建成了博物馆。据说收集齐所有展品后，会有奇迹发生。",
+      "藏珍阁原本是村里的祠堂。后来有学者建议把集民们挖到的化石和古物集中保存，祠堂便改建成了藏珍阁。据说收集齐所有展品后，会有奇迹发生。",
     usable: false,
   },
   {
@@ -194,7 +195,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "treasure",
     title: "废弃矿井",
     content:
-      "在矿洞深处有一条被封住的支洞，据说是更古老的矿井遗址。里面不仅有金银，还有珍贵的铱矿石。",
+      "在玄矿幽脉深处有一条被封住的支洞，据说是更古老的矿井遗址。里面不仅有金银，还有珍贵的铱矿石。",
     usable: true,
     reward: { money: 2000, items: [{ itemId: "iridium_ore", quantity: 1 }] },
   },
@@ -203,7 +204,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "story",
     title: "桃源秘事",
     content:
-      "万象仙乡的地底深处，据说封印着远古的力量。建村隐士之所以选择此地，并非偶然——他是这股力量的守护者。如今守护者已去，力量渐渐苏醒……这或许就是矿洞中怪物越来越多的原因。",
+      "万象仙乡的地底深处，据说封印着远古的力量。建村隐士之所以选择此地，并非偶然——他是这股力量的守护者。如今守护者已去，力量渐渐苏醒……这或许就是玄矿幽脉中怪物越来越多的原因。",
     usable: false,
   },
   // 仙灵线索
@@ -220,7 +221,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "story",
     title: "玉杵残片",
     content:
-      "采药时偶然捡到一块玉白色的残片，形状像是某种杵臼的碎块。老人说，满月之夜的竹林深处，偶尔能听到叮叮当当的捣药声。但没人知道是谁在捣药。",
+      "采药时偶然捡到一块玉白色的残片，形状像是某种杵臼的碎块。老人说，满月之夜的青篁秘林深处，偶尔能听到叮叮当当的捣药声。但没人知道是谁在捣药。",
     usable: false,
   },
   {
@@ -228,7 +229,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
     type: "story",
     title: "金光掠影",
     content:
-      "有不止一个村民在黄昏时分看到过一道金光掠过。传闻村子附近的山中住着一只修炼千年的狐狸精——亦正亦邪，喜欢出谜题戏弄路人。据说只有足够富有且人缘好的人才能引起它的注意。",
+      "有不止一个集民在黄昏时分看到过一道金光掠过。传闻村子附近的山中住着一只修炼千年的狐狸精——亦正亦邪，喜欢出谜题戏弄路人。据说只有足够富有且人缘好的人才能引起它的注意。",
     usable: false,
   },
 ];

@@ -43,7 +43,7 @@ export const DAO_GEAR: DaoGearDef[] = [
     id: "immortal_sword",
     slot: "sword",
     name: "灵剑",
-    desc: "修士御敌护道的本命外兵，独立于农场/矿洞武器，强化秘境与登塔战力。",
+    desc: "修士御敌护道的本命外兵，独立于灵田/玄矿幽脉武器，强化秘境与登塔战力。",
     material: { itemId: "artifact_shard", name: "法宝碎片", quantity: 2 },
     spiritStoneCost: 12,
     powerPerLevel: 520,
@@ -270,12 +270,12 @@ export const REALM_EVENTS: RealmEvent[] = [
   {
     id: "rare_seed_cache",
     name: "灵种遗藏",
-    desc: "古修遗落的灵种匣被你发现，种子仍有生机。",
+    desc: "古修遗落的灵种匣被你发现，灵种仍有生机。",
     chance: 0.05,
     minRealm: 12,
     effect: "item",
     value: 0,
-    itemReward: { itemId: "seed_ice_soul_lotus", name: "冰魄雪莲种子", qty: 1 },
+    itemReward: { itemId: "seed_ice_soul_lotus", name: "冰魄雪莲灵种", qty: 1 },
   },
   {
     id: "ganoderma_spore",
@@ -1321,7 +1321,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const sectDailyKey = ref("");
   const sectDailyDone = ref<string[]>([]);
 
-  // V1.3.9：宗门差异化实装。按宗门技能与职位给实际玩法加成。
+  // V1.3.9：宗门差异化实装。按宗门百艺与职位给实际玩法加成。
   const sectSkillTotal = computed(() =>
     sectSkills.value.reduce((sum, lv) => sum + (Number(lv) || 0), 0),
   );
@@ -1863,7 +1863,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const player = usePlayerStore();
     if (earthPulse.value < 100) {
       showFloat(
-        `地脉感应不足，还需${100 - earthPulse.value}点。先从收获作物开始感应田间灵机。`,
+        `地脉感应不足，还需${100 - earthPulse.value}点。先从收获灵植开始感应田间灵机。`,
         "danger",
       );
       return false;
@@ -1877,7 +1877,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     aura.value += 80;
     mana.value = maxMana.value;
     addLog(
-      "你长期耕作积累的地脉感应终于贯通，田埂下涌出一缕温润灵脉，田庄启蒙为黄阶灵田。",
+      "你长期耕作积累的地脉感应终于贯通，田埂下涌出一缕温润灵脉，灵田洞天启蒙为黄阶灵田。",
     );
     showFloat("地脉初醒，灵田启蒙！", "success");
     return true;
@@ -2122,7 +2122,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     aura.value -= cost;
     fieldTier.value++;
     mana.value = maxMana.value;
-    addLog(`你以灵气温养地脉，田庄提升为「${fieldTierName.value}」。`);
+    addLog(`你以灵气温养地脉，灵田洞天提升为「${fieldTierName.value}」。`);
     showFloat(fieldTierName.value, "success");
     return true;
   };
@@ -2149,7 +2149,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
         );
         showFloat("地脉感应圆满", "accent");
       } else if (spiritCrop || earthPulse.value % 20 < before % 20) {
-        addLog(`收获作物时感到一丝地脉回应，地脉感应+${pulseGain}。`);
+        addLog(`收获灵植时感到一丝地脉回应，地脉感应+${pulseGain}。`);
       }
       return 0;
     }
@@ -2176,7 +2176,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     aura.value += gain;
     totalAuraHarvested.value += gain;
     addLog(
-      `${spiritCrop ? "灵植" : "作物"}收获牵动田间灵机，获得灵气${gain}点。`,
+      `${spiritCrop ? "灵植" : "灵植"}收获牵动田间灵机，获得灵气${gain}点。`,
     );
     showFloat(`灵气+${gain}`, "accent");
     return gain;
@@ -2830,7 +2830,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const usePill = (pillId: UsablePillId) => {
     const inventory = useInventoryStore();
     if (!inventory.hasItem(pillId)) {
-      showFloat("背包中没有这种丹药。", "danger");
+      showFloat("纳戒中没有这种丹药。", "danger");
       return false;
     }
     if (pillId === "rebirth_pill") {
@@ -3272,7 +3272,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const removed = inventory.removeItem(data.feedCrop, data.feedQty);
     const afterCount = inventory.getItemCount(data.feedCrop);
     if (!removed || beforeCount - afterCount < data.feedQty) {
-      showFloat(`${feedName}扣除失败，请整理背包后重试。`, "danger");
+      showFloat(`${feedName}扣除失败，请整理纳戒后重试。`, "danger");
       addLog(`喂食${data.name}失败：${feedName}未正确扣除，未增加羁绊。`);
       return false;
     }
@@ -3294,7 +3294,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
       return false;
     }
     if (beastExpedition.value) {
-      showFloat("灵兽已有任务。", "danger");
+      showFloat("灵兽已有委托。", "danger");
       return false;
     }
     beastExpedition.value = { type, daysLeft: type === "guard" ? 1 : 2 };

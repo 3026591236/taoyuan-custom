@@ -7,7 +7,7 @@
         <span>育种</span>
       </div>
       <span class="text-xs text-muted"
-        >种子箱 {{ breedingStore.boxCount }}/{{
+        >灵种箱 {{ breedingStore.boxCount }}/{{
           breedingStore.maxSeedBox
         }}</span
       >
@@ -128,11 +128,11 @@
         </div>
       </div>
 
-      <!-- 种子箱 -->
+      <!-- 灵种箱 -->
       <div>
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-xs text-muted"
-            >种子箱 {{ breedingStore.boxCount }}/{{
+            >灵种箱 {{ breedingStore.boxCount }}/{{
               breedingStore.maxSeedBox
             }}</span
           >
@@ -156,9 +156,9 @@
           class="border border-accent/10 rounded-xs py-6 flex flex-col items-center space-y-2"
         >
           <PackageOpen :size="32" class="text-muted/30" />
-          <p class="text-xs text-muted">种子箱为空</p>
+          <p class="text-xs text-muted">灵种箱为空</p>
           <p class="text-xs text-muted/60">
-            通过种子制造机收取产物时有概率获得育种种子
+            通过灵种制造机收取产物时有概率获得育种灵种
           </p>
         </div>
         <div
@@ -214,23 +214,23 @@
             class="text-xs text-muted leading-relaxed mt-1.5 flex flex-col space-y-1"
           >
             <li>
-              · 收获作物时有
+              · 收获灵植时有
               <span class="text-accent">30%+种植等级×3%</span>
-              概率获得育种种子
+              概率获得育种灵种
             </li>
-            <li>· 种子制造机加工作物也有概率产出育种种子</li>
+            <li>· 灵种制造机加工灵植也有概率产出育种灵种</li>
             <li>
-              · 育种种子拥有独立遗传属性（甜度/产量/抗性），与物品品质无关
+              · 育种灵种拥有独立遗传属性（甜度/产量/抗性），与物品品质无关
             </li>
             <li>
               ·
               <span class="text-accent">同种培育</span>
-              ：两颗相同作物的育种种子杂交，可提升后代遗传属性
+              ：两颗相同灵植的育种灵种杂交，可提升后代遗传属性
             </li>
             <li>
               ·
               <span class="text-accent">异种杂交</span>
-              ：两颗不同作物的育种种子杂交，当亲本平均属性达标时可发现新品种
+              ：两颗不同灵植的育种灵种杂交，当亲本平均属性达标时可发现新品种
             </li>
             <li>· 先通过同种培育提升属性，再尝试异种杂交效果更佳</li>
           </ul>
@@ -245,13 +245,13 @@
           图鉴收录通过
           <span class="text-accent">异种杂交</span>
           发现的新品种。将两种
-          <span class="text-accent">不同作物</span>
-          的育种种子放入育种台，当亲本平均属性达标时即可发现杂交品种。
+          <span class="text-accent">不同灵植</span>
+          的育种灵种放入育种台，当亲本平均属性达标时即可发现杂交品种。
         </p>
         <p class="text-xs text-muted mt-1 leading-relaxed">
           提示：先通过
           <span class="text-accent">同种培育</span>
-          提升种子的甜度和产量属性，再尝试异种杂交。
+          提升灵种的甜度和产量属性，再尝试异种杂交。
         </p>
       </div>
       <!-- 阶层筛选 -->
@@ -387,7 +387,7 @@
       </div>
     </Transition>
 
-    <!-- 种子详情弹窗 -->
+    <!-- 灵种详情弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="detailSeed"
@@ -548,7 +548,7 @@
       </div>
     </Transition>
 
-    <!-- 种子箱升级弹窗 -->
+    <!-- 灵种箱升级弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showSeedBoxUpgradeModal"
@@ -565,7 +565,7 @@
 
           <p class="text-sm text-accent mb-2">
             <ArrowUpCircle :size="14" class="inline mr-0.5" />
-            种子箱信息
+            灵种箱信息
           </p>
 
           <!-- 当前状态 -->
@@ -646,7 +646,7 @@
               :disabled="!canUpgradeSeedBox"
               @click="showSeedBoxUpgradeConfirm = true"
             >
-              扩容种子箱
+              扩容灵种箱
             </Button>
 
             <!-- 确认 -->
@@ -668,7 +668,7 @@
           </template>
 
           <p v-else class="text-[10px] text-muted text-center">
-            种子箱已达到最高等级。
+            灵种箱已达到最高等级。
           </p>
         </div>
       </div>
@@ -689,7 +689,7 @@
             <X :size="14" />
           </button>
 
-          <p class="text-sm text-accent mb-1">选择两颗种子</p>
+          <p class="text-sm text-accent mb-1">选择两颗灵种</p>
           <p class="text-xs text-muted mb-2">
             已选 {{ selectedSeedIds.length }}/2
           </p>
@@ -940,7 +940,7 @@ const tierColor = (hybridId: string): string => {
 
 const activeHybrid = ref<HybridDef | null>(null);
 
-// === 种子详情 ===
+// === 灵种详情 ===
 
 const detailSeed = ref<BreedingSeed | null>(null);
 
@@ -983,7 +983,7 @@ const seedAttributes = computed(() => {
 const handleDiscard = () => {
   if (!detailSeed.value) return;
   breedingStore.removeFromBox(detailSeed.value.genetics.id);
-  addLog("丢弃了一颗育种种子。");
+  addLog("丢弃了一颗育种灵种。");
   detailSeed.value = null;
 };
 
@@ -1011,7 +1011,7 @@ const toggleSeedSelect = (id: string) => {
   }
 };
 
-/** 选中两颗种子时，检查是否存在杂交配方并显示属性要求 */
+/** 选中两颗灵种时，检查是否存在杂交配方并显示属性要求 */
 const crossBreedHint = computed(() => {
   if (selectedSeedIds.value.length !== 2) return null;
   const seedA = breedingStore.breedingBox.find(
@@ -1069,7 +1069,7 @@ const handleCollect = (slotIdx: number) => {
   if (result) {
     const crop = getCropById(result.cropId);
     const stars = getStarRating(result);
-    addLog(`收取了育种种子：${crop?.name ?? result.cropId}（${stars}星）。`);
+    addLog(`收取了育种灵种：${crop?.name ?? result.cropId}（${stars}星）。`);
   }
 };
 
@@ -1108,7 +1108,7 @@ const handleCraftStation = () => {
   }
 };
 
-// === 种子箱升级 ===
+// === 灵种箱升级 ===
 
 const showSeedBoxUpgradeModal = ref(false);
 const showSeedBoxUpgradeConfirm = ref(false);

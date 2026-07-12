@@ -157,14 +157,14 @@ export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
     itemId: "storage_talisman",
     name: "纳物符",
     price: 12,
-    description: "灵石兑换，使用后背包永久+1格，可突破普通上限",
+    description: "灵石兑换，使用后纳戒永久+1格，可突破普通上限",
     currency: "spirit_stone",
   },
   {
     itemId: "cosmos_bag",
     name: "乾坤袋",
     price: 45,
-    description: "灵石兑换，使用后背包永久+4格，可突破普通上限",
+    description: "灵石兑换，使用后纳戒永久+4格，可突破普通上限",
     currency: "spirit_stone",
   },
   {
@@ -207,7 +207,7 @@ export const useShopStore = defineStore("shop", () => {
 
   // === 多商铺导航 ===
 
-  /** 当前选中的商铺（null=商圈总览） */
+  /** 当前选中的商铺（null=万象市集总览） */
   const currentShopId = ref<string | null>(null);
   type PlayerAuctionId =
     "spirit_bone_lot" | "cloud_silk_lot" | "artifact_core_lot";
@@ -225,7 +225,7 @@ export const useShopStore = defineStore("shop", () => {
     const walletStore = useWalletStore();
     const discount = walletStore.getShopDiscount();
     const ringDiscount = inventoryStore.getRingEffectValue("shop_discount");
-    // 仙缘能力：狐眼（hu_xian_1）商店价格降低
+    // 仙缘能力：狐眼（hu_xian_1）万象铺价格降低
     const spiritDiscount =
       useHiddenNpcStore().getAbilityValue("hu_xian_1") / 100;
     return Math.floor(
@@ -235,7 +235,7 @@ export const useShopStore = defineStore("shop", () => {
 
   // === 万物铺 (陈伯) ===
 
-  /** 当前季节可购买的种子 */
+  /** 当前季节可购买的灵种 */
   const availableSeeds = computed(() => {
     return getCropsBySeason(gameStore.season)
       .filter((crop) => crop.seedPrice > 0)
@@ -251,7 +251,7 @@ export const useShopStore = defineStore("shop", () => {
       }));
   });
 
-  /** 购买种子 */
+  /** 购买灵种 */
   const buySeed = (seedId: string, quantity: number = 1): boolean => {
     const seed = availableSeeds.value.find((s) => s.seedId === seedId);
     if (!seed) return false;
@@ -278,19 +278,19 @@ export const useShopStore = defineStore("shop", () => {
       itemId: "copper_ore",
       name: "铜矿",
       price: 100,
-      description: "矿洞中常见的铜矿",
+      description: "玄矿幽脉中常见的铜矿",
     },
     {
       itemId: "iron_ore",
       name: "铁矿",
       price: 200,
-      description: "中层矿洞出产的铁矿",
+      description: "中层玄矿幽脉出产的铁矿",
     },
     {
       itemId: "gold_ore",
       name: "金矿",
       price: 400,
-      description: "深层矿洞出产的金矿",
+      description: "深层玄矿幽脉出产的金矿",
     },
     {
       itemId: "copper_bar",
@@ -365,13 +365,13 @@ export const useShopStore = defineStore("shop", () => {
       itemId: "fish_feed",
       name: "鱼饲料",
       price: 30,
-      description: "鱼塘专用饲料",
+      description: "灵泉鱼池专用饲料",
     },
     {
       itemId: "water_purifier",
       name: "水质改良剂",
       price: 100,
-      description: "改善鱼塘水质",
+      description: "改善灵泉鱼池水质",
     },
   ]);
 
@@ -403,7 +403,7 @@ export const useShopStore = defineStore("shop", () => {
       itemId: "crab_pot",
       name: "蟹笼",
       price: 1500,
-      description: "放置在钓鱼地点，每日自动捕获水产（需鱼饵）",
+      description: "放置在垂钓地点，每日自动捕获水产（需鱼饵）",
     },
   ]);
 
@@ -670,14 +670,14 @@ export const useShopStore = defineStore("shop", () => {
     return true;
   };
 
-  // === 出货箱 ===
+  // === 出货灵匣 ===
 
-  /** 出货箱中的物品 */
+  /** 出货灵匣中的物品 */
   const shippingBox = ref<
     { itemId: string; quantity: number; quality: Quality }[]
   >([]);
 
-  /** 添加物品到出货箱 */
+  /** 添加物品到出货灵匣 */
   const addToShippingBox = (
     itemId: string,
     quantity: number,
@@ -695,7 +695,7 @@ export const useShopStore = defineStore("shop", () => {
     return true;
   };
 
-  /** 从出货箱取回物品 */
+  /** 从出货灵匣取回物品 */
   const removeFromShippingBox = (
     itemId: string,
     quantity: number,
@@ -707,7 +707,7 @@ export const useShopStore = defineStore("shop", () => {
     if (idx === -1) return false;
     const entry = shippingBox.value[idx]!;
     if (entry.quantity < quantity) return false;
-    // 先计算背包可用空间，避免 addItem 部分添加的副作用
+    // 先计算纳戒可用空间，避免 addItem 部分添加的副作用
     const MAX_STACK = 999;
     let space = 0;
     for (const s of inventoryStore.items) {
@@ -723,7 +723,7 @@ export const useShopStore = defineStore("shop", () => {
       (inventoryStore.capacity - inventoryStore.items.length) * MAX_STACK;
     const toTransfer = Math.min(quantity, space);
     if (toTransfer <= 0) return false;
-    // 先从出货箱移除，再添加到背包
+    // 先从出货灵匣移除，再添加到纳戒
     entry.quantity -= toTransfer;
     if (entry.quantity <= 0) {
       shippingBox.value.splice(idx, 1);
@@ -732,7 +732,7 @@ export const useShopStore = defineStore("shop", () => {
     return true;
   };
 
-  /** 处理出货箱结算（日结时调用），返回总收入 */
+  /** 处理出货灵匣结算（日结时调用），返回总收入 */
   const processShippingBox = (): number => {
     let total = 0;
     const dayKey = `${gameStore.year}-${gameStore.seasonIndex}-${gameStore.day}`;
@@ -833,7 +833,7 @@ export const useShopStore = defineStore("shop", () => {
     {
       id: "spirit_bone_lot",
       name: "玩家拍卖·灵骨整箱",
-      desc: "镇魔与公会玩家寄售的灵骨，适合宗门工程与后期维护。",
+      desc: "镇魔与仙盟玩家寄售的灵骨，适合宗门工程与后期维护。",
       itemId: "spirit_bone",
       itemName: "灵骨",
       baseBid: 6000,
@@ -978,7 +978,7 @@ export const useShopStore = defineStore("shop", () => {
     isMerchantHere,
     refreshMerchantStock,
     buyFromTraveler,
-    // 出货箱
+    // 出货灵匣
     shippingBox,
     addToShippingBox,
     removeFromShippingBox,

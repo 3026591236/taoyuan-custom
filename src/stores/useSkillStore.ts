@@ -11,7 +11,7 @@ const EXP_TABLE = [
   0, 100, 380, 770, 1300, 2150, 3300, 4800, 6900, 10000, 15000,
 ];
 
-/** 创建初始技能状态 */
+/** 创建初始百艺状态 */
 const createSkill = (type: SkillType): SkillState => {
   return { type, exp: 0, level: 0, perk5: null, perk10: null };
 };
@@ -56,8 +56,8 @@ export const useSkillStore = defineStore("skill", () => {
   }[] = [
     {
       id: "chef_supply",
-      name: "灶台供餐",
-      desc: "提交蕴灵稻，为村庄、宗门和家族提供日常膳食。",
+      name: "灵膳房供餐",
+      desc: "提交蕴灵稻，为万象集、宗门和家族提供日常膳食。",
       skill: "farming",
       itemId: "spirit_rice",
       itemName: "蕴灵稻",
@@ -68,7 +68,7 @@ export const useSkillStore = defineStore("skill", () => {
     {
       id: "angler_stock",
       name: "鱼鲜备货",
-      desc: "提交鲫鱼，补足商圈与家宴消耗。",
+      desc: "提交鲫鱼，补足万象市集与家宴消耗。",
       skill: "fishing",
       itemId: "crucian",
       itemName: "鲫鱼",
@@ -79,7 +79,7 @@ export const useSkillStore = defineStore("skill", () => {
     {
       id: "miner_refine",
       name: "矿材精炼",
-      desc: "提交铁锭，支撑修仙装备和公会工程。",
+      desc: "提交铁锭，支撑修仙装备和仙盟工程。",
       skill: "mining",
       itemId: "iron_bar",
       itemName: "铁锭",
@@ -113,7 +113,7 @@ export const useSkillStore = defineStore("skill", () => {
     {
       id: "spirit_banquet",
       name: "大师委托·灵膳宴",
-      desc: "农耕大师以灵米与月华玉筹备宗门灵膳。",
+      desc: "灵耕大师以灵米与月华玉筹备宗门灵膳。",
       skill: "farming",
       level: 7,
       items: [
@@ -127,7 +127,7 @@ export const useSkillStore = defineStore("skill", () => {
     {
       id: "rare_fish_feast",
       name: "大师委托·珍鱼席",
-      desc: "钓鱼大师为瀚海商队备下鲜鱼与仙露。",
+      desc: "垂钓大师为瀚海商队备下鲜鱼与仙露。",
       skill: "fishing",
       level: 7,
       items: [
@@ -141,7 +141,7 @@ export const useSkillStore = defineStore("skill", () => {
     {
       id: "hundred_craft",
       name: "大师委托·百工器修",
-      desc: "挖矿大师交付玄铁与图纸，支援炼器升星。",
+      desc: "采玄矿大师交付玄铁与图纸，支援炼器升星。",
       skill: "mining",
       level: 8,
       items: [
@@ -216,7 +216,7 @@ export const useSkillStore = defineStore("skill", () => {
     return { current: skill.exp, required: EXP_TABLE[skill.level + 1]! };
   };
 
-  /** 计算技能对体力消耗的减免 (每级减少1%，10级共减少10%) */
+  /** 计算百艺对体力消耗的减免 (每级减少1%，10级共减少10%) */
   const getStaminaReduction = (type: SkillType): number => {
     return getSkill(type).level * 0.01;
   };
@@ -237,12 +237,12 @@ export const useSkillStore = defineStore("skill", () => {
     return true;
   };
 
-  /** 判断作物品质（基于农耕等级） */
+  /** 判断灵植品质（基于灵耕等级） */
   const rollCropQuality = (): "normal" | "fine" | "excellent" | "supreme" => {
     return rollCropQualityWithBonus(0);
   };
 
-  /** 判断作物品质（带肥料加成 + 可选技能等级加成） */
+  /** 判断灵植品质（带肥料加成 + 可选百艺等级加成） */
   const rollCropQualityWithBonus = (
     qualityBonus: number,
     levelBonus: number = 0,
@@ -256,7 +256,7 @@ export const useSkillStore = defineStore("skill", () => {
     return "normal";
   };
 
-  /** 判断采集物品质（基于采集等级和专精 + 可选技能等级加成） */
+  /** 判断采集物品质（基于采集等级和专精 + 可选百艺等级加成） */
   const rollForageQuality = (
     levelBonus: number = 0,
   ): "normal" | "fine" | "excellent" | "supreme" => {
@@ -311,7 +311,7 @@ export const useSkillStore = defineStore("skill", () => {
     addExp(order.skill, order.exp);
     professionOrdersDone.value.push(key);
     addLog(
-      `完成生活职业委托「${order.name}」，获得${order.money}文与${order.exp}技能经验。`,
+      `完成生活职业委托「${order.name}」，获得${order.money}文与${order.exp}百艺经验。`,
     );
     return { success: true, message: `${order.name}完成。` };
   };
@@ -345,7 +345,7 @@ export const useSkillStore = defineStore("skill", () => {
     addExp(order.skill, order.exp);
     professionOrdersDone.value.push(key);
     addLog(
-      `完成${order.name}，获得${order.money}文、灵石×${order.spiritStone}与${order.exp}技能经验。`,
+      `完成${order.name}，获得${order.money}文、灵石×${order.spiritStone}与${order.exp}百艺经验。`,
     );
     return { success: true, message: `${order.name}完成。` };
   };
@@ -359,7 +359,7 @@ export const useSkillStore = defineStore("skill", () => {
 
   const deserialize = (data: ReturnType<typeof serialize>) => {
     const arr: SkillState[] = data.skills ?? [];
-    // 确保 5 个技能都存在（旧存档可能没有 combat）
+    // 确保 5 个百艺都存在（旧存档可能没有 combat）
     const allTypes: SkillType[] = [
       "farming",
       "foraging",

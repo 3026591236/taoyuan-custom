@@ -68,7 +68,7 @@
               <p class="text-[10px] text-muted">{{ recipe.desc }}</p>
             </div>
             <span class="text-[10px] text-muted"
-              >背包 {{ itemCount(recipe.id) }}</span
+              >纳戒 {{ itemCount(recipe.id) }}</span
             >
           </div>
           <p class="text-[10px] text-muted mb-2">

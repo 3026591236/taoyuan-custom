@@ -9,7 +9,7 @@ export const CHAPTER_TITLES: Record<number, string> = {
   5: "桃源之主",
 };
 
-/** 50个主线任务定义，分5章每章10个 */
+/** 50个主线委托定义，分5章每章10个 */
 export const STORY_QUESTS: MainQuestDef[] = [
   // ============================================================
   // 第1章「初入桃源」— 新手引导
@@ -20,9 +20,9 @@ export const STORY_QUESTS: MainQuestDef[] = [
     order: 1,
     title: "新的开始",
     description:
-      "柳村长说，想在万象仙乡立足，先从种地开始吧。试着收获5次作物。",
+      "柳村长说，想在万象仙乡立足，先从种地开始吧。试着收获5次灵植。",
     npcId: "liu_cunzhang",
-    objectives: [{ type: "harvestCrops", label: "累计收获5次作物", target: 5 }],
+    objectives: [{ type: "harvestCrops", label: "累计收获5次灵植", target: 5 }],
     moneyReward: 300,
     friendshipReward: [{ npcId: "liu_cunzhang", amount: 20 }],
   },
@@ -49,7 +49,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 1,
     order: 3,
     title: "溪边垂钓",
-    description: "秋月是村里最会钓鱼的姑娘，她邀你去溪边试试身手。",
+    description: "秋月是村里最会垂钓的姑娘，她邀你去溪边试试身手。",
     npcId: "qiu_yue",
     objectives: [{ type: "catchFish", label: "累计钓到5条鱼", target: 5 }],
     moneyReward: 300,
@@ -60,10 +60,12 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_1_4",
     chapter: 1,
     order: 4,
-    title: "初探矿洞",
-    description: "阿石说矿洞里有好东西，但也有危险。先探到第5层试试。",
+    title: "初探玄矿幽脉",
+    description: "阿石说玄矿幽脉里有好东西，但也有危险。先探到第5层试试。",
     npcId: "a_shi",
-    objectives: [{ type: "reachMineFloor", label: "矿洞到达第5层", target: 5 }],
+    objectives: [
+      { type: "reachMineFloor", label: "玄矿幽脉到达第5层", target: 5 },
+    ],
     moneyReward: 500,
     friendshipReward: [{ npcId: "a_shi", amount: 20 }],
   },
@@ -83,7 +85,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 1,
     order: 6,
     title: "广结善缘",
-    description: "柳村长希望你多认识村里的人，同时也帮乡亲们办办事。",
+    description: "柳村长希望你多认识村里的人，同时也帮集民们办办事。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeQuests", label: "累计完成3个委托", target: 3 },
@@ -145,12 +147,12 @@ export const STORY_QUESTS: MainQuestDef[] = [
     order: 10,
     title: "扎根桃源",
     description:
-      "要在万象仙乡真正站稳脚跟，农耕技能必须过硬。把农耕练到3级吧。",
+      "要在万象仙乡真正站稳脚跟，灵耕百艺必须过硬。把灵耕练到3级吧。",
     npcId: "liu_cunzhang",
     objectives: [
       {
         type: "skillLevel",
-        label: "农耕技能达到3级",
+        label: "灵耕百艺达到3级",
         skillType: "farming",
         target: 3,
       },
@@ -168,10 +170,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 2,
     order: 1,
     title: "丰收之路",
-    description: "柳娘说你的农场越来越像样了，继续加油收获更多作物吧。",
+    description: "柳娘说你的灵田越来越像样了，继续加油收获更多灵植吧。",
     npcId: "liu_niang",
     objectives: [
-      { type: "harvestCrops", label: "累计收获50次作物", target: 50 },
+      { type: "harvestCrops", label: "累计收获50次灵植", target: 50 },
     ],
     moneyReward: 800,
     friendshipReward: [{ npcId: "liu_niang", amount: 20 }],
@@ -180,11 +182,11 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_2_2",
     chapter: 2,
     order: 2,
-    title: "矿洞深处",
-    description: "阿石说矿洞20层以下有铁矿脉，深入探索一下吧。",
+    title: "玄矿幽脉深处",
+    description: "阿石说玄矿幽脉20层以下有铁矿脉，深入探索一下吧。",
     npcId: "a_shi",
     objectives: [
-      { type: "reachMineFloor", label: "矿洞到达第20层", target: 20 },
+      { type: "reachMineFloor", label: "玄矿幽脉到达第20层", target: 20 },
     ],
     moneyReward: 1000,
     itemReward: [{ itemId: "iron_ore", quantity: 10 }],
@@ -195,7 +197,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 2,
     order: 3,
     title: "渔翁之道",
-    description: "李渔翁说，钓鱼讲究心境。多钓几条鱼，领悟其中奥妙。",
+    description: "李渔翁说，垂钓讲究心境。多钓几条鱼，领悟其中奥妙。",
     npcId: "li_yu",
     objectives: [{ type: "catchFish", label: "累计钓到30条鱼", target: 30 }],
     moneyReward: 800,
@@ -207,10 +209,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     order: 4,
     title: "乡情初绽",
     description:
-      "柳村长说村里祠堂有一块任务板，去图鉴中的「祠堂」看看，完成一个任务为村子做点贡献。",
+      "柳村长说村里祠堂有一块委托板，去图鉴中的「祠堂」看看，完成一个委托为村子做点贡献。",
     npcId: "liu_cunzhang",
     objectives: [
-      { type: "completeBundles", label: "完成1个祠堂任务", target: 1 },
+      { type: "completeBundles", label: "完成1个祠堂委托", target: 1 },
     ],
     moneyReward: 1000,
     friendshipReward: [{ npcId: "liu_cunzhang", amount: 30 }],
@@ -243,7 +245,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_2_6",
     chapter: 2,
     order: 6,
-    title: "牧场之梦",
+    title: "灵牧苑之梦",
     description: "大牛说养动物是件快乐的事，试着养3只牲畜吧。",
     npcId: "da_niu",
     objectives: [{ type: "ownAnimals", label: "拥有3只牲畜", target: 3 }],
@@ -266,7 +268,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 2,
     order: 8,
     title: "村里的委托",
-    description: "柳村长说你帮了不少乡亲的忙，继续做下去吧。",
+    description: "柳村长说你帮了不少集民的忙，继续做下去吧。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeQuests", label: "累计完成10个委托", target: 10 },
@@ -310,10 +312,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 3,
     order: 1,
     title: "深渊挑战",
-    description: "阿石说矿洞40层以下有金矿脉，但怪物也更凶猛了。",
+    description: "阿石说玄矿幽脉40层以下有金矿脉，但怪物也更凶猛了。",
     npcId: "a_shi",
     objectives: [
-      { type: "reachMineFloor", label: "矿洞到达第40层", target: 40 },
+      { type: "reachMineFloor", label: "玄矿幽脉到达第40层", target: 40 },
     ],
     moneyReward: 1500,
     itemReward: [{ itemId: "gold_ore", quantity: 10 }],
@@ -324,7 +326,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 3,
     order: 2,
     title: "百事通",
-    description: "柳村长说你已经成了村里的大忙人，继续帮助乡亲们吧。",
+    description: "柳村长说你已经成了村里的大忙人，继续帮助集民们吧。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeQuests", label: "累计完成25个委托", target: 25 },
@@ -366,7 +368,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     objectives: [
       {
         type: "npcAllFriendly",
-        label: "与所有村民成为相识",
+        label: "与所有集民成为相识",
         friendshipLevel: "acquaintance",
       },
     ],
@@ -377,8 +379,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_3_6",
     chapter: 3,
     order: 6,
-    title: "牧场扩张",
-    description: "大牛对你的牧场很感兴趣，把牲畜养到8只吧。",
+    title: "灵牧苑扩张",
+    description: "大牛对你的灵牧苑很感兴趣，把牲畜养到8只吧。",
     npcId: "da_niu",
     objectives: [{ type: "ownAnimals", label: "拥有8只牲畜", target: 8 }],
     moneyReward: 1500,
@@ -411,9 +413,9 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 3,
     order: 9,
     title: "技艺精通",
-    description: "林老说人要有一技之长，把任意一项技能练到7级。",
+    description: "林老说人要有一技之长，把任意一项百艺练到7级。",
     npcId: "lin_lao",
-    objectives: [{ type: "skillLevel", label: "任意技能达到7级", target: 7 }],
+    objectives: [{ type: "skillLevel", label: "任意百艺达到7级", target: 7 }],
     moneyReward: 2000,
     friendshipReward: [{ npcId: "lin_lao", amount: 20 }],
   },
@@ -440,10 +442,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 4,
     order: 1,
     title: "深渊征服者",
-    description: "阿石说矿洞最深处隐藏着强大的boss，到达第80层吧。",
+    description: "阿石说玄矿幽脉最深处隐藏着强大的boss，到达第80层吧。",
     npcId: "a_shi",
     objectives: [
-      { type: "reachMineFloor", label: "矿洞到达第80层", target: 80 },
+      { type: "reachMineFloor", label: "玄矿幽脉到达第80层", target: 80 },
     ],
     moneyReward: 3000,
     itemReward: [{ itemId: "gold_ore", quantity: 15 }],
@@ -468,10 +470,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     order: 3,
     title: "乡情圆满",
     description:
-      "柳村长希望你能为村子完成更多祠堂任务。前往图鉴中的「祠堂」查看并提交所需物品。",
+      "柳村长希望你能为村子完成更多祠堂委托。前往图鉴中的「祠堂」查看并提交所需物品。",
     npcId: "liu_cunzhang",
     objectives: [
-      { type: "completeBundles", label: "完成4个祠堂任务", target: 4 },
+      { type: "completeBundles", label: "完成4个祠堂委托", target: 4 },
     ],
     moneyReward: 3000,
     friendshipReward: [{ npcId: "liu_cunzhang", amount: 30 }],
@@ -527,12 +529,12 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 4,
     order: 8,
     title: "知己之交",
-    description: "人生得一知己足矣。和一位村民成为挚友吧。",
+    description: "人生得一知己足矣。和一位集民成为挚友吧。",
     npcId: "lin_lao",
     objectives: [
       {
         type: "npcFriendship",
-        label: "与任意村民成为挚友",
+        label: "与任意集民成为挚友",
         npcId: "_any",
         friendshipLevel: "bestFriend",
       },
@@ -545,10 +547,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 4,
     order: 9,
     title: "丰收大亨",
-    description: "柳娘说你的农场是万象仙乡产量最高的，继续保持。",
+    description: "柳娘说你的灵田是万象仙乡产量最高的，继续保持。",
     npcId: "liu_niang",
     objectives: [
-      { type: "harvestCrops", label: "累计收获300次作物", target: 300 },
+      { type: "harvestCrops", label: "累计收获300次灵植", target: 300 },
     ],
     moneyReward: 3000,
     friendshipReward: [{ npcId: "liu_niang", amount: 20 }],
@@ -575,11 +577,11 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_5_1",
     chapter: 5,
     order: 1,
-    title: "矿洞之底",
-    description: "阿石说矿洞最底层沉睡着古老的秘密，到达第120层揭开谜底。",
+    title: "玄矿幽脉之底",
+    description: "阿石说玄矿幽脉最底层沉睡着古老的秘密，到达第120层揭开谜底。",
     npcId: "a_shi",
     objectives: [
-      { type: "reachMineFloor", label: "矿洞到达第120层", target: 120 },
+      { type: "reachMineFloor", label: "玄矿幽脉到达第120层", target: 120 },
     ],
     moneyReward: 5000,
     friendshipReward: [{ npcId: "a_shi", amount: 30 }],
@@ -589,10 +591,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 5,
     order: 2,
     title: "骷髅深渊",
-    description: "阿石说矿洞尽头通往骷髅矿穴，那里有更珍贵的矿石。",
+    description: "阿石说玄矿幽脉尽头通往幽骨矿窟，那里有更珍贵的矿石。",
     npcId: "a_shi",
     objectives: [
-      { type: "reachSkullFloor", label: "骷髅矿穴到达第50层", target: 50 },
+      { type: "reachSkullFloor", label: "幽骨矿窟到达第50层", target: 50 },
     ],
     moneyReward: 5000,
     itemReward: [{ itemId: "iridium_ore", quantity: 5 }],
@@ -616,10 +618,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 5,
     order: 4,
     title: "全能大师",
-    description: "林老说真正的大师是样样精通。把所有技能都提升到8级。",
+    description: "林老说真正的大师是样样精通。把所有百艺都提升到8级。",
     npcId: "lin_lao",
     objectives: [
-      { type: "allSkillsLevel", label: "所有技能达到8级", target: 8 },
+      { type: "allSkillsLevel", label: "所有百艺达到8级", target: 8 },
     ],
     moneyReward: 5000,
     friendshipReward: [{ npcId: "lin_lao", amount: 30 }],
@@ -656,7 +658,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     objectives: [
       {
         type: "npcAllFriendly",
-        label: "与所有村民成为相知",
+        label: "与所有集民成为相知",
         friendshipLevel: "friendly",
       },
     ],
@@ -680,10 +682,10 @@ export const STORY_QUESTS: MainQuestDef[] = [
     order: 9,
     title: "祠堂圆满",
     description:
-      "柳村长说祠堂任务板上的所有任务都靠你了。前往图鉴中的「祠堂」完成剩余任务。",
+      "柳村长说祠堂委托板上的所有委托都靠你了。前往图鉴中的「祠堂」完成剩余委托。",
     npcId: "liu_cunzhang",
     objectives: [
-      { type: "completeBundles", label: "完成全部6个祠堂任务", target: 6 },
+      { type: "completeBundles", label: "完成全部6个祠堂委托", target: 6 },
     ],
     moneyReward: 8000,
     friendshipReward: [{ npcId: "liu_cunzhang", amount: 30 }],
@@ -694,11 +696,11 @@ export const STORY_QUESTS: MainQuestDef[] = [
     order: 10,
     title: "桃源之主",
     description:
-      "你已经成为万象仙乡真正的主人。所有技能满级，财富冠绝乡里。这是最终的挑战。",
+      "你已经成为万象仙乡真正的主人。所有百艺满级，财富冠绝乡里。这是最终的挑战。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "earnMoney", label: "累计获得300000文", target: 300000 },
-      { type: "allSkillsLevel", label: "所有技能达到10级", target: 10 },
+      { type: "allSkillsLevel", label: "所有百艺达到10级", target: 10 },
     ],
     moneyReward: 10000,
     itemReward: [{ itemId: "prismatic_shard", quantity: 1 }],
@@ -706,12 +708,12 @@ export const STORY_QUESTS: MainQuestDef[] = [
   },
 ];
 
-/** 根据ID获取主线任务 */
+/** 根据ID获取主线委托 */
 export const getStoryQuestById = (id: string): MainQuestDef | undefined => {
   return STORY_QUESTS.find((q) => q.id === id);
 };
 
-/** 根据章节和序号获取主线任务 */
+/** 根据章节和序号获取主线委托 */
 export const getStoryQuestByOrder = (
   chapter: number,
   order: number,
@@ -719,7 +721,7 @@ export const getStoryQuestByOrder = (
   return STORY_QUESTS.find((q) => q.chapter === chapter && q.order === order);
 };
 
-/** 获取下一个主线任务 */
+/** 获取下一个主线委托 */
 export const getNextStoryQuest = (
   currentId: string,
 ): MainQuestDef | undefined => {
@@ -728,12 +730,12 @@ export const getNextStoryQuest = (
   return STORY_QUESTS[idx + 1];
 };
 
-/** 获取某章的所有主线任务 */
+/** 获取某章的所有主线委托 */
 export const getChapterQuests = (chapter: number): MainQuestDef[] => {
   return STORY_QUESTS.filter((q) => q.chapter === chapter);
 };
 
-/** 获取第一个主线任务 */
+/** 获取第一个主线委托 */
 export const getFirstStoryQuest = (): MainQuestDef => {
   return STORY_QUESTS[0]!;
 };

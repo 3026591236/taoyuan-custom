@@ -1,7 +1,7 @@
 import type { MonsterDef, MineFloorDef } from "@/types";
 import { getItemById } from "./items";
 
-/** 矿洞总层数 */
+/** 玄矿幽脉总层数 */
 export const MAX_MINE_FLOOR = 120;
 
 /** 区域矿石/宝石映射（铜1-40/铁41-80/金81-120，各区附加特色矿石） */
@@ -280,7 +280,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
       { itemId: "gold_ore", chance: 0.65 },
       { itemId: "ruby", chance: 0.25 },
     ],
-    description: "矿洞深处的强大敌人。",
+    description: "玄矿幽脉深处的强大敌人。",
   },
   // 水晶 (61-80)
   crystal_golem: {
@@ -365,7 +365,7 @@ export const MONSTERS: Record<string, MonsterDef> = {
   },
 };
 
-/** 骷髅矿穴专属怪物 */
+/** 幽骨矿窟专属怪物 */
 export const SKULL_CAVERN_MONSTERS: Record<string, MonsterDef> = {
   iridium_golem: {
     id: "iridium_golem",
@@ -391,7 +391,7 @@ export const SKULL_CAVERN_MONSTERS: Record<string, MonsterDef> = {
       { itemId: "iridium_ore", chance: 0.5 },
       { itemId: "shadow_ore", chance: 0.2 },
     ],
-    description: "骷髅矿穴中飞舞的毒蛇。",
+    description: "幽骨矿窟中飞舞的毒蛇。",
   },
   ancient_mummy: {
     id: "ancient_mummy",
@@ -539,7 +539,7 @@ export const getWeakenedBoss = (floor: number): MonsterDef | undefined => {
 
 // ==================== 楼层生成 ====================
 
-/** 生成矿洞层数据（120层） */
+/** 生成玄矿幽脉层数据（120层） */
 const generateFloors = (): MineFloorDef[] => {
   const floors: MineFloorDef[] = [];
   const zones: MineFloorDef["zone"][] = [
@@ -583,7 +583,7 @@ export const getFloor = (floor: number): MineFloorDef | undefined => {
   return MINE_FLOORS[floor - 1];
 };
 
-/** 矿洞区域中文名 */
+/** 玄矿幽脉区域中文名 */
 export const ZONE_NAMES: Record<MineFloorDef["zone"], string> = {
   shallow: "浅矿·土石洞穴",
   frost: "冰窟·冰霜暗河",
@@ -593,9 +593,9 @@ export const ZONE_NAMES: Record<MineFloorDef["zone"], string> = {
   abyss: "深渊·无底深渊",
 };
 
-// ==================== 骷髅矿穴 ====================
+// ==================== 幽骨矿窟 ====================
 
-/** 骷髅矿穴楼层数据（运行时生成） */
+/** 幽骨矿窟楼层数据（运行时生成） */
 export interface SkullCavernFloorDef {
   floor: number;
   ores: string[];
@@ -605,7 +605,7 @@ export interface SkullCavernFloorDef {
   isSafePoint: boolean;
 }
 
-/** 骷髅矿穴矿石池 */
+/** 幽骨矿窟矿石池 */
 const SKULL_CAVERN_BASE_ORES = [
   "copper_ore",
   "iron_ore",
@@ -622,7 +622,7 @@ const SKULL_CAVERN_BASE_ORES = [
   "iridium_ore",
 ];
 
-/** 生成骷髅矿穴楼层 */
+/** 生成幽骨矿窟楼层 */
 export const generateSkullCavernFloor = (
   floor: number,
 ): SkullCavernFloorDef => {
@@ -659,7 +659,7 @@ export const generateSkullCavernFloor = (
   };
 };
 
-/** 缩放怪物属性（骷髅矿穴用） */
+/** 缩放怪物属性（幽骨矿窟用） */
 export const scaleMonster = (
   monster: MonsterDef,
   scaleFactor: number,
@@ -673,7 +673,7 @@ export const scaleMonster = (
   };
 };
 
-/** 获取骷髅矿穴小BOSS（每25层，随机BOSS×2倍缩放） */
+/** 获取幽骨矿窟小BOSS（每25层，随机BOSS×2倍缩放） */
 export const getSkullCavernBoss = (floor: number): MonsterDef | undefined => {
   if (floor % 25 !== 0) return undefined;
   const bossFloors = Object.keys(BOSS_MONSTERS).map(Number);

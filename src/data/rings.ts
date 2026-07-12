@@ -32,7 +32,7 @@ export const RINGS: RingDef[] = [
   {
     id: "farmers_ring",
     name: "农人青环",
-    description: "农耕时消耗的体力减少。",
+    description: "灵耕时消耗的体力减少。",
     effects: [{ type: "farming_stamina", value: 0.1 }],
     recipe: [
       { itemId: "copper_bar", quantity: 3 },
@@ -60,7 +60,7 @@ export const RINGS: RingDef[] = [
   {
     id: "anglers_ring",
     name: "渔翁碧环",
-    description: "钓鱼时鱼更温顺，体力消耗降低。",
+    description: "垂钓时鱼更温顺，体力消耗降低。",
     effects: [
       { type: "fishing_calm", value: 0.08 },
       { type: "fishing_stamina", value: 0.1 },
@@ -105,7 +105,7 @@ export const RINGS: RingDef[] = [
   {
     id: "miners_ring",
     name: "矿工金环",
-    description: "矿洞探索体力大幅降低，额外采集矿石。",
+    description: "玄矿幽脉探索体力大幅降低，额外采集矿石。",
     effects: [
       { type: "mining_stamina", value: 0.15 },
       { type: "ore_bonus", value: 1 },
@@ -122,7 +122,7 @@ export const RINGS: RingDef[] = [
   {
     id: "merchants_ring",
     name: "商贾金环",
-    description: "出售物品价格提升，商店价格降低。",
+    description: "出售物品价格提升，万象铺价格降低。",
     effects: [
       { type: "sell_price_bonus", value: 0.05 },
       { type: "shop_discount", value: 0.05 },
@@ -153,7 +153,7 @@ export const RINGS: RingDef[] = [
   {
     id: "harvest_moon_ring",
     name: "丰月指环",
-    description: "月光润泽作物，品质与生长速度提升。",
+    description: "月光润泽灵植，品质与生长速度提升。",
     effects: [
       { type: "crop_quality_bonus", value: 0.08 },
       { type: "crop_growth_bonus", value: 0.08 },
@@ -199,7 +199,7 @@ export const RINGS: RingDef[] = [
   {
     id: "treasure_hunter_ring",
     name: "寻宝指环",
-    description: "矿洞宝箱更常出现，钓鱼宝箱概率提升。",
+    description: "玄矿幽脉宝箱更常出现，垂钓宝箱概率提升。",
     effects: [{ type: "treasure_find", value: 0.1 }],
     recipe: [
       { itemId: "gold_bar", quantity: 2 },
@@ -357,7 +357,7 @@ export const RINGS: RingDef[] = [
   {
     id: "growth_ring",
     name: "催生指环",
-    description: "月光与草药之力催发生机，作物更快成熟。",
+    description: "月光与草药之力催发生机，灵植更快成熟。",
     effects: [{ type: "crop_growth_bonus", value: 0.12 }],
     recipe: [
       { itemId: "gold_bar", quantity: 2 },
@@ -462,22 +462,22 @@ export const RINGS: RingDef[] = [
     ],
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "矿洞宝箱",
+    obtainSource: "玄矿幽脉宝箱",
     sellPrice: 600,
   },
 
-  // === 公会专属 ===
+  // === 仙盟专属 ===
   {
     id: "guild_war_ring",
-    name: "公会战戒",
-    description: "冒险家公会精英成员的战斗指环，蕴含公会的力量。",
+    name: "仙盟战戒",
+    description: "冒险家仙盟精英成员的战斗指环，蕴含仙盟的力量。",
     effects: [
       { type: "attack_bonus", value: 4 },
       { type: "defense_bonus", value: 0.06 },
     ],
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "公会商店",
+    obtainSource: "仙盟万象铺",
     sellPrice: 800,
   },
   // === 通商兑换 ===
@@ -494,7 +494,7 @@ export const RINGS: RingDef[] = [
     obtainSource: "通商积分兑换",
     sellPrice: 600,
   },
-  // === 竹林野兽材料制作 ===
+  // === 青篁秘林野兽材料制作 ===
   {
     id: "wolf_fang_pendant",
     name: "狼牙坠",

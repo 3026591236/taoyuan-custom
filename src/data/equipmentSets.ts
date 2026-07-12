@@ -22,7 +22,7 @@ export interface EquipmentSetDef {
 }
 
 export const EQUIPMENT_SETS: EquipmentSetDef[] = [
-  // === 早期（商店可购买） ===
+  // === 早期（万象铺可购买） ===
   {
     id: "miner_set",
     name: "矿工套装",
@@ -37,7 +37,7 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
       {
         count: 3,
         effects: [{ type: "mining_stamina", value: 0.1 }],
-        description: "采矿体力消耗-10%",
+        description: "采玄矿体力消耗-10%",
       },
     ],
   },
@@ -55,7 +55,7 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
       {
         count: 3,
         effects: [{ type: "fishing_calm", value: 0.1 }],
-        description: "钓鱼稳定+10%",
+        description: "垂钓稳定+10%",
       },
     ],
   },
@@ -79,7 +79,7 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
       {
         count: 3,
         effects: [{ type: "shop_discount", value: 0.08 }],
-        description: "商店折扣+8%",
+        description: "万象铺折扣+8%",
       },
     ],
   },
@@ -96,12 +96,12 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
       {
         count: 2,
         effects: [{ type: "crop_growth_bonus", value: 0.1 }],
-        description: "作物生长+10%",
+        description: "灵植生长+10%",
       },
       {
         count: 3,
         effects: [{ type: "crop_quality_bonus", value: 0.1 }],
-        description: "作物品质+10%",
+        description: "灵植品质+10%",
       },
     ],
   },
@@ -208,7 +208,7 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
       {
         count: 2,
         effects: [{ type: "fishing_calm", value: 0.1 }],
-        description: "钓鱼稳定+10%",
+        description: "垂钓稳定+10%",
       },
       {
         count: 3,
@@ -243,11 +243,11 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     ],
   },
 
-  // === 竹林猎手（竹林野兽材料合成） ===
+  // === 青篁秘林猎手（青篁秘林野兽材料合成） ===
   {
     id: "forest_hunter_set",
-    name: "竹林猎手套装",
-    description: "以竹林猛兽的皮骨打造的猎人装备",
+    name: "青篁秘林猎手套装",
+    description: "以青篁秘林猛兽的皮骨打造的猎人装备",
     pieces: {
       ring: "wolf_fang_pendant",
       hat: "wolf_pelt_hood",
@@ -272,7 +272,7 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
   {
     id: "beast_king_set",
     name: "兽王套装",
-    description: "竹林之王的战利品，尽显猎手荣耀",
+    description: "青篁秘林之王的战利品，尽显猎手荣耀",
     pieces: {
       ring: "tiger_fang_ring",
       hat: "tiger_pelt_cape",
@@ -295,11 +295,11 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
     ],
   },
 
-  // === 公会专属 ===
+  // === 仙盟专属 ===
   {
     id: "guild_champion_set",
-    name: "公会勇士套装",
-    description: "冒险家公会精英战士的专属装备",
+    name: "仙盟勇士套装",
+    description: "冒险家仙盟精英战士的专属装备",
     pieces: {
       weapon: "guild_war_blade",
       ring: "guild_war_ring",

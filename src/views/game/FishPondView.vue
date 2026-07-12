@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-1">
       <div class="flex items-center space-x-1.5 text-sm text-accent">
         <Waves :size="14" />
-        <span>鱼塘</span>
+        <span>灵泉鱼池</span>
       </div>
       <span v-if="!fishPondStore.pond.built" class="text-xs text-muted"
         >{{ fishPondStore.fishCount }}/{{ fishPondStore.capacity }}</span
@@ -17,10 +17,10 @@
       class="border border-accent/10 rounded-xs py-6 flex flex-col items-center space-y-2"
     >
       <Waves :size="32" class="text-muted/30" />
-      <p class="text-xs text-muted">尚未建造鱼塘</p>
-      <p class="text-xs text-muted/60">建造鱼塘后可养殖鱼类、繁殖收获</p>
+      <p class="text-xs text-muted">尚未建造灵泉鱼池</p>
+      <p class="text-xs text-muted/60">建造灵泉鱼池后可养殖鱼类、繁殖收获</p>
       <Button :icon="Hammer" :icon-size="12" @click="pondModal = 'build'"
-        >建造鱼塘</Button
+        >建造灵泉鱼池</Button
       >
     </div>
 
@@ -33,7 +33,7 @@
           :class="{ '!bg-accent !text-bg': currentTab === 'pond' }"
           @click="currentTab = 'pond'"
         >
-          鱼塘
+          灵泉鱼池
         </Button>
         <Button
           class="flex-1 justify-center"
@@ -44,12 +44,12 @@
         </Button>
       </div>
 
-      <!-- ===== 鱼塘 Tab ===== -->
+      <!-- ===== 灵泉鱼池 Tab ===== -->
       <template v-if="currentTab === 'pond'">
         <!-- 状态总览 -->
         <div class="mb-3">
           <div class="flex items-center justify-between mb-1.5">
-            <Divider>鱼塘 Lv.{{ fishPondStore.pond.level }}</Divider>
+            <Divider>灵泉鱼池 Lv.{{ fishPondStore.pond.level }}</Divider>
             <div class="flex items-center space-x-2">
               <span class="text-xs text-muted"
                 >{{ fishPondStore.fishCount }}/{{
@@ -130,8 +130,8 @@
             class="border border-accent/10 rounded-xs py-6 flex flex-col items-center space-y-2"
           >
             <Fish :size="32" class="text-muted/30" />
-            <p class="text-xs text-muted">鱼塘空空如也</p>
-            <p class="text-xs text-muted/60">从背包中放入鱼苗开始养殖</p>
+            <p class="text-xs text-muted">灵泉鱼池空空如也</p>
+            <p class="text-xs text-muted/60">从纳戒中放入鱼苗开始养殖</p>
           </div>
 
           <!-- 鱼列表 -->
@@ -228,8 +228,8 @@
             class="border border-accent/10 rounded-xs py-6 flex flex-col items-center space-y-2"
           >
             <Package :size="32" class="text-muted/30" />
-            <p class="text-xs text-muted">背包中没有可养殖的鱼</p>
-            <p class="text-xs text-muted/60">在清溪钓鱼后可放入鱼塘养殖</p>
+            <p class="text-xs text-muted">纳戒中没有可养殖的鱼</p>
+            <p class="text-xs text-muted/60">在灵溪垂钓后可放入灵泉鱼池养殖</p>
           </div>
         </div>
 
@@ -298,7 +298,7 @@
           >
             <Heart :size="32" class="text-muted/30" />
             <p class="text-xs text-muted">选择两条同种成熟鱼开始繁殖</p>
-            <p class="text-xs text-muted/60">需要鱼塘有空余容量</p>
+            <p class="text-xs text-muted/60">需要灵泉鱼池有空余容量</p>
           </div>
         </div>
       </template>
@@ -462,7 +462,7 @@
               :icon="ArrowUp"
               :icon-size="12"
               @click="handleDetailRemove"
-              >取出到背包</Button
+              >取出到纳戒</Button
             >
           </div>
         </div>
@@ -689,7 +689,7 @@ const upgradeNextLevel = computed(
 );
 
 const modalTitle = computed(() =>
-  pondModal.value === "build" ? "建造鱼塘" : "鱼塘升级",
+  pondModal.value === "build" ? "建造灵泉鱼池" : "灵泉鱼池升级",
 );
 
 const modalCurrentLevel = computed(() =>
@@ -734,17 +734,17 @@ const canConfirmModal = computed(() => {
 const handleModalConfirm = () => {
   if (pondModal.value === "build") {
     if (fishPondStore.buildPond()) {
-      addLog("鱼塘建造完成！");
-      showFloat("鱼塘建造完成！", "success");
+      addLog("灵泉鱼池建造完成！");
+      showFloat("灵泉鱼池建造完成！", "success");
       pondModal.value = null;
     } else {
-      addLog("材料或铜钱不足，无法建造鱼塘。");
+      addLog("材料或铜钱不足，无法建造灵泉鱼池。");
     }
   } else {
     const nextLevel = (fishPondStore.pond.level + 1) as 2 | 3;
     if (fishPondStore.upgradePond()) {
-      addLog(`鱼塘升级到 Lv.${nextLevel}！容量提升。`);
-      showFloat(`鱼塘升级 Lv.${nextLevel}`, "success");
+      addLog(`灵泉鱼池升级到 Lv.${nextLevel}！容量提升。`);
+      showFloat(`灵泉鱼池升级 Lv.${nextLevel}`, "success");
       pondModal.value = null;
     } else {
       addLog("材料或铜钱不足，无法升级。");
@@ -752,7 +752,7 @@ const handleModalConfirm = () => {
   }
 };
 
-/** 背包中可放入鱼塘的鱼 */
+/** 纳戒中可放入灵泉鱼池的鱼 */
 const pondableFishInBag = computed(() => {
   const result: { itemId: string; name: string; count: number }[] = [];
   for (const def of PONDABLE_FISH) {
@@ -809,7 +809,7 @@ const handleDetailBreed = () => {
   detailFish.value = null;
 };
 
-/** 弹窗内取出到背包 */
+/** 弹窗内取出到纳戒 */
 const handleDetailRemove = () => {
   if (!detailFish.value) return;
   handleRemoveFish(detailFish.value.id);
@@ -820,7 +820,7 @@ const handleDetailRemove = () => {
 
 const handleFeed = () => {
   if (fishPondStore.feedFish()) {
-    addLog("喂食了鱼塘中的鱼。");
+    addLog("喂食了灵泉鱼池中的鱼。");
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.feedFish);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) handleEndDay();
@@ -833,7 +833,7 @@ const handleFeed = () => {
 
 const handleClean = () => {
   if (fishPondStore.cleanPond()) {
-    addLog("使用水质改良剂清理了鱼塘。");
+    addLog("使用水质改良剂清理了灵泉鱼池。");
     showFloat("+水质", "success");
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.cleanPond);
     if (tr.message) addLog(tr.message);
@@ -876,9 +876,9 @@ const handleAddFish = (fishId: string) => {
     const name = getPondableFishName(fishId);
     addLog(`放入了${added}条${name}。`);
   } else if (fishPondStore.isFull) {
-    addLog("鱼塘已满，无法放入更多鱼。");
+    addLog("灵泉鱼池已满，无法放入更多鱼。");
   } else {
-    addLog("背包中没有这种鱼。");
+    addLog("纳戒中没有这种鱼。");
   }
 };
 
@@ -887,7 +887,7 @@ const handleRemoveFish = (pondFishId: string) => {
     addLog("取出了一条鱼。");
     selectedBreedingFish.value = null;
   } else {
-    addLog("背包已满，无法取出。");
+    addLog("纳戒已满，无法取出。");
   }
 };
 
@@ -913,7 +913,7 @@ const handleSelectForBreeding = (fish: PondFish) => {
     if (selectedBreedingFish.value.fishId !== fish.fishId) {
       addLog("只能配对同种鱼。");
     } else if (fishPondStore.isFull) {
-      addLog("鱼塘已满，无法繁殖。");
+      addLog("灵泉鱼池已满，无法繁殖。");
     } else {
       addLog("无法配对，请确认鱼已成熟且未生病。");
     }

@@ -104,7 +104,7 @@
                 }}</span>
               </div>
               <div class="flex items-center justify-between mt-0.5">
-                <span class="text-xs text-muted">钓鱼时限</span>
+                <span class="text-xs text-muted">垂钓时限</span>
                 <span class="text-xs"
                   >{{ ROD_TIME[selectedToolObj!.tier] }}秒</span
                 >
@@ -225,7 +225,7 @@
                   </span>
                 </div>
                 <div class="flex items-center justify-between mt-0.5">
-                  <span class="text-xs text-muted">钓鱼时限</span>
+                  <span class="text-xs text-muted">垂钓时限</span>
                   <span class="text-xs">
                     {{ ROD_TIME[selectedToolObj!.tier] }}秒 →
                     <span class="text-success"

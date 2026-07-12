@@ -35,7 +35,7 @@ export const NPCS: NpcDef[] = [
         "最近进了些好货，你来看看。",
       ],
       friendly: [
-        "{player}跟你祖父年轻时一个样，能吃苦。",
+        "{player}跟你先人年轻时一个样，能吃苦。",
         "有些好东西，我只留给{title}你。",
       ],
       bestFriend: [
@@ -64,7 +64,7 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["iron_ore", "firewood"],
     dialogues: {
       stranger: [
-        "你好，你是新来的田庄主人吧？我是柳娘。",
+        "你好，你是新来的灵田洞天主人吧？我是柳娘。",
         "万象仙乡很美的，{title}你会喜欢这里。",
       ],
       acquaintance: [
@@ -109,8 +109,11 @@ export const NPCS: NpcDef[] = [
     likedItems: ["gold_ore", "iron_ore", "potato", "rabbit_foot"],
     hatedItems: ["chrysanthemum", "wintersweet"],
     dialogues: {
-      stranger: ["……嗯。", "矿洞……{title}小心点。"],
-      acquaintance: ["{title}也去挖矿？……带上镐。", "深层有好东西，也有危险。"],
+      stranger: ["……嗯。", "玄矿幽脉……{title}小心点。"],
+      acquaintance: [
+        "{title}也去采玄矿？……带上镐。",
+        "深层有好东西，也有危险。",
+      ],
       friendly: [
         "这块矿石不错，给{title}。",
         "{player}的镐该升级了，我可以帮你看看。",
@@ -124,11 +127,11 @@ export const NPCS: NpcDef[] = [
     heartEventIds: ["a_shi_heart_3", "a_shi_heart_5", "a_shi_heart_8"],
     datingDialogues: [
       "……{player}，这块矿石很漂亮。像你的眼睛。",
-      "以前觉得矿洞最好，现在……有{title}在的地方更好。",
+      "以前觉得玄矿幽脉最好，现在……有{title}在的地方更好。",
       "我不太会说话……但{player}在身边就够了。",
     ],
     zhijiDialogues: [
-      "……有你在旁边挖矿，效率好像变高了。",
+      "……有你在旁边采玄矿，效率好像变高了。",
       "{player}，这块矿石……只有知己才配拥有。",
       "不用说话也很自在……这就是知己吧。",
     ],
@@ -154,19 +157,19 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["copper_ore", "iron_ore"],
     dialogues: {
       stranger: [
-        "哎呀，新面孔！{title}你好，我是秋月，最会钓鱼的那个！",
-        "想学钓鱼就来找我呀！",
+        "哎呀，新面孔！{title}你好，我是秋月，最会垂钓的那个！",
+        "想学垂钓就来找我呀！",
       ],
       acquaintance: [
         "今天溪水特别清，肯定能钓到大鱼！",
-        "{title}钓鱼的样子越来越有模有样了嘛。",
+        "{title}垂钓的样子越来越有模有样了嘛。",
       ],
       friendly: [
         "这是我的私房钓点，只告诉{title}哦。",
         "我教{player}做红烧鲤鱼吧，超好吃的！",
       ],
       bestFriend: [
-        "以后一起去钓鱼好不好？每天都去！",
+        "以后一起去垂钓好不好？每天都去！",
         "{title}是我见过最厉害的钓手！嘿嘿。",
       ],
     },
@@ -175,10 +178,10 @@ export const NPCS: NpcDef[] = [
     datingDialogues: [
       "{player}！今天的夕阳好美，我们一起看嘛！",
       "嘿嘿，{title}是我的了，别人不许抢。",
-      "以后每天都一起钓鱼好不好？就我们两个！",
+      "以后每天都一起垂钓好不好？就我们两个！",
     ],
     zhijiDialogues: [
-      "{player}！今天一起去钓鱼吧！只有知己才能去我的秘密钓点！",
+      "{player}！今天一起去垂钓吧！只有知己才能去我的秘密钓点！",
       "嘿嘿，有什么心事都可以跟我说！我们可是知己！",
       "以后不管去哪儿，都带上{title}！",
     ],
@@ -215,7 +218,7 @@ export const NPCS: NpcDef[] = [
       ],
       friendly: [
         "老夫有一剂药膳方子，可以增强体力。",
-        "{player}的祖父……是老夫的故交。",
+        "{player}的先人……是老夫的故交。",
       ],
       bestFriend: [
         "这部《本草拾遗》，送给{title}了。好好研读。",
@@ -244,7 +247,7 @@ export const NPCS: NpcDef[] = [
     dialogues: {
       stranger: [
         "哇，你就是那个新来的！我是小满！",
-        "{title}的田庄我去偷看过了，好破啊——啊不是，很有潜力！",
+        "{title}的灵田洞天我去偷看过了，好破啊——啊不是，很有潜力！",
       ],
       acquaintance: [
         "我最近在练做柜子，{title}要不要来一个？",
@@ -336,10 +339,10 @@ export const NPCS: NpcDef[] = [
       stranger: ["……你挡住我的光了。", "不买画的话，请不要碰那些颜料。"],
       acquaintance: [
         "{title}对画有兴趣？你眼光倒还行。",
-        "这幅山水画，灵感来自村后的瀑布。",
+        "这幅山水画，灵感来自集后的瀑布。",
       ],
       friendly: [
-        "{player}，你的田庄在夕阳下很美，我画了一幅。",
+        "{player}，你的灵田洞天在夕阳下很美，我画了一幅。",
         "本来不喜欢人多的地方……但{title}来了还好。",
       ],
       bestFriend: [
@@ -581,7 +584,7 @@ export const NPCS: NpcDef[] = [
     id: "da_niu",
     name: "大牛",
     gender: "male",
-    role: "牧场小伙",
+    role: "灵牧苑小伙",
     personality: "憨直热情",
     birthday: { season: "winter", day: 3 },
     lovedItems: ["milk", "hay", "goat_milk", "buffalo_milk", "yak_milk"],
@@ -611,7 +614,7 @@ export const NPCS: NpcDef[] = [
       ],
       bestFriend: [
         "{player}是我见过最会照顾动物的人！",
-        "{title}，将来咱们合开一个大牧场怎么样？",
+        "{title}，将来咱们合开一个大灵牧苑怎么样？",
       ],
     },
     marriageable: true,
@@ -619,12 +622,12 @@ export const NPCS: NpcDef[] = [
     datingDialogues: [
       "{player}！今天小牛犊出生了！我第一个想告诉你！",
       "嘿嘿，和{title}在一起比和牛在一起还开心！",
-      "以后咱们的牧场一定是全村最大的！{player}你信不信？",
+      "以后咱们的灵牧苑一定是全村最大的！{player}你信不信？",
     ],
     zhijiDialogues: [
       "{player}！你是我最铁的兄弟！比福宝还铁！",
       "有你陪我看牛、淋雨、赶羊……比什么都开心！",
-      "咱俩以后合开牧场吧！知己搭伙，天下无敌！",
+      "咱俩以后合开灵牧苑吧！知己搭伙，天下无敌！",
     ],
     zhijiHeartEventIds: ["da_niu_zhiji_7", "da_niu_zhiji_9"],
   },
@@ -798,7 +801,7 @@ export const NPCS: NpcDef[] = [
       ],
       friendly: [
         "{player}真是个好孩子。婆婆织了条围巾给你。",
-        "你祖父以前常来找婆婆聊天，你跟他一样和善。",
+        "你先人以前常来找婆婆聊天，你跟他一样和善。",
       ],
       bestFriend: [
         "有{player}在，婆婆觉得安心。",
@@ -826,8 +829,8 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["gold_ore", "ruby"],
     dialogues: {
       stranger: [
-        "嗬，又来了个钓鱼的。老朽李渔翁，在这溪边坐了二十年了。",
-        "钓鱼么？急不得。",
+        "嗬，又来了个垂钓的。老朽李渔翁，在这溪边坐了二十年了。",
+        "垂钓么？急不得。",
       ],
       acquaintance: [
         "鱼竿是手的延伸，心静了鱼自然来。",
@@ -1013,7 +1016,7 @@ export const NPCS: NpcDef[] = [
         "我最喜欢{title}了！比石头好一百倍！",
       ],
       bestFriend: [
-        "{player}，我画了一幅画送给你！你看，这是你在种田。",
+        "{player}，我画了一幅画送给你！你看，这是你在灵田经营。",
         "长大以后我也要像{title}一样厉害！",
       ],
     },
@@ -1038,8 +1041,8 @@ export const NPCS: NpcDef[] = [
         "我今天往周先生墨汁里加了水，他没发现！嘿嘿！",
       ],
       friendly: [
-        "{player}，教我钓鱼嘛！秋月姐姐老说我太吵！",
-        "偷偷告诉{title}一个秘密——村后面的山洞里有蝙蝠！",
+        "{player}，教我垂钓嘛！秋月姐姐老说我太吵！",
+        "偷偷告诉{title}一个秘密——集后面的山洞里有蝙蝠！",
       ],
       bestFriend: [
         "其实……{player}，我爸妈在外面做工，很久没回来了。",
@@ -1131,16 +1134,16 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["pickled_cabbage", "firewood"],
     dialogues: {
       stranger: [
-        "你就是接手那片田庄的年轻人？我是柳村长。希望你能不辱祖辈留下的基业。",
+        "你就是接手那片灵田洞天的年轻人？我是柳村长。希望你能不辱祖辈留下的基业。",
         "万象仙乡的规矩，不可不守。",
       ],
       acquaintance: [
-        "{title}最近干得不错，村民们都说你勤快。",
+        "{title}最近干得不错，集民们都说你勤快。",
         "柳娘跟我提过你几次……嗯。",
       ],
       friendly: [
         "{player}，你为村子做的事，老夫都看在眼里。",
-        "当年你祖父也是这般有魄力。",
+        "当年你先人也是这般有魄力。",
       ],
       bestFriend: [
         "{player}是万象仙乡之福。",
@@ -1197,7 +1200,7 @@ export const NPCS: NpcDef[] = [
         "村里的八卦——不是，消息，都在茶楼里传。",
       ],
       friendly: [
-        "{player}啊，你那些农场趣事我都听说了，哈哈哈！",
+        "{player}啊，你那些灵田趣事我都听说了，哈哈哈！",
         "好茶配好友，{title}你就是我的好友！",
       ],
       bestFriend: [
@@ -1218,7 +1221,7 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["jade", "moonstone"],
     dialogues: {
       stranger: [
-        "你好，我姓秦，大伙儿叫我秦大叔。我在村东有片果园。",
+        "你好，我姓秦，大伙儿叫我秦大叔。我在集东有片果园。",
         "果树这东西，种下去就得等。{title}急不得。",
       ],
       acquaintance: [
@@ -1259,7 +1262,7 @@ export const NPCS: NpcDef[] = [
       ],
       acquaintance: [
         "{title}！今天牛又从栅栏里跑出来了，嘿嘿。",
-        "大牛哥说我以后能当牧场主！",
+        "大牛哥说我以后能当灵牧苑主！",
       ],
       friendly: [
         "{player}家的鸡下蛋了没？我家牛今天产奶了！",

@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-1">
       <div class="flex items-center space-x-1.5 text-sm text-accent">
         <Package :size="14" />
-        <span>背包</span>
+        <span>纳戒</span>
       </div>
       <span class="text-xs text-muted">
         {{ inventoryStore.items.length }}/{{ inventoryStore.capacity }}
@@ -114,16 +114,16 @@
         class="flex flex-col items-center justify-center py-4 text-muted"
       >
         <Package :size="24" />
-        <p class="text-xs mt-1">背包是空的</p>
+        <p class="text-xs mt-1">纳戒是空的</p>
       </div>
     </template>
 
-    <!-- 临时背包页 -->
+    <!-- 临时纳戒页 -->
     <template v-if="tab === 'temp'">
       <div v-if="inventoryStore.tempItems.length > 0">
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-[10px] text-muted"
-            >背包满时溢出的物品，请及时取回</span
+            >纳戒满时溢出的物品，请及时取回</span
           >
           <Button
             v-if="!inventoryStore.isFull"
@@ -167,7 +167,7 @@
         class="flex flex-col items-center justify-center py-4 text-muted"
       >
         <Archive :size="24" />
-        <p class="text-xs mt-1">临时背包是空的</p>
+        <p class="text-xs mt-1">临时纳戒是空的</p>
       </div>
     </template>
 
@@ -572,7 +572,7 @@
       </div>
     </Transition>
 
-    <!-- 临时背包物品详情弹窗 -->
+    <!-- 临时纳戒物品详情弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showFilterModal"
@@ -619,7 +619,7 @@
       </div>
     </Transition>
 
-    <!-- 临时背包物品详情弹窗 -->
+    <!-- 临时纳戒物品详情弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="activeTempItem"
@@ -682,7 +682,7 @@
               :disabled="inventoryStore.isFull"
               @click="handleMoveFromTemp"
             >
-              放入背包
+              放入纳戒
             </Button>
             <Button
               class="w-full justify-center text-danger border-danger/40"
@@ -1244,8 +1244,8 @@ const FILTER_CATEGORIES: ItemCategory[] = [
 ];
 
 const CATEGORY_NAMES: Partial<Record<ItemCategory, string>> = {
-  seed: "种子",
-  crop: "作物",
+  seed: "灵种",
+  crop: "灵植",
   fruit: "水果",
   fish: "鱼类",
   animal_product: "畜产",
@@ -1413,15 +1413,15 @@ const RING_EFFECT_NAMES: Record<RingEffectType, string> = {
   vampiric: "吸血",
   max_hp_bonus: "最大HP",
   stamina_reduction: "体力消耗",
-  mining_stamina: "采矿体力",
+  mining_stamina: "采玄矿体力",
   farming_stamina: "农作体力",
-  fishing_stamina: "钓鱼体力",
-  crop_quality_bonus: "作物品质",
-  crop_growth_bonus: "作物生长",
+  fishing_stamina: "垂钓体力",
+  crop_quality_bonus: "灵植品质",
+  crop_growth_bonus: "灵植生长",
   fish_quality_bonus: "鱼类品质",
-  fishing_calm: "钓鱼稳定",
+  fishing_calm: "垂钓稳定",
   sell_price_bonus: "售价加成",
-  shop_discount: "商店折扣",
+  shop_discount: "万象铺折扣",
   gift_friendship: "送礼好感",
   monster_drop_bonus: "掉落率",
   exp_bonus: "经验加成",
@@ -1619,7 +1619,7 @@ const handleSellShoe = () => {
   activeShoeIdx.value = null;
 };
 
-// === 临时背包 ===
+// === 临时纳戒 ===
 
 const activeTempIdx = ref<number | null>(null);
 
@@ -1637,20 +1637,20 @@ const handleMoveFromTemp = () => {
   if (activeTempIdx.value === null) return;
   const success = inventoryStore.moveFromTemp(activeTempIdx.value);
   if (success) {
-    addLog("物品已转移到背包。");
+    addLog("物品已转移到纳戒。");
     activeTempIdx.value = null;
   } else {
-    addLog("背包空间不足，部分物品仍在临时背包中。");
+    addLog("纳戒空间不足，部分物品仍在临时纳戒中。");
   }
 };
 
 const handleMoveAllFromTemp = () => {
   const moved = inventoryStore.moveAllFromTemp();
   if (moved > 0) {
-    addLog(`已将${moved}项物品从临时背包转移到背包。`);
+    addLog(`已将${moved}项物品从临时纳戒转移到纳戒。`);
   }
   if (inventoryStore.tempItems.length > 0) {
-    addLog("部分物品因空间不足仍在临时背包中。");
+    addLog("部分物品因空间不足仍在临时纳戒中。");
   }
 };
 
@@ -1667,8 +1667,8 @@ const handleDiscardTemp = () => {
 
 const ITEM_USAGE_HINT: Record<string, string> = {
   spirit_stone: "修仙市集货币，购买功法与法器",
-  storage_talisman: "使用后永久扩展背包+1格",
-  cosmos_bag: "使用后永久扩展背包+4格",
+  storage_talisman: "使用后永久扩展纳戒+1格",
+  cosmos_bag: "使用后永久扩展纳戒+4格",
   wood_scripture: "使用后学习青木长生诀功法",
   thunder_scripture: "使用后学习九霄雷诀功法",
   void_scripture: "使用后学习太虚归元功功法",
@@ -1676,7 +1676,7 @@ const ITEM_USAGE_HINT: Record<string, string> = {
   nirvana_soul_pill: "使用后恢复元神掉级",
   moonlight_jade: "法衣/护魂丹药材料，可在洞府折灵",
   sunfire_crystal: "灵剑淬炼和火系丹引材料，可折灵",
-  mystic_iron: "炼器通用材料，可从幽冥洞窟或矿洞深层获得",
+  mystic_iron: "炼器通用材料，可从幽冥洞窟或玄矿幽脉深层获得",
   cold_jade: "护符/清心丹材料，云梦泽和寒潭奇遇产出",
   phoenix_plume: "云靴、法衣和高阶订单材料，风暴鹰/穷奇产出",
   dragon_scale: "高阶护符、法衣与轮回准备材料，凶兽掉落",

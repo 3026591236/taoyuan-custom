@@ -39,7 +39,7 @@ import { useGameStore } from "./useGameStore";
 export const useBreedingStore = defineStore("breeding", () => {
   // === 状态 ===
 
-  /** 种子箱 */
+  /** 灵种箱 */
   const breedingBox = ref<BreedingSeed[]>([]);
 
   /** 育种台 */
@@ -51,15 +51,15 @@ export const useBreedingStore = defineStore("breeding", () => {
   /** 图鉴 */
   const compendium = ref<CompendiumEntry[]>([]);
 
-  /** 是否已解锁育种系统（拥有种子制造机即解锁） */
+  /** 是否已解锁育种系统（拥有灵种制造机即解锁） */
   const unlocked = ref(false);
 
-  /** 种子箱等级：0/1/2，对应 30/45/60 */
+  /** 灵种箱等级：0/1/2，对应 30/45/60 */
   const seedBoxLevel = ref(0);
 
   // === 计算属性 ===
 
-  /** 种子箱最大容量（基于等级） */
+  /** 灵种箱最大容量（基于等级） */
   const maxSeedBox = computed(
     () => BASE_BREEDING_BOX + seedBoxLevel.value * SEED_BOX_UPGRADE_INCREMENT,
   );
@@ -67,7 +67,7 @@ export const useBreedingStore = defineStore("breeding", () => {
   const boxCount = computed(() => breedingBox.value.length);
   const boxFull = computed(() => breedingBox.value.length >= maxSeedBox.value);
 
-  // === 种子箱操作 ===
+  // === 灵种箱操作 ===
 
   const addToBox = (genetics: SeedGenetics): boolean => {
     if (breedingBox.value.length >= maxSeedBox.value) return false;
@@ -86,7 +86,7 @@ export const useBreedingStore = defineStore("breeding", () => {
     return breedingBox.value.splice(idx, 1)[0] ?? null;
   };
 
-  // === 种子制造机增强 ===
+  // === 灵种制造机增强 ===
 
   const trySeedMakerGeneticSeed = (
     cropId: string,
@@ -151,7 +151,7 @@ export const useBreedingStore = defineStore("breeding", () => {
     return true;
   };
 
-  // === 种子箱升级 ===
+  // === 灵种箱升级 ===
 
   const getNextSeedBoxUpgrade = () => {
     const next = seedBoxLevel.value + 1;
@@ -176,7 +176,7 @@ export const useBreedingStore = defineStore("breeding", () => {
     removeItem: (id: string, qty: number) => void,
   ): { success: boolean; message: string } => {
     const upgrade = getNextSeedBoxUpgrade();
-    if (!upgrade) return { success: false, message: "种子箱已达到最高等级。" };
+    if (!upgrade) return { success: false, message: "灵种箱已达到最高等级。" };
     spendMoney(upgrade.cost);
     for (const mat of upgrade.materials) {
       removeItem(mat.itemId, mat.quantity);
@@ -184,7 +184,7 @@ export const useBreedingStore = defineStore("breeding", () => {
     seedBoxLevel.value++;
     return {
       success: true,
-      message: `种子箱扩容完成！容量提升至${maxSeedBox.value}格。`,
+      message: `灵种箱扩容完成！容量提升至${maxSeedBox.value}格。`,
     };
   };
 
@@ -199,7 +199,7 @@ export const useBreedingStore = defineStore("breeding", () => {
     const seedA = removeFromBox(seedAId);
     const seedB = removeFromBox(seedBId);
     if (!seedA || !seedB) {
-      // 归还已取出的种子
+      // 归还已取出的灵种
       if (seedA) addToBox(seedA.genetics);
       if (seedB) addToBox(seedB.genetics);
       return false;
@@ -219,9 +219,9 @@ export const useBreedingStore = defineStore("breeding", () => {
     if (!slot || !slot.ready || !slot.result) return null;
 
     const result = slot.result;
-    // 放入种子箱
+    // 放入灵种箱
     if (!addToBox(result)) {
-      addLog("种子箱已满，无法收取。");
+      addLog("灵种箱已满，无法收取。");
       return null;
     }
 
@@ -448,7 +448,7 @@ export const useBreedingStore = defineStore("breeding", () => {
 
       return result;
     } else {
-      // 匹配失败，返回随机亲本种子的副本并微降属性
+      // 匹配失败，返回随机亲本灵种的副本并微降属性
       const source = Math.random() < 0.5 ? a : b;
       const statToReduce: ("sweetness" | "yield" | "resistance")[] = [
         "sweetness",
@@ -468,7 +468,7 @@ export const useBreedingStore = defineStore("breeding", () => {
           `杂交失败：亲本平均甜度${Math.round(avgSweetness)}（需≥${hybrid.minSweetness}），平均产量${Math.round(avgYield)}（需≥${hybrid.minYield}）。请先通过同种培育提升属性。`,
         );
       } else {
-        addLog("这两个品种无法杂交，返回了一颗种子。");
+        addLog("这两个品种无法杂交，返回了一颗灵种。");
       }
 
       return failed;
@@ -493,7 +493,7 @@ export const useBreedingStore = defineStore("breeding", () => {
             );
           } else if (isCrossBreed) {
             addLog(
-              `杂交未成功，获得了${crop?.name ?? slot.result.cropId}种子（${stars}星）。`,
+              `杂交未成功，获得了${crop?.name ?? slot.result.cropId}灵种（${stars}星）。`,
             );
           } else {
             addLog(

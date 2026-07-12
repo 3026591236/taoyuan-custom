@@ -12,7 +12,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
     gender: "female",
     title: "潜渊龙灵",
     origin:
-      "千年潜伏于后山瀑布深潭的翠色灵龙，传说万象仙乡建村之初便已栖于此处。雨中偶现鳞光，被村民视为守护灵。",
+      "千年潜伏于后山瀑布深潭的翠色灵龙，传说万象仙乡建村之初便已栖于此处。雨中偶现鳞光，被集民视为守护灵。",
     personality: "沉静深邃、古朴庄重",
     discoverySteps: [
       {
@@ -169,7 +169,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         id: "long_ling_1",
         affinityRequired: 800,
         name: "龙泽",
-        description: "瀑布钓鱼品质提升一级",
+        description: "瀑布垂钓品质提升一级",
         passive: { type: "quality_boost", value: 1 },
       },
       {
@@ -208,7 +208,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         phase: "rumor",
         conditions: [{ type: "skill", skillType: "farming", minLevel: 4 }],
         scenes: [
-          { text: "清晨在农场劳作时，一阵不合时节的桃花瓣飘过你的面前。" },
+          { text: "清晨在灵田劳作时，一阵不合时节的桃花瓣飘过你的面前。" },
           { text: "花瓣中似乎传来极细微的笑声，轻灵得如同风铃。" },
         ],
         logMessage: "【仙缘】桃花瓣中似有轻语，是风的错觉吗……",
@@ -262,7 +262,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
                   "「花灵啦！桃林花灵！」她鼓起腮帮子纠正道，「叫桃夭就好。」",
               },
               {
-                text: "你一直在看着我种田吗？",
+                text: "你一直在看着我灵田经营吗？",
                 friendshipChange: 60,
                 response:
                   "她羞涩地别过头：「才、才没有一直看……只是偶尔啦。你种地很认真呢。」",
@@ -281,7 +281,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: "skill", skillType: "farming", minLevel: 5 },
         ],
         scenes: [
-          { text: "当你走进农场时，桃夭已经坐在树枝上荡着腿等你了。" },
+          { text: "当你走进灵田时，桃夭已经坐在树枝上荡着腿等你了。" },
           {
             text: "「我想好啦！」她跳下树，裙摆扬起一片花瓣，「我叫灼华，是这片桃林的守护灵。」",
           },
@@ -358,7 +358,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         id: "tao_yao_2",
         affinityRequired: 1200,
         name: "春息",
-        description: "春季作物生长快15%",
+        description: "春季灵植生长快15%",
         passive: { type: "exp_boost", value: 15 },
       },
       {
@@ -409,16 +409,16 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           {
-            text: '满月之夜，月华如银洒满竹林。你听到远处传来"咚、咚、咚"的有节奏的声响。',
+            text: '满月之夜，月华如银洒满青篁秘林。你听到远处传来"咚、咚、咚"的有节奏的声响。',
           },
           {
             text: "循声望去，月光下一个白色的小小身影正在捣弄什么。她头顶两只长长的耳朵一跳一跳的。",
           },
           {
-            text: '似乎察觉到你的目光，那身影"嗖"地消失在竹林深处，只留下几片散落的药草。',
+            text: '似乎察觉到你的目光，那身影"嗖"地消失在青篁秘林深处，只留下几片散落的药草。',
           },
         ],
-        logMessage: "【仙缘】满月竹林中，白影一闪，药草散落一地。",
+        logMessage: "【仙缘】满月青篁秘林中，白影一闪，药草散落一地。",
       },
       {
         id: "yue_tu_encounter",
@@ -430,7 +430,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           {
-            text: "你带着人参和草药来到竹林。刚放下草药，一个声音从头顶传来——",
+            text: "你带着人参和草药来到青篁秘林。刚放下草药，一个声音从头顶传来——",
           },
           {
             text: "「人参！是人参！」一个兔耳少女从竹子上跳下来，眼睛亮晶晶地盯着你手中的药材。",
@@ -462,7 +462,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
             text: "月兔抱着草药蹦蹦跳跳地消失在月光中，空气里留下淡淡的药香。",
           },
         ],
-        logMessage: "【仙缘】竹林中邂逅了从月宫偷溜下凡的玉兔。",
+        logMessage: "【仙缘】青篁秘林中邂逅了从月宫偷溜下凡的玉兔。",
       },
       {
         id: "yue_tu_revealed",
@@ -472,7 +472,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: "skill", skillType: "foraging", minLevel: 7 },
         ],
         scenes: [
-          { text: "你再次来到竹林，月兔正坐在石头上，面前摆着一排小药瓶。" },
+          {
+            text: "你再次来到青篁秘林，月兔正坐在石头上，面前摆着一排小药瓶。",
+          },
           {
             text: "「啊！你来啦！」她高兴地跳起来，耳朵一抖一抖，「我叫素问，是月宫的捣药玉兔。」",
           },
@@ -648,7 +650,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           {
-            text: "你带着在矿洞深处找到的狐珠回到村中。那个青年已经靠在树上等着了。",
+            text: "你带着在玄矿幽脉深处找到的狐珠回到村中。那个青年已经靠在树上等着了。",
           },
           { text: "「你找到了我的狐珠。」他伸手接过，珠子在掌中闪耀赤光。" },
           {
@@ -709,14 +711,14 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         id: "hu_xian_1",
         affinityRequired: 700,
         name: "狐眼",
-        description: "商店价格降低5%",
+        description: "万象铺价格降低5%",
         passive: { type: "sell_bonus", value: 5 },
       },
       {
         id: "hu_xian_2",
         affinityRequired: 1400,
         name: "灵探",
-        description: "矿洞额外掉落概率提升",
+        description: "玄矿幽脉额外掉落概率提升",
         passive: { type: "luck", value: 15 },
       },
       {
@@ -752,13 +754,13 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           {
-            text: "矿洞深处，你发现了一本泛黄的古册，封面写着「清虚修炼手札」。",
+            text: "玄矿幽脉深处，你发现了一本泛黄的古册，封面写着「清虚修炼手札」。",
           },
           {
             text: "翻开第一页：「入山五百年，丹成九转。桃源之下，地脉灵气最盛处，吾将闭关于此。」",
           },
         ],
-        logMessage: "【仙缘】矿洞深处发现一本古老的修炼手札……",
+        logMessage: "【仙缘】玄矿幽脉深处发现一本古老的修炼手札……",
       },
       {
         id: "shan_weng_glimpse",
@@ -769,7 +771,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: "location", panel: "mining" },
         ],
         scenes: [
-          { text: "冬日的矿洞深处，你听到一阵悠远的箫声，苍凉而古朴。" },
+          { text: "冬日的玄矿幽脉深处，你听到一阵悠远的箫声，苍凉而古朴。" },
           {
             text: "循着箫声走去，你隐约看到一位白发老者盘坐在矿脉旁，周身环绕着淡金色的灵气。",
           },
@@ -777,7 +779,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
             text: "你踏前一步，脚下的碎石发出声响。老者睁开眼，你只觉一股浩然之气扑面而来，一晃神间他已消失不见。",
           },
         ],
-        logMessage: "【仙缘】矿洞深处，一位白发老者正在修炼，转瞬即逝。",
+        logMessage: "【仙缘】玄矿幽脉深处，一位白发老者正在修炼，转瞬即逝。",
       },
       {
         id: "shan_weng_encounter",
@@ -788,11 +790,11 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           {
-            text: "你带着人参和雪莲进入矿洞，灵气明显比平时浓郁。那位老者坐在洞壁前，面前摆着一个古铜色的丹炉。",
+            text: "你带着人参和雪莲进入玄矿幽脉，灵气明显比平时浓郁。那位老者坐在洞壁前，面前摆着一个古铜色的丹炉。",
           },
           { text: "「来了。」他声音低沉而平静，仿佛早已预料到你的来访。" },
           {
-            text: "「年轻人，你为何深入矿洞？」他睁开一只眼，浑浊的瞳孔中闪过精光。",
+            text: "「年轻人，你为何深入玄矿幽脉？」他睁开一只眼，浑浊的瞳孔中闪过精光。",
             choices: [
               {
                 text: "为了变得更强。",
@@ -817,7 +819,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
             text: "「去吧。待你真正准备好了，再来此处。」他闭上眼，周身灵气再次涌动。",
           },
         ],
-        logMessage: "【仙缘】矿洞深处邂逅了一位修炼的老仙人。",
+        logMessage: "【仙缘】玄矿幽脉深处邂逅了一位修炼的老仙人。",
       },
       {
         id: "shan_weng_revealed",
@@ -827,7 +829,9 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
           { type: "skill", skillType: "mining", minLevel: 8 },
         ],
         scenes: [
-          { text: "你再次来到矿洞深处，老仙人正在煮茶。一壶清茶，两只杯子。" },
+          {
+            text: "你再次来到玄矿幽脉深处，老仙人正在煮茶。一壶清茶，两只杯子。",
+          },
           { text: "「坐。」他指了指对面的石头。这是他第一次邀请你。" },
           {
             text: "「吾号清虚，在此修行已逾五百年。既有缘，偶尔来坐坐也无妨。」他端起茶杯，嘴角微微上扬。",
@@ -842,7 +846,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
     dialogues: {
       wary: ["「修行之人，不喜打扰。」", "「你身上的杀气太重，静一静再来。」"],
       curious: [
-        "「嗯，今日矿洞的灵气有些不同。」",
+        "「嗯，今日玄矿幽脉的灵气有些不同。」",
         "「你的体质……比普通凡人要好些。」",
       ],
       trusting: [
@@ -891,14 +895,14 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         id: "shan_weng_1",
         affinityRequired: 600,
         name: "聚气",
-        description: "挖矿体力消耗-15%",
+        description: "采玄矿体力消耗-15%",
         passive: { type: "stamina_save", value: 15 },
       },
       {
         id: "shan_weng_2",
         affinityRequired: 1200,
         name: "灵脉",
-        description: "矿洞中概率采到稀有草药",
+        description: "玄矿幽脉中概率采到稀有草药",
         passive: { type: "luck", value: 12 },
       },
       {
@@ -954,7 +958,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         ],
         scenes: [
           {
-            text: "深夜的村庄万籁俱寂。你路过旧屋时，果然听到了那个声音——吱呀，吱呀。",
+            text: "深夜的万象集万籁俱寂。你路过旧屋时，果然听到了那个声音——吱呀，吱呀。",
           },
           {
             text: "透过窗棂，月光中一台古老的织机正自行运转，银白色的丝线在空中飞舞。",

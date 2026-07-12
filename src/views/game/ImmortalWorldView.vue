@@ -1181,7 +1181,7 @@
     <div v-if="isTab('market')" class="relative z-10 mb-4">
       <div class="flex items-center justify-between mb-2">
         <p class="text-xs text-accent">仙市兑换</p>
-        <span class="text-[10px] text-muted">资源转化，不复制凡界商店</span>
+        <span class="text-[10px] text-muted">资源转化，不复制凡界万象铺</span>
       </div>
       <div class="immortal-scene-banner market-scene">
         <img :src="ART.market" alt="仙市场景" />

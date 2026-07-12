@@ -20,7 +20,7 @@ export const WEATHER_FORAGE_MODIFIER: Record<Weather, number> = {
   green_rain: 1.5,
 };
 
-/** 竹林采集物 */
+/** 青篁秘林采集物 */
 export const FORAGE_ITEMS: ForageItemDef[] = [
   {
     itemId: "bamboo",
@@ -94,7 +94,7 @@ export const FORAGE_ITEMS: ForageItemDef[] = [
   },
   {
     itemId: "camphor_seed",
-    name: "樟树种子",
+    name: "樟树灵种",
     season: ["spring", "summer"],
     chance: 0.15,
     expReward: 5,
@@ -107,7 +107,7 @@ export const FORAGE_ITEMS: ForageItemDef[] = [
     expReward: 4,
   },
 
-  // ===== 稀有采集物（博物馆化石/古物） =====
+  // ===== 稀有采集物（藏珍阁化石/古物） =====
   {
     itemId: "ancient_pottery",
     name: "古陶片",
@@ -150,9 +150,9 @@ export const getForageItems = (season: string): ForageItemDef[] => {
   return FORAGE_ITEMS.filter((f) => f.season.includes(season as any));
 };
 
-// ===== 竹林动物遭遇 =====
+// ===== 青篁秘林动物遭遇 =====
 
-/** 竹林动物遭遇概率 */
+/** 青篁秘林动物遭遇概率 */
 export const FOREST_ENCOUNTER_CHANCE = 0.15;
 
 /** 温和动物定义 */
@@ -205,11 +205,11 @@ export const FRIENDLY_ANIMALS: FriendlyAnimalDef[] = [
   },
 ];
 
-/** 竹林野兽定义 */
+/** 青篁秘林野兽定义 */
 export const HOSTILE_ANIMALS: MonsterDef[] = [
   {
     id: "forest_wolf",
-    name: "竹林狼",
+    name: "青篁秘林狼",
     hp: 40,
     attack: 12,
     defense: 3,
@@ -218,7 +218,7 @@ export const HOSTILE_ANIMALS: MonsterDef[] = [
       { itemId: "wolf_pelt", chance: 0.6 },
       { itemId: "wolf_fang", chance: 0.3 },
     ],
-    description: "在竹林中游荡的灰狼，警觉而凶猛。",
+    description: "在青篁秘林中游荡的灰狼，警觉而凶猛。",
   },
   {
     id: "forest_bear",
@@ -246,11 +246,11 @@ export const HOSTILE_ANIMALS: MonsterDef[] = [
       { itemId: "tiger_bone", chance: 0.25 },
       { itemId: "tiger_fang", chance: 0.3 },
     ],
-    description: "竹林之王，极其危险的猛兽。",
+    description: "青篁秘林之王，极其危险的猛兽。",
   },
 ];
 
-/** 竹林野兽战败惩罚 */
+/** 青篁秘林野兽战败惩罚 */
 export const FOREST_DEFEAT_MONEY_PENALTY_RATE = 0.1;
 export const FOREST_DEFEAT_MONEY_PENALTY_CAP = 5000;
 

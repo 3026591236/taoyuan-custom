@@ -1211,13 +1211,13 @@ export const useCombatStore = defineStore("combat", () => {
           {
             id: "field",
             label: "灌注灵田",
-            desc: "获得灵植种子，强化种田-修仙循环。",
+            desc: "获得灵植灵种，强化灵田经营-修仙循环。",
             effect: () => {
               inv.addItem("seed_spirit_rice", 2 + realmScale);
               inv.addItem("seed_dew_grass", 1 + Math.floor(realmScale / 2));
               if ((c.realmIndex || 0) >= 12)
                 inv.addItem("seed_ice_soul_lotus", 1);
-              return `引泉灌田，获得蕴灵稻种子×${2 + realmScale}、凝露草种子×${1 + Math.floor(realmScale / 2)}${(c.realmIndex || 0) >= 12 ? "、冰魄雪莲种子×1" : ""}`;
+              return `引泉灌田，获得蕴灵稻灵种×${2 + realmScale}、凝露草灵种×${1 + Math.floor(realmScale / 2)}${(c.realmIndex || 0) >= 12 ? "、冰魄雪莲灵种×1" : ""}`;
             },
           },
         ],
@@ -1379,7 +1379,7 @@ export const useCombatStore = defineStore("combat", () => {
     }
     drops.value = [];
     addLog(
-      okCount ? "拾取了所有掉落物" : "背包已满或物品未登记，部分掉落未能拾取",
+      okCount ? "拾取了所有掉落物" : "纳戒已满或物品未登记，部分掉落未能拾取",
     );
   };
 

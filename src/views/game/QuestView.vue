@@ -3,7 +3,7 @@
     <!-- 标题 -->
     <div class="flex items-center space-x-1.5 text-sm text-accent mb-3">
       <ClipboardList :size="14" />
-      <span>任务</span>
+      <span>委托</span>
     </div>
 
     <!-- 修行志 -->
@@ -21,7 +21,7 @@
         >
       </div>
       <p class="text-xs text-muted leading-relaxed mb-2">
-        按“种田 → 钓鱼 → 挖矿 → 烹饪 → 委托 → 修仙 →
+        按“灵田经营 → 垂钓 → 采玄矿 → 烹饪 → 委托 → 修仙 →
         战斗试炼”的路线推进，每个系统都有阶段目标和每日小奖励。
       </p>
       <div class="flex flex-col space-y-1.5">
@@ -94,11 +94,11 @@
       </div>
     </div>
 
-    <!-- 主线任务 -->
+    <!-- 主线委托 -->
     <div class="border border-accent/20 rounded-xs p-3 mb-3">
       <p class="text-xs text-muted mb-2">
         <BookOpen :size="12" class="inline" />
-        主线任务
+        主线委托
       </p>
       <div
         v-if="mainQuestDef"
@@ -142,7 +142,7 @@
         class="flex flex-col items-center justify-center py-4 text-muted"
       >
         <CheckCircle :size="24" />
-        <p class="text-xs mt-1">主线任务已全部完成</p>
+        <p class="text-xs mt-1">主线委托已全部完成</p>
       </div>
     </div>
 
@@ -211,7 +211,7 @@
         class="flex flex-col items-center justify-center py-4 text-muted"
       >
         <Clock :size="24" />
-        <p class="text-xs mt-1">暂无进行中的任务</p>
+        <p class="text-xs mt-1">暂无进行中的委托</p>
       </div>
       <div v-else class="flex flex-col space-y-1.5">
         <div
@@ -260,7 +260,7 @@
           </div>
           <div v-else class="mt-0.5">
             <span class="text-xs text-muted"
-              >背包 {{ inventoryStore.getItemCount(quest.targetItemId) }}/{{
+              >纳戒 {{ inventoryStore.getItemCount(quest.targetItemId) }}/{{
                 quest.targetQuantity
               }}</span
             >
@@ -277,7 +277,7 @@
       </p>
     </div>
 
-    <!-- 任务详情弹窗 -->
+    <!-- 委托详情弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="questModal"
@@ -292,7 +292,7 @@
             <X :size="14" />
           </button>
 
-          <!-- 主线任务详情 -->
+          <!-- 主线委托详情 -->
           <template v-if="questModal.type === 'main' && mainQuestDef">
             <p class="text-accent text-sm mb-1">
               第{{ mainQuestDef.chapter }}章「{{ chapterTitle }}」
@@ -347,7 +347,7 @@
               :icon-size="12"
               @click="handleAcceptMain"
             >
-              接取任务
+              接取委托
             </Button>
             <Button
               v-else
@@ -360,7 +360,7 @@
               :disabled="!questStore.canSubmitMainQuest()"
               @click="handleSubmitMain"
             >
-              提交任务
+              提交委托
             </Button>
           </template>
 
@@ -458,7 +458,7 @@
             </Button>
           </template>
 
-          <!-- 进行中任务详情 -->
+          <!-- 进行中委托详情 -->
           <template v-if="questModal.type === 'active' && selectedActiveQuest">
             <p class="text-accent text-sm mb-2">
               {{
@@ -528,7 +528,7 @@
               :disabled="!canSubmit(selectedActiveQuest)"
               @click="handleSubmit(selectedActiveQuest.id)"
             >
-              提交任务
+              提交委托
             </Button>
           </template>
         </div>
@@ -575,7 +575,7 @@ const targetProgressText = (quest: any) =>
             `${t.name} ${inventoryStore.getItemCount(t.itemId)}/${t.quantity}`,
         )
         .join("；")
-    : `背包中 ${inventoryStore.getItemCount(quest.targetItemId)}/${quest.targetQuantity}`;
+    : `纳戒中 ${inventoryStore.getItemCount(quest.targetItemId)}/${quest.targetQuantity}`;
 
 const getItemName = (id: string): string => {
   return getItemById(id)?.name ?? id;
@@ -590,28 +590,28 @@ const visibleJourneyTasks = computed(() => {
 });
 
 const JOURNEY_LOCATION_HINTS: Record<string, string> = {
-  cropHarvest: "→ 农场",
-  earthPulse: "→ 农场",
+  cropHarvest: "→ 灵田",
+  earthPulse: "→ 灵田",
   fieldTier: "→ 修仙",
   cultivationUnlocked: "→ 修仙",
   realmIndex: "→ 修仙",
-  moneyEarned: "→ 商店/委托",
+  moneyEarned: "→ 万象铺/委托",
   monsterKills: "→ 修仙之途·秘境",
-  mineFloor: "→ 矿洞",
+  mineFloor: "→ 玄矿幽脉",
   completedCommissions: "→ 委托",
   craftedPills: "→ 加工/炼丹",
   attributePower: "→ 多种行为",
   manualLevels: "→ 修仙·功法",
   towerFloor: "→ 战斗·登仙塔",
-  fishCaught: "→ 钓鱼",
+  fishCaught: "→ 垂钓",
   recipesCooked: "→ 烹饪",
-  discoveredItems: "→ 采集/商店",
+  discoveredItems: "→ 采集/万象铺",
   breedingsDone: "→ 灵兽培育",
   hybridsDiscovered: "→ 育种",
-  forageItems: "→ 竹林/采集",
-  museumDonations: "→ 博物馆",
-  guildGoalsCompleted: "→ 公会",
-  guildContribution: "→ 公会",
+  forageItems: "→ 青篁秘林/采集",
+  museumDonations: "→ 藏珍阁",
+  guildGoalsCompleted: "→ 仙盟",
+  guildContribution: "→ 仙盟",
   hanhaiUnlocked: "→ 瀚海",
   hanhaiTradePoints: "→ 瀚海贸易",
   hanhaiTradeLevel: "→ 瀚海贸易",
@@ -663,7 +663,7 @@ const selectedActiveQuest = computed(() => {
   return questStore.activeQuests.find((q) => q.id === m.questId) ?? null;
 });
 
-// === 主线任务 ===
+// === 主线委托 ===
 
 const mainQuestDef = computed(() => {
   if (!questStore.mainQuest) return null;
@@ -693,7 +693,7 @@ const handleSubmitMain = () => {
 
 // === 日常委托 ===
 
-/** 非送货类任务的有效进度（取追踪数量和背包数量的较大值） */
+/** 非送货类委托的有效进度（取追踪数量和纳戒数量的较大值） */
 const getEffectiveProgress = (quest: QuestInstance): number => {
   return Math.min(
     Math.max(

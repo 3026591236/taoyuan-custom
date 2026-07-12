@@ -4,10 +4,10 @@ import { getCropById } from "./crops";
 
 // === 常量 ===
 
-/** 种子箱基础容量 */
+/** 灵种箱基础容量 */
 export const BASE_BREEDING_BOX = 30;
 
-/** 种子箱升级定义 */
+/** 灵种箱升级定义 */
 export const SEED_BOX_UPGRADES = [
   {
     level: 1,
@@ -54,7 +54,7 @@ export const SEED_BOX_UPGRADES = [
   },
 ];
 
-/** 每级种子箱容量增量 */
+/** 每级灵种箱容量增量 */
 export const SEED_BOX_UPGRADE_INCREMENT = 15;
 
 /** @deprecated 使用 useBreedingStore().maxSeedBox 代替 */
@@ -85,7 +85,7 @@ export const MUTATION_RATE_DRIFT = 5;
 /** 变异正向概率（增加方向） */
 export const MUTATION_POSITIVE_CHANCE = 0.6;
 
-/** 收获育种作物时按品质返还种子的概率 */
+/** 收获育种灵植时按品质返还灵种的概率 */
 export const SEED_RETURN_CHANCE: Record<Quality, number> = {
   normal: 0.5,
   fine: 0.7,
@@ -93,7 +93,7 @@ export const SEED_RETURN_CHANCE: Record<Quality, number> = {
   supreme: 1.0,
 };
 
-/** 判断收获时是否返还育种种子 */
+/** 判断收获时是否返还育种灵种 */
 export const shouldReturnBreedingSeed = (quality: Quality): boolean => {
   return Math.random() < (SEED_RETURN_CHANCE[quality] ?? 0);
 };
@@ -130,7 +130,7 @@ export const clampMutationRate = (value: number): number => {
   return Math.max(1, Math.min(50, Math.round(value)));
 };
 
-/** 根据作物ID计算默认基因属性 */
+/** 根据灵植ID计算默认基因属性 */
 export const getDefaultGenetics = (
   cropId: string,
 ): Omit<SeedGenetics, "id"> => {
@@ -151,7 +151,7 @@ export const getDefaultGenetics = (
     };
   }
 
-  // 贵/慢的作物属性更高
+  // 贵/慢的灵植属性更高
   const priceScore = Math.min(crop.sellPrice / 350, 1); // 350 = 雪莲售价
   const growthScore = Math.min(crop.growthDays / 12, 1); // 12 = 雪莲生长天数
 
@@ -191,7 +191,7 @@ export const getStarRating = (g: SeedGenetics): SeedStarRating => {
   return 1;
 };
 
-/** 生成种子显示标签 */
+/** 生成灵种显示标签 */
 export const makeSeedLabel = (g: SeedGenetics): string => {
   const crop = getCropById(g.cropId);
   const name = crop?.name ?? g.cropId;
@@ -1852,7 +1852,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     baseGenetics: { sweetness: 70, yield: 65, resistance: 65 },
     discoveryText: "霜雪蒜的寒意渗入山药，冰润滑腻入口即化。",
   },
-  // === 三代杂交作物 ===,
+  // === 三代杂交灵植 ===,
   {
     id: "wind_melon",
     name: "风瓜",
@@ -2403,7 +2403,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     baseGenetics: { sweetness: 72, yield: 72, resistance: 65 },
     discoveryText: "金瓜与紫柿汇聚山川之气，化为珍品。",
   },
-  // === 四代杂交作物 ===,
+  // === 四代杂交灵植 ===,
   {
     id: "moon_hua_melon",
     name: "月华瓜",
@@ -2954,7 +2954,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     baseGenetics: { sweetness: 78, yield: 78, resistance: 70 },
     discoveryText: "蜜茶果与甜丝瓜在月华中蜕变，天赐之品。",
   },
-  // === 五代杂交作物 ===,
+  // === 五代杂交灵植 ===,
   {
     id: "precious_light5_melon",
     name: "瑶光瓜",
@@ -3230,7 +3230,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     baseGenetics: { sweetness: 85, yield: 85, resistance: 78 },
     discoveryText: "雨稻与蜜茶果凝珊瑚之精，琳琅之品。",
   },
-  // === 六代杂交作物 ===,
+  // === 六代杂交灵植 ===,
   {
     id: "spirit_wonder_melon",
     name: "灵妙瓜",
@@ -3506,7 +3506,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     baseGenetics: { sweetness: 90, yield: 90, resistance: 82 },
     discoveryText: "月华瓜与雷翠桃仙灵缭绕，不染尘埃。",
   },
-  // === 七代杂交作物 ===,
+  // === 七代杂交灵植 ===,
   {
     id: "draco_song_melon",
     name: "龙吟瓜",
@@ -3782,7 +3782,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     baseGenetics: { sweetness: 94, yield: 94, resistance: 88 },
     discoveryText: "瑶光瓜与琉瑞桃蛟龙出水，威震八方。",
   },
-  // === 八代杂交作物 ===,
+  // === 八代杂交灵植 ===,
   {
     id: "supreme_origin_melon",
     name: "太初瓜",
@@ -4058,7 +4058,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     baseGenetics: { sweetness: 97, yield: 97, resistance: 92 },
     discoveryText: "灵妙瓜与璃锦桃元气混沌初开，太一显化。",
   },
-  // === 九代杂交作物 ===,
+  // === 九代杂交灵植 ===,
   {
     id: "vast_meng_melon",
     name: "鸿蒙瓜",
@@ -4334,7 +4334,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     baseGenetics: { sweetness: 99, yield: 99, resistance: 96 },
     discoveryText: "龙吟瓜与真禅桃鸿蒙初判，天地为之变色。",
   },
-  // === 十代杂交作物 ===,
+  // === 十代杂交灵植 ===,
   {
     id: "creation_change_melon",
     name: "造化瓜",
@@ -4344,7 +4344,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     minYield: 88,
     resultCropId: "creation_change_melon",
     baseGenetics: { sweetness: 96, yield: 96, resistance: 90 },
-    discoveryText: "太初瓜与龙吟瓜造化之力成就，永恒不朽之品。",
+    discoveryText: "太初瓜与龙吟瓜造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_change_bean",
@@ -4399,7 +4399,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     minYield: 90,
     resultCropId: "creation_lasting_fruit",
     baseGenetics: { sweetness: 97, yield: 97, resistance: 92 },
-    discoveryText: "太初瓜与龙舞果造化之力成就，永恒不朽之品。",
+    discoveryText: "太初瓜与龙舞果造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_lasting_bloom",
@@ -4454,7 +4454,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     minYield: 92,
     resultCropId: "creation_timeless_wheat",
     baseGenetics: { sweetness: 98, yield: 98, resistance: 94 },
-    discoveryText: "太初瓜与龙辉麦造化之力成就，永恒不朽之品。",
+    discoveryText: "太初瓜与龙辉麦造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_timeless_sesame",
@@ -4509,7 +4509,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     minYield: 94,
     resultCropId: "creation_destiny_vine",
     baseGenetics: { sweetness: 99, yield: 99, resistance: 96 },
-    discoveryText: "太初瓜与龙影藤造化之力成就，永恒不朽之品。",
+    discoveryText: "太初瓜与龙影藤造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_destiny_bud",
@@ -4564,7 +4564,7 @@ export const HYBRID_DEFS: HybridDef[] = [
     minYield: 96,
     resultCropId: "creation_form_chestnut",
     baseGenetics: { sweetness: 99, yield: 99, resistance: 98 },
-    discoveryText: "太初瓜与龙啸栗造化之力成就，永恒不朽之品。",
+    discoveryText: "太初瓜与龙啸栗造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_form_apricot",
@@ -4647,7 +4647,7 @@ export const findPossibleHybridById = (hybridId: string): HybridDef | null => {
   return HYBRID_DEFS.find((h) => h.id === hybridId) ?? null;
 };
 
-/** 种子制造机产出育种种子的概率 */
+/** 灵种制造机产出育种灵种的概率 */
 export const getSeedMakerGeneticChance = (farmingLevel: number): number => {
   return 0.3 + farmingLevel * 0.03;
 };

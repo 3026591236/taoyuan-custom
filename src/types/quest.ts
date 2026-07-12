@@ -1,60 +1,61 @@
-import type { Season } from './game'
+import type { Season } from "./game";
 
 /** 任务类型 */
-export type QuestType = 'delivery' | 'fishing' | 'mining' | 'gathering' | 'special_order'
+export type QuestType =
+  "delivery" | "fishing" | "mining" | "gathering" | "special_order";
 
 /** 任务目标模板 */
 export interface QuestTargetDef {
-  itemId: string
-  name: string
-  minQty: number
-  maxQty: number
+  itemId: string;
+  name: string;
+  minQty: number;
+  maxQty: number;
   /** 该目标在哪些季节可用 (空数组=全季节) */
-  seasons: Season[]
+  seasons: Season[];
   /** 物品单价(用于计算奖励) */
-  unitPrice: number
+  unitPrice: number;
 }
 
 /** 任务模板(按类型) */
 export interface QuestTemplateDef {
-  type: QuestType
-  targets: QuestTargetDef[]
-  npcPool: string[]
-  rewardMultiplier: number
-  friendshipReward: number
+  type: QuestType;
+  targets: QuestTargetDef[];
+  npcPool: string[];
+  rewardMultiplier: number;
+  friendshipReward: number;
 }
 
 /** 任务多材料进度 */
 export interface QuestTargetProgress {
-  itemId: string
-  name: string
-  quantity: number
-  collectedQuantity: number
+  itemId: string;
+  name: string;
+  quantity: number;
+  collectedQuantity: number;
 }
 
 /** 任务实例(运行时) */
 export interface QuestInstance {
-  id: string
-  type: QuestType
-  npcId: string
-  npcName: string
-  description: string
-  targetItemId: string
-  targetItemName: string
-  targetQuantity: number
-  collectedQuantity: number
+  id: string;
+  type: QuestType;
+  npcId: string;
+  npcName: string;
+  description: string;
+  targetItemId: string;
+  targetItemName: string;
+  targetQuantity: number;
+  collectedQuantity: number;
   /** 多材料目标（V1.3.8，用于特殊订单；旧单目标订单留空） */
-  targets?: QuestTargetProgress[]
-  moneyReward: number
-  friendshipReward: number
-  daysRemaining: number
-  accepted: boolean
+  targets?: QuestTargetProgress[];
+  moneyReward: number;
+  friendshipReward: number;
+  daysRemaining: number;
+  accepted: boolean;
   /** 物品奖励（特殊订单） */
-  itemReward?: { itemId: string; quantity: number }[]
+  itemReward?: { itemId: string; quantity: number }[];
   /** 难度标签（特殊订单） */
-  tierLabel?: string
+  tierLabel?: string;
   /** 订单分类标签（如宗门灵植） */
-  orderTag?: string
+  orderTag?: string;
 }
 
 // ============================================================
@@ -63,62 +64,62 @@ export interface QuestInstance {
 
 /** 主线任务目标类型 */
 export type MainQuestObjectiveType =
-  | 'earnMoney'
-  | 'reachMineFloor'
-  | 'reachSkullFloor'
-  | 'skillLevel'
-  | 'allSkillsLevel'
-  | 'harvestCrops'
-  | 'catchFish'
-  | 'cookRecipes'
-  | 'killMonsters'
-  | 'discoverItems'
-  | 'npcFriendship'
-  | 'npcAllFriendly'
-  | 'completeBundles'
-  | 'completeQuests'
-  | 'shipItems'
-  | 'ownAnimals'
-  | 'married'
-  | 'hasChild'
-  | 'deliverItem'
+  | "earnMoney"
+  | "reachMineFloor"
+  | "reachSkullFloor"
+  | "skillLevel"
+  | "allSkillsLevel"
+  | "harvestCrops"
+  | "catchFish"
+  | "cookRecipes"
+  | "killMonsters"
+  | "discoverItems"
+  | "npcFriendship"
+  | "npcAllFriendly"
+  | "completeBundles"
+  | "completeQuests"
+  | "shipItems"
+  | "ownAnimals"
+  | "married"
+  | "hasChild"
+  | "deliverItem";
 
 /** 主线任务单个目标 */
 export interface MainQuestObjective {
-  type: MainQuestObjectiveType
+  type: MainQuestObjectiveType;
   /** 目标描述文本 */
-  label: string
+  label: string;
   /** 数值目标(金钱/层数/等级/数量) */
-  target?: number
+  target?: number;
   /** 技能类型(skillLevel时) */
-  skillType?: string
+  skillType?: string;
   /** NPC ID(npcFriendship时) */
-  npcId?: string
+  npcId?: string;
   /** 好感等级(npcFriendship/npcAllFriendly时) */
-  friendshipLevel?: string
+  friendshipLevel?: string;
   /** 物品ID(deliverItem时) */
-  itemId?: string
+  itemId?: string;
   /** 物品数量(deliverItem时) */
-  itemQuantity?: number
+  itemQuantity?: number;
 }
 
 /** 主线任务定义(数据层) */
 export interface MainQuestDef {
-  id: string
-  chapter: number
-  order: number
-  title: string
-  description: string
-  npcId: string
-  objectives: MainQuestObjective[]
-  moneyReward: number
-  friendshipReward?: { npcId: string; amount: number }[]
-  itemReward?: { itemId: string; quantity: number }[]
+  id: string;
+  chapter: number;
+  order: number;
+  title: string;
+  description: string;
+  npcId: string;
+  objectives: MainQuestObjective[];
+  moneyReward: number;
+  friendshipReward?: { npcId: string; amount: number }[];
+  itemReward?: { itemId: string; quantity: number }[];
 }
 
 /** 主线任务运行时状态 */
 export interface MainQuestState {
-  questId: string
-  accepted: boolean
-  objectiveProgress: boolean[]
+  questId: string;
+  accepted: boolean;
+  objectiveProgress: boolean[];
 }

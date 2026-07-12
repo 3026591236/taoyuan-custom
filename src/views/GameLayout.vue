@@ -1298,7 +1298,7 @@ const grantOfflineRewards = async () => {
     lines.push(`修为 +${idle.cultivation}`, `灵气 +${idle.aura}`);
     if (idle.yuanShen > 0) lines.push(`元神经验 +${idle.yuanShen}`);
   }
-  addRewardLog("离线归来，洞府与田庄已有积累", lines.slice(1));
+  addRewardLog("离线归来，洞府与灵田洞天已有积累", lines.slice(1));
   showRewardBurst({
     title: "离线收益已到账",
     desc: "你不在的时候，万象仙乡仍在缓慢运转。最多累计12小时回访收益。",

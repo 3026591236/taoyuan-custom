@@ -39,23 +39,23 @@ export const useQuestStore = defineStore("quest", () => {
   const npcStore = useNpcStore();
   const achievementStore = useAchievementStore();
 
-  /** 告示栏上的可接取任务 */
+  /** 天机榜上的可接取委托 */
   const boardQuests = ref<QuestInstance[]>([]);
 
-  /** 已接取的进行中任务 */
+  /** 已接取的进行中委托 */
   const activeQuests = ref<QuestInstance[]>([]);
 
-  /** 累计完成任务数 */
+  /** 累计完成委托数 */
   const completedQuestCount = ref<number>(0);
 
   /** 当前可接取的特殊订单 */
   const specialOrder = ref<QuestInstance | null>(null);
 
-  /** 最大同时接取任务数 */
+  /** 最大同时接取委托数 */
   const MAX_ACTIVE_QUESTS = 3;
 
   // ============================================================
-  // 修行志：把种田、地脉、灵田、修仙与战斗串成可领取目标
+  // 修行志：把灵田经营、地脉、灵田、修仙与战斗串成可领取目标
   // ============================================================
 
   type JourneyTaskType = "guide" | "daily" | "sevenDay";
@@ -116,7 +116,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "guide_first_harvest",
       type: "guide",
       title: "春种第一获",
-      desc: "收获任意作物，感受田庄第一份回报。",
+      desc: "收获任意灵植，感受灵田洞天第一份回报。",
       metric: "cropHarvest",
       target: 1,
       reward: { money: 180, attributeExp: { physique: 14 } },
@@ -125,7 +125,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "guide_pulse_20",
       type: "guide",
       title: "地脉初闻",
-      desc: "通过收获作物累计20点地脉感应。",
+      desc: "通过收获灵植累计20点地脉感应。",
       metric: "earthPulse",
       target: 20,
       reward: { money: 260, attributeExp: { perception: 16 } },
@@ -143,7 +143,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "guide_unlock_cultivation",
       type: "guide",
       title: "启蒙灵田",
-      desc: "完成灵田启蒙，让种田正式连向修仙。",
+      desc: "完成灵田启蒙，让灵田经营正式连向修仙。",
       metric: "cultivationUnlocked",
       target: 1,
       reward: { aura: 90, attributeExp: { perception: 20 } },
@@ -179,7 +179,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "daily_harvest_5",
       type: "daily",
       title: "今日勤耕",
-      desc: "累计收获5次作物，稳定积累地脉与资质。",
+      desc: "累计收获5次灵植，稳定积累地脉与资质。",
       metric: "cropHarvest",
       target: 5,
       reward: { money: 260, attributeExp: { physique: 14 } },
@@ -188,7 +188,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "daily_commission_1",
       type: "daily",
       title: "乡里委托",
-      desc: "完成1个委托，让田庄和村落流动起来。",
+      desc: "完成1个委托，让灵田洞天和村落流动起来。",
       metric: "completedCommissions",
       target: 1,
       reward: { money: 320, attributeExp: { perception: 14 } },
@@ -215,7 +215,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "daily_mine_floor",
       type: "daily",
       title: "今日探矿",
-      desc: "矿洞最高层数推进1层，给挖矿一个明确小目标。",
+      desc: "玄矿幽脉最高层数推进1层，给采玄矿一个明确小目标。",
       metric: "mineFloor",
       target: 1,
       reward: { money: 360, attributeExp: { strength: 16, physique: 12 } },
@@ -233,7 +233,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "daily_forage_3",
       type: "daily",
       title: "今日采集",
-      desc: "在竹林或野外获得3件新采集物，补充料理、炼丹和委托材料。",
+      desc: "在青篁秘林或野外获得3件新采集物，补充料理、炼丹和委托材料。",
       metric: "forageItems",
       target: 3,
       reward: { money: 260, attributeExp: { agility: 10, perception: 16 } },
@@ -241,8 +241,8 @@ export const useQuestStore = defineStore("quest", () => {
     {
       id: "daily_guild_1",
       type: "daily",
-      title: "今日公会",
-      desc: "完成1档公会怪物目标或获取贡献，让战斗掉落有长期回收点。",
+      title: "今日仙盟",
+      desc: "完成1档仙盟怪物目标或获取贡献，让战斗掉落有长期回收点。",
       metric: "guildContribution",
       target: 8,
       reward: {
@@ -256,7 +256,7 @@ export const useQuestStore = defineStore("quest", () => {
       type: "sevenDay",
       day: 1,
       title: "第一日：安身立田",
-      desc: "收获3次作物，建立最初的田庄节奏。",
+      desc: "收获3次灵植，建立最初的灵田洞天节奏。",
       metric: "cropHarvest",
       target: 3,
       reward: { money: 360, attributeExp: { physique: 20 } },
@@ -266,7 +266,7 @@ export const useQuestStore = defineStore("quest", () => {
       type: "sevenDay",
       day: 2,
       title: "第二日：感应地脉",
-      desc: "累计40点地脉感应，理解种田与修仙的关系。",
+      desc: "累计40点地脉感应，理解灵田经营与修仙的关系。",
       metric: "earthPulse",
       target: 40,
       reward: { money: 380, attributeExp: { perception: 24 } },
@@ -422,7 +422,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v12_farm_50",
       type: "guide",
       title: "农事专精：五十收成",
-      desc: "累计收获50次作物，田庄经营从新手进入稳定期。",
+      desc: "累计收获50次灵植，灵田洞天经营从新手进入稳定期。",
       metric: "cropHarvest",
       target: 50,
       reward: {
@@ -435,7 +435,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v12_fish_20",
       type: "guide",
       title: "溪畔钓客：二十尾",
-      desc: "累计钓到20条鱼，让钓鱼成为稳定赚钱和放松玩法。",
+      desc: "累计钓到20条鱼，让垂钓成为稳定赚钱和放松玩法。",
       metric: "fishCaught",
       target: 20,
       reward: { money: 1100, attributeExp: { agility: 32, perception: 24 } },
@@ -443,8 +443,8 @@ export const useQuestStore = defineStore("quest", () => {
     {
       id: "v12_mine_10",
       type: "guide",
-      title: "矿洞远行：十层见光",
-      desc: "矿洞推进到10层，形成装备、矿石与战力循环。",
+      title: "玄矿幽脉远行：十层见光",
+      desc: "玄矿幽脉推进到10层，形成装备、矿石与战力循环。",
       metric: "mineFloor",
       target: 10,
       reward: { money: 1200, attributeExp: { strength: 36, physique: 24 } },
@@ -453,7 +453,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v12_cook_10",
       type: "guide",
       title: "灶火初成：十道料理",
-      desc: "累计制作10道料理，把食物增益接入种田、挖矿和战斗。",
+      desc: "累计制作10道料理，把食物增益接入灵田经营、采玄矿和战斗。",
       metric: "recipesCooked",
       target: 10,
       reward: {
@@ -466,7 +466,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v12_collect_40",
       type: "guide",
       title: "图鉴收藏：四十发现",
-      desc: "发现40种物品，推动采集、钓鱼、挖矿、怪物掉落和商店探索。",
+      desc: "发现40种物品，推动采集、垂钓、采玄矿、怪物掉落和万象铺探索。",
       metric: "discoveredItems",
       target: 40,
       reward: { money: 1300, attributeExp: { perception: 42 } },
@@ -539,8 +539,8 @@ export const useQuestStore = defineStore("quest", () => {
     {
       id: "v160_forage_25",
       type: "guide",
-      title: "竹林行脚：二十五件采集",
-      desc: "通过竹林采集、友好动物或野外事件累计发现25种物品，把采集接入烹饪、炼丹和委托循环。",
+      title: "青篁秘林行脚：二十五件采集",
+      desc: "通过青篁秘林采集、友好动物或野外事件累计发现25种物品，把采集接入烹饪、炼丹和委托循环。",
       metric: "forageItems",
       target: 25,
       reward: {
@@ -553,7 +553,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v160_museum_5",
       type: "guide",
       title: "博物开卷：五件捐赠",
-      desc: "向博物馆捐赠5件藏品，解锁阶段奖励并推动图鉴收集。",
+      desc: "向藏珍阁捐赠5件藏品，解锁阶段奖励并推动图鉴收集。",
       metric: "museumDonations",
       target: 5,
       reward: { money: 1200, attributeExp: { perception: 42 } },
@@ -562,7 +562,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v160_museum_15",
       type: "guide",
       title: "博物成册：十五件捐赠",
-      desc: "累计捐赠15件藏品，让钓鱼、挖矿、采集和怪物掉落都有收藏目标。",
+      desc: "累计捐赠15件藏品，让垂钓、采玄矿、采集和怪物掉落都有收藏目标。",
       metric: "museumDonations",
       target: 15,
       reward: { money: 2600, aura: 280, attributeExp: { perception: 56 } },
@@ -570,8 +570,8 @@ export const useQuestStore = defineStore("quest", () => {
     {
       id: "v160_guild_goal_3",
       type: "guide",
-      title: "公会猎令：三档目标",
-      desc: "完成3档怪物讨伐目标，换取贡献并打开公会商店成长线。",
+      title: "仙盟猎令：三档目标",
+      desc: "完成3档怪物讨伐目标，换取贡献并打开仙盟万象铺成长线。",
       metric: "guildGoalsCompleted",
       target: 3,
       reward: {
@@ -583,8 +583,8 @@ export const useQuestStore = defineStore("quest", () => {
     {
       id: "v160_guild_contribution_120",
       type: "guide",
-      title: "公会贡献：百二十点",
-      desc: "累计120点公会贡献，体验捐献、讨伐和兑换形成的长期循环。",
+      title: "仙盟贡献：百二十点",
+      desc: "累计120点仙盟贡献，体验捐献、讨伐和兑换形成的长期循环。",
       metric: "guildContribution",
       target: 120,
       reward: {
@@ -619,7 +619,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v160_breed_8",
       type: "guide",
       title: "育种熟手：八次配育",
-      desc: "累计完成8次配育，持续推进作物杂交与动物养成目标。",
+      desc: "累计完成8次配育，持续推进灵植杂交与动物养成目标。",
       metric: "breedingsDone",
       target: 8,
       reward: {
@@ -632,7 +632,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v160_hybrid_3",
       type: "guide",
       title: "异种谱系：三种杂交",
-      desc: "发现3种杂交产物，形成育种图鉴和高价值作物追求。",
+      desc: "发现3种杂交产物，形成育种图鉴和高价值灵植追求。",
       metric: "hybridsDiscovered",
       target: 3,
       reward: {
@@ -859,9 +859,9 @@ export const useQuestStore = defineStore("quest", () => {
     };
   };
 
-  /** 每日生成新任务到告示栏 */
+  /** 每日生成新委托到天机榜 */
   const generateDailyQuests = (season: Season, day: number) => {
-    boardQuests.value = []; // 清空旧的告示栏
+    boardQuests.value = []; // 清空旧的天机榜
     const count = 1 + Math.floor(Math.random() * 2); // 1-2个
     for (let i = 0; i < count; i++) {
       const quest = generateQuest(season, day);
@@ -915,7 +915,7 @@ export const useQuestStore = defineStore("quest", () => {
         if (quest.type === "special_order" && bagCount < t.quantity)
           return {
             ok: false,
-            message: `背包中${t.name}不足，特殊订单需要实际交付物品。`,
+            message: `纳戒中${t.name}不足，特殊订单需要实际交付物品。`,
           };
       }
       return { ok: true };
@@ -930,7 +930,7 @@ export const useQuestStore = defineStore("quest", () => {
     if (quest.type === "special_order" && bagCount < quest.targetQuantity)
       return {
         ok: false,
-        message: `背包中${quest.targetItemName}不足，特殊订单需要实际交付物品。`,
+        message: `纳戒中${quest.targetItemName}不足，特殊订单需要实际交付物品。`,
       };
     return { ok: true };
   };
@@ -945,28 +945,28 @@ export const useQuestStore = defineStore("quest", () => {
     inventoryStore.removeItem(quest.targetItemId, quest.targetQuantity);
   };
 
-  /** 接取任务 */
+  /** 接取委托 */
   const acceptQuest = (
     questId: string,
   ): { success: boolean; message: string } => {
     if (activeQuests.value.length >= MAX_ACTIVE_QUESTS) {
       return {
         success: false,
-        message: `最多同时接取${MAX_ACTIVE_QUESTS}个任务。`,
+        message: `最多同时接取${MAX_ACTIVE_QUESTS}个委托。`,
       };
     }
     const idx = boardQuests.value.findIndex((q) => q.id === questId);
-    if (idx === -1) return { success: false, message: "任务不存在。" };
+    if (idx === -1) return { success: false, message: "委托不存在。" };
 
     const quest = boardQuests.value[idx]!;
     quest.accepted = true;
 
-    // 非送货类委托：检查背包中已有的物品数量
+    // 非送货类委托：检查纳戒中已有的物品数量
     refreshQuestTargets(quest);
 
     activeQuests.value.push(quest);
     boardQuests.value.splice(idx, 1);
-    return { success: true, message: `接取了任务：${quest.description}` };
+    return { success: true, message: `接取了委托：${quest.description}` };
   };
 
   /** 接取特殊订单 */
@@ -976,7 +976,7 @@ export const useQuestStore = defineStore("quest", () => {
     if (activeQuests.value.length >= MAX_ACTIVE_QUESTS) {
       return {
         success: false,
-        message: `最多同时接取${MAX_ACTIVE_QUESTS}个任务。`,
+        message: `最多同时接取${MAX_ACTIVE_QUESTS}个委托。`,
       };
     }
 
@@ -989,30 +989,30 @@ export const useQuestStore = defineStore("quest", () => {
     return { success: true, message: `接取了特殊订单：${order.description}` };
   };
 
-  /** 提交完成的任务 */
+  /** 提交完成的委托 */
   const submitQuest = (
     questId: string,
   ): { success: boolean; message: string } => {
     const idx = activeQuests.value.findIndex((q) => q.id === questId);
-    if (idx === -1) return { success: false, message: "任务不存在。" };
+    if (idx === -1) return { success: false, message: "委托不存在。" };
 
     const quest = activeQuests.value[idx]!;
 
-    // 送货类委托：提交时从背包扣除物品
+    // 送货类委托：提交时从纳戒扣除物品
     if (quest.type === "delivery") {
       if (!inventoryStore.hasItem(quest.targetItemId, quest.targetQuantity)) {
         return {
           success: false,
-          message: `背包中${quest.targetItemName}不足。`,
+          message: `纳戒中${quest.targetItemName}不足。`,
         };
       }
       inventoryStore.removeItem(quest.targetItemId, quest.targetQuantity);
     } else {
-      // 钓鱼/挖矿/采集类按收集进度完成；特殊订单需要真实提交背包物品；V1.3.8 支持多材料目标
+      // 垂钓/采玄矿/采集类按收集进度完成；特殊订单需要真实提交纳戒物品；V1.3.8 支持多材料目标
       refreshQuestTargets(quest);
       const ready = questTargetsReady(quest);
       if (!ready.ok)
-        return { success: false, message: ready.message || "任务材料不足。" };
+        return { success: false, message: ready.message || "委托材料不足。" };
       if (quest.type === "special_order") removeQuestTargets(quest);
     }
 
@@ -1044,7 +1044,7 @@ export const useQuestStore = defineStore("quest", () => {
     return { success: true, message };
   };
 
-  /** 当玩家获得某物品时，更新进行中任务的进度（钓鱼/挖矿/采集类） */
+  /** 当玩家获得某物品时，更新进行中委托的进度（垂钓/采玄矿/采集类） */
   const onItemObtained = (itemId: string, quantity: number = 1) => {
     for (const quest of activeQuests.value) {
       if (quest.type === "delivery") continue; // 送货类不自动追踪
@@ -1072,7 +1072,7 @@ export const useQuestStore = defineStore("quest", () => {
       }
     }
 
-    // 同步刷新主线任务中 deliverItem 目标的进度
+    // 同步刷新主线委托中 deliverItem 目标的进度
     if (mainQuest.value?.accepted) {
       const def = getStoryQuestById(mainQuest.value.questId);
       if (def) {
@@ -1114,19 +1114,19 @@ export const useQuestStore = defineStore("quest", () => {
     return expired;
   };
 
-  /** 检查是否有任务关注某物品 */
+  /** 检查是否有委托关注某物品 */
   const hasActiveQuestFor = (itemId: string): boolean => {
     return activeQuests.value.some((q) => q.targetItemId === itemId);
   };
 
   // ============================================================
-  // 主线任务
+  // 主线委托
   // ============================================================
 
-  /** 当前主线任务状态 */
+  /** 当前主线委托状态 */
   const mainQuest = ref<MainQuestState | null>(null);
 
-  /** 已完成的主线任务ID列表 */
+  /** 已完成的主线委托ID列表 */
   const completedMainQuests = ref<string[]>([]);
 
   /** 好感等级层级顺序 */
@@ -1165,7 +1165,7 @@ export const useQuestStore = defineStore("quest", () => {
             ).level >= (obj.target ?? 0)
           );
         }
-        // 无指定技能类型 = 任意技能达标
+        // 无指定百艺类型 = 任意百艺达标
         return skillStore.skills.some((s) => s.level >= (obj.target ?? 0));
       case "allSkillsLevel":
         return skillStore.skills.every((s) => s.level >= (obj.target ?? 0));
@@ -1212,19 +1212,19 @@ export const useQuestStore = defineStore("quest", () => {
       case "hasChild":
         return npcStore.children.length > 0;
       case "deliverItem":
-        // deliverItem 只检查背包有足够物品（提交时才扣除）
+        // deliverItem 只检查纳戒有足够物品（提交时才扣除）
         return inventoryStore.hasItem(obj.itemId ?? "", obj.itemQuantity ?? 1);
       default:
         return false;
     }
   };
 
-  /** 初始化主线任务：如果没有当前任务，设置下一个可接取的 */
+  /** 初始化主线委托：如果没有当前委托，设置下一个可接取的 */
   const initMainQuest = () => {
-    if (mainQuest.value) return; // 已有当前任务
+    if (mainQuest.value) return; // 已有当前委托
     if (completedMainQuests.value.length >= STORY_QUESTS.length) return; // 全部完成
 
-    // 找到下一个未完成的主线任务
+    // 找到下一个未完成的主线委托
     const nextQuest =
       completedMainQuests.value.length === 0
         ? getFirstStoryQuest()
@@ -1241,15 +1241,15 @@ export const useQuestStore = defineStore("quest", () => {
     }
   };
 
-  /** 接取主线任务 */
+  /** 接取主线委托 */
   const acceptMainQuest = (): { success: boolean; message: string } => {
     if (!mainQuest.value)
-      return { success: false, message: "没有可接取的主线任务。" };
+      return { success: false, message: "没有可接取的主线委托。" };
     if (mainQuest.value.accepted)
-      return { success: false, message: "主线任务已接取。" };
+      return { success: false, message: "主线委托已接取。" };
 
     const def = getStoryQuestById(mainQuest.value.questId);
-    if (!def) return { success: false, message: "主线任务数据异常。" };
+    if (!def) return { success: false, message: "主线委托数据异常。" };
 
     mainQuest.value.accepted = true;
 
@@ -1264,11 +1264,11 @@ export const useQuestStore = defineStore("quest", () => {
     const npcName = npcDef?.name ?? def.npcId;
     return {
       success: true,
-      message: `接取了主线任务：${def.title}（${npcName}）`,
+      message: `接取了主线委托：${def.title}（${npcName}）`,
     };
   };
 
-  /** 每日更新主线任务进度 */
+  /** 每日更新主线委托进度 */
   const updateMainQuestProgress = () => {
     if (!mainQuest.value || !mainQuest.value.accepted) return;
 
@@ -1284,7 +1284,7 @@ export const useQuestStore = defineStore("quest", () => {
     }
   };
 
-  /** 检查主线任务是否可提交（实时评估未完成的目标） */
+  /** 检查主线委托是否可提交（实时评估未完成的目标） */
   const canSubmitMainQuest = (): boolean => {
     if (!mainQuest.value || !mainQuest.value.accepted) return false;
 
@@ -1303,14 +1303,14 @@ export const useQuestStore = defineStore("quest", () => {
     return mainQuest.value.objectiveProgress.every((p) => p);
   };
 
-  /** 提交主线任务 */
+  /** 提交主线委托 */
   const submitMainQuest = (): { success: boolean; message: string } => {
     if (!mainQuest.value || !mainQuest.value.accepted) {
-      return { success: false, message: "没有可提交的主线任务。" };
+      return { success: false, message: "没有可提交的主线委托。" };
     }
 
     const def = getStoryQuestById(mainQuest.value.questId);
-    if (!def) return { success: false, message: "主线任务数据异常。" };
+    if (!def) return { success: false, message: "主线委托数据异常。" };
 
     // 最终验证所有目标
     for (let i = 0; i < def.objectives.length; i++) {
@@ -1319,14 +1319,14 @@ export const useQuestStore = defineStore("quest", () => {
       );
     }
     if (!mainQuest.value.objectiveProgress.every((p) => p)) {
-      return { success: false, message: "主线任务目标尚未全部完成。" };
+      return { success: false, message: "主线委托目标尚未全部完成。" };
     }
 
-    // deliverItem 类型扣除背包物品
+    // deliverItem 类型扣除纳戒物品
     for (const obj of def.objectives) {
       if (obj.type === "deliverItem" && obj.itemId && obj.itemQuantity) {
         if (!inventoryStore.removeItem(obj.itemId, obj.itemQuantity)) {
-          return { success: false, message: `背包中物品不足，无法提交。` };
+          return { success: false, message: `纳戒中物品不足，无法提交。` };
         }
       }
     }
@@ -1352,7 +1352,7 @@ export const useQuestStore = defineStore("quest", () => {
     completedMainQuests.value.push(mainQuest.value.questId);
     mainQuest.value = null;
 
-    // 自动初始化下一个主线任务
+    // 自动初始化下一个主线委托
     initMainQuest();
 
     const npcDef = getNpcById(def.npcId);
@@ -1363,7 +1363,7 @@ export const useQuestStore = defineStore("quest", () => {
     }
     if (!mainQuest.value) {
       if (completedMainQuests.value.length >= STORY_QUESTS.length) {
-        message += ` 恭喜！你已完成万象仙乡全部主线任务！`;
+        message += ` 恭喜！你已完成万象仙乡全部主线委托！`;
       }
     }
 
@@ -1410,7 +1410,7 @@ export const useQuestStore = defineStore("quest", () => {
     journeyDailyBaselines.value =
       ((data as Record<string, unknown>).journeyDailyBaselines as
         Partial<Record<JourneyMetric, number>> | undefined) ?? {};
-    // 加载后初始化主线任务（兼容旧存档）
+    // 加载后初始化主线委托（兼容旧存档）
     initMainQuest();
   };
 

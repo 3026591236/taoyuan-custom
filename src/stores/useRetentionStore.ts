@@ -100,7 +100,7 @@ const ACTIVITY_BOXES: ActivityBox[] = [
   {
     score: 60,
     title: "秘境行囊",
-    desc: "鼓励继续战斗、钓鱼、探矿。",
+    desc: "鼓励继续战斗、垂钓、探矿。",
     reward: {
       money: 1280,
       aura: 240,
@@ -137,8 +137,8 @@ const ACTIVITY_BOXES: ActivityBox[] = [
 const SEVEN_DAY_GIFTS: SevenDayGift[] = [
   {
     day: 1,
-    title: "第1日：安家种田",
-    desc: "铜钱、灵石与回灵丹，帮你快速补种子和基础修仙材料。",
+    title: "第1日：安家灵田经营",
+    desc: "铜钱、灵石与回灵丹，帮你快速补灵种和基础修仙材料。",
     reward: {
       money: 1800,
       aura: 120,
@@ -247,7 +247,7 @@ const STREAK_GIFTS: StreakGift[] = [
   {
     day: 5,
     title: "五日满勤：宗门加持",
-    desc: "连续5天满勤，补给炼器与公会成长材料。",
+    desc: "连续5天满勤，补给炼器与仙盟成长材料。",
     reward: {
       money: 6200,
       aura: 1100,
@@ -296,7 +296,7 @@ const WEEKLY_TASKS: WeeklyTask[] = [
   {
     id: "weekly_battle_30",
     title: "周令·秘境三十战",
-    desc: "本周击败30只怪物，带动秘境、登塔与公会目标。",
+    desc: "本周击败30只怪物，带动秘境、登塔与仙盟目标。",
     metric: "monsterKills",
     target: 30,
     reward: {
@@ -324,7 +324,7 @@ const WEEKLY_TASKS: WeeklyTask[] = [
   {
     id: "weekly_museum_3",
     title: "周令·博物三藏",
-    desc: "本周捐赠3件藏品，让挖矿、钓鱼、采集都有收藏目标。",
+    desc: "本周捐赠3件藏品，让采玄矿、垂钓、采集都有收藏目标。",
     metric: "museumDonations",
     target: 3,
     reward: {
@@ -336,8 +336,8 @@ const WEEKLY_TASKS: WeeklyTask[] = [
   },
   {
     id: "weekly_guild_80",
-    title: "周令·公会声望",
-    desc: "本周获得80点公会贡献，推动怪物掉落回收。",
+    title: "周令·仙盟声望",
+    desc: "本周获得80点仙盟贡献，推动怪物掉落回收。",
     metric: "guildContribution",
     target: 80,
     reward: {
@@ -451,8 +451,8 @@ export const useRetentionStore = defineStore("retention", () => {
       {
         id: "village_shadow",
         title: "凡界主线·村雨妖影",
-        desc: "桃源村近日雨夜多妖踪，村民托你查明源头。",
-        requirement: "击败10只怪物并完成1项村庄人情请求",
+        desc: "万象集近日雨夜多妖踪，集民托你查明源头。",
+        requirement: "击败10只怪物并完成1项万象集人情请求",
         done: () => achievementStore.stats.totalMonstersKilled >= 10,
         reward: {
           money: 1200,
@@ -464,8 +464,8 @@ export const useRetentionStore = defineStore("retention", () => {
       {
         id: "sect_letter",
         title: "凡界主线·宗门来信",
-        desc: "宗门传书，说妖潮与旧天庭碎片有关，需要你联络公会与宗门。",
-        requirement: "公会贡献达到120",
+        desc: "宗门传书，说妖潮与旧天庭碎片有关，需要你联络仙盟与宗门。",
+        requirement: "仙盟贡献达到120",
         done: () => guildStore.contributionPoints >= 120,
         reward: {
           money: 1800,
@@ -478,8 +478,8 @@ export const useRetentionStore = defineStore("retention", () => {
       {
         id: "family_oath",
         title: "凡界主线·家族灯火",
-        desc: "家人和村民共同守夜，凡界锚点第一次显出力量。",
-        requirement: "博物馆藏品达到3或家族传承达到2级",
+        desc: "家人和集民共同守夜，凡界锚点第一次显出力量。",
+        requirement: "藏珍阁藏品达到3或家族传承达到2级",
         done: () => museumStore.donatedCount >= 3,
         reward: {
           money: 2200,
@@ -523,7 +523,7 @@ export const useRetentionStore = defineStore("retention", () => {
         reward: {
           money: 900,
           aura: 120,
-          items: [{ itemId: "seed_cabbage", name: "卷心菜种子", quantity: 3 }],
+          items: [{ itemId: "seed_cabbage", name: "卷心菜灵种", quantity: 3 }],
           attributeExp: { physique: 14 },
         },
       },
@@ -558,7 +558,7 @@ export const useRetentionStore = defineStore("retention", () => {
       {
         id: "winter_hearth_guard",
         title: "冬令·守岁镇妖",
-        desc: "冬夜妖气重，村庄、家族与宗门共同守岁。",
+        desc: "冬夜妖气重，万象集、家族与宗门共同守岁。",
         condition: "冬季任意日可完成一次",
         active: () => gameStore.season === "winter",
         reward: {

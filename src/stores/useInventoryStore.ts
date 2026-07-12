@@ -118,7 +118,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     if (
       !items.value.some((i) => i.itemId === itemId && i.quality === quality)
     ) {
-      showFloat("背包里没有这个物品。", "danger");
+      showFloat("纳戒里没有这个物品。", "danger");
       return false;
     }
     if (
@@ -155,10 +155,10 @@ export const useInventoryStore = defineStore("inventory", () => {
       (q) => q.itemId === itemId && q.quality === quality,
     );
 
-  /** 临时背包（溢出缓冲区） */
+  /** 临时纳戒（溢出缓冲区） */
   const tempItems = ref<InventoryItem[]>([]);
   const isTempFull = computed(() => tempItems.value.length >= TEMP_CAPACITY);
-  /** 主背包+临时背包均满 */
+  /** 主纳戒+临时纳戒均满 */
   const isAllFull = computed(() => isFull.value && isTempFull.value);
 
   /** 获取当前装备的武器 */
@@ -253,7 +253,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     };
   };
 
-  /** 添加物品到背包 */
+  /** 添加物品到纳戒 */
   const addItem = (
     itemId: string,
     quantity: number = 1,
@@ -286,7 +286,7 @@ export const useInventoryStore = defineStore("inventory", () => {
       remaining -= batch;
     }
 
-    // 溢出到临时背包
+    // 溢出到临时纳戒
     if (remaining > 0) {
       for (const slot of tempItems.value) {
         if (remaining <= 0) break;
@@ -309,12 +309,12 @@ export const useInventoryStore = defineStore("inventory", () => {
 
     if (remaining > 0) {
       const name = getItemById(itemId)?.name ?? itemId;
-      showFloat(`背包已满！${name}×${remaining}丢失了`, "danger");
+      showFloat(`纳戒已满！${name}×${remaining}丢失了`, "danger");
     } else {
-      // 背包快满预警：剩余格数 ≤ 3 时提示一次
+      // 纳戒快满预警：剩余格数 ≤ 3 时提示一次
       const freeSlots = capacity.value - items.value.length;
       if (freeSlots <= 3) {
-        showFloat(`背包快满了！剩余${freeSlots}格`, "accent");
+        showFloat(`纳戒快满了！剩余${freeSlots}格`, "accent");
       }
     }
 
@@ -415,7 +415,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     if (slot) slot.locked = !slot.locked;
   };
 
-  /** 一键整理背包（按分类→物品ID→品质排序，合并同类栈） */
+  /** 一键整理纳戒（按分类→物品ID→品质排序，合并同类栈） */
   const sortItems = () => {
     // 先合并同类栈（任一栈锁定则合并后保持锁定）
     const merged: InventoryItem[] = [];
@@ -464,20 +464,20 @@ export const useInventoryStore = defineStore("inventory", () => {
     items.value = split;
   };
 
-  /** 扩容背包 */
+  /** 扩容纳戒 */
   const expandCapacity = (): boolean => {
     if (capacity.value >= MAX_CAPACITY) return false;
     capacity.value += 4;
     return true;
   };
 
-  /** 超限扩容背包（+1格，突破 MAX_CAPACITY） */
+  /** 超限扩容纳戒（+1格，突破 MAX_CAPACITY） */
   const expandCapacityExtra = (): boolean => {
     capacity.value += 1;
     return true;
   };
 
-  /** 将临时背包中的物品转移到主背包 */
+  /** 将临时纳戒中的物品转移到主纳戒 */
   const moveFromTemp = (index: number): boolean => {
     if (index < 0 || index >= tempItems.value.length) return false;
     const tempSlot = tempItems.value[index]!;
@@ -510,7 +510,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     return false;
   };
 
-  /** 一键将所有可转移的临时背包物品移入主背包 */
+  /** 一键将所有可转移的临时纳戒物品移入主纳戒 */
   const moveAllFromTemp = (): number => {
     let movedCount = 0;
     for (let i = tempItems.value.length - 1; i >= 0; i--) {
@@ -520,7 +520,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     return movedCount;
   };
 
-  /** 丢弃临时背包中的物品 */
+  /** 丢弃临时纳戒中的物品 */
   const discardTempItem = (index: number): boolean => {
     if (index < 0 || index >= tempItems.value.length) return false;
     tempItems.value.splice(index, 1);
@@ -1124,7 +1124,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     if (missing.length > 0) {
       return {
         success: true,
-        message: `已应用方案「${preset.name}」，但${missing.join("、")}已不在背包中。`,
+        message: `已应用方案「${preset.name}」，但${missing.join("、")}已不在纳戒中。`,
       };
     }
     return { success: true, message: `已应用方案「${preset.name}」。` };

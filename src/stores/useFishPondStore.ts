@@ -125,7 +125,7 @@ export const useFishPondStore = defineStore("fishPond", () => {
 
   // === 鱼操作 ===
 
-  /** 从背包放鱼入塘（自动分配随机 Gen1 品种） */
+  /** 从纳戒放鱼入塘（自动分配随机 Gen1 品种） */
   const addFish = (fishId: string, quantity: number = 1): number => {
     if (!pond.value.built) return 0;
     if (!isPondableFish(fishId)) return 0;
@@ -158,7 +158,7 @@ export const useFishPondStore = defineStore("fishPond", () => {
     return added;
   };
 
-  /** 从塘中取鱼回背包 */
+  /** 从塘中取鱼回纳戒 */
   const removeFish = (pondFishId: string): boolean => {
     const idx = pond.value.fish.findIndex((f) => f.id === pondFishId);
     if (idx === -1) return false;
@@ -359,7 +359,7 @@ export const useFishPondStore = defineStore("fishPond", () => {
       // 疾病判定
       if (!fish.sick && pond.value.waterQuality < DISEASE_THRESHOLD) {
         const resist = fish.genetics.diseaseRes / 100;
-        // 钓鱼等级降低生病率
+        // 垂钓等级降低生病率
         const chance =
           (DISEASE_CHANCE_BASE * (1 - resist)) / (1 + fishingLevel * 0.05);
         if (Math.random() < chance) {
@@ -438,7 +438,7 @@ export const useFishPondStore = defineStore("fishPond", () => {
         if (!parentA || !parentB) {
           result.breedingFailed = "亲鱼死亡，繁殖失败";
         } else if (fishCount.value >= capacity.value) {
-          result.breedingFailed = "鱼塘已满，繁殖失败";
+          result.breedingFailed = "灵泉鱼池已满，繁殖失败";
         } else {
           const childGenetics = _breedGenetics(
             parentA.genetics,

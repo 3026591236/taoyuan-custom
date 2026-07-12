@@ -9,7 +9,7 @@ import type {
 export const ANIMAL_BUILDINGS: AnimalBuildingDef[] = [
   {
     type: "coop",
-    name: "鸡舍",
+    name: "灵禽舍",
     description: "饲养鸡鸭等小型家禽。",
     capacity: 4,
     cost: 4000,
@@ -44,7 +44,7 @@ export const ANIMAL_BUILDINGS: AnimalBuildingDef[] = [
 
 /** 动物定义 */
 export const ANIMAL_DEFS: AnimalDef[] = [
-  // ===== 鸡舍动物 (8种) =====
+  // ===== 灵禽舍动物 (8种) =====
   {
     type: "chicken",
     name: "鸡",
@@ -307,7 +307,7 @@ export const BUILDING_UPGRADES: {
   {
     type: "coop",
     level: 2,
-    name: "大型鸡舍",
+    name: "大型灵禽舍",
     capacity: 8,
     cost: 10000,
     materialCost: [
@@ -318,7 +318,7 @@ export const BUILDING_UPGRADES: {
   {
     type: "coop",
     level: 3,
-    name: "豪华鸡舍",
+    name: "豪华灵禽舍",
     capacity: 12,
     cost: 20000,
     materialCost: [

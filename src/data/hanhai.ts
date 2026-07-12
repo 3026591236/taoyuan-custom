@@ -20,16 +20,16 @@ import type {
 export const HANHAI_FIXED_ITEMS: HanhaiShopItemDef[] = [
   {
     itemId: "hanhai_cactus_seed",
-    name: "仙人掌种子",
+    name: "仙人掌灵种",
     price: 500,
-    description: "来自西域的奇特植物种子。",
+    description: "来自西域的奇特植物灵种。",
     weeklyLimit: 5,
   },
   {
     itemId: "hanhai_date_seed",
-    name: "红枣种子",
+    name: "红枣灵种",
     price: 400,
-    description: "丝绸之路带来的果树种子。",
+    description: "丝绸之路带来的果树灵种。",
     weeklyLimit: 5,
   },
   {
@@ -43,7 +43,7 @@ export const HANHAI_FIXED_ITEMS: HanhaiShopItemDef[] = [
     itemId: "mega_bomb_recipe",
     name: "巨型炸弹配方",
     price: 5000,
-    description: "据说能炸开整层矿洞的秘方。",
+    description: "据说能炸开整层玄矿幽脉的秘方。",
     weeklyLimit: 1,
   },
 ];
@@ -136,7 +136,7 @@ export const getWeeklyRotatingItems = (
 ): HanhaiShopItemDef[] => {
   const weekNumber = Math.ceil(day / 7);
   const seed = year * 10000 + seasonIndex * 100 + weekNumber;
-  // 简易确定性随机：基于种子打乱
+  // 简易确定性随机：基于灵种打乱
   const pool = [...HANHAI_ROTATING_POOL];
   let s = seed;
   for (let i = pool.length - 1; i > 0; i--) {
@@ -655,7 +655,7 @@ export const dealerDecide = (
 
 // === 通商系统 ===
 
-/** 通商店铺升级定义 */
+/** 通万象铺铺升级定义 */
 export const TRADE_SHOP_UPGRADES: TradeShopUpgradeDef[] = [
   {
     level: 1,
@@ -757,7 +757,7 @@ export const TRADE_EXCHANGE_ITEMS: TradeExchangeItemDef[] = [
     itemId: "trade_prosperity_seal",
     name: "通商金印",
     pointsCost: 300,
-    description: "钱袋物品，通商积分获取+20%。",
+    description: "财库物品，通商积分获取+20%。",
     totalLimit: 1,
     isWalletItem: true,
   },

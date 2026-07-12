@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-1">
       <div class="flex items-center space-x-1.5 text-sm text-accent">
         <Landmark :size="14" />
-        <span>博物馆</span>
+        <span>藏珍阁</span>
       </div>
       <span class="text-xs text-muted"
         >{{ museumStore.donatedCount }}/{{ museumStore.totalCount }}</span
@@ -19,9 +19,9 @@
       class="flex flex-col items-center justify-center py-10 space-y-3"
     >
       <Landmark :size="48" class="text-accent/30" />
-      <p class="text-sm text-muted">博物馆空空如也</p>
+      <p class="text-sm text-muted">藏珍阁空空如也</p>
       <p class="text-xs text-muted/60 text-center max-w-60">
-        在矿洞宝箱、竹林采集中获得化石与古物，捐赠给博物馆可获得里程碑奖励
+        在玄矿幽脉宝箱、青篁秘林采集中获得化石与古物，捐赠给藏珍阁可获得里程碑奖励
       </p>
     </div>
 
@@ -360,7 +360,7 @@
           >
             <div class="flex items-center justify-center space-x-1">
               <CircleCheck :size="12" class="text-success" />
-              <span class="text-xs text-success">已捐赠至博物馆</span>
+              <span class="text-xs text-success">已捐赠至藏珍阁</span>
             </div>
           </div>
           <Button
@@ -375,7 +375,7 @@
           <div v-else class="border border-accent/10 rounded-xs p-2">
             <div class="flex items-center space-x-1">
               <Package :size="12" class="text-muted" />
-              <span class="text-xs text-muted">背包中没有此物品</span>
+              <span class="text-xs text-muted">纳戒中没有此物品</span>
             </div>
           </div>
         </div>
@@ -456,13 +456,13 @@ const handleDonateAndClose = (itemId: string) => {
 
 const claimTheme = (themeId: string) => {
   const ok = museumStore.claimThemeReward(themeId);
-  addLog(ok ? "完成博物馆主题收藏，名望提升。" : "主题收藏尚未完成。");
+  addLog(ok ? "完成藏珍阁主题收藏，名望提升。" : "主题收藏尚未完成。");
   showFloat(ok ? "主题完成" : "未完成", ok ? "success" : "danger");
 };
 
 const restoreProject = (projectId: string) => {
   const ok = museumStore.restoreProject(projectId);
-  addLog(ok ? "完成一项文物修复，博物馆名望提升。" : "修复条件不足。");
+  addLog(ok ? "完成一项文物修复，藏珍阁名望提升。" : "修复条件不足。");
   showFloat(ok ? "修复完成" : "条件不足", ok ? "success" : "danger");
 };
 

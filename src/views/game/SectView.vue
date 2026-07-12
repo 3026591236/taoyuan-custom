@@ -35,7 +35,7 @@
           宗门加成：{{ sect.bonusDesc }}
         </div>
         <div class="space-y-1">
-          <div class="text-[10px] text-muted">宗门技能：</div>
+          <div class="text-[10px] text-muted">宗门百艺：</div>
           <div
             v-for="(skill, i) in sect.skills"
             :key="i"
@@ -245,7 +245,7 @@
           >
         </div>
         <p class="text-[10px] text-muted leading-relaxed">
-          把宗门职位、技能、三大工程和远征材料串成战斗闭环。亲传弟子可挑战宗门副本，长老候补额外开启长老试炼。
+          把宗门职位、百艺、三大工程和远征材料串成战斗闭环。亲传弟子可挑战宗门副本，长老候补额外开启长老试炼。
         </p>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
           <button
@@ -398,7 +398,7 @@
             @click="upgradeSkill(i)"
             :disabled="!canUpgradeSkill(i)"
           >
-            升级技能
+            升级百艺
           </button>
         </div>
       </div>
@@ -452,7 +452,7 @@ const SECTS = [
     motto: "剑气纵横三万里，一剑光寒十九洲",
     desc: "以剑入道，重视历练、斩妖和剑意磨砺。",
     bonusDesc: "攻击与战斗成长更强",
-    identity: "宗门技能额外提升战力，适合主打秘境与登仙塔。",
+    identity: "宗门百艺额外提升战力，适合主打秘境与登仙塔。",
     skills: [
       { name: "御剑术", desc: "飞剑与基础攻击成长提高，适合红尘历练。" },
       { name: "剑意", desc: "提升暴击与破防理解，强化秘境表现。" },
@@ -480,7 +480,7 @@ const SECTS = [
     motto: "一符镇天地，万法皆可封",
     desc: "以符入道，重视灵力调度、阵法和防御。",
     bonusDesc: "灵力消耗与防御表现更优",
-    identity: "宗门技能与职位共同强化战力，委派偏向符材和防御资源。",
+    identity: "宗门百艺与职位共同强化战力，委派偏向符材和防御资源。",
     skills: [
       { name: "灵符术", desc: "提升灵力运用效率，适合长期修行。" },
       { name: "封印术", desc: "削弱妖兽攻势，提高挑战容错。" },
@@ -495,21 +495,21 @@ const RANKS = [
     merit: 0,
     realm: 10,
     cost: 0,
-    bonus: "可接日课，技能上限3",
+    bonus: "可接日课，百艺上限3",
   },
   {
     name: "内门弟子",
     merit: 80,
     realm: 11,
     cost: 120,
-    bonus: "技能上限4，宝库折扣雏形",
+    bonus: "百艺上限4，宝库折扣雏形",
   },
   {
     name: "亲传弟子",
     merit: 220,
     realm: 13,
     cost: 260,
-    bonus: "技能上限5，日课收益更高",
+    bonus: "百艺上限5，日课收益更高",
   },
   {
     name: "执事",
@@ -585,7 +585,7 @@ const COMMISSIONS: Record<
     desc: "协助丹房守炉调火，需要上交凝露草×2，回报灵植与丹材。",
     contribution: 70,
     merit: 22,
-    rewardText: "蕴灵稻种子×3、朱果种子×1",
+    rewardText: "蕴灵稻灵种×3、朱果灵种×1",
     require: () => inventoryStore.getItemCount("dew_grass") >= 2,
     consume: () => inventoryStore.removeItem("dew_grass", 2),
     reward: () => {
@@ -619,7 +619,7 @@ const TREASURY = [
   {
     id: "spirit_seed_pack",
     name: "灵植种匣",
-    desc: "蕴灵稻、凝露草、朱果种子各×2。",
+    desc: "蕴灵稻、凝露草、朱果灵种各×2。",
     cost: 150,
     reward: () => {
       inventoryStore.addItem("seed_spirit_rice", 2);
@@ -630,7 +630,7 @@ const TREASURY = [
   {
     id: "high_spirit_seed_pack",
     name: "高阶灵植种匣",
-    desc: "冰魄雪莲种子×2、紫韵灵芝孢子×2。",
+    desc: "冰魄雪莲灵种×2、紫韵灵芝孢子×2。",
     cost: 350,
     reward: () => {
       inventoryStore.addItem("seed_ice_soul_lotus", 2);
@@ -680,7 +680,7 @@ const SECT_DUNGEONS = [
     merit: 46,
     contribution: 34,
     aura: 620,
-    rewardText: "功勋46、紫韵灵芝孢子×2、冰魄雪莲种子×1",
+    rewardText: "功勋46、紫韵灵芝孢子×2、冰魄雪莲灵种×1",
     reward: () => {
       inventoryStore.addItem("seed_purple_ganoderma", 2);
       inventoryStore.addItem("seed_ice_soul_lotus", 1);
@@ -957,9 +957,9 @@ const upgradeSkill = (idx: number) => {
     (cultivationStore.sectContribution || 0) - cost;
   cultivationStore.sectSkills[idx] = level + 1;
   addLog(
-    `${currentSect.value?.skills[idx]?.name ?? "技能"} 升级到 Lv.${level + 1}！`,
+    `${currentSect.value?.skills[idx]?.name ?? "百艺"} 升级到 Lv.${level + 1}！`,
   );
-  showFloat("技能升级！", "success");
+  showFloat("百艺升级！", "success");
 };
 
 const redeem = (item: (typeof TREASURY)[number]) => {

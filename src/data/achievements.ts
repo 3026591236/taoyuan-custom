@@ -1,6 +1,6 @@
 import type { AchievementDef, CommunityBundleDef } from "@/types";
 
-/** 成就列表 */
+/** 功业列表 */
 export const ACHIEVEMENTS: AchievementDef[] = [
   // 收集
   {
@@ -24,25 +24,25 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     condition: { type: "itemCount", count: 60 },
     reward: { money: 1500 },
   },
-  // 农耕
+  // 灵耕
   {
     id: "farmer_50",
     name: "辛勤农夫",
-    description: "累计收获50次作物。",
+    description: "累计收获50次灵植。",
     condition: { type: "cropHarvest", count: 50 },
     reward: { money: 300 },
   },
   {
     id: "farmer_200",
     name: "丰收之王",
-    description: "累计收获200次作物。",
+    description: "累计收获200次灵植。",
     condition: { type: "cropHarvest", count: 200 },
     reward: {
       money: 1000,
       items: [{ itemId: "basic_fertilizer", quantity: 10 }],
     },
   },
-  // 钓鱼
+  // 垂钓
   {
     id: "fisher_20",
     name: "垂钓新手",
@@ -57,46 +57,46 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     condition: { type: "fishCaught", count: 100 },
     reward: { money: 800 },
   },
-  // 挖矿
+  // 采玄矿
   {
     id: "miner_15",
-    name: "矿洞探索者",
-    description: "到达矿洞第15层。",
+    name: "玄矿幽脉探索者",
+    description: "到达玄矿幽脉第15层。",
     condition: { type: "mineFloor", floor: 15 },
     reward: { money: 300 },
   },
   {
     id: "miner_30",
     name: "深渊矿工",
-    description: "到达矿洞第30层。",
+    description: "到达玄矿幽脉第30层。",
     condition: { type: "mineFloor", floor: 30 },
     reward: { money: 1000, items: [{ itemId: "gold_ore", quantity: 10 }] },
   },
   {
     id: "miner_60",
     name: "熔岩征服者",
-    description: "到达矿洞第60层。",
+    description: "到达玄矿幽脉第60层。",
     condition: { type: "mineFloor", floor: 60 },
     reward: { money: 2000, items: [{ itemId: "gold_ore", quantity: 20 }] },
   },
   {
     id: "miner_120",
     name: "深渊行者",
-    description: "到达矿洞最底层。",
+    description: "到达玄矿幽脉最底层。",
     condition: { type: "mineFloor", floor: 120 },
     reward: { money: 5000, items: [{ itemId: "void_ore", quantity: 10 }] },
   },
   {
     id: "skull_25",
     name: "骷髅探险家",
-    description: "骷髅矿穴到达第25层。",
+    description: "幽骨矿窟到达第25层。",
     condition: { type: "skullCavernFloor", floor: 25 },
     reward: { money: 3000, items: [{ itemId: "iridium_ore", quantity: 5 }] },
   },
   {
     id: "skull_100",
     name: "深渊勇者",
-    description: "骷髅矿穴到达第100层。",
+    description: "幽骨矿窟到达第100层。",
     condition: { type: "skullCavernFloor", floor: 100 },
     reward: {
       money: 10000,
@@ -133,11 +133,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     condition: { type: "recipesCooked", count: 50 },
     reward: { money: 1000 },
   },
-  // 技能
+  // 百艺
   {
     id: "skill_master",
     name: "技艺精通",
-    description: "种植技能达到10级。",
+    description: "种植百艺达到10级。",
     condition: { type: "skillLevel", skillType: "farming", level: 10 },
     reward: { money: 2000 },
   },
@@ -145,22 +145,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "social_friend",
     name: "好人缘",
-    description: '与所有村民成为"相识"。',
+    description: '与所有集民成为"相识"。',
     condition: { type: "npcFriendship", level: "acquaintance" },
     reward: { money: 500 },
   },
-  // 任务
+  // 委托
   {
     id: "quest_10",
     name: "乡里热心人",
-    description: "累计完成10个委托任务。",
+    description: "累计完成10个委托委托。",
     condition: { type: "questsCompleted", count: 10 },
     reward: { money: 500 },
   },
   {
     id: "quest_40",
     name: "有求必应",
-    description: "累计完成40个委托任务。",
+    description: "累计完成40个委托委托。",
     condition: { type: "questsCompleted", count: 40 },
     reward: { money: 2500 },
   },
@@ -168,14 +168,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "friend_best",
     name: "知己",
-    description: "与1位村民成为挚友。",
+    description: "与1位集民成为挚友。",
     condition: { type: "npcBestFriend", count: 1 },
     reward: { money: 200 },
   },
   {
     id: "friend_all_friendly",
     name: "桃源之友",
-    description: "与所有村民成为朋友。",
+    description: "与所有集民成为朋友。",
     condition: { type: "npcAllFriendly" },
     reward: { money: 1000, items: [{ itemId: "jade_ring", quantity: 1 }] },
   },
@@ -248,17 +248,17 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     condition: { type: "fullShipment" },
     reward: { money: 5000 },
   },
-  // 畜牧
+  // 灵牧
   {
     id: "rancher_5",
-    name: "畜牧新手",
+    name: "灵牧新手",
     description: "拥有5只牲畜。",
     condition: { type: "animalCount", count: 5 },
     reward: { money: 500 },
   },
   {
     id: "rancher_15",
-    name: "牧场主",
+    name: "灵牧苑主",
     description: "拥有15只牲畜。",
     condition: { type: "animalCount", count: 15 },
     reward: { money: 2000 },
@@ -278,11 +278,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     condition: { type: "moneyEarned", amount: 200000 },
     reward: { money: 10000 },
   },
-  // 更多农耕 & 钓鱼
+  // 更多灵耕 & 垂钓
   {
     id: "farmer_500",
     name: "田园大亨",
-    description: "累计收获500次作物。",
+    description: "累计收获500次灵植。",
     condition: { type: "cropHarvest", count: 500 },
     reward: { money: 2000 },
   },
@@ -293,18 +293,18 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     condition: { type: "fishCaught", count: 200 },
     reward: { money: 2000 },
   },
-  // 全技能 & 全祠堂
+  // 全百艺 & 全祠堂
   {
     id: "all_skills",
     name: "全能大师",
-    description: "所有技能达到10级。",
+    description: "所有百艺达到10级。",
     condition: { type: "allSkillsMax" },
     reward: { money: 5000 },
   },
   {
     id: "all_bundles",
     name: "乡情圆满",
-    description: "完成所有祠堂任务。",
+    description: "完成所有祠堂委托。",
     condition: { type: "allBundlesComplete" },
     reward: { money: 5000 },
   },
@@ -326,14 +326,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "quest_80",
     name: "百事通",
-    description: "累计完成80个委托任务。",
+    description: "累计完成80个委托委托。",
     condition: { type: "questsCompleted", count: 80 },
     reward: { money: 3000 },
   },
   {
     id: "friend_all_best",
     name: "人间至友",
-    description: "与6位村民成为挚友。",
+    description: "与6位集民成为挚友。",
     condition: { type: "npcBestFriend", count: 6 },
     reward: { money: 3000, items: [{ itemId: "jade_ring", quantity: 1 }] },
   },
@@ -384,30 +384,30 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     },
   },
 
-  // 农耕
+  // 灵耕
   {
     id: "farmer_10",
     name: "新手耕耘",
-    description: "累计收获10次作物。",
+    description: "累计收获10次灵植。",
     condition: { type: "cropHarvest", count: 10 },
     reward: { money: 100 },
   },
   {
     id: "farmer_100",
     name: "精耕细作",
-    description: "累计收获100次作物。",
+    description: "累计收获100次灵植。",
     condition: { type: "cropHarvest", count: 100 },
     reward: { money: 500 },
   },
   {
     id: "farmer_1000",
     name: "田园传奇",
-    description: "累计收获1000次作物。",
+    description: "累计收获1000次灵植。",
     condition: { type: "cropHarvest", count: 1000 },
     reward: { money: 5000, items: [{ itemId: "iridium_ore", quantity: 5 }] },
   },
 
-  // 钓鱼
+  // 垂钓
   {
     id: "fisher_5",
     name: "河边少年",
@@ -500,28 +500,28 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "quest_5",
     name: "助人为乐",
-    description: "累计完成5个委托任务。",
+    description: "累计完成5个委托委托。",
     condition: { type: "questsCompleted", count: 5 },
     reward: { money: 200 },
   },
   {
     id: "quest_20",
     name: "信使达人",
-    description: "累计完成20个委托任务。",
+    description: "累计完成20个委托委托。",
     condition: { type: "questsCompleted", count: 20 },
     reward: { money: 1000 },
   },
   {
     id: "quest_60",
     name: "使命必达",
-    description: "累计完成60个委托任务。",
+    description: "累计完成60个委托委托。",
     condition: { type: "questsCompleted", count: 60 },
     reward: { money: 2000 },
   },
   {
     id: "quest_100",
     name: "万事通达",
-    description: "累计完成100个委托任务。",
+    description: "累计完成100个委托委托。",
     condition: { type: "questsCompleted", count: 100 },
     reward: { money: 5000, items: [{ itemId: "dragon_jade", quantity: 1 }] },
   },
@@ -579,7 +579,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     reward: { money: 2000 },
   },
 
-  // 畜牧
+  // 灵牧
   {
     id: "rancher_1",
     name: "初养牲畜",
@@ -589,82 +589,82 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "rancher_3",
-    name: "小型牧场",
+    name: "小型灵牧苑",
     description: "拥有3只牲畜。",
     condition: { type: "animalCount", count: 3 },
     reward: { money: 300 },
   },
   {
     id: "rancher_10",
-    name: "畜牧达人",
+    name: "灵牧达人",
     description: "拥有10只牲畜。",
     condition: { type: "animalCount", count: 10 },
     reward: { money: 1000 },
   },
   {
     id: "rancher_20",
-    name: "牧场传奇",
+    name: "灵牧苑传奇",
     description: "拥有20只牲畜。",
     condition: { type: "animalCount", count: 20 },
     reward: { money: 3000, items: [{ itemId: "iridium_ore", quantity: 3 }] },
   },
 
-  // 矿洞
+  // 玄矿幽脉
   {
     id: "miner_5",
-    name: "初入矿洞",
-    description: "到达矿洞第5层。",
+    name: "初入玄矿幽脉",
+    description: "到达玄矿幽脉第5层。",
     condition: { type: "mineFloor", floor: 5 },
     reward: { money: 100 },
   },
   {
     id: "miner_45",
     name: "冰霜矿脉",
-    description: "到达矿洞第45层。",
+    description: "到达玄矿幽脉第45层。",
     condition: { type: "mineFloor", floor: 45 },
     reward: { money: 1500, items: [{ itemId: "iron_ore", quantity: 15 }] },
   },
   {
     id: "miner_90",
     name: "水晶洞穴",
-    description: "到达矿洞第90层。",
+    description: "到达玄矿幽脉第90层。",
     condition: { type: "mineFloor", floor: 90 },
     reward: { money: 3000, items: [{ itemId: "crystal_ore", quantity: 10 }] },
   },
   {
     id: "miner_100",
     name: "百层勇者",
-    description: "到达矿洞第100层。",
+    description: "到达玄矿幽脉第100层。",
     condition: { type: "mineFloor", floor: 100 },
     reward: { money: 4000, items: [{ itemId: "shadow_ore", quantity: 5 }] },
   },
 
-  // 骷髅矿穴
+  // 幽骨矿窟
   {
     id: "skull_10",
     name: "骷髅初探",
-    description: "骷髅矿穴到达第10层。",
+    description: "幽骨矿窟到达第10层。",
     condition: { type: "skullCavernFloor", floor: 10 },
     reward: { money: 1000 },
   },
   {
     id: "skull_50",
     name: "深渊跋涉",
-    description: "骷髅矿穴到达第50层。",
+    description: "幽骨矿窟到达第50层。",
     condition: { type: "skullCavernFloor", floor: 50 },
     reward: { money: 5000, items: [{ itemId: "iridium_ore", quantity: 10 }] },
   },
   {
     id: "skull_75",
     name: "冥界行者",
-    description: "骷髅矿穴到达第75层。",
+    description: "幽骨矿窟到达第75层。",
     condition: { type: "skullCavernFloor", floor: 75 },
     reward: { money: 8000, items: [{ itemId: "dragon_jade", quantity: 1 }] },
   },
   {
     id: "skull_150",
     name: "无尽深渊",
-    description: "骷髅矿穴到达第150层。",
+    description: "幽骨矿窟到达第150层。",
     condition: { type: "skullCavernFloor", floor: 150 },
     reward: {
       money: 20000,
@@ -676,21 +676,21 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "friend_best_2",
     name: "二三知己",
-    description: "与2位村民成为挚友。",
+    description: "与2位集民成为挚友。",
     condition: { type: "npcBestFriend", count: 2 },
     reward: { money: 500 },
   },
   {
     id: "friend_best_3",
     name: "莫逆之交",
-    description: "与3位村民成为挚友。",
+    description: "与3位集民成为挚友。",
     condition: { type: "npcBestFriend", count: 3 },
     reward: { money: 1000 },
   },
   {
     id: "friend_best_4",
     name: "四海为友",
-    description: "与4位村民成为挚友。",
+    description: "与4位集民成为挚友。",
     condition: { type: "npcBestFriend", count: 4 },
     reward: { money: 2000 },
   },
@@ -699,72 +699,72 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "social_all_friendly",
     name: "广结善缘",
-    description: '与所有村民成为"熟识"。',
+    description: '与所有集民成为"熟识"。',
     condition: { type: "npcFriendship", level: "friendly" },
     reward: { money: 2000 },
   },
 
-  // 技能等级
+  // 百艺等级
   {
     id: "farming_5",
     name: "耕种有道",
-    description: "种植技能达到5级。",
+    description: "种植百艺达到5级。",
     condition: { type: "skillLevel", skillType: "farming", level: 5 },
     reward: { money: 300 },
   },
   {
     id: "foraging_5",
     name: "山林之子",
-    description: "采集技能达到5级。",
+    description: "采集百艺达到5级。",
     condition: { type: "skillLevel", skillType: "foraging", level: 5 },
     reward: { money: 300 },
   },
   {
     id: "foraging_10",
     name: "采集宗师",
-    description: "采集技能达到10级。",
+    description: "采集百艺达到10级。",
     condition: { type: "skillLevel", skillType: "foraging", level: 10 },
     reward: { money: 2000 },
   },
   {
     id: "fishing_5",
     name: "钓术入门",
-    description: "钓鱼技能达到5级。",
+    description: "垂钓百艺达到5级。",
     condition: { type: "skillLevel", skillType: "fishing", level: 5 },
     reward: { money: 300 },
   },
   {
     id: "fishing_10",
-    name: "钓鱼宗师",
-    description: "钓鱼技能达到10级。",
+    name: "垂钓宗师",
+    description: "垂钓百艺达到10级。",
     condition: { type: "skillLevel", skillType: "fishing", level: 10 },
     reward: { money: 2000 },
   },
   {
     id: "mining_5",
     name: "矿脉感应",
-    description: "采矿技能达到5级。",
+    description: "采玄矿百艺达到5级。",
     condition: { type: "skillLevel", skillType: "mining", level: 5 },
     reward: { money: 300 },
   },
   {
     id: "mining_10",
-    name: "采矿宗师",
-    description: "采矿技能达到10级。",
+    name: "采玄矿宗师",
+    description: "采玄矿百艺达到10级。",
     condition: { type: "skillLevel", skillType: "mining", level: 10 },
     reward: { money: 2000 },
   },
   {
     id: "combat_5",
     name: "初涉江湖",
-    description: "战斗技能达到5级。",
+    description: "战斗百艺达到5级。",
     condition: { type: "skillLevel", skillType: "combat", level: 5 },
     reward: { money: 300 },
   },
   {
     id: "combat_10",
     name: "武林高手",
-    description: "战斗技能达到10级。",
+    description: "战斗百艺达到10级。",
     condition: { type: "skillLevel", skillType: "combat", level: 10 },
     reward: { money: 2000 },
   },
@@ -872,53 +872,53 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "hybrid_ship_1",
     name: "杂交初售",
-    description: "出货1种杂交作物。",
+    description: "出货1种杂交灵植。",
     condition: { type: "hybridsShipped", count: 1 },
     reward: { money: 300 },
   },
   {
     id: "hybrid_ship_5",
     name: "良种外销",
-    description: "出货5种杂交作物。",
+    description: "出货5种杂交灵植。",
     condition: { type: "hybridsShipped", count: 5 },
     reward: { money: 800 },
   },
   {
     id: "hybrid_ship_15",
     name: "杂交商人",
-    description: "出货15种杂交作物。",
+    description: "出货15种杂交灵植。",
     condition: { type: "hybridsShipped", count: 15 },
     reward: { money: 2000 },
   },
   {
     id: "hybrid_ship_30",
     name: "良种流通",
-    description: "出货30种杂交作物。",
+    description: "出货30种杂交灵植。",
     condition: { type: "hybridsShipped", count: 30 },
     reward: { money: 5000 },
   },
   {
     id: "hybrid_ship_50",
     name: "杂交出货全鉴",
-    description: "出货50种杂交作物。",
+    description: "出货50种杂交灵植。",
     condition: { type: "hybridsShipped", count: 50 },
     reward: {
       money: 10000,
       items: [{ itemId: "prismatic_shard", quantity: 1 }],
     },
   },
-  // 博物馆
+  // 藏珍阁
   {
     id: "museum_20",
     name: "收藏爱好者",
-    description: "向博物馆捐赠20件物品。",
+    description: "向藏珍阁捐赠20件物品。",
     condition: { type: "museumDonations", count: 20 },
     reward: { money: 1000 },
   },
   {
     id: "museum_36",
-    name: "博物馆之星",
-    description: "向博物馆捐赠36件物品。",
+    name: "藏珍阁之星",
+    description: "向藏珍阁捐赠36件物品。",
     condition: { type: "museumDonations", count: 36 },
     reward: {
       money: 5000,
@@ -928,11 +928,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "museum_40",
     name: "灵物全鉴",
-    description: "完成博物馆全部40件收藏（含仙灵物品）。",
+    description: "完成藏珍阁全部40件收藏（含仙灵物品）。",
     condition: { type: "museumDonations", count: 40 },
     reward: { money: 8000 },
   },
-  // 冒险家公会
+  // 冒险家仙盟
   {
     id: "guild_5",
     name: "怪物猎人",
@@ -1002,7 +1002,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
 ];
 
-/** 祠堂任务板 */
+/** 祠堂委托板 */
 export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   {
     id: "spring_bundle",
@@ -1017,7 +1017,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
     reward: {
       money: 500,
       items: [{ itemId: "seed_peach", quantity: 3 }],
-      description: "500文 + 桃种子×3",
+      description: "500文 + 桃灵种×3",
     },
   },
   {
@@ -1033,7 +1033,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
     reward: {
       money: 800,
       items: [{ itemId: "seed_lotus_seed", quantity: 2 }],
-      description: "800文 + 莲子种子×2",
+      description: "800文 + 莲子灵种×2",
     },
   },
   {
@@ -1049,7 +1049,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
     reward: {
       money: 800,
       items: [{ itemId: "seed_snow_lotus", quantity: 1 }],
-      description: "800文 + 雪莲种子×1",
+      description: "800文 + 雪莲灵种×1",
     },
   },
   {
@@ -1080,7 +1080,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   {
     id: "friendship_bundle",
     name: "乡情之礼",
-    description: "与所有村民建立友善关系。",
+    description: "与所有集民建立友善关系。",
     requiredItems: [
       { itemId: "wintersweet", quantity: 2 },
       { itemId: "chrysanthemum", quantity: 2 },
@@ -1121,7 +1121,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   {
     id: "ore_bundle",
     name: "矿石之礼",
-    description: "矿洞中采集的各类矿石。",
+    description: "玄矿幽脉中采集的各类矿石。",
     requiredItems: [
       { itemId: "copper_ore", quantity: 10 },
       { itemId: "iron_ore", quantity: 5 },
@@ -1149,8 +1149,8 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   // 畜产品
   {
     id: "animal_bundle",
-    name: "牧场之礼",
-    description: "牧场动物们的馈赠。",
+    name: "灵牧苑之礼",
+    description: "灵牧苑动物们的馈赠。",
     requiredItems: [
       { itemId: "egg", quantity: 5 },
       { itemId: "milk", quantity: 3 },
@@ -1279,7 +1279,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   {
     id: "hybrid_spring_bundle",
     name: "春华杂交",
-    description: "春季杂交作物的初步收获。",
+    description: "春季杂交灵植的初步收获。",
     requiredItems: [
       { itemId: "emerald_radish", quantity: 2 },
       { itemId: "jade_shoot", quantity: 2 },
@@ -1291,7 +1291,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   {
     id: "hybrid_summer_bundle",
     name: "夏实杂交",
-    description: "夏季杂交作物的丰硕之果。",
+    description: "夏季杂交灵植的丰硕之果。",
     requiredItems: [
       { itemId: "purple_melon", quantity: 2 },
       { itemId: "golden_rice", quantity: 2 },
@@ -1303,7 +1303,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   {
     id: "hybrid_autumn_bundle",
     name: "秋韵杂交",
-    description: "秋季杂交作物的丰收之味。",
+    description: "秋季杂交灵植的丰收之味。",
     requiredItems: [
       { itemId: "amber_yam", quantity: 2 },
       { itemId: "twin_blossom", quantity: 1 },
@@ -1315,7 +1315,7 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   {
     id: "hybrid_winter_bundle",
     name: "冬藏杂交",
-    description: "冬季杂交作物的严寒之珍。",
+    description: "冬季杂交灵植的严寒之珍。",
     requiredItems: [
       { itemId: "jade_white", quantity: 2 },
       { itemId: "garlic_cabbage", quantity: 2 },

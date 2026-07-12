@@ -69,14 +69,14 @@ export const formatTime = (hour: number): string => {
 
 // === 行动时间开销 (单位：小时) ===
 export const ACTION_TIME_COSTS = {
-  // 农场
+  // 灵田
   till: 0.17,
   plant: 0.17,
   water: 0.08,
   harvest: 0.17,
-  // 钓鱼
+  // 垂钓
   fishStart: 1,
-  // 挖矿
+  // 采玄矿
   mineOre: 0.25,
   combat: 0.25,
   nextFloor: 0.17,
@@ -90,14 +90,14 @@ export const ACTION_TIME_COSTS = {
   // 社交
   talk: 0.17,
   gift: 0,
-  // 加工坊
+  // 百匠造台
   craftMachine: 0.17,
   startProcessing: 0,
   collectProduct: 0,
   craftSprinkler: 0.17,
   craftFertilizer: 0.17,
   craftJadeRing: 0.17,
-  // 牧场
+  // 灵牧苑
   feedAnimals: 0.5,
   petAnimal: 0.17,
   batchPet: 0.5,
@@ -108,7 +108,7 @@ export const ACTION_TIME_COSTS = {
   plantTree: 0.5,
   // 工具升级
   toolUpgrade: 1,
-  // 批量农场操作
+  // 批量灵田操作
   batchWater: 0.17,
   batchTill: 0.25,
   batchHarvest: 0.5,
@@ -120,7 +120,7 @@ export const ACTION_TIME_COSTS = {
   checkAchievement: 0,
   // 育种
   breeding: 0.17,
-  // 鱼塘
+  // 灵泉鱼池
   feedFish: 0.5,
   cleanPond: 0.5,
   collectFishProducts: 0.17,
@@ -134,7 +134,7 @@ export const TOOL_TIME_SAVINGS: Record<string, number> = {
   iridium: 30,
 };
 
-/** 技能等级每级减免行动时间的比例 */
+/** 百艺等级每级减免行动时间的比例 */
 export const SKILL_TIME_REDUCTION_PER_LEVEL = 0.02;
 
 /** 行动最低时间（分钟） */
@@ -227,10 +227,10 @@ export const TRAVEL_STAMINA: Record<string, number> = {
 };
 
 const LOCATION_GROUP_NAMES: Record<LocationGroup, string> = {
-  farm: "农场",
-  village_area: "桃源村",
+  farm: "灵田",
+  village_area: "万象集",
   nature: "野外",
-  mine: "矿洞",
+  mine: "玄矿幽脉",
   hanhai: "瀚海",
 };
 
@@ -238,7 +238,7 @@ export const getLocationGroupName = (group: LocationGroup): string => {
   return LOCATION_GROUP_NAMES[group];
 };
 
-// === 商店营业 ===
+// === 万象铺营业 ===
 export interface ShopSchedule {
   tabKey: string;
   name: string;
@@ -250,14 +250,14 @@ export interface ShopSchedule {
 export const SHOP_SCHEDULES: ShopSchedule[] = [
   {
     tabKey: "shop",
-    name: "桃源商圈",
+    name: "桃源万象市集",
     closedDays: [],
     openHour: 6,
     closeHour: 24,
   },
   {
     tabKey: "upgrade",
-    name: "工坊",
+    name: "匠造台",
     closedDays: ["sun"],
     openHour: 8,
     closeHour: 20,

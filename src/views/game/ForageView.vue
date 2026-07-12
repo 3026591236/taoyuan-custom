@@ -2,7 +2,7 @@
   <div>
     <h3 class="text-accent text-sm mb-3">
       <TreePine :size="14" class="inline" />
-      竹林采集
+      青篁秘林采集
     </h3>
 
     <!-- 采集操作 -->
@@ -13,7 +13,7 @@
           >消耗 {{ forageCost }} 体力 · {{ forageTimeLabel }}</span
         >
       </div>
-      <p class="text-xs text-muted mb-2">使用斧头在竹林中搜寻各类物资。</p>
+      <p class="text-xs text-muted mb-2">使用斧头在青篁秘林中搜寻各类物资。</p>
       <div
         class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5"
         @click="handleForage"
@@ -51,7 +51,7 @@
           >料理运气+{{ cookingLuckBuff }}%</span
         >
         <span v-if="isForestFarm" class="text-[10px] text-success"
-          >森林农场：经验×1.25</span
+          >森林灵田：经验×1.25</span
         >
       </div>
     </div>
@@ -219,7 +219,7 @@
             遇到了{{ encounter.animal.name }}！
           </p>
           <p class="text-xs text-muted mb-3">
-            一只{{ encounter.animal.name }}出现在竹林中，看起来很温顺。
+            一只{{ encounter.animal.name }}出现在青篁秘林中，看起来很温顺。
           </p>
           <div class="flex flex-col space-y-1.5">
             <div
@@ -440,8 +440,8 @@ const QUALITY_NAMES: Record<Quality, string> = {
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
-  seed: "种子",
-  crop: "农作物",
+  seed: "灵种",
+  crop: "农灵植",
   fish: "鱼类",
   ore: "矿石",
   gem: "宝石",
@@ -489,7 +489,7 @@ const forageCost = computed(() =>
   ),
 );
 
-/** 采集耗时（小时），受工具和技能减免 */
+/** 采集耗时（小时），受工具和百艺减免 */
 const forageTime = computed(() => {
   const baseMin = ACTION_TIME_COSTS.forage * 60;
   const toolTier = inventoryStore.getTool("axe")?.tier ?? "basic";
@@ -666,7 +666,7 @@ const handleForage = () => {
       const name = def?.name ?? g.itemId!;
       return g.quantity > 1 ? `${name}×${g.quantity}` : name;
     });
-  let msg = `在竹林中采集，获得了${names.join("、") || "空气"}。(-${cost}体力)`;
+  let msg = `在青篁秘林中采集，获得了${names.join("、") || "空气"}。(-${cost}体力)`;
   if (leveledUp) msg += ` 采集提升到${newLevel}级！`;
   addLog(msg);
 
@@ -731,7 +731,7 @@ const handleFriendlyCollect = () => {
     quantity: 1,
     quality,
   });
-  let msg = `在竹林遇到${animal.name}，收集到了${itemDef?.name ?? animal.productItemId}${qLabel}！`;
+  let msg = `在青篁秘林遇到${animal.name}，收集到了${itemDef?.name ?? animal.productItemId}${qLabel}！`;
   if (leveledUp) msg += ` 采集提升到${newLevel}级！`;
   addLog(msg);
   encounter.value = null;
@@ -748,7 +748,7 @@ const handleFriendlyChase = () => {
     label: `驱赶了${animal.name}（+${animal.chaseExp}经验）`,
     quantity: 0,
   });
-  let msg = `在竹林遇到${animal.name}，将其驱赶了。（+${animal.chaseExp}采集经验）`;
+  let msg = `在青篁秘林遇到${animal.name}，将其驱赶了。（+${animal.chaseExp}采集经验）`;
   if (leveledUp) msg += ` 采集提升到${newLevel}级！`;
   addLog(msg);
   encounter.value = null;
@@ -791,10 +791,10 @@ const handleForestCombat = (action: CombatAction) => {
   forestCombatRound.value++;
   const monster = forestCombatMonster.value;
 
-  // 逃跑 —— 竹林100%成功
+  // 逃跑 —— 青篁秘林100%成功
   if (action === "flee") {
     forestCombatLog.value.push("你转身逃离了！");
-    addLog(`在竹林遭遇${monster.name}，你选择了逃跑。`);
+    addLog(`在青篁秘林遭遇${monster.name}，你选择了逃跑。`);
     endForestCombat(false);
     return;
   }
@@ -939,7 +939,7 @@ const handleForestVictory = () => {
     monster.expReward,
   );
 
-  let msg = `在竹林击败了${monster.name}！`;
+  let msg = `在青篁秘林击败了${monster.name}！`;
   if (drops.length > 0) msg += ` 获得了${drops.join("、")}。`;
   msg += ` (+${monster.expReward}战斗经验)`;
   if (leveledUp) msg += ` 战斗提升到${newLevel}级！`;
@@ -971,7 +971,7 @@ const handleForestDefeat = () => {
   // HP恢复50%
   playerStore.restoreHealth(Math.floor(playerStore.getMaxHp() * 0.5));
 
-  let msg = `在竹林被${monster.name}击败了……`;
+  let msg = `在青篁秘林被${monster.name}击败了……`;
   if (moneyLoss > 0) msg += ` 丢失了${moneyLoss}文。`;
   msg += " 采集物全部散落。";
   addLog(msg);

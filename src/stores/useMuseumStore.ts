@@ -31,7 +31,7 @@ export const useMuseumStore = defineStore("museum", () => {
     {
       id: "farm_memory",
       name: "桃源农事展",
-      desc: "展示农具、作物与村庄旧物，每日收入+8%。",
+      desc: "展示农具、灵植与万象集旧物，每日收入+8%。",
       fameNeed: 0,
       incomeRate: 1.08,
     },
@@ -115,7 +115,7 @@ export const useMuseumStore = defineStore("museum", () => {
     return donatedItems.value.includes(itemId);
   };
 
-  /** 是否可捐赠（背包中有且未捐赠过） */
+  /** 是否可捐赠（纳戒中有且未捐赠过） */
   const canDonate = (itemId: string): boolean => {
     if (isDonated(itemId)) return false;
     if (!MUSEUM_ITEMS.find((m) => m.id === itemId)) return false;
@@ -123,7 +123,7 @@ export const useMuseumStore = defineStore("museum", () => {
     return inventoryStore.hasItem(itemId);
   };
 
-  /** 获取背包中可捐赠的物品列表 */
+  /** 获取纳戒中可捐赠的物品列表 */
   const donatableItems = computed(() => {
     const inventoryStore = useInventoryStore();
     return inventoryStore.items

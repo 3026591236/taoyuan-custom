@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-accent text-sm">灶台</h3>
+      <h3 class="text-accent text-sm">灵膳房</h3>
       <button
         class="text-[10px] px-2 py-0.5 border rounded-xs"
         :class="
@@ -85,7 +85,7 @@
         v-else-if="cookingStore.recipes.length === 0"
         class="text-[10px] text-muted/50 mt-0.5"
       >
-        与村民交好或观看电视可学习食谱
+        与集民交好或观看电视可学习食谱
       </p>
     </div>
 

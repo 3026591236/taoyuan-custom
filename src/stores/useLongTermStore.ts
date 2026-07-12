@@ -311,7 +311,7 @@ const FARM_GOALS: {
     reward: {
       money: 3600,
       spiritStone: 10,
-      items: [{ itemId: "seed_spirit_rice", name: "蕴灵稻种子", quantity: 4 }],
+      items: [{ itemId: "seed_spirit_rice", name: "蕴灵稻灵种", quantity: 4 }],
     },
   },
   {
@@ -322,7 +322,7 @@ const FARM_GOALS: {
     reward: {
       money: 4200,
       spiritStone: 12,
-      items: [{ itemId: "seed_dew_grass", name: "凝露草种子", quantity: 4 }],
+      items: [{ itemId: "seed_dew_grass", name: "凝露草灵种", quantity: 4 }],
     },
   },
   {
@@ -397,7 +397,7 @@ const AFFIX_POOL: Record<
   boots: [
     {
       name: "踏风",
-      desc: "钓鱼/采集/瀚海周目标更快",
+      desc: "垂钓/采集/瀚海周目标更快",
       rarity: "普通",
       setId: "sea",
     },
@@ -419,7 +419,7 @@ const AFFIX_POOL: Record<
     { name: "引雷", desc: "雷精相关收益提高", rarity: "稀有", setId: "demon" },
     {
       name: "月华归元",
-      desc: "回流、奇遇与月度任务收益提高",
+      desc: "回流、奇遇与月度委托收益提高",
       rarity: "绝品",
       setId: "spirit",
     },
@@ -492,7 +492,7 @@ const SECONDARY_AFFIX_POOL: Record<
   boots: [
     {
       name: "踏浪",
-      desc: "副词条：钓鱼、瀚海与商队收益提高",
+      desc: "副词条：垂钓、瀚海与商队收益提高",
       rarity: "普通",
       setId: "sea",
     },

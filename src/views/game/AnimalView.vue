@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-accent text-sm">
         <Home :size="14" class="inline" />
-        牧场
+        灵牧苑
       </h3>
       <Button v-if="unpettedCount > 0" :icon="Hand" @click="handlePetAll"
         >一键抚摸（{{ unpettedCount }}只）</Button
@@ -123,7 +123,7 @@
       </div>
     </div>
 
-    <!-- 畜舍列表 (鸡舍和牲口棚) -->
+    <!-- 畜舍列表 (灵禽舍和牲口棚) -->
     <div
       v-for="bDef in mainBuildings"
       :key="bDef.type"
@@ -161,7 +161,7 @@
         >
           自动抚摸机运行中 — 每日自动抚摸所有动物
         </p>
-        <!-- 鸡舍孵化器（鸡舍2级以上） -->
+        <!-- 灵禽舍孵化器（灵禽舍2级以上） -->
         <div
           v-if="bDef.type === 'coop' && getBuildingLevel('coop') >= 2"
           class="mb-3 p-2 border border-accent/10 rounded-xs"
@@ -191,7 +191,7 @@
               <span class="text-xs text-muted">&times;{{ eggItem.count }}</span>
             </div>
           </div>
-          <p v-else class="text-xs text-muted">背包中没有可孵化的蛋。</p>
+          <p v-else class="text-xs text-muted">纳戒中没有可孵化的蛋。</p>
         </div>
 
         <!-- 牲口棚孵化器（牲口棚2级以上） -->
@@ -225,7 +225,7 @@
             </div>
           </div>
           <p v-else class="text-xs text-muted">
-            背包中没有可在牲口棚孵化的蛋。
+            纳戒中没有可在牲口棚孵化的蛋。
           </p>
         </div>
 
@@ -391,7 +391,9 @@
         <div v-else class="flex flex-col items-center justify-center py-6">
           <Home :size="36" class="text-accent/20 mb-2" />
           <p class="text-xs text-muted">暂无动物</p>
-          <p class="text-[10px] text-muted/50 mt-0.5">在商店购买幼崽来饲养吧</p>
+          <p class="text-[10px] text-muted/50 mt-0.5">
+            在万象铺购买幼崽来饲养吧
+          </p>
         </div>
       </template>
       <template v-else>
@@ -607,7 +609,7 @@
 
     <!-- 血脉概况 -->
     <div class="mb-4 border border-accent/20 rounded-xs p-3">
-      <h3 class="text-accent text-sm mb-2">牧场血脉</h3>
+      <h3 class="text-accent text-sm mb-2">灵牧苑血脉</h3>
       <div class="grid grid-cols-4 gap-2 text-center">
         <div class="border border-accent/10 rounded-xs p-2">
           <p class="text-[10px] text-muted">凡血</p>
@@ -1000,7 +1002,7 @@ const tutorialHint = computed(() => {
   const barnBuilt =
     animalStore.buildings.find((b) => b.type === "barn")?.built ?? false;
   if (!coopBuilt && !barnBuilt)
-    return "先去商铺的万物铺建造鸡舍或牧场，然后就可以购买和饲养动物了。";
+    return "先去商铺的万物铺建造灵禽舍或灵牧苑，然后就可以购买和饲养动物了。";
   if (
     animalStore.animals.length > 0 &&
     animalStore.animals.every((a) => !a.wasPetted)
@@ -1076,7 +1078,7 @@ const confirmSellAnimal = () => {
 
 // === 数据计算 ===
 
-/** 只显示鸡舍和牲口棚（马厩单独渲染） */
+/** 只显示灵禽舍和牲口棚（马厩单独渲染） */
 const mainBuildings = computed(() =>
   ANIMAL_BUILDINGS.filter((b) => b.type !== "stable"),
 );
@@ -1127,7 +1129,7 @@ const sickCount = computed(
   () => animalStore.animals.filter((a) => a.sick).length,
 );
 
-/** 可在鸡舍孵化的蛋列表 */
+/** 可在灵禽舍孵化的蛋列表 */
 const coopIncubatableEggs = computed(() => {
   const result: { itemId: string; name: string; count: number }[] = [];
   for (const [itemId, mapping] of Object.entries(INCUBATION_MAP)) {
@@ -1439,12 +1441,12 @@ const handleFeedAll = () => {
 const handleBuyFeed = () => {
   const feed = FEED_DEFS.find((f) => f.id === selectedFeed.value);
   if (!feed) return;
-  // 检查背包主区是否有空间（已有同类栈或有空位），防止溢出到临时背包导致无法使用
+  // 检查纳戒主区是否有空间（已有同类栈或有空位），防止溢出到临时纳戒导致无法使用
   const hasStack = inventoryStore.items.some(
     (s) => s.itemId === feed.id && s.quality === "normal" && s.quantity < 999,
   );
   if (!hasStack && inventoryStore.isFull) {
-    addLog("背包已满，无法购买。");
+    addLog("纳戒已满，无法购买。");
     return;
   }
   if (!playerStore.spendMoney(feed.price)) {

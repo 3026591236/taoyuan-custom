@@ -16,7 +16,7 @@ import { RINGS } from "./rings";
 import { HATS } from "./hats";
 import { SHOES } from "./shoes";
 
-/** 从作物定义自动生成种子物品（排除已手动定义的种子） */
+/** 从灵植定义自动生成灵种物品（排除已手动定义的灵种） */
 const SEED_ITEMS: ItemDef[] = CROPS.filter(
   (crop) =>
     crop.seedId !== "ancient_seed" &&
@@ -24,9 +24,9 @@ const SEED_ITEMS: ItemDef[] = CROPS.filter(
     crop.seedId !== "hanhai_date_seed",
 ).map((crop) => ({
   id: crop.seedId,
-  name: `${crop.name}种子`,
+  name: `${crop.name}灵种`,
   category: "seed",
-  description: `${crop.name}的种子，${crop.season
+  description: `${crop.name}的灵种，${crop.season
     .map((s) => {
       const names: Record<string, string> = {
         spring: "春",
@@ -41,7 +41,7 @@ const SEED_ITEMS: ItemDef[] = CROPS.filter(
   edible: false,
 }));
 
-/** 从作物定义自动生成收获物品 */
+/** 从灵植定义自动生成收获物品 */
 const CROP_ITEMS: ItemDef[] = CROPS.map((crop) => ({
   id: crop.id,
   name: crop.name,
@@ -417,7 +417,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "storage_talisman",
     name: "纳物符",
     category: "misc",
-    description: "刻有须弥小阵的符箓，使用后背包永久+1格，可突破普通上限。",
+    description: "刻有须弥小阵的符箓，使用后纳戒永久+1格，可突破普通上限。",
     sellPrice: 600,
     edible: false,
   },
@@ -425,7 +425,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "cosmos_bag",
     name: "乾坤袋",
     category: "misc",
-    description: "内藏一方小小空间，使用后背包永久+4格，可突破普通上限。",
+    description: "内藏一方小小空间，使用后纳戒永久+4格，可突破普通上限。",
     sellPrice: 2400,
     edible: false,
   },
@@ -585,9 +585,9 @@ const MISC_ITEMS: ItemDef[] = [
   },
   {
     id: "seed_ice_soul_lotus",
-    name: "冰魄雪莲种子",
+    name: "冰魄雪莲灵种",
     category: "seed",
-    description: "冰魄雪莲的种子，冬令方可种植。",
+    description: "冰魄雪莲的灵种，冬令方可种植。",
     sellPrice: 150,
     edible: false,
   },
@@ -725,7 +725,8 @@ const MISC_ITEMS: ItemDef[] = [
     id: "mystic_iron",
     name: "玄铁",
     category: "ore",
-    description: "比精铁更沉的黑色灵矿，是炼器、工坊订单与洞府折灵的通用材料。",
+    description:
+      "比精铁更沉的黑色灵矿，是炼器、匠造台订单与洞府折灵的通用材料。",
     sellPrice: 420,
     edible: false,
   },
@@ -822,7 +823,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "stone",
     name: "石料",
     category: "material",
-    description: "小屋维护、博物馆修复和基础建设常用的石材。",
+    description: "仙居维护、藏珍阁修复和基础建设常用的石材。",
     sellPrice: 4,
     edible: false,
   },
@@ -838,7 +839,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "bamboo",
     name: "竹子",
     category: "material",
-    description: "竹林中采集的翠竹。",
+    description: "青篁秘林中采集的翠竹。",
     sellPrice: 10,
     edible: false,
   },
@@ -940,7 +941,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "scarecrow",
     name: "稻草人",
     category: "machine",
-    description: "放置在农场，驱赶偷吃作物的乌鸦。",
+    description: "放置在灵田，驱赶偷吃灵植的乌鸦。",
     sellPrice: 75,
     edible: false,
   },
@@ -956,7 +957,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "fish_feed",
     name: "鱼饲料",
     category: "material",
-    description: "鱼塘专用饲料，维持鱼塘水质和鱼的健康。",
+    description: "灵泉鱼池专用饲料，维持灵泉鱼池水质和鱼的健康。",
     sellPrice: 10,
     edible: false,
   },
@@ -964,7 +965,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "water_purifier",
     name: "水质改良剂",
     category: "material",
-    description: "改善鱼塘水质，降低鱼生病概率。",
+    description: "改善灵泉鱼池水质，降低鱼生病概率。",
     sellPrice: 50,
     edible: false,
   },
@@ -1655,9 +1656,9 @@ const SAPLING_ITEMS: ItemDef[] = FRUIT_TREE_DEFS.map((t) => ({
 const WILD_TREE_ITEMS: ItemDef[] = [
   {
     id: "camphor_seed",
-    name: "樟树种子",
+    name: "樟树灵种",
     category: "material",
-    description: "樟树的种子，种下后可长成樟树。",
+    description: "樟树的灵种，种下后可长成樟树。",
     sellPrice: 15,
     edible: false,
   },
@@ -1721,7 +1722,7 @@ const CRAB_POT_ITEMS: ItemDef[] = [
     id: "crab_pot",
     name: "蟹笼",
     category: "machine",
-    description: "放置在钓鱼地点，每日自动捕获水产（需鱼饵）。",
+    description: "放置在垂钓地点，每日自动捕获水产（需鱼饵）。",
     sellPrice: 750,
     edible: false,
   },
@@ -1769,7 +1770,7 @@ const CRAB_POT_ITEMS: ItemDef[] = [
     id: "cave_shrimp",
     name: "洞穴虾",
     category: "fish",
-    description: "矿洞暗河中的透明小虾。",
+    description: "玄矿幽脉暗河中的透明小虾。",
     sellPrice: 40,
     edible: true,
     staminaRestore: 8,
@@ -2431,9 +2432,9 @@ export const ITEMS: ItemDef[] = [
   },
   {
     id: "ancient_seed",
-    name: "远古种子",
+    name: "远古灵种",
     category: "artifact",
-    description: "蕴含远古生命力的神秘种子，据说能种出远古水果。",
+    description: "蕴含远古生命力的神秘灵种，据说能种出远古水果。",
     sellPrice: 400,
     edible: false,
   },
@@ -2462,7 +2463,7 @@ export const ITEMS: ItemDef[] = [
     edible: false,
   },
 
-  // ===== 公会商店物品 =====
+  // ===== 仙盟万象铺物品 =====
   {
     id: "combat_tonic",
     name: "战斗补剂",
@@ -2521,7 +2522,7 @@ export const ITEMS: ItemDef[] = [
   },
   {
     id: "guild_badge",
-    name: "公会徽章",
+    name: "仙盟徽章",
     category: "misc",
     description: "攻击力永久+3。",
     sellPrice: 0,
@@ -2575,17 +2576,17 @@ export const ITEMS: ItemDef[] = [
   // ===== 瀚海物品 =====
   {
     id: "hanhai_cactus_seed",
-    name: "仙人掌种子",
+    name: "仙人掌灵种",
     category: "seed",
-    description: "来自西域的奇特植物种子，夏季可种植。",
+    description: "来自西域的奇特植物灵种，夏季可种植。",
     sellPrice: 250,
     edible: false,
   },
   {
     id: "hanhai_date_seed",
-    name: "椰枣种子",
+    name: "椰枣灵种",
     category: "seed",
-    description: "丝绸之路带来的西域果实种子，夏/秋季可种植。",
+    description: "丝绸之路带来的西域果实灵种，夏/秋季可种植。",
     sellPrice: 200,
     edible: false,
   },
@@ -2625,7 +2626,7 @@ export const ITEMS: ItemDef[] = [
     id: "mega_bomb_recipe",
     name: "巨型炸弹配方",
     category: "misc",
-    description: "据说能炸开整层矿洞的秘方。",
+    description: "据说能炸开整层玄矿幽脉的秘方。",
     sellPrice: 2500,
     edible: false,
   },
@@ -2880,7 +2881,7 @@ export const ITEMS: ItemDef[] = [
     id: "fox_bead",
     name: "狐珠",
     category: "misc",
-    description: "矿洞深处捡到的赤红色珠子，温热如有生命。",
+    description: "玄矿幽脉深处捡到的赤红色珠子，温热如有生命。",
     sellPrice: 500,
     edible: false,
   },
@@ -3012,12 +3013,12 @@ export const ITEMS: ItemDef[] = [
     sellPrice: 500,
     edible: false,
   },
-  // --- 竹林野兽掉落 ---
+  // --- 青篁秘林野兽掉落 ---
   {
     id: "wolf_pelt",
     name: "狼皮",
     category: "material",
-    description: "竹林灰狼的毛皮，柔韧耐磨。",
+    description: "青篁秘林灰狼的毛皮，柔韧耐磨。",
     sellPrice: 200,
     edible: false,
   },
@@ -3069,7 +3070,7 @@ export const ITEMS: ItemDef[] = [
     sellPrice: 350,
     edible: false,
   },
-  // --- 竹林野兽掉落加工品 ---
+  // --- 青篁秘林野兽掉落加工品 ---
   {
     id: "bear_gall_pill",
     name: "熊胆丸",
@@ -3099,29 +3100,29 @@ export const getItemById = (id: string): ItemDef | undefined => {
 
 /** 物品分类默认来源 */
 const CATEGORY_SOURCE: Record<ItemCategory, string> = {
-  seed: "商店购买",
+  seed: "万象铺购买",
   crop: "种植收获",
-  fish: "钓鱼获得",
-  ore: "矿洞采集",
-  gem: "矿洞采集",
+  fish: "垂钓获得",
+  ore: "玄矿幽脉采集",
+  gem: "玄矿幽脉采集",
   material: "采集/合成",
   food: "烹饪制作",
   processed: "加工制作",
   machine: "合成制作",
   sprinkler: "合成制作",
   fertilizer: "合成制作",
-  bait: "商店购买",
-  tackle: "商店购买",
-  animal_product: "畜牧产出",
+  bait: "万象铺购买",
+  tackle: "万象铺购买",
+  animal_product: "灵牧产出",
   fruit: "果树收获",
-  sapling: "商店购买",
+  sapling: "万象铺购买",
   bomb: "合成制作",
-  gift: "采集/商店",
-  fossil: "矿洞挖掘",
-  artifact: "矿洞挖掘",
-  weapon: "商店/掉落",
-  ring: "商店/合成",
-  hat: "商店/合成",
+  gift: "采集/万象铺",
+  fossil: "玄矿幽脉挖掘",
+  artifact: "玄矿幽脉挖掘",
+  weapon: "万象铺/掉落",
+  ring: "万象铺/合成",
+  hat: "万象铺/合成",
   shoe: "铁匠铺合成",
   misc: "多种途径",
 };
@@ -3150,10 +3151,10 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   silk_cloth: "织布机加工",
   alpaca_cloth: "织布机加工",
   felt: "织布机加工",
-  fish_feed: "商店购买",
-  water_purifier: "商店购买",
+  fish_feed: "万象铺购买",
+  water_purifier: "万象铺购买",
   // 采集类
-  wild_mushroom: "矿洞蘑菇层/秋季觅食",
+  wild_mushroom: "玄矿幽脉蘑菇层/秋季觅食",
   winter_bamboo_shoot: "冬季觅食",
   ginseng: "秋季觅食",
   wild_berry: "夏季觅食",
@@ -3198,9 +3199,9 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   chrysanthemum_tea: "加工制作",
   ginseng_tea: "加工制作",
   // 礼物
-  jade_ring: "商店购买",
-  silk_ribbon: "商店购买",
-  zhiji_jade: "商店购买",
+  jade_ring: "万象铺购买",
+  silk_ribbon: "万象铺购买",
+  zhiji_jade: "万象铺购买",
   wintersweet: "冬季觅食",
   pine_incense: "合成制作",
   camphor_incense: "合成制作",
@@ -3208,19 +3209,19 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   // 杂货
   rain_totem: "合成制作",
   gold_nugget: "河边淘金",
-  // 公会商店
-  combat_tonic: "冒险家公会",
-  fortify_brew: "冒险家公会",
-  ironhide_potion: "冒险家公会",
-  warriors_feast: "冒险家公会",
-  slayer_charm: "冒险家公会",
-  monster_lure: "冒险家公会",
-  guild_badge: "冒险家公会",
-  life_talisman: "冒险家公会",
-  defense_charm: "冒险家公会",
-  lucky_coin: "冒险家公会",
-  adventurer_ration: "冒险家公会",
-  stamina_elixir: "冒险家公会",
+  // 仙盟万象铺
+  combat_tonic: "冒险家仙盟",
+  fortify_brew: "冒险家仙盟",
+  ironhide_potion: "冒险家仙盟",
+  warriors_feast: "冒险家仙盟",
+  slayer_charm: "冒险家仙盟",
+  monster_lure: "冒险家仙盟",
+  guild_badge: "冒险家仙盟",
+  life_talisman: "冒险家仙盟",
+  defense_charm: "冒险家仙盟",
+  lucky_coin: "冒险家仙盟",
+  adventurer_ration: "冒险家仙盟",
+  stamina_elixir: "冒险家仙盟",
   // 瀚海物品
   hanhai_cactus_seed: "瀚海沙漠商人",
   hanhai_date_seed: "瀚海沙漠商人",
@@ -3258,15 +3259,15 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   date_porridge: "烹饪",
   desert_feast: "烹饪",
   brocade_dumpling: "烹饪",
-  // 远古种子
-  ancient_seed: "矿洞挖掘（可种植）",
+  // 远古灵种
+  ancient_seed: "玄矿幽脉挖掘（可种植）",
   // 草药加工品
   herbal_paste: "加工制作",
   ginseng_extract: "加工制作",
   antler_powder: "加工制作",
   stamina_fruit: "深渊宝箱(极稀有) / 制作",
   // 仙灵相关物品
-  fox_bead: "矿洞深处（狐仙发现线索）",
+  fox_bead: "玄矿幽脉深处（狐仙发现线索）",
   spirit_peach: "仙缘能力·灵桃（桃夭）",
   moon_herb: "仙缘能力·月华（月兔）",
   dream_silk: "仙缘能力·梦织（归女）",
@@ -3282,27 +3283,27 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   fox_spirit_bead: "制作（狐仙结缘信物）",
   immortal_gourd: "制作（山翁结缘信物）",
   starlight_loom: "制作（归女结缘信物）",
-  // 竹林野兽掉落
-  wolf_pelt: "竹林野兽掉落",
-  wolf_fang: "竹林野兽掉落",
-  bear_pelt: "竹林野兽掉落",
-  bear_gall: "竹林野兽掉落",
-  tiger_pelt: "竹林野兽掉落",
-  tiger_bone: "竹林野兽掉落",
-  tiger_fang: "竹林野兽掉落",
+  // 青篁秘林野兽掉落
+  wolf_pelt: "青篁秘林野兽掉落",
+  wolf_fang: "青篁秘林野兽掉落",
+  bear_pelt: "青篁秘林野兽掉落",
+  bear_gall: "青篁秘林野兽掉落",
+  tiger_pelt: "青篁秘林野兽掉落",
+  tiger_bone: "青篁秘林野兽掉落",
+  tiger_fang: "青篁秘林野兽掉落",
   bear_gall_pill: "加工制作",
   tiger_bone_tonic: "加工制作",
   artifact_shard: "秘境/凶兽掉落；洞府灵石坊折灵",
   star_iron: "昆仑外境/穷奇/混沌掉落；洞府灵石坊折灵",
   moonlight_jade: "云梦泽、幽冥洞窟掉落；洞府灵石坊折灵",
   sunfire_crystal: "昆仑外境、登仙塔高层掉落；洞府灵石坊折灵",
-  mystic_iron: "幽冥洞窟、矿洞深层、宗门订单奖励",
+  mystic_iron: "幽冥洞窟、玄矿幽脉深层、宗门订单奖励",
   cold_jade: "云梦泽、寒潭奇遇、冰魄雪莲订单奖励",
   phoenix_plume: "风暴鹰、穷奇、宗门高阶订单奖励",
   dragon_scale: "凶兽·混沌、凶兽·饕餮高阶掉落",
   void_dust: "凶兽·混沌、太虚秘境抉择、登仙塔高层",
   immortal_dew: "秘境灵脉泉眼、灵植订单、宗门宝库",
-  spirit_bone: "凶兽挑战、竹林猛兽、登仙塔掉落",
+  spirit_bone: "凶兽挑战、青篁秘林猛兽、登仙塔掉落",
   demon_core: "秘境首领、凶兽挑战、登仙塔精英",
   jade_slip: "古修遗府、宗门委派、秘境抉择",
   spirit_ink: "制符/宗门委派；灵砂与妖兽材料调制",
@@ -3318,7 +3319,7 @@ export const getItemSource = (itemId: string): string => {
   return CATEGORY_SOURCE[def.category];
 };
 
-/** 箱子阶梯定义 */
+/** 储物匣阶梯定义 */
 import type { ChestTier } from "@/types";
 
 export const CHEST_DEFS: Record<
@@ -3377,7 +3378,7 @@ export const CHEST_DEFS: Record<
   },
 };
 
-/** 箱子阶梯顺序 */
+/** 储物匣阶梯顺序 */
 export const CHEST_TIER_ORDER: ChestTier[] = [
   "wood",
   "copper",

@@ -7,10 +7,10 @@ import { useSkillStore } from "./useSkillStore";
 import { useMiningStore } from "./useMiningStore";
 
 export const useWalletStore = defineStore("wallet", () => {
-  /** 已解锁的钱袋物品ID */
+  /** 已解锁的财库物品ID */
   const unlockedItems = ref<string[]>([]);
 
-  /** 已解锁的钱袋物品定义 */
+  /** 已解锁的财库物品定义 */
   const unlockedDefs = computed(() =>
     WALLET_ITEMS.filter((w) => unlockedItems.value.includes(w.id)),
   );
@@ -51,7 +51,7 @@ export const useWalletStore = defineStore("wallet", () => {
       newlyUnlocked.push("神农本草");
     }
 
-    // 矿工护符：矿洞50层
+    // 矿工护符：玄矿幽脉50层
     if (!has("miners_charm") && miningStore.safePointFloor >= 50) {
       unlock("miners_charm");
       newlyUnlocked.push("矿工护符");
@@ -75,7 +75,7 @@ export const useWalletStore = defineStore("wallet", () => {
       newlyUnlocked.push("厨师帽");
     }
 
-    // 大地图腾：收获100次作物
+    // 大地图腾：收获100次灵植
     if (
       !has("earth_totem") &&
       achievementStore.stats.totalCropsHarvested >= 100
@@ -89,7 +89,7 @@ export const useWalletStore = defineStore("wallet", () => {
 
   // === 被动效果查询 ===
 
-  /** 商店折扣 (0.1 = 10%) */
+  /** 万象铺折扣 (0.1 = 10%) */
   const getShopDiscount = (): number => {
     return has("merchant_seal") ? 0.1 : 0;
   };
@@ -99,12 +99,12 @@ export const useWalletStore = defineStore("wallet", () => {
     return has("herb_guide") ? 1 : 0;
   };
 
-  /** 挖矿体力减免 (0.15 = 15%) */
+  /** 采玄矿体力减免 (0.15 = 15%) */
   const getMiningStaminaReduction = (): number => {
     return has("miners_charm") ? 0.15 : 0;
   };
 
-  /** 钓鱼calm概率加成 */
+  /** 垂钓calm概率加成 */
   const getFishingCalmBonus = (): number => {
     return has("anglers_token") ? 0.1 : 0;
   };
@@ -114,7 +114,7 @@ export const useWalletStore = defineStore("wallet", () => {
     return has("chefs_hat") ? 0.25 : 0;
   };
 
-  /** 作物生长速度加成 (0.1 = 10%) */
+  /** 灵植生长速度加成 (0.1 = 10%) */
   const getCropGrowthBonus = (): number => {
     return has("earth_totem") ? 0.1 : 0;
   };

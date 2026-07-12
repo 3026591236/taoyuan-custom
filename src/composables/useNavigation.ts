@@ -99,7 +99,7 @@ export const TABS: {
   { key: "fishing", label: "灵溪垂钓", icon: Fish },
   { key: "mining", label: "玄矿幽脉", icon: Pickaxe },
   { key: "cooking", label: "灵膳房", icon: Flame },
-  { key: "workshop", label: "百工坊", icon: Cog },
+  { key: "workshop", label: "百匠造台", icon: Cog },
   { key: "upgrade", label: "匠造台", icon: Wrench },
   { key: "charinfo", label: "仙籍", icon: User },
   { key: "cultivation", label: "问道", icon: Sparkles },
@@ -124,7 +124,7 @@ export const TABS: {
   { key: "hanhai", label: "瀚海", icon: Tent },
 ];
 
-/** 导航到游戏面板，检查旅行时间、就寝时间和商店营业时间 */
+/** 导航到游戏面板，检查旅行时间、就寝时间和万象铺营业时间 */
 export const navigateToPanel = (panelKey: PanelKey) => {
   const gameStore = useGameStore();
   const { startBgm } = useAudio();
@@ -138,7 +138,7 @@ export const navigateToPanel = (panelKey: PanelKey) => {
     return;
   }
 
-  // 商店营业检查
+  // 万象铺营业检查
   const shopCheck = isShopOpen(panelKey, gameStore.day, gameStore.hour);
   if (!shopCheck.open) {
     showFloat(shopCheck.reason!, "danger");

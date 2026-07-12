@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Tab 切换按钮 -->
-    <h3 class="text-accent text-sm mb-3">桃源村</h3>
+    <h3 class="text-accent text-sm mb-3">万象集</h3>
 
     <div class="flex space-x-1.5 mb-3">
       <Button
@@ -10,7 +10,7 @@
         :icon="Users"
         @click="activeTab = 'villager'"
       >
-        村民
+        集民
       </Button>
       <Button
         class="flex-1 justify-center"
@@ -22,7 +22,7 @@
       </Button>
     </div>
 
-    <!-- 村民 Tab -->
+    <!-- 集民 Tab -->
     <div v-if="activeTab === 'villager'">
       <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">
         {{ tutorialHint }}
@@ -60,7 +60,7 @@
       <section class="border border-accent/20 rounded-xs p-2 mb-3 bg-bg/40">
         <div class="flex items-center justify-between mb-2">
           <div>
-            <p class="text-xs text-accent">村庄回响 / 人情反馈</p>
+            <p class="text-xs text-accent">万象集回响 / 人情反馈</p>
             <p class="text-[10px] text-muted mt-0.5">
               {{ npcStore.villageReputationText }} 平均好感：{{
                 npcStore.villageFriendshipAvg
@@ -681,9 +681,7 @@
             </p>
             <template v-if="selectedNpcState?.zhiji">
               <p class="text-[10px] text-accent/60 mb-1">
-                {{
-                  selectedNpcDef.gender === "male" ? "蓝颜知己" : "红颜知己"
-                }}
+                {{ selectedNpcDef.gender === "male" ? "蓝颜知己" : "红颜知己" }}
                 ♦
               </p>
               <Button
@@ -782,7 +780,7 @@
           <!-- 送礼 -->
           <div>
             <p class="text-xs text-muted mb-2">
-              送礼（选择背包中的物品）
+              送礼（选择纳戒中的物品）
               <span v-if="npcStore.isBirthday(selectedNpc!)" class="text-danger"
                 >— 生日加成中!</span
               >
@@ -834,7 +832,7 @@
                 class="flex flex-col items-center justify-center py-6 text-muted"
               >
                 <Package :size="32" class="mb-2" />
-                <p class="text-xs">背包为空</p>
+                <p class="text-xs">纳戒为空</p>
               </div>
             </template>
           </div>
@@ -988,7 +986,7 @@ const getLastDiscoveryLog = (npcId: string): string | null => {
 const tutorialHint = computed(() => {
   if (!tutorialStore.enabled || gameStore.year > 1) return null;
   if (npcStore.npcStates.every((n) => n.friendship === 0))
-    return "点击村民头像可以聊天和送礼，经常互动能增进友好度。";
+    return "点击集民头像可以聊天和送礼，经常互动能增进友好度。";
   return null;
 });
 

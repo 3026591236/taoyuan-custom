@@ -1,6 +1,6 @@
 import type { FishDef, FishingLocation } from "@/types";
 
-/** 钓鱼地点定义 */
+/** 垂钓地点定义 */
 export const FISHING_LOCATIONS: {
   id: FishingLocation;
   name: string;
@@ -11,8 +11,8 @@ export const FISHING_LOCATIONS: {
   { id: "river", name: "江河", description: "湍急的大河，有更大的鱼出没。" },
   {
     id: "mine",
-    name: "矿洞暗河",
-    description: "矿洞深处的地下水域，鱼类不受季节影响。",
+    name: "玄矿幽脉暗河",
+    description: "玄矿幽脉深处的地下水域，鱼类不受季节影响。",
   },
   {
     id: "waterfall",
@@ -481,15 +481,15 @@ export const FISH: FishDef[] = [
     miniGameDirChange: 0.05,
   },
 
-  // ==================== 矿洞暗河 (mine) — 8 种 ====================
+  // ==================== 玄矿幽脉暗河 (mine) — 8 种 ====================
   {
     id: "cave_loach",
-    name: "矿洞泥鳅",
+    name: "玄矿幽脉泥鳅",
     season: ["spring", "summer", "autumn", "winter"],
     weather: ["any"],
     difficulty: "normal",
     sellPrice: 35,
-    description: "矿洞地下水中的泥鳅。",
+    description: "玄矿幽脉地下水中的泥鳅。",
     location: "mine",
     miniGameSpeed: 2.0,
     miniGameDirChange: 0.05,
@@ -501,12 +501,12 @@ export const FISH: FishDef[] = [
     weather: ["any"],
     difficulty: "hard",
     sellPrice: 100,
-    description: "矿洞深处的珍稀盲鱼。",
+    description: "玄矿幽脉深处的珍稀盲鱼。",
     location: "mine",
     miniGameSpeed: 2.5,
     miniGameDirChange: 0.09,
   },
-  // 矿洞新增
+  // 玄矿幽脉新增
   {
     id: "glowfish",
     name: "荧光鱼",
@@ -526,7 +526,7 @@ export const FISH: FishDef[] = [
     weather: ["any"],
     difficulty: "easy",
     sellPrice: 30,
-    description: "生活在矿洞岩石间的小蟹。",
+    description: "生活在玄矿幽脉岩石间的小蟹。",
     location: "mine",
     miniGameSpeed: 0.7,
     miniGameDirChange: 0.02,
@@ -538,7 +538,7 @@ export const FISH: FishDef[] = [
     weather: ["any"],
     difficulty: "normal",
     sellPrice: 60,
-    description: "通体透明的矿洞虾，仿佛水晶。",
+    description: "通体透明的玄矿幽脉虾，仿佛水晶。",
     location: "mine",
     miniGameSpeed: 2.2,
     miniGameDirChange: 0.06,
@@ -574,7 +574,7 @@ export const FISH: FishDef[] = [
     weather: ["any"],
     difficulty: "legendary",
     sellPrice: 800,
-    description: "矿洞最深处的远古巨兽，无人得见其全貌。",
+    description: "玄矿幽脉最深处的远古巨兽，无人得见其全貌。",
     location: "mine",
     miniGameSpeed: 4.5,
     miniGameDirChange: 0.15,

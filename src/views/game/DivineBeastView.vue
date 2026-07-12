@@ -72,7 +72,7 @@
       <div class="border border-accent/10 rounded-xs p-2 space-y-2">
         <div class="flex items-center justify-between">
           <span class="text-xs text-accent"
-            >灵兽任务：{{ cultivation.beastExpeditionName }}</span
+            >灵兽委托：{{ cultivation.beastExpeditionName }}</span
           >
           <span
             v-if="cultivation.beastExpedition"

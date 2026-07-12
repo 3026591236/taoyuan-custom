@@ -339,7 +339,7 @@
       </div>
     </div>
 
-    <!-- 修仙装备：独立于农场/矿洞装备 -->
+    <!-- 修仙装备：独立于灵田/玄矿幽脉装备 -->
     <div
       v-if="cultivationStore.unlocked"
       class="border border-accent/20 rounded-xs p-2 mb-3 bg-panel/30"
@@ -656,10 +656,10 @@
       </div>
     </div>
 
-    <!-- 技能总览 -->
+    <!-- 百艺总览 -->
     <div class="border border-accent/20 rounded-xs p-2 mb-3">
       <div class="flex items-center justify-between mb-1.5">
-        <p class="text-xs text-muted">技能</p>
+        <p class="text-xs text-muted">百艺</p>
         <button class="text-xs text-accent hover:underline" @click="goToSkills">
           查看详情
         </button>
@@ -796,7 +796,7 @@ const genderLabel = computed(() =>
 
 // === 角色资质 ===
 const ATTRIBUTE_HINTS: Record<AttributeKey, string> = {
-  physique: "收获作物成长，提升生命",
+  physique: "收获灵植成长，提升生命",
   strength: "战斗历练成长，提升攻击",
   agility: "挑战强敌成长，提升减伤",
   perception: "优质收获与红尘历练成长",
@@ -815,14 +815,14 @@ const growthDiagnosis = computed(() => {
   if (playerStore.attributeCombatPower < 20)
     tips.push("⚔️ 战力偏低，升级功法/装备");
   if (inventoryStore.items.length >= inventoryStore.capacity - 3)
-    tips.push("🎒 背包将满，可购买纳物符");
+    tips.push("🎒 纳戒将满，可购买纳物符");
   const manuals = Object.values(
     cultivationStore.manuals as Record<string, number>,
   ).reduce((s: number, l: number) => s + (Number(l) || 0), 0);
   if (cultivationStore.unlocked && manuals < 2)
     tips.push("📖 功法层数低，去修仙市集购买秘籍");
   if (!cultivationStore.unlocked)
-    tips.push("🌱 未启蒙灵田，多种田触发地脉感应");
+    tips.push("🌱 未启蒙灵田，多灵田经营触发地脉感应");
   if (tips.length === 0) tips.push("✨ 全面发展，继续探索各系统");
   return tips.slice(0, 4);
 });
@@ -930,9 +930,9 @@ const RING_EFFECT_SHORT: Record<EquipmentEffectType, string> = {
   vampiric: "吸血",
   max_hp_bonus: "生命",
   stamina_reduction: "体力减免",
-  mining_stamina: "挖矿体力减免",
-  farming_stamina: "农耕体力减免",
-  fishing_stamina: "钓鱼体力减免",
+  mining_stamina: "采玄矿体力减免",
+  farming_stamina: "灵耕体力减免",
+  fishing_stamina: "垂钓体力减免",
   crop_quality_bonus: "品质",
   crop_growth_bonus: "生长加速",
   fish_quality_bonus: "鱼品质",
@@ -1108,12 +1108,12 @@ const handleUnequipShoeFromPopup = () => {
   }
 };
 
-// === 技能 ===
+// === 百艺 ===
 const SKILL_NAMES: Record<SkillType, string> = {
-  farming: "农耕",
+  farming: "灵耕",
   foraging: "采集",
-  fishing: "钓鱼",
-  mining: "挖矿",
+  fishing: "垂钓",
+  mining: "采玄矿",
   combat: "战斗",
 };
 
@@ -1130,7 +1130,7 @@ const PERK_NAMES: Record<SkillPerk5 | SkillPerk10, string> = {
   defender: "守护者",
   intensive: "精耕",
   artisan: "匠人",
-  coopmaster: "牧场主",
+  coopmaster: "灵牧苑主",
   shepherd: "牧羊人",
   botanist: "植物学家",
   alchemist: "炼金师",

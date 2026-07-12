@@ -76,13 +76,13 @@ export const useHanhaiStore = defineStore("hanhai", () => {
   const unlocked = ref(false);
   /** 今日赌博次数 */
   const casinoBetsToday = ref(0);
-  /** 本周商店购买计数 { itemId: count } */
+  /** 本周万象铺购买计数 { itemId: count } */
   const weeklyPurchases = ref<Record<string, number>>({});
 
   // === 通商系统 ===
   /** 通商积分 */
   const tradePoints = ref(0);
-  /** 通商店铺等级 */
+  /** 通万象铺铺等级 */
   const tradeShopLevel = ref(1);
   /** 售货槽位 */
   const tradeSlots = ref<TradeSlot[]>([]);
@@ -208,7 +208,7 @@ export const useHanhaiStore = defineStore("hanhai", () => {
     const inventoryStore = useInventoryStore();
     if (!inventoryStore.addItem(item.itemId, 1)) {
       playerStore.earnMoney(item.price);
-      return { success: false, message: "背包已满，无法购买。" };
+      return { success: false, message: "纳戒已满，无法购买。" };
     }
     weeklyPurchases.value[itemId] = (weeklyPurchases.value[itemId] ?? 0) + 1;
     return { success: true, message: `购买了${item.name}。` };
@@ -790,7 +790,7 @@ export const useHanhaiStore = defineStore("hanhai", () => {
     return messages;
   };
 
-  /** 升级通商店铺 */
+  /** 升级通万象铺铺 */
   const upgradeTradeShop = (): { success: boolean; message: string } => {
     const next = nextTradeShopUpgrade.value;
     if (!next) return { success: false, message: "店铺已满级。" };
@@ -816,7 +816,7 @@ export const useHanhaiStore = defineStore("hanhai", () => {
     }
     tradeShopLevel.value = next.level;
     addLog(
-      `通商店铺升级为「${next.name}」！槽位${next.maxSlots}个，售卖周期${next.sellDays}天。`,
+      `通万象铺铺升级为「${next.name}」！槽位${next.maxSlots}个，售卖周期${next.sellDays}天。`,
     );
     return { success: true, message: `店铺升级为「${next.name}」！` };
   };
@@ -862,14 +862,14 @@ export const useHanhaiStore = defineStore("hanhai", () => {
       totalExchangePurchases.value[itemId] =
         (totalExchangePurchases.value[itemId] ?? 0) + 1;
     }
-    // 钱袋物品直接解锁
+    // 财库物品直接解锁
     if (exchangeDef.isWalletItem) {
       const walletStore = useWalletStore();
       walletStore.unlock(itemId);
-      addLog(`兑换了${exchangeDef.name}，已加入钱袋！`);
+      addLog(`兑换了${exchangeDef.name}，已加入财库！`);
       return {
         success: true,
-        message: `兑换了${exchangeDef.name}，已加入钱袋！`,
+        message: `兑换了${exchangeDef.name}，已加入财库！`,
       };
     }
     // 香料礼包特殊处理：直接给5个西域香料
@@ -881,14 +881,14 @@ export const useHanhaiStore = defineStore("hanhai", () => {
           weeklyExchangePurchases.value[itemId] =
             (weeklyExchangePurchases.value[itemId] ?? 0) - 1;
         }
-        return { success: false, message: "背包已满，无法兑换。" };
+        return { success: false, message: "纳戒已满，无法兑换。" };
       }
       addLog(
         `用${exchangeDef.pointsCost}积分兑换了${exchangeDef.name}，获得西域香料×5。`,
       );
       return { success: true, message: "获得西域香料×5！" };
     }
-    // 普通物品加入背包
+    // 普通物品加入纳戒
     const inventoryStore = useInventoryStore();
     if (!inventoryStore.addItem(itemId, 1)) {
       // 退还积分
@@ -901,16 +901,16 @@ export const useHanhaiStore = defineStore("hanhai", () => {
         totalExchangePurchases.value[itemId] =
           (totalExchangePurchases.value[itemId] ?? 0) - 1;
       }
-      return { success: false, message: "背包已满，无法兑换。" };
+      return { success: false, message: "纳戒已满，无法兑换。" };
     }
     addLog(`用${exchangeDef.pointsCost}积分兑换了${exchangeDef.name}。`);
     return { success: true, message: `兑换了${exchangeDef.name}！` };
   };
 
-  /** 每日重置赌博次数，每周重置商店限购 */
+  /** 每日重置赌博次数，每周重置万象铺限购 */
   const resetDailyBets = () => {
     casinoBetsToday.value = 0;
-    // 每周重置商店限购 (day 7, 14, 21, 28)
+    // 每周重置万象铺限购 (day 7, 14, 21, 28)
     const gameStore = useGameStore();
     if (gameStore.day % 7 === 0) {
       weeklyPurchases.value = {};

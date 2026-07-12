@@ -1,6 +1,6 @@
 import type { CropDef } from "@/types/farm";
 
-/** 所有作物定义 */
+/** 所有灵植定义 */
 export const CROPS: CropDef[] = [
   // 春季
   {
@@ -24,7 +24,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 55,
     seedPrice: 15,
     deepWatering: false,
-    description: "脆甜多汁的根茎作物。",
+    description: "脆甜多汁的根茎灵植。",
   },
   {
     id: "potato",
@@ -141,7 +141,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 200,
     seedPrice: 60,
     deepWatering: false,
-    description: "桂花飘香，高级作物。",
+    description: "桂花飘香，高级灵植。",
   },
   {
     id: "rapeseed",
@@ -168,7 +168,7 @@ export const CROPS: CropDef[] = [
     regrowthDays: 3,
     maxHarvests: 3,
   },
-  // 春季新作物
+  // 春季新灵植
   {
     id: "bamboo_shoot",
     name: "春笋",
@@ -178,7 +178,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 50,
     seedPrice: 15,
     deepWatering: false,
-    description: "春天的竹林间挖出的鲜嫩笋。",
+    description: "春天的青篁秘林间挖出的鲜嫩笋。",
   },
   {
     id: "peach",
@@ -231,13 +231,13 @@ export const CROPS: CropDef[] = [
     sellPrice: 90,
     seedPrice: 28,
     deepWatering: false,
-    description: "紫亮的茄子，可形成巨型作物。",
+    description: "紫亮的茄子，可形成巨型灵植。",
     giantCropEligible: true,
     regrowth: true,
     regrowthDays: 3,
     maxHarvests: 4,
   },
-  // 夏季新作物
+  // 夏季新灵植
   {
     id: "chili",
     name: "辣椒",
@@ -299,7 +299,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "香脆可口的花生。",
   },
-  // 秋季新作物
+  // 秋季新灵植
   {
     id: "jujube",
     name: "红枣",
@@ -345,7 +345,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 50,
     seedPrice: 12,
     deepWatering: false,
-    description: "冬日里最家常的蔬菜，可形成巨型作物。",
+    description: "冬日里最家常的蔬菜，可形成巨型灵植。",
     giantCropEligible: true,
   },
   {
@@ -384,7 +384,7 @@ export const CROPS: CropDef[] = [
     regrowthDays: 3,
     maxHarvests: 6,
   },
-  // 冬季原有作物
+  // 冬季原有灵植
   {
     id: "winter_wheat",
     name: "冬小麦",
@@ -418,7 +418,7 @@ export const CROPS: CropDef[] = [
     deepWatering: true,
     description: "传说中的雪莲花，极其珍贵。",
   },
-  // 杂交作物
+  // 杂交灵植
   {
     id: "golden_melon",
     name: "金蜜瓜",
@@ -428,7 +428,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 400,
     seedPrice: 0,
     deepWatering: false,
-    description: "西瓜与莲藕杂交的传说作物，金黄剔透。",
+    description: "西瓜与莲藕杂交的传说灵植，金黄剔透。",
     giantCropEligible: true,
   },
   {
@@ -478,7 +478,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "雪莲与大蒜杂交的珍品，寒气逼人。",
   },
-  // === 一代杂交作物 ===,
+  // === 一代杂交灵植 ===,
   {
     id: "emerald_radish",
     name: "翡翠萝卜",
@@ -1581,7 +1581,7 @@ export const CROPS: CropDef[] = [
     deepWatering: true,
     description: "莲子的清心与雪莲的纯净合一，寒冬明珠。",
   },
-  // === 二代杂交作物 ===,
+  // === 二代杂交灵植 ===,
   {
     id: "melon_tea_fruit",
     name: "蜜茶果",
@@ -2140,7 +2140,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "霜雪蒜的寒意渗入山药，冰润滑腻入口即化。",
   },
-  // === 三代杂交作物 ===,
+  // === 三代杂交灵植 ===,
   {
     id: "wind_melon",
     name: "风瓜",
@@ -2691,7 +2691,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "金瓜与紫柿汇聚山川之气，化为珍品。",
   },
-  // === 四代杂交作物 ===,
+  // === 四代杂交灵植 ===,
   {
     id: "moon_hua_melon",
     name: "月华瓜",
@@ -3242,7 +3242,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "蜜茶果与甜丝瓜在月华中蜕变，天赐之品。",
   },
-  // === 五代杂交作物 ===,
+  // === 五代杂交灵植 ===,
   {
     id: "precious_light5_melon",
     name: "瑶光瓜",
@@ -3518,7 +3518,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "雨稻与蜜茶果凝珊瑚之精，琳琅之品。",
   },
-  // === 六代杂交作物 ===,
+  // === 六代杂交灵植 ===,
   {
     id: "spirit_wonder_melon",
     name: "灵妙瓜",
@@ -3794,7 +3794,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "月华瓜与雷翠桃仙灵缭绕，不染尘埃。",
   },
-  // === 七代杂交作物 ===,
+  // === 七代杂交灵植 ===,
   {
     id: "draco_song_melon",
     name: "龙吟瓜",
@@ -4070,7 +4070,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "瑶光瓜与琉瑞桃蛟龙出水，威震八方。",
   },
-  // === 八代杂交作物 ===,
+  // === 八代杂交灵植 ===,
   {
     id: "supreme_origin_melon",
     name: "太初瓜",
@@ -4346,7 +4346,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "灵妙瓜与璃锦桃元气混沌初开，太一显化。",
   },
-  // === 九代杂交作物 ===,
+  // === 九代杂交灵植 ===,
   {
     id: "vast_meng_melon",
     name: "鸿蒙瓜",
@@ -4622,7 +4622,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "龙吟瓜与真禅桃鸿蒙初判，天地为之变色。",
   },
-  // === 十代杂交作物 ===,
+  // === 十代杂交灵植 ===,
   {
     id: "creation_change_melon",
     name: "造化瓜",
@@ -4632,7 +4632,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 2800,
     seedPrice: 0,
     deepWatering: true,
-    description: "太初瓜与龙吟瓜造化之力成就，永恒不朽之品。",
+    description: "太初瓜与龙吟瓜造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_change_bean",
@@ -4687,7 +4687,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 2946,
     seedPrice: 0,
     deepWatering: true,
-    description: "太初瓜与龙舞果造化之力成就，永恒不朽之品。",
+    description: "太初瓜与龙舞果造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_lasting_bloom",
@@ -4742,7 +4742,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 3092,
     seedPrice: 0,
     deepWatering: true,
-    description: "太初瓜与龙辉麦造化之力成就，永恒不朽之品。",
+    description: "太初瓜与龙辉麦造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_timeless_sesame",
@@ -4797,7 +4797,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 3238,
     seedPrice: 0,
     deepWatering: true,
-    description: "太初瓜与龙影藤造化之力成就，永恒不朽之品。",
+    description: "太初瓜与龙影藤造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_destiny_bud",
@@ -4852,7 +4852,7 @@ export const CROPS: CropDef[] = [
     sellPrice: 3383,
     seedPrice: 0,
     deepWatering: true,
-    description: "太初瓜与龙啸栗造化之力成就，永恒不朽之品。",
+    description: "太初瓜与龙啸栗造化之力功业，永恒不朽之品。",
   },
   {
     id: "eternal_form_apricot",
@@ -4898,7 +4898,7 @@ export const CROPS: CropDef[] = [
     deepWatering: false,
     description: "太初瓜与虎啸桃永恒不灭之光，照耀天地。",
   },
-  // === 远古作物 ===
+  // === 远古灵植 ===
   {
     id: "ancient_fruit",
     name: "远古水果",
@@ -4908,12 +4908,12 @@ export const CROPS: CropDef[] = [
     sellPrice: 4000,
     seedPrice: 0,
     deepWatering: false,
-    description: "远古种子孕育的神秘果实，蕴含亘古生命力，四季皆可生长。",
+    description: "远古灵种孕育的神秘果实，蕴含亘古生命力，四季皆可生长。",
     regrowth: true,
     regrowthDays: 7,
     maxHarvests: 6,
   },
-  // === 瀚海作物 ===
+  // === 瀚海灵植 ===
   {
     id: "hanhai_cactus",
     name: "仙人掌",
@@ -5003,17 +5003,17 @@ export const CROPS: CropDef[] = [
   },
 ];
 
-/** 根据ID查找作物 */
+/** 根据ID查找灵植 */
 export const getCropById = (id: string): CropDef | undefined => {
   return CROPS.find((c) => c.id === id);
 };
 
-/** 根据种子ID获取作物定义 */
+/** 根据灵种ID获取灵植定义 */
 export const getCropBySeedId = (seedId: string): CropDef | undefined => {
   return CROPS.find((c) => c.seedId === seedId);
 };
 
-/** 根据季节获取可种作物 */
+/** 根据季节获取可种灵植 */
 export const getCropsBySeason = (season: string): CropDef[] => {
   return CROPS.filter((c) => c.season.includes(season as any));
 };

@@ -1,117 +1,118 @@
 /** 物品分类 */
 export type ItemCategory =
-  | 'seed'
-  | 'crop'
-  | 'fish'
-  | 'ore'
-  | 'gem'
-  | 'gift'
-  | 'food'
-  | 'material'
-  | 'misc'
-  | 'processed'
-  | 'machine'
-  | 'sprinkler'
-  | 'fertilizer'
-  | 'animal_product'
-  | 'sapling'
-  | 'fruit'
-  | 'bait'
-  | 'tackle'
-  | 'bomb'
-  | 'fossil'
-  | 'artifact'
-  | 'weapon'
-  | 'ring'
-  | 'hat'
-  | 'shoe'
+  | "seed"
+  | "crop"
+  | "fish"
+  | "ore"
+  | "gem"
+  | "gift"
+  | "food"
+  | "material"
+  | "misc"
+  | "processed"
+  | "machine"
+  | "sprinkler"
+  | "fertilizer"
+  | "animal_product"
+  | "sapling"
+  | "fruit"
+  | "bait"
+  | "tackle"
+  | "bomb"
+  | "fossil"
+  | "artifact"
+  | "weapon"
+  | "ring"
+  | "hat"
+  | "shoe";
 
 /** 物品品质 */
-export type Quality = 'normal' | 'fine' | 'excellent' | 'supreme'
+export type Quality = "normal" | "fine" | "excellent" | "supreme";
 
 /** 物品基础定义（配置数据用） */
 export interface ItemDef {
-  id: string
-  name: string
-  category: ItemCategory
-  description: string
-  sellPrice: number
+  id: string;
+  name: string;
+  category: ItemCategory;
+  description: string;
+  sellPrice: number;
   /** 是否可以食用 */
-  edible: boolean
+  edible: boolean;
   /** 食用恢复体力 */
-  staminaRestore?: number
+  staminaRestore?: number;
   /** 食用恢复生命值 */
-  healthRestore?: number
+  healthRestore?: number;
 }
 
 /** 背包中的物品实例 */
 export interface InventoryItem {
-  itemId: string
-  quantity: number
-  quality: Quality
-  locked?: boolean
+  itemId: string;
+  quantity: number;
+  quality: Quality;
+  locked?: boolean;
 }
 
 /** 工具等级 */
-export type ToolTier = 'basic' | 'iron' | 'steel' | 'iridium'
+export type ToolTier = "basic" | "iron" | "steel" | "iridium";
 
 /** 工具类型 */
-export type ToolType = 'wateringCan' | 'hoe' | 'pickaxe' | 'fishingRod' | 'scythe' | 'axe' | 'pan'
+export type ToolType =
+  "wateringCan" | "hoe" | "pickaxe" | "fishingRod" | "scythe" | "axe" | "pan";
 
 /** 工具实例 */
 export interface Tool {
-  type: ToolType
-  tier: ToolTier
+  type: ToolType;
+  tier: ToolTier;
   /** 工具精通等级（V1.7.7）：0-3，提升效率并形成后期消耗 */
-  masteryLevel?: number
+  masteryLevel?: number;
 }
 
 /** 武器类型 */
-export type WeaponType = 'sword' | 'dagger' | 'club'
+export type WeaponType = "sword" | "dagger" | "club";
 
 /** 武器定义 */
 export interface WeaponDef {
-  id: string
-  name: string
-  type: WeaponType
-  attack: number
-  critRate: number
-  description: string
-  /** 商店购买价格（null = 不可购买） */
-  shopPrice: number | null
+  id: string;
+  name: string;
+  type: WeaponType;
+  attack: number;
+  critRate: number;
+  description: string;
+  /** 万象铺购买价格（null = 不可购买） */
+  shopPrice: number | null;
   /** 购买所需材料 */
-  shopMaterials: { itemId: string; quantity: number }[]
+  shopMaterials: { itemId: string; quantity: number }[];
   /** 固定附魔（BOSS 武器） */
-  fixedEnchantment: string | null
+  fixedEnchantment: string | null;
 }
 
 /** 附魔定义 */
 export interface EnchantmentDef {
-  id: string
-  name: string
-  description: string
-  attackBonus: number
-  critBonus: number
-  special: 'vampiric' | 'sturdy' | 'lucky' | null
+  id: string;
+  name: string;
+  description: string;
+  attackBonus: number;
+  critBonus: number;
+  special: "vampiric" | "sturdy" | "lucky" | null;
 }
 
 /** 拥有的武器实例 */
 export interface OwnedWeapon {
-  defId: string
-  enchantmentId: string | null
+  defId: string;
+  enchantmentId: string | null;
 }
 
 /** 箱子阶梯 */
-export type ChestTier = 'wood' | 'copper' | 'iron' | 'gold' | 'void'
+export type ChestTier = "wood" | "copper" | "iron" | "gold" | "void";
 
 /** 虚空箱子角色 */
-export type VoidChestRole = 'none' | 'input' | 'output'
+export type VoidChestRole = "none" | "input" | "output";
 
 /** 箱子实例 */
 export interface Chest {
-  id: string
-  tier: ChestTier
-  label: string
-  items: InventoryItem[]
-  voidRole: VoidChestRole
+  id: string;
+  tier: ChestTier;
+  label: string;
+  items: InventoryItem[];
+  voidRole: VoidChestRole;
 }

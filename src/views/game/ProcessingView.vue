@@ -51,7 +51,7 @@
           @click="showUpgradeModal = true"
         >
           <ArrowUpCircle :size="10" class="inline mr-0.5" />
-          工坊 Lv.{{ processingStore.workshopLevel }}
+          匠造台 Lv.{{ processingStore.workshopLevel }}
         </button>
       </div>
 
@@ -131,7 +131,7 @@
 
               <!-- 空闲：选择配方 -->
               <div v-if="!slot.recipeId">
-                <!-- 种子制造机：按品质展开 -->
+                <!-- 灵种制造机：按品质展开 -->
                 <template v-if="slot.machineType === 'seed_maker'">
                   <div
                     v-if="
@@ -300,7 +300,7 @@
       </div>
     </div>
 
-    <!-- 工坊扩建弹窗 -->
+    <!-- 匠造台扩建弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showUpgradeModal"
@@ -317,7 +317,7 @@
 
           <p class="text-sm text-accent mb-2">
             <ArrowUpCircle :size="14" class="inline mr-0.5" />
-            工坊信息
+            匠造台信息
           </p>
 
           <!-- 当前状态 -->
@@ -395,7 +395,7 @@
               :disabled="!canUpgrade"
               @click="showUpgradeConfirm = true"
             >
-              扩建工坊
+              扩建匠造台
             </Button>
 
             <!-- 确认 -->
@@ -417,7 +417,7 @@
           </template>
 
           <p v-else class="text-[10px] text-muted text-center">
-            工坊已达到最高等级。
+            匠造台已达到最高等级。
           </p>
         </div>
       </div>
@@ -640,7 +640,7 @@ const getFilteredRecipes = (machineType: MachineType) => {
 
 const QUALITY_ORDER: Quality[] = ["normal", "fine", "excellent", "supreme"];
 
-/** 种子制造机：按品质展开配方列表 */
+/** 灵种制造机：按品质展开配方列表 */
 const getSeedMakerQualityRecipes = (machineType: MachineType) => {
   const recipes = processingStore.getAvailableRecipes(machineType);
   const result: {
@@ -723,7 +723,7 @@ const getMachineCountByType = (type: MachineType): number => {
   return processingStore.machines.filter((m) => m.machineType === type).length;
 };
 
-// === 工坊升级 ===
+// === 匠造台升级 ===
 
 const showUpgradeModal = ref(false);
 const showUpgradeConfirm = ref(false);
@@ -859,7 +859,7 @@ const craftCategories = computed(
       })),
     },
     {
-      label: "农场设施",
+      label: "灵田设施",
       items: [
         ...SPRINKLERS.map((s) => ({
           id: s.id,
@@ -924,7 +924,7 @@ const craftCategories = computed(
           ? [
               {
                 id: "auto_petter_coop",
-                name: `${AUTO_PETTER.name}（鸡舍）`,
+                name: `${AUTO_PETTER.name}（灵禽舍）`,
                 description: AUTO_PETTER.description,
                 materials: AUTO_PETTER.craftCost,
                 cost: AUTO_PETTER.craftMoney,
@@ -944,7 +944,7 @@ const craftCategories = computed(
           ? [
               {
                 id: "auto_petter_barn",
-                name: `${AUTO_PETTER.name}（牧场）`,
+                name: `${AUTO_PETTER.name}（灵牧苑）`,
                 description: AUTO_PETTER.description,
                 materials: AUTO_PETTER.craftCost,
                 cost: AUTO_PETTER.craftMoney,
@@ -1033,7 +1033,7 @@ const craftCategories = computed(
                 id: "stamina_fruit",
                 name: "仙桃",
                 description:
-                  "蕴含远古灵气的果实，食用后永久提升体力上限。需要种植/觅食/钓鱼/采矿全部≥8级。",
+                  "蕴含远古灵气的果实，食用后永久提升体力上限。需要种植/觅食/垂钓/采玄矿全部≥8级。",
                 materials: STAMINA_FRUIT_COST,
                 cost: STAMINA_FRUIT_MONEY,
                 onCraft: () => handleCraftStaminaFruit(),
@@ -1050,7 +1050,7 @@ const craftCategories = computed(
     ...(warehouseStore.unlocked
       ? [
           {
-            label: "箱子",
+            label: "储物匣",
             items: CHEST_TIER_ORDER.map((tier) => {
               const def = CHEST_DEFS[tier];
               return {
@@ -1132,7 +1132,7 @@ const handleCraftSprinkler = (sprinklerId: string) => {
     sfxClick();
     const name =
       SPRINKLERS.find((s) => s.id === sprinklerId)?.name ?? sprinklerId;
-    addLog(`制造了${name}，已放入背包。去农场放置吧。`);
+    addLog(`制造了${name}，已放入纳戒。去灵田放置吧。`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1149,7 +1149,7 @@ const handleCraftFertilizer = (fertilizerId: string) => {
     sfxClick();
     const name =
       FERTILIZERS.find((f) => f.id === fertilizerId)?.name ?? fertilizerId;
-    addLog(`制造了${name}，已放入背包。`);
+    addLog(`制造了${name}，已放入纳戒。`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1165,7 +1165,7 @@ const handleCraftBait = (baitId: string) => {
   if (processingStore.craftBait(baitId)) {
     sfxClick();
     const name = BAITS.find((b) => b.id === baitId)?.name ?? baitId;
-    addLog(`制造了${name}，已放入背包。`);
+    addLog(`制造了${name}，已放入纳戒。`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1181,7 +1181,7 @@ const handleCraftTackle = (tackleId: string) => {
   if (processingStore.craftTackle(tackleId)) {
     sfxClick();
     const name = TACKLES.find((t) => t.id === tackleId)?.name ?? tackleId;
-    addLog(`制造了${name}，已放入背包。`);
+    addLog(`制造了${name}，已放入纳戒。`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1196,7 +1196,7 @@ const handleCraftTackle = (tackleId: string) => {
 const handleCraftCrabPot = () => {
   if (processingStore.craftCrabPot()) {
     sfxClick();
-    addLog(`制造了${CRAB_POT_CRAFT.name}，已放入背包。`);
+    addLog(`制造了${CRAB_POT_CRAFT.name}，已放入纳戒。`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1211,7 +1211,7 @@ const handleCraftCrabPot = () => {
 const handleCraftTapper = () => {
   if (processingStore.craftTapper()) {
     sfxClick();
-    addLog(`制造了采脂器，已放入背包。去农场安装到野树上吧。`);
+    addLog(`制造了采脂器，已放入纳戒。去灵田安装到野树上吧。`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1232,7 +1232,7 @@ const handleCraftLightningRod = () => {
   ) {
     sfxClick();
     farmStore.lightningRods++;
-    addLog(`制造了避雷针，已安装到农场。(共${farmStore.lightningRods}根)`);
+    addLog(`制造了避雷针，已安装到灵田。(共${farmStore.lightningRods}根)`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1253,7 +1253,7 @@ const handleCraftScarecrow = () => {
   ) {
     sfxClick();
     farmStore.scarecrows++;
-    addLog(`制造了稻草人，已安装到农场。(共${farmStore.scarecrows}个)`);
+    addLog(`制造了稻草人，已安装到灵田。(共${farmStore.scarecrows}个)`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1294,7 +1294,7 @@ const handleCraftBomb = (bombId: string) => {
   if (processingStore.craftBomb(bombId)) {
     sfxClick();
     const name = BOMBS.find((b) => b.id === bombId)?.name ?? bombId;
-    addLog(`制造了${name}，已放入背包。`);
+    addLog(`制造了${name}，已放入纳戒。`);
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1336,7 +1336,7 @@ const handleCraftStaminaFruit = () => {
   ) {
     sfxClick();
     inventoryStore.addItem("stamina_fruit");
-    addLog("制造了仙桃！在背包中使用可永久提升体力上限。");
+    addLog("制造了仙桃！在纳戒中使用可永久提升体力上限。");
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.craftMachine);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) {
@@ -1351,11 +1351,11 @@ const handleCraftStaminaFruit = () => {
 const handleCraftChest = (tier: ChestTier) => {
   const def = CHEST_DEFS[tier];
   if (!warehouseStore.unlocked) {
-    addLog("请先解锁仓库，再制造箱子。");
+    addLog("请先解锁仓库，再制造储物匣。");
     return;
   }
   if (warehouseStore.chests.length >= warehouseStore.maxChests) {
-    addLog("箱子槽位已满，请先扩建仓库。");
+    addLog("储物匣槽位已满，请先扩建仓库。");
     return;
   }
   if (!processingStore.canCraft(def.craftCost, def.craftMoney)) {
@@ -1363,14 +1363,14 @@ const handleCraftChest = (tier: ChestTier) => {
     return;
   }
   if (!processingStore.consumeCraftMaterials(def.craftCost, def.craftMoney)) {
-    addLog("材料扣除失败，请整理背包/仓库后再试。");
+    addLog("材料扣除失败，请整理纳戒/仓库后再试。");
     return;
   }
   if (!warehouseStore.addChest(tier)) {
     // 极少数情况下创建失败，退回铜钱和材料，避免玩家损失。
     playerStore.earnMoney(def.craftMoney);
     for (const c of def.craftCost) inventoryStore.addItem(c.itemId, c.quantity);
-    addLog("箱子创建失败，材料已退回。请刷新后再试。");
+    addLog("储物匣创建失败，材料已退回。请刷新后再试。");
     return;
   }
   sfxClick();

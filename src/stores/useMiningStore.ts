@@ -74,12 +74,12 @@ export const useMiningStore = defineStore("mining", () => {
   const inventoryStore = useInventoryStore();
   const skillStore = useSkillStore();
 
-  /** 当前进度（主矿洞） */
+  /** 当前进度（主玄矿幽脉） */
   const currentFloor = ref(1);
   const safePointFloor = ref(0);
   const isExploring = ref(false);
 
-  /** 骷髅矿穴状态 */
+  /** 幽骨矿窟状态 */
   const isInSkullCavern = ref(false);
   const skullCavernFloor = ref(0);
   const skullCavernBestFloor = ref(0);
@@ -102,7 +102,7 @@ export const useMiningStore = defineStore("mining", () => {
 
   /** 猎魔符效果：本次探索掉落率+20% */
   const slayerCharmActive = ref(false);
-  /** 公会徽章累积攻击力加成（永久） */
+  /** 仙盟徽章累积攻击力加成（永久） */
   const guildBadgeBonusAttack = ref(0);
   /** 生命护符累积最大HP加成（永久） */
   const guildBonusMaxHp = ref(0);
@@ -128,9 +128,9 @@ export const useMiningStore = defineStore("mining", () => {
   /** 当前战斗对应的格子索引 */
   const _combatTileIndex = ref(-1);
 
-  // ==================== 骷髅矿穴辅助 ====================
+  // ==================== 幽骨矿窟辅助 ====================
 
-  /** 骷髅矿穴是否已解锁（击败60层BOSS） */
+  /** 幽骨矿窟是否已解锁（击败60层BOSS） */
   const isSkullCavernUnlocked = (): boolean => {
     return defeatedBosses.value.includes("lava_lord");
   };
@@ -140,7 +140,7 @@ export const useMiningStore = defineStore("mining", () => {
     return isInSkullCavern.value ? skullCavernFloor.value : currentFloor.value;
   };
 
-  /** 获取当前活跃楼层数据（兼容主矿洞与骷髅矿穴） */
+  /** 获取当前活跃楼层数据（兼容主玄矿幽脉与幽骨矿窟） */
   const getActiveFloorData = (): MineFloorDef | undefined => {
     if (isInSkullCavern.value) {
       const sc = cachedSkullFloorData.value;
@@ -157,7 +157,7 @@ export const useMiningStore = defineStore("mining", () => {
     return getFloor(currentFloor.value);
   };
 
-  /** 生成并缓存骷髅矿穴当前层数据 */
+  /** 生成并缓存幽骨矿窟当前层数据 */
   const cacheSkullFloor = (floor: number) => {
     cachedSkullFloorData.value = generateSkullCavernFloor(floor);
   };
@@ -232,7 +232,11 @@ export const useMiningStore = defineStore("mining", () => {
     index: number,
   ): { success: boolean; message: string; startsCombat: boolean } => {
     if (!isExploring.value)
-      return { success: false, message: "你不在矿洞中。", startsCombat: false };
+      return {
+        success: false,
+        message: "你不在玄矿幽脉中。",
+        startsCombat: false,
+      };
     if (inCombat.value)
       return {
         success: false,
@@ -299,7 +303,11 @@ export const useMiningStore = defineStore("mining", () => {
     index: number,
   ): { success: boolean; message: string; startsCombat: boolean } => {
     if (!isExploring.value)
-      return { success: false, message: "你不在矿洞中。", startsCombat: false };
+      return {
+        success: false,
+        message: "你不在玄矿幽脉中。",
+        startsCombat: false,
+      };
     if (inCombat.value)
       return {
         success: false,
@@ -325,12 +333,12 @@ export const useMiningStore = defineStore("mining", () => {
     if (!inventoryStore.isToolAvailable("pickaxe")) {
       return {
         success: false,
-        message: "镐正在升级中，无法探索矿洞。",
+        message: "镐正在升级中，无法探索玄矿幽脉。",
         startsCombat: false,
       };
     }
 
-    // 扣体力（1 点基础，受镐/技能/buff 减免）
+    // 扣体力（1 点基础，受镐/百艺/buff 减免）
     const pickaxeMultiplier =
       inventoryStore.getToolStaminaMultiplier("pickaxe");
     const cookingStore = useCookingStore();
@@ -344,7 +352,7 @@ export const useMiningStore = defineStore("mining", () => {
       inventoryStore.getRingEffectValue("mining_stamina");
     const ringGlobalReduction =
       inventoryStore.getRingEffectValue("stamina_reduction");
-    // 仙缘能力：聚气（shan_weng_1）挖矿体力-15%
+    // 仙缘能力：聚气（shan_weng_1）采玄矿体力-15%
     const spiritMiningReduction =
       useHiddenNpcStore().getAbilityValue("shan_weng_1") / 100;
     const staminaCost = Math.max(
@@ -421,7 +429,7 @@ export const useMiningStore = defineStore("mining", () => {
     // 矿工专精：50%概率+1
     if (skillStore.getSkill("mining").perk5 === "miner" && Math.random() < 0.5)
       quantity += 1;
-    // 山丘农场加成：50%概率+1
+    // 山丘灵田加成：50%概率+1
     const gameStore = useGameStore();
     if (gameStore.farmMapType === "hilltop" && Math.random() < 0.5)
       quantity += 1;
@@ -446,7 +454,7 @@ export const useMiningStore = defineStore("mining", () => {
     useAchievementStore().discoverItem(oreId);
     useQuestStore().onItemObtained(oreId, quantity);
 
-    // 仙缘能力：药山（shan_weng_2）矿洞15%概率采到稀有草药
+    // 仙缘能力：药山（shan_weng_2）玄矿幽脉15%概率采到稀有草药
     const hiddenNpcStore = useHiddenNpcStore();
     if (hiddenNpcStore.isAbilityActive("shan_weng_2") && Math.random() < 0.15) {
       const herbs = ["herb", "ginseng"] as const;
@@ -716,14 +724,14 @@ export const useMiningStore = defineStore("mining", () => {
     centerIndex: number,
   ): { success: boolean; message: string } => {
     if (!isExploring.value)
-      return { success: false, message: "你不在矿洞中。" };
+      return { success: false, message: "你不在玄矿幽脉中。" };
     if (inCombat.value)
       return { success: false, message: "战斗中无法使用炸弹。" };
 
     const bombDef = getBombById(bombId);
     if (!bombDef) return { success: false, message: "无效的炸弹。" };
     if (!inventoryStore.removeItem(bombId))
-      return { success: false, message: "背包中没有该炸弹。" };
+      return { success: false, message: "纳戒中没有该炸弹。" };
 
     // 挖掘者专精：30%概率不消耗炸弹
     const excavatorSaved =
@@ -750,7 +758,7 @@ export const useMiningStore = defineStore("mining", () => {
           break;
         case "ore": {
           const oreId = tile.data?.oreId ?? "copper_ore";
-          // 炸弹采矿不享受矿工专精/地形/探矿者加成，仅给基础数量
+          // 炸弹采玄矿不享受矿工专精/地形/探矿者加成，仅给基础数量
           const quantity = tile.data?.oreQuantity ?? 1;
           inventoryStore.addItem(oreId, quantity);
           sessionLoot.value.push({ itemId: oreId, quantity });
@@ -855,7 +863,7 @@ export const useMiningStore = defineStore("mining", () => {
 
   // ==================== 进入 / 离开 ====================
 
-  /** 进入矿洞（可选择起始安全点楼层） */
+  /** 进入玄矿幽脉（可选择起始安全点楼层） */
   const enterMine = (startFromSafePoint?: number): string => {
     isExploring.value = true;
     isInSkullCavern.value = false;
@@ -868,12 +876,12 @@ export const useMiningStore = defineStore("mining", () => {
     // BOSS 层自动进入战斗（如果格子中有 boss 且入口邻格就是 boss）
     _checkAutoBossCombat();
 
-    return `进入云隐矿洞，当前第${currentFloor.value}层。`;
+    return `进入云隐玄矿幽脉，当前第${currentFloor.value}层。`;
   };
 
-  /** 进入骷髅矿穴（可选择起始安全点楼层） */
+  /** 进入幽骨矿窟（可选择起始安全点楼层） */
   const enterSkullCavern = (startFromSafePoint?: number): string => {
-    if (!isSkullCavernUnlocked()) return "需要先击败60层BOSS才能进入骷髅矿穴。";
+    if (!isSkullCavernUnlocked()) return "需要先击败60层BOSS才能进入幽骨矿窟。";
     isExploring.value = true;
     isInSkullCavern.value = true;
     const baseFloor = startFromSafePoint ?? skullSafePointFloor.value;
@@ -885,7 +893,7 @@ export const useMiningStore = defineStore("mining", () => {
 
     _checkAutoBossCombat();
 
-    return `进入骷髅矿穴，当前第${skullCavernFloor.value}层。`;
+    return `进入幽骨矿窟，当前第${skullCavernFloor.value}层。`;
   };
 
   /** 检查是否自动触发BOSS战（BOSS格在入口邻格时） */
@@ -902,7 +910,7 @@ export const useMiningStore = defineStore("mining", () => {
     return points;
   };
 
-  /** 获取骷髅矿穴已解锁的安全点 */
+  /** 获取幽骨矿窟已解锁的安全点 */
   const getUnlockedSkullSafePoints = (): number[] => {
     const points: number[] = [0]; // 0 = 从第1层开始
     for (let f = 10; f <= skullSafePointFloor.value; f += 10) {
@@ -998,7 +1006,7 @@ export const useMiningStore = defineStore("mining", () => {
       ? getEnchantmentById(owned.enchantmentId)
       : null;
 
-    // 基础攻击力（含戒指加成 + 料理全技能加成）
+    // 基础攻击力（含戒指加成 + 料理全百艺加成）
     const ringAttackBonus = inventoryStore.getRingEffectValue("attack_bonus");
     const allSkillsBuff =
       cookingStore.activeBuff?.type === "all_skills"
@@ -1250,7 +1258,7 @@ export const useMiningStore = defineStore("mining", () => {
     // BOSS 击败处理
     if (combatIsBoss.value) {
       if (isInSkullCavern.value) {
-        // 骷髅矿穴BOSS：奖励铜钱和矿石（按深度缩放）
+        // 幽骨矿窟BOSS：奖励铜钱和矿石（按深度缩放）
         const scFloor = skullCavernFloor.value;
         const moneyReward = 200 + scFloor * 20;
         playerStore.earnMoney(moneyReward);
@@ -1264,7 +1272,7 @@ export const useMiningStore = defineStore("mining", () => {
         }
         msg += ` 获得了${bonusOreCount}个稀有矿石！`;
       } else {
-        // 主矿洞BOSS
+        // 主玄矿幽脉BOSS
         const bossId = monster.id;
         const isFirstKill = !defeatedBosses.value.includes(bossId);
 
@@ -1384,7 +1392,7 @@ export const useMiningStore = defineStore("mining", () => {
       if (item) inventoryStore.removeItem(item.itemId, item.quantity);
     }
 
-    // 随机丢失最多3件背包物品
+    // 随机丢失最多3件纳戒物品
     const droppedItems: string[] = [];
     const availableItems = inventoryStore.items.filter((i) => i.quantity > 0);
     const dropCount = Math.min(DEFEAT_MAX_ITEM_LOSS, availableItems.length);
@@ -1407,18 +1415,18 @@ export const useMiningStore = defineStore("mining", () => {
     const maxHp = playerStore.getMaxHp();
     playerStore.restoreHealth(Math.floor(maxHp * 0.5));
 
-    // 骷髅矿穴：重置
+    // 幽骨矿窟：重置
     if (wasInSkullCavern) {
       isInSkullCavern.value = false;
       skullCavernFloor.value = 0;
       cachedSkullFloorData.value = null;
     }
 
-    const location = wasInSkullCavern ? "骷髅矿穴" : "矿洞";
+    const location = wasInSkullCavern ? "幽骨矿窟" : "玄矿幽脉";
     const parts: string[] = [`你在${location}中倒下了……`];
     parts.push("丢失了一半战利品");
     if (droppedItems.length > 0)
-      parts.push(`和${droppedItems.length}件背包物品`);
+      parts.push(`和${droppedItems.length}件纳戒物品`);
     if (moneyLost > 0) parts.push(`及${moneyLost}文`);
     parts.push("，被送回入口。");
     const msg = parts.join("");
@@ -1431,7 +1439,7 @@ export const useMiningStore = defineStore("mining", () => {
   /** 前进到下一层 */
   const goNextFloor = (): { success: boolean; message: string } => {
     if (!isExploring.value)
-      return { success: false, message: "你不在矿洞中。" };
+      return { success: false, message: "你不在玄矿幽脉中。" };
     if (!stairsFound.value) {
       return { success: false, message: "还没有找到楼梯，继续探索吧。" };
     }
@@ -1452,7 +1460,7 @@ export const useMiningStore = defineStore("mining", () => {
     }
 
     if (isInSkullCavern.value) {
-      // 骷髅矿穴：无上限，每10层安全点
+      // 幽骨矿窟：无上限，每10层安全点
       skullCavernFloor.value++;
       cacheSkullFloor(skullCavernFloor.value);
       if (skullCavernFloor.value > skullCavernBestFloor.value) {
@@ -1468,9 +1476,9 @@ export const useMiningStore = defineStore("mining", () => {
         skullSafePointFloor.value = skullCavernFloor.value;
       }
     } else {
-      // 主矿洞：最多 120 层
+      // 主玄矿幽脉：最多 120 层
       if (currentFloor.value >= MAX_MINE_FLOOR) {
-        // 到达120层后自动转入骷髅矿穴
+        // 到达120层后自动转入幽骨矿窟
         if (isSkullCavernUnlocked()) {
           isInSkullCavern.value = true;
           skullCavernFloor.value = 1;
@@ -1478,12 +1486,12 @@ export const useMiningStore = defineStore("mining", () => {
           _generateGrid();
           return {
             success: true,
-            message: "你穿过矿洞最深处的裂隙，进入了骷髅矿穴第1层！",
+            message: "你穿过玄矿幽脉最深处的裂隙，进入了幽骨矿窟第1层！",
           };
         }
         return {
           success: false,
-          message: "已经到达矿洞最深处！（击败60层BOSS可解锁骷髅矿穴）",
+          message: "已经到达玄矿幽脉最深处！（击败60层BOSS可解锁幽骨矿窟）",
         };
       }
 
@@ -1505,7 +1513,7 @@ export const useMiningStore = defineStore("mining", () => {
 
     const activeFloorNum = getActiveFloorNum();
     const newFloor = getActiveFloorData();
-    const locationName = isInSkullCavern.value ? "骷髅矿穴" : "";
+    const locationName = isInSkullCavern.value ? "幽骨矿窟" : "";
     const specialLabels: Record<string, string> = {
       mushroom: "蘑菇洞穴",
       treasure: "宝箱层",
@@ -1521,7 +1529,7 @@ export const useMiningStore = defineStore("mining", () => {
     return { success: true, message: msg };
   };
 
-  /** 离开矿洞 */
+  /** 离开玄矿幽脉 */
   const leaveMine = (): string => {
     // 离开前保存安全点（防止玩家到达安全点楼层后直接离开）
     if (!isInSkullCavern.value) {
@@ -1530,7 +1538,7 @@ export const useMiningStore = defineStore("mining", () => {
         safePointFloor.value = currentFloor.value;
       }
     }
-    // 骷髅矿穴：离开前保存安全点
+    // 幽骨矿窟：离开前保存安全点
     if (isInSkullCavern.value) {
       const skullFloor = cachedSkullFloorData.value;
       if (
@@ -1548,9 +1556,9 @@ export const useMiningStore = defineStore("mining", () => {
     if (isInSkullCavern.value) {
       isInSkullCavern.value = false;
       cachedSkullFloorData.value = null;
-      return "你离开了骷髅矿穴。";
+      return "你离开了幽骨矿窟。";
     }
-    return "你离开了矿洞。";
+    return "你离开了玄矿幽脉。";
   };
 
   // ==================== 道具使用 ====================
@@ -1561,18 +1569,18 @@ export const useMiningStore = defineStore("mining", () => {
     quantity: number = 1,
   ): { success: boolean; message: string } => {
     if (!inCombat.value && !isExploring.value)
-      return { success: false, message: "不在矿洞中。" };
+      return { success: false, message: "不在玄矿幽脉中。" };
 
-    // 公会徽章：永久+3攻击力
+    // 仙盟徽章：永久+3攻击力
     if (itemId === "guild_badge") {
       const actual = Math.min(
         quantity,
         inventoryStore.getItemCount("guild_badge"),
       );
-      if (actual <= 0) return { success: false, message: "没有公会徽章。" };
+      if (actual <= 0) return { success: false, message: "没有仙盟徽章。" };
       inventoryStore.removeItem("guild_badge", actual);
       guildBadgeBonusAttack.value += 3 * actual;
-      const msg = `使用了公会徽章×${actual}，攻击力永久+${3 * actual}！`;
+      const msg = `使用了仙盟徽章×${actual}，攻击力永久+${3 * actual}！`;
       if (inCombat.value) combatLog.value.push(msg);
       return { success: true, message: msg };
     }
@@ -1643,7 +1651,7 @@ export const useMiningStore = defineStore("mining", () => {
       if (hpFull && staminaFull) {
         return { success: false, message: "体力和生命值都已满。" };
       }
-      // 查找背包中该食物的最低品质
+      // 查找纳戒中该食物的最低品质
       const qualityOrder: Quality[] = [
         "normal",
         "fine",
@@ -1702,7 +1710,8 @@ export const useMiningStore = defineStore("mining", () => {
 
   /** 在探索中使用怪物诱饵（本层怪物数量翻倍） */
   const useMonsterLure = (): { success: boolean; message: string } => {
-    if (!isExploring.value) return { success: false, message: "不在矿洞中。" };
+    if (!isExploring.value)
+      return { success: false, message: "不在玄矿幽脉中。" };
     if (inCombat.value)
       return { success: false, message: "战斗中无法使用怪物诱饵。" };
     if (!inventoryStore.removeItem("monster_lure"))
@@ -1791,7 +1800,7 @@ export const useMiningStore = defineStore("mining", () => {
       currentFloor.value = data.currentFloor ?? 1;
     }
 
-    // 骷髅矿穴状态
+    // 幽骨矿窟状态
     isInSkullCavern.value =
       ((data as Record<string, unknown>).isInSkullCavern as boolean) ?? false;
     skullCavernFloor.value =
@@ -1801,11 +1810,11 @@ export const useMiningStore = defineStore("mining", () => {
     skullSafePointFloor.value =
       ((data as Record<string, unknown>).skullSafePointFloor as number) ?? 0;
 
-    // 格子状态不序列化——读档后玩家在矿洞外
+    // 格子状态不序列化——读档后玩家在玄矿幽脉外
     isExploring.value = false;
     floorGrid.value = [];
 
-    // 公会徽章永久加成
+    // 仙盟徽章永久加成
     guildBadgeBonusAttack.value =
       ((data as Record<string, unknown>).guildBadgeBonusAttack as number) ?? 0;
     guildBonusMaxHp.value =

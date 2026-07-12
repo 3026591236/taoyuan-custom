@@ -83,7 +83,7 @@ export const generateMerchantStock = (
     });
   }
 
-  // 从反季作物中选 1-2 种子
+  // 从反季灵植中选 1-2 灵种
   const otherSeasonCrops = CROPS.filter(
     (c) => !c.season.includes(currentSeason) && c.seedPrice > 0,
   );
@@ -94,8 +94,8 @@ export const generateMerchantStock = (
       const crop = shuffledCrops[i]!;
       stock.push({
         itemId: crop.seedId,
-        name: `${crop.name}种子`,
-        price: Math.max(Math.floor(crop.seedPrice * 4), crop.sellPrice * 2), // 4 倍反季溢价，且不低于作物售价×2
+        name: `${crop.name}灵种`,
+        price: Math.max(Math.floor(crop.seedPrice * 4), crop.sellPrice * 2), // 4 倍反季溢价，且不低于灵植售价×2
         quantity: 3 + Math.floor(rng() * 3), // 3-5 个
       });
     }

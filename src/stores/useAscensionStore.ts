@@ -479,7 +479,7 @@ export const IMMORTAL_OFFICES: Array<{
     name: "文命仙官",
     icon: "📜",
     desc: "记录功德、回应凡界香火。",
-    buff: "声望、博物馆与宗门反馈更强",
+    buff: "声望、藏珍阁与宗门反馈更强",
   },
 ];
 
@@ -498,7 +498,7 @@ export const IMMORTAL_DUTIES: Array<{
     office: "sinong",
     name: "调雨润田",
     icon: "🌧️",
-    desc: "向下界灵田布雨，回响种田线而不是新增重复农场。",
+    desc: "向下界灵田布雨，回响灵田经营线而不是新增重复灵田。",
     rewardMerit: 16,
     rewardJade: 3,
     rewardRule: 1,
@@ -617,9 +617,9 @@ export const MORTAL_ECHOES: Array<{
     id: "farm_blessing",
     name: "点化灵田",
     icon: "🌾",
-    desc: "让仙界影响原种田线。",
+    desc: "让仙界影响原灵田经营线。",
     meritCost: 18,
-    rewardText: "灵田、仙露与高阶作物获得回响。",
+    rewardText: "灵田、仙露与高阶灵植获得回响。",
   },
 ];
 export const IMMORTAL_RIVALS: Array<{

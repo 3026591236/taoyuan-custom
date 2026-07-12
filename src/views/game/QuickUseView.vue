@@ -19,7 +19,7 @@
     <div
       class="border border-accent/15 rounded-xs p-3 bg-accent/5 text-xs text-muted leading-relaxed"
     >
-      这里会汇总背包中可快速使用的丹药、食物和功能道具。体力丹可让体力临时超过上限，最多额外+500；时间禁锢丹会暂停游戏时间流逝3小时现实时间。
+      这里会汇总纳戒中可快速使用的丹药、食物和功能道具。体力丹可让体力临时超过上限，最多额外+500；时间禁锢丹会暂停游戏时间流逝3小时现实时间。
       <span v-if="clock.isTimeFrozen.value" class="block text-success mt-1"
         >当前时间禁锢中：剩余约 {{ freezeRemainText }}</span
       >
@@ -30,7 +30,7 @@
       class="py-8 text-center text-muted border border-accent/10 rounded-xs"
     >
       <Package :size="24" class="mx-auto mb-2 opacity-40" />
-      <p class="text-xs">背包中暂无可快捷使用的物品或丹药。</p>
+      <p class="text-xs">纳戒中暂无可快捷使用的物品或丹药。</p>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">

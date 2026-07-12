@@ -18,7 +18,7 @@
         <div>
           <h2 class="text-accent text-lg">世界剧情与季节事件</h2>
           <p class="text-xs text-muted leading-relaxed mt-1">
-            把村庄、宗门、公会、家族、秘境和天气节令串成长期世界线。{{
+            把万象集、宗门、仙盟、家族、秘境和天气节令串成长期世界线。{{
               retention.seasonEventBuffText
             }}
           </p>
@@ -207,7 +207,7 @@
         <div>
           <h2 class="text-accent text-lg">周修行令</h2>
           <p class="text-xs text-muted leading-relaxed mt-1">
-            每7个游戏日重置一次，用周目标把秘境、烹饪、博物馆、公会、瀚海、育种和钓鱼串起来。
+            每7个游戏日重置一次，用周目标把秘境、烹饪、藏珍阁、仙盟、瀚海、育种和垂钓串起来。
           </p>
         </div>
         <div class="text-right">

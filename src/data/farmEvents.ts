@@ -44,7 +44,7 @@ export const MORNING_NARRATIONS: MorningNarration[] = [
     effect: { type: "loseCrop" },
   },
   {
-    message: "田里有一株作物被连根拔起扔在旁边，像是野猪干的。",
+    message: "田里有一株灵植被连根拔起扔在旁边，像是野猪干的。",
     effect: { type: "loseCrop" },
   },
   {
@@ -67,25 +67,25 @@ export const MORNING_NARRATIONS: MorningNarration[] = [
   // —— 纯旁白 ——
   { message: "篱笆上挂着几根兔毛，看来夜里有不速之客。" },
   { message: "一只野猫在田埂上打盹，看样子已经赖了一夜了。" },
-  { message: "菜地边上发现一堆松鼠藏的坚果壳，它们似乎很喜欢你的农场。" },
+  { message: "菜地边上发现一堆松鼠藏的坚果壳，它们似乎很喜欢你的灵田。" },
   { message: "清晨出门，发现地上有一串小脚印从菜地延伸到篱笆外。" },
   { message: "有只刺猬在堆肥堆里安了家，它看起来很满意现在的住所。" },
   { message: "田边的稻草人歪了，像是被什么撞了一下。大概是夜里路过的野鹿。" },
   { message: "水井旁发现了几根散落的羽毛，可能是野鸡来喝过水。" },
   { message: "屋顶上蹲着一只猫头鹰，正歪头打量你。你一动，它就飞走了。" },
-  { message: "田坎边多了一个小洞，看着像是田鼠挖的。好在没伤到作物。" },
+  { message: "田坎边多了一个小洞，看着像是田鼠挖的。好在没伤到灵植。" },
   { message: "晨雾散去，篱笆上挂着一张蜘蛛网，露珠在阳光下闪闪发亮。" },
   { message: "几只麻雀在屋檐下吵作一团，不知道在争什么。" },
-  { message: "水渠里多了几条小蝌蚪，看来青蛙也喜欢你的农场。" },
+  { message: "水渠里多了几条小蝌蚪，看来青蛙也喜欢你的灵田。" },
   { message: "地头的大石头上趴着一只壁虎，一动不动地晒太阳。" },
   { message: "风吹过来一股桂花香，不知是谁家院子里飘来的。" },
   { message: "你的稻草人歪得更厉害了。说不定它晚上偷偷活动过。" },
   { message: "清晨有只蜻蜓落在你的锄头上，翅膀薄得透光。" },
   { message: "一群蚂蚁正搬着什么东西穿过田埂，队伍长得看不到尾。" },
-  { message: "农场角落里多了一个小鸟窝，看来有鸟儿打算在这安家了。" },
+  { message: "灵田角落里多了一个小鸟窝，看来有鸟儿打算在这安家了。" },
 ];
 
-/** 纯旁白（无 loseCrop）的子集，空农场回退用 */
+/** 纯旁白（无 loseCrop）的子集，空灵田回退用 */
 export const NARRATIONS_NO_LOSS: MorningNarration[] = MORNING_NARRATIONS.filter(
   (n) => !n.effect || n.effect.type !== "loseCrop",
 );
@@ -99,7 +99,7 @@ export const MORNING_CHOICE_EVENTS: MorningChoiceEvent[] = [
     choices: [
       {
         label: "包扎伤口，放它养一阵",
-        result: "你小心地包扎了小鸟的翅膀。村民们听说了这件事，都夸你心善。",
+        result: "你小心地包扎了小鸟的翅膀。集民们听说了这件事，都夸你心善。",
         effect: { type: "gainFriendship", amount: 10 },
       },
       {
@@ -110,7 +110,7 @@ export const MORNING_CHOICE_EVENTS: MorningChoiceEvent[] = [
   },
   {
     id: "hungry_traveler",
-    message: "农场外来了个风尘仆仆的旅人，看起来又累又饿。",
+    message: "灵田外来了个风尘仆仆的旅人，看起来又累又饿。",
     choices: [
       {
         label: "请他吃顿饭",
@@ -155,7 +155,7 @@ export const MORNING_CHOICE_EVENTS: MorningChoiceEvent[] = [
   },
   {
     id: "old_man_fishing",
-    message: "一位白胡子老伯在你农场边的水渠钓鱼，看到你出来笑着打了声招呼。",
+    message: "一位白胡子老伯在你灵田边的水渠垂钓，看到你出来笑着打了声招呼。",
     choices: [
       {
         label: "坐下来聊一会",
@@ -229,7 +229,7 @@ export const MORNING_CHOICE_EVENTS: MorningChoiceEvent[] = [
       {
         label: "看看它们吃的啥",
         result:
-          "野兔在啃杂草，没碰作物。你笑了笑，由它们去了。它们反而帮你除了些杂草。",
+          "野兔在啃杂草，没碰灵植。你笑了笑，由它们去了。它们反而帮你除了些杂草。",
       },
     ],
   },
@@ -247,7 +247,7 @@ export const MORNING_CHOICE_EVENTS: MorningChoiceEvent[] = [
   },
   {
     id: "painting_visitor",
-    message: "一个背着画板的年轻人站在田边，正在画你的农场。",
+    message: "一个背着画板的年轻人站在田边，正在画你的灵田。",
     choices: [
       {
         label: "过去看看",
@@ -298,7 +298,7 @@ export const MORNING_CHOICE_EVENTS: MorningChoiceEvent[] = [
       {
         label: "擦干净放在田边",
         result:
-          "你把小佛像擦净放好。路过的村民说这是好彩头，大伙儿的运气要好了。",
+          "你把小佛像擦净放好。路过的集民说这是好彩头，大伙儿的运气要好了。",
         effect: { type: "gainFriendship", amount: 10 },
       },
       {
@@ -338,7 +338,7 @@ export const MORNING_EASTER_EGGS: MorningEasterEgg[] = [
   },
   {
     message:
-      "夜里似乎下了一场花瓣雨，整个农场弥漫着淡淡的花香。谁也说不清花从哪来的。",
+      "夜里似乎下了一场花瓣雨，整个灵田弥漫着淡淡的花香。谁也说不清花从哪来的。",
   },
   {
     message:
@@ -355,7 +355,7 @@ export const MORNING_EASTER_EGGS: MorningEasterEgg[] = [
   },
   {
     message:
-      "今天早上，所有的作物似乎都比昨天精神了一些。也许是你的错觉，也许不是。",
+      "今天早上，所有的灵植似乎都比昨天精神了一些。也许是你的错觉，也许不是。",
   },
   {
     message:

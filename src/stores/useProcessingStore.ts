@@ -26,7 +26,7 @@ import {
   getLowestCombinedQuality,
 } from "@/composables/useCombinedInventory";
 
-/** 工坊升级定义 */
+/** 匠造台升级定义 */
 const WORKSHOP_UPGRADES = [
   {
     level: 1,
@@ -54,7 +54,7 @@ export const useProcessingStore = defineStore("processing", () => {
   /** 已放置的加工机器（运行中的槽位） */
   const machines = ref<ProcessingSlot[]>([]);
 
-  /** 工坊等级：0/1/2，对应 15/20/25 */
+  /** 匠造台等级：0/1/2，对应 15/20/25 */
   const workshopLevel = ref(0);
 
   /** 最大放置机器数 */
@@ -108,7 +108,7 @@ export const useProcessingStore = defineStore("processing", () => {
     return true;
   };
 
-  /** 制造洒水器（返回物品ID放入背包） */
+  /** 制造洒水器（返回物品ID放入纳戒） */
   const craftSprinkler = (sprinklerId: string): boolean => {
     const def = SPRINKLERS.find((s) => s.id === sprinklerId);
     if (!def) return false;
@@ -176,7 +176,7 @@ export const useProcessingStore = defineStore("processing", () => {
 
   // === 加工操作 ===
 
-  /** 检测背包+仓库中某物品的最低品质（removeItem 默认消耗顺序） */
+  /** 检测纳戒+仓库中某物品的最低品质（removeItem 默认消耗顺序） */
   const getLowestQuality = (itemId: string): Quality => {
     return getLowestCombinedQuality(itemId);
   };
@@ -236,7 +236,7 @@ export const useProcessingStore = defineStore("processing", () => {
     const recipe = getProcessingRecipeById(slot.recipeId);
     if (!recipe) return null;
 
-    // 优先放入虚空成品箱，箱子满则回退到背包
+    // 优先放入虚空成品箱，储物匣满则回退到纳戒
     const warehouseStore = useWarehouseStore();
     const voidOutput = warehouseStore.getVoidOutputChest();
     const outputQuality = slot.inputQuality ?? "normal";
@@ -256,14 +256,14 @@ export const useProcessingStore = defineStore("processing", () => {
       );
     }
 
-    // 种子制造机额外触发育种种子生成
+    // 灵种制造机额外触发育种灵种生成
     if (slot.machineType === "seed_maker" && slot.inputItemId) {
       const breedingStore = useBreedingStore();
       const farmingLevel = skillStore.farmingLevel;
       if (
         breedingStore.trySeedMakerGeneticSeed(slot.inputItemId, farmingLevel)
       ) {
-        addLog("种子制造机额外产出了一颗育种种子！");
+        addLog("灵种制造机额外产出了一颗育种灵种！");
       }
     }
 
@@ -444,7 +444,7 @@ export const useProcessingStore = defineStore("processing", () => {
               }
               collected.push(recipe.name);
 
-              // 种子制造机额外触发育种种子生成
+              // 灵种制造机额外触发育种灵种生成
               if (slot.machineType === "seed_maker" && slot.inputItemId) {
                 const breedingStore = useBreedingStore();
                 const farmingLevel = skillStore.farmingLevel;
@@ -454,7 +454,7 @@ export const useProcessingStore = defineStore("processing", () => {
                     farmingLevel,
                   )
                 ) {
-                  addLog("种子制造机额外产出了一颗育种种子！");
+                  addLog("灵种制造机额外产出了一颗育种灵种！");
                 }
               }
 
@@ -517,7 +517,7 @@ export const useProcessingStore = defineStore("processing", () => {
       const summary = Array.from(counts.entries())
         .map(([name, count]) => (count > 1 ? `${name}x${count}` : name))
         .join("、");
-      addLog(`工坊自动收取了：${summary}。`);
+      addLog(`匠造台自动收取了：${summary}。`);
     }
     if (readyNames.length > 0) {
       const counts = new Map<string, number>();
@@ -527,23 +527,23 @@ export const useProcessingStore = defineStore("processing", () => {
       const summary = Array.from(counts.entries())
         .map(([name, count]) => (count > 1 ? `${name}x${count}` : name))
         .join("、");
-      addLog(`加工完成：${summary}，去工坊收取吧。`);
+      addLog(`加工完成：${summary}，去匠造台收取吧。`);
     }
   };
 
-  // === 工坊升级 ===
+  // === 匠造台升级 ===
 
-  /** 升级工坊（扩展机器上限） */
+  /** 升级匠造台（扩展机器上限） */
   const upgradeWorkshop = (): { success: boolean; message: string } => {
     const next = workshopLevel.value + 1;
     const upgrade = WORKSHOP_UPGRADES.find((u) => u.level === next);
-    if (!upgrade) return { success: false, message: "工坊已达到最高等级。" };
+    if (!upgrade) return { success: false, message: "匠造台已达到最高等级。" };
     if (!consumeCraftMaterials(upgrade.materials, upgrade.cost))
       return { success: false, message: "材料或铜钱不足。" };
     workshopLevel.value = next;
     return {
       success: true,
-      message: `工坊扩建完成！机器上限提升至${maxMachines.value}台。`,
+      message: `匠造台扩建完成！机器上限提升至${maxMachines.value}台。`,
     };
   };
 
@@ -553,7 +553,7 @@ export const useProcessingStore = defineStore("processing", () => {
     return WORKSHOP_UPGRADES.find((u) => u.level === next) ?? null;
   };
 
-  /** 工坊分组折叠状态（参与存档） */
+  /** 匠造台分组折叠状态（参与存档） */
   const collapsedGroups = ref(new Set<MachineType>());
 
   const toggleGroup = (type: MachineType) => {

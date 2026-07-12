@@ -25,10 +25,10 @@ export const useGuildStore = defineStore("guild", () => {
   /** 贡献点（可消费货币） */
   const contributionPoints = ref(0);
 
-  /** 公会经验（隐性） */
+  /** 仙盟经验（隐性） */
   const guildExp = ref(0);
 
-  /** 公会等级（显性） */
+  /** 仙盟等级（显性） */
   const guildLevel = ref(0);
 
   /** 每日限购追踪：{ itemId: 今日已购次数 } */
@@ -71,7 +71,7 @@ export const useGuildStore = defineStore("guild", () => {
     {
       id: "monster_watch",
       name: "妖踪巡哨",
-      desc: "提交灵骨布置巡哨，提升公会讨伐组织度。",
+      desc: "提交灵骨布置巡哨，提升仙盟讨伐组织度。",
       itemId: "spirit_bone",
       itemName: "灵骨",
       quantity: 1,
@@ -81,7 +81,7 @@ export const useGuildStore = defineStore("guild", () => {
     {
       id: "supply_line",
       name: "远征补给线",
-      desc: "提交云纹丝修整护具，支撑宗门/公会远征。",
+      desc: "提交云纹丝修整护具，支撑宗门/仙盟远征。",
       itemId: "cloud_silk",
       itemName: "云纹丝",
       quantity: 1,
@@ -91,7 +91,7 @@ export const useGuildStore = defineStore("guild", () => {
     {
       id: "sect_drill",
       name: "宗门合练",
-      desc: "消耗灵石组织合练，给战斗与公会周常一个长期消耗点。",
+      desc: "消耗灵石组织合练，给战斗与仙盟周常一个长期消耗点。",
       itemId: "spirit_stone",
       itemName: "灵石",
       quantity: 10,
@@ -144,21 +144,21 @@ export const useGuildStore = defineStore("guild", () => {
   const WEEKLY_EXPEDITIONS = [
     {
       id: "raid",
-      name: "公会周常·秘境讨伐",
+      name: "仙盟周常·秘境讨伐",
       desc: "本周累计击杀20只怪物。",
       target: 20,
       rewardPoints: 90,
     },
     {
       id: "donate",
-      name: "公会周常·物资筹备",
-      desc: "公会等级达到2或贡献点达到300。",
+      name: "仙盟周常·物资筹备",
+      desc: "仙盟等级达到2或贡献点达到300。",
       target: 1,
       rewardPoints: 70,
     },
     {
       id: "escort",
-      name: "公会周常·护送协作",
+      name: "仙盟周常·护送协作",
       desc: "贡献点达到500后领取护送协作奖励。",
       target: 1,
       rewardPoints: 120,
@@ -224,7 +224,7 @@ export const useGuildStore = defineStore("guild", () => {
         inventoryStore.addItem(item.itemId, item.quantity);
       }
     }
-    // 讨伐奖励只给贡献点，不增加公会经验（只有捐献增加经验）
+    // 讨伐奖励只给贡献点，不增加仙盟经验（只有捐献增加经验）
     const bonusPoints =
       Math.floor((goal.reward.money ?? 0) / 20) + goal.killTarget;
     contributionPoints.value += bonusPoints;
@@ -233,7 +233,7 @@ export const useGuildStore = defineStore("guild", () => {
     return true;
   };
 
-  // ==================== 公会等级 ====================
+  // ==================== 仙盟等级 ====================
 
   /** 计算当前游戏天编号 */
   const getCurrentDay = (): number => {
@@ -274,7 +274,7 @@ export const useGuildStore = defineStore("guild", () => {
       const next = GUILD_LEVELS[guildLevel.value];
       if (!next || guildExp.value < next.expRequired) break;
       guildLevel.value++;
-      addLog(`冒险家公会等级提升到 ${guildLevel.value} 级！`);
+      addLog(`冒险家仙盟等级提升到 ${guildLevel.value} 级！`);
     }
   };
 
@@ -314,12 +314,12 @@ export const useGuildStore = defineStore("guild", () => {
     return totalLimit - (totalPurchases.value[itemId] ?? 0);
   };
 
-  /** 获取公会等级被动攻击加成 */
+  /** 获取仙盟等级被动攻击加成 */
   const getGuildAttackBonus = (): number => {
     return guildLevel.value * GUILD_BONUS_PER_LEVEL.attack;
   };
 
-  /** 获取公会等级被动HP加成 */
+  /** 获取仙盟等级被动HP加成 */
   const getGuildHpBonus = (): number => {
     return guildLevel.value * GUILD_BONUS_PER_LEVEL.maxHp;
   };
@@ -389,7 +389,7 @@ export const useGuildStore = defineStore("guild", () => {
     contributionPoints.value += Math.floor(project.exp * 0.7);
     guildExp.value += project.exp;
     checkLevelUp();
-    addLog(`参与${project.name}，公会经验+${project.exp}。`);
+    addLog(`参与${project.name}，仙盟经验+${project.exp}。`);
     return { success: true, message: `${project.name}进度+1。` };
   };
 
@@ -442,9 +442,9 @@ export const useGuildStore = defineStore("guild", () => {
     return { success: true, message: `${task.name}奖励已领取。` };
   };
 
-  // ==================== 商店 ====================
+  // ==================== 万象铺 ====================
 
-  /** 公会商店：检查物品是否已解锁 */
+  /** 仙盟万象铺：检查物品是否已解锁 */
   const isShopItemUnlocked = (itemId: string): boolean => {
     const item = GUILD_SHOP_ITEMS.find((i) => i.itemId === itemId);
     if (!item) return false;
@@ -452,7 +452,7 @@ export const useGuildStore = defineStore("guild", () => {
     return guildLevel.value >= item.unlockGuildLevel;
   };
 
-  /** 公会商店：购买物品 */
+  /** 仙盟万象铺：购买物品 */
   const buyShopItem = (itemId: string): boolean => {
     const item = GUILD_SHOP_ITEMS.find((i) => i.itemId === itemId);
     if (!item) return false;
@@ -541,7 +541,7 @@ export const useGuildStore = defineStore("guild", () => {
     if (item.totalLimit) {
       totalPurchases.value[itemId] = (totalPurchases.value[itemId] ?? 0) + 1;
     }
-    addLog(`在公会商店购买了「${item.name}」。`);
+    addLog(`在仙盟万象铺购买了「${item.name}」。`);
     return true;
   };
 

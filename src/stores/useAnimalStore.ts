@@ -42,7 +42,7 @@ export const useAnimalStore = defineStore("animal", () => {
   ]);
   const animals = ref<Animal[]>([]);
 
-  /** 鸡舍孵化器状态 (同时最多1个) */
+  /** 灵禽舍孵化器状态 (同时最多1个) */
   const incubating = ref<IncubationState | null>(null);
 
   /** 牲口棚孵化器状态 (同时最多1个, barn level ≥ 2) */
@@ -254,7 +254,7 @@ export const useAnimalStore = defineStore("animal", () => {
     return true;
   };
 
-  /** 喂食所有动物（消耗指定饲料，马也需要喂食；从背包+仓库箱子取饲料） */
+  /** 喂食所有动物（消耗指定饲料，马也需要喂食；从纳戒+仓库储物匣取饲料） */
   const feedAll = (
     feedId: string = HAY_ITEM_ID,
   ): { fedCount: number; noFeedCount: number } => {
@@ -340,25 +340,28 @@ export const useAnimalStore = defineStore("animal", () => {
   // 孵化器
   // ============================================================
 
-  /** 开始鸡舍孵化 (需鸡舍 ≥ 2 级, 仅限 coop 类蛋) */
+  /** 开始灵禽舍孵化 (需灵禽舍 ≥ 2 级, 仅限 coop 类蛋) */
   const startIncubation = (
     itemId: string,
   ): { success: boolean; message: string } => {
     const coopBuilding = buildings.value.find((b) => b.type === "coop");
     if (!coopBuilding?.built || coopBuilding.level < 2) {
-      return { success: false, message: "需要大型鸡舍（2级）才能使用孵化器。" };
+      return {
+        success: false,
+        message: "需要大型灵禽舍（2级）才能使用孵化器。",
+      };
     }
     if (incubating.value) {
       return { success: false, message: "孵化器中已有蛋在孵化。" };
     }
     const mapping = INCUBATION_MAP[itemId];
     if (!mapping || mapping.building !== "coop") {
-      return { success: false, message: "这个物品不能在鸡舍孵化。" };
+      return { success: false, message: "这个物品不能在灵禽舍孵化。" };
     }
 
     const inventoryStore = useInventoryStore();
     if (!inventoryStore.removeItem(itemId, 1)) {
-      return { success: false, message: "背包中没有这个物品。" };
+      return { success: false, message: "纳戒中没有这个物品。" };
     }
 
     // coopmaster 专精减半孵化时间
@@ -437,7 +440,7 @@ export const useAnimalStore = defineStore("animal", () => {
 
     const inventoryStore = useInventoryStore();
     if (!inventoryStore.removeItem(itemId, 1)) {
-      return { success: false, message: "背包中没有这个物品。" };
+      return { success: false, message: "纳戒中没有这个物品。" };
     }
 
     const skillStore = useSkillStore();
@@ -595,7 +598,7 @@ export const useAnimalStore = defineStore("animal", () => {
       }
     }
 
-    // 将猪找到的松露直接加入背包
+    // 将猪找到的松露直接加入纳戒
     if (bonusProducts.length > 0) {
       const inventoryStore = useInventoryStore();
       for (const bp of bonusProducts) {
@@ -677,7 +680,7 @@ export const useAnimalStore = defineStore("animal", () => {
         !animal.sick &&
         Math.random() < SICK_CHANCE
       ) {
-        // 草甸田庄：动物不会因饥饿生病
+        // 草甸灵田洞天：动物不会因饥饿生病
         if (gameStore.farmMapType !== "meadowlands") {
           animal.sick = true;
           animal.sickDays = 0;
@@ -817,7 +820,7 @@ export const useAnimalStore = defineStore("animal", () => {
           }
           animal.daysSinceProduct = 0;
 
-          // 草甸田庄：40%概率额外产出1件
+          // 草甸灵田洞天：40%概率额外产出1件
           if (gameStore.farmMapType === "meadowlands" && Math.random() < 0.4) {
             products.push({ itemId: def.productId, quality });
           }
@@ -965,7 +968,7 @@ export const useAnimalStore = defineStore("animal", () => {
     if (mission === "guard") {
       playerStore.earnMoney(300 + Math.floor(pet.value.friendship / 5));
       return {
-        message: `${pet.value.name}看家护院，帮牧场减少损耗，获得一些报酬。`,
+        message: `${pet.value.name}看家护院，帮灵牧苑减少损耗，获得一些报酬。`,
       };
     }
     const reward =
@@ -989,7 +992,10 @@ export const useAnimalStore = defineStore("animal", () => {
     if ((animal.dispatchCooldown ?? 0) > 0)
       return { success: false, message: "这只动物刚完成派遣，还需要休整。" };
     if (animal.friendship < 500)
-      return { success: false, message: "动物好感达到500后才能参与牧场派遣。" };
+      return {
+        success: false,
+        message: "动物好感达到500后才能参与灵牧苑派遣。",
+      };
     animal.dispatchCooldown = animal.trait === "hardy" ? 1 : 2;
     const inventoryStore = useInventoryStore();
     const playerStore = usePlayerStore();
@@ -1005,10 +1011,10 @@ export const useAnimalStore = defineStore("animal", () => {
     if (animal.trait === "treasure" || bloodline !== "normal")
       inventoryStore.addItem("spirit_stone", stone);
     playerStore.earnMoney(120 + animal.friendship / 4);
-    const extra = animal.trait === "guardian" ? "，并提升了牧场护院声望" : "";
+    const extra = animal.trait === "guardian" ? "，并提升了灵牧苑护院声望" : "";
     return {
       success: true,
-      message: `${animal.name}完成一次牧场派遣，带回灵石×${stone}和一些铜钱${extra}。`,
+      message: `${animal.name}完成一次灵牧苑派遣，带回灵石×${stone}和一些铜钱${extra}。`,
     };
   };
 
@@ -1057,7 +1063,7 @@ export const useAnimalStore = defineStore("animal", () => {
     autoPetterBuildings.value.push(buildingType);
     return {
       success: true,
-      message: `自动抚摸机已安装到${buildingType === "coop" ? "鸡舍" : "牧场"}。`,
+      message: `自动抚摸机已安装到${buildingType === "coop" ? "灵禽舍" : "灵牧苑"}。`,
     };
   };
 

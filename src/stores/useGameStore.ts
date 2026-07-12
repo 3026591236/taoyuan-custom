@@ -130,7 +130,7 @@ export const useGameStore = defineStore("game", () => {
     {
       type: "wealth",
       name: "财星照命",
-      desc: "今日财运正旺，经营与任务的铜钱回报更讨喜。",
+      desc: "今日财运正旺，经营与委托的铜钱回报更讨喜。",
       bonusText: "今日目标铜钱 +15%",
     },
   ];
@@ -146,10 +146,10 @@ export const useGameStore = defineStore("game", () => {
     return dailyFateType.value === type ? 1 : 0;
   };
 
-  /** 山丘田庄：地表矿脉（日结生成，在农场面板开采后清除） */
+  /** 山丘灵田洞天：地表矿脉（日结生成，在灵田界面开采后清除） */
   const surfaceOrePatch = ref<{ oreId: string; quantity: number } | null>(null);
 
-  /** 溪流田庄：溪流鱼获（日结生成，在农场面板收取后清除） */
+  /** 溪流灵田洞天：溪流鱼获（日结生成，在灵田界面收取后清除） */
   const creekCatch = ref<{ fishId: string; quality: Quality }[]>([]);
 
   const seasonIndex = computed(() => SEASON_ORDER.indexOf(season.value));

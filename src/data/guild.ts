@@ -158,14 +158,14 @@ export const MONSTER_GOALS: MonsterGoalDef[] = [
     reward: { money: 6000, items: [{ itemId: "dragon_jade", quantity: 2 }] },
     description: "三次击败深渊龙王。",
   },
-  // ===== 骷髅矿穴 =====
+  // ===== 幽骨矿窟 =====
   {
     monsterId: "iridium_golem",
     monsterName: "铱金魔像",
     zone: "skull",
     killTarget: 50,
     reward: { money: 3000 },
-    description: "在骷髅矿穴中讨伐铱金魔像。",
+    description: "在幽骨矿窟中讨伐铱金魔像。",
   },
   {
     monsterId: "skull_serpent",
@@ -173,7 +173,7 @@ export const MONSTER_GOALS: MonsterGoalDef[] = [
     zone: "skull",
     killTarget: 50,
     reward: { money: 3000 },
-    description: "在骷髅矿穴中消灭骷髅飞蛇。",
+    description: "在幽骨矿窟中消灭骷髅飞蛇。",
   },
   {
     monsterId: "ancient_mummy",
@@ -181,11 +181,11 @@ export const MONSTER_GOALS: MonsterGoalDef[] = [
     zone: "skull",
     killTarget: 50,
     reward: { money: 5000 },
-    description: "在骷髅矿穴中击败远古木乃伊。",
+    description: "在幽骨矿窟中击败远古木乃伊。",
   },
 ];
 
-/** 公会商店物品 (与镖局互补，不重复) */
+/** 仙盟万象铺物品 (与镖局互补，不重复) */
 export const GUILD_SHOP_ITEMS: GuildShopItemDef[] = [
   // --- 消耗品（铜钱购买，不限购）---
   {
@@ -244,7 +244,7 @@ export const GUILD_SHOP_ITEMS: GuildShopItemDef[] = [
   // --- 装备（贡献点+材料，限购1件）---
   {
     itemId: "guild_war_ring",
-    name: "公会战戒",
+    name: "仙盟战戒",
     price: 0,
     contributionCost: 200,
     description: "攻击+4，防御+6%。",
@@ -258,7 +258,7 @@ export const GUILD_SHOP_ITEMS: GuildShopItemDef[] = [
   },
   {
     itemId: "guild_war_helm",
-    name: "公会战盔",
+    name: "仙盟战盔",
     price: 0,
     contributionCost: 250,
     description: "攻击+3，HP+15。",
@@ -272,7 +272,7 @@ export const GUILD_SHOP_ITEMS: GuildShopItemDef[] = [
   },
   {
     itemId: "guild_war_boots",
-    name: "公会战靴",
+    name: "仙盟战靴",
     price: 0,
     contributionCost: 250,
     description: "攻击+2，防御+5%，移速+10%。",
@@ -286,7 +286,7 @@ export const GUILD_SHOP_ITEMS: GuildShopItemDef[] = [
   },
   {
     itemId: "guild_war_blade",
-    name: "公会战刃",
+    name: "仙盟战刃",
     price: 0,
     contributionCost: 350,
     description: "攻击力36，暴击率10%。",
@@ -301,7 +301,7 @@ export const GUILD_SHOP_ITEMS: GuildShopItemDef[] = [
   // --- 永久品（贡献点购买，每日限购）---
   {
     itemId: "guild_badge",
-    name: "公会徽章",
+    name: "仙盟徽章",
     price: 0,
     contributionCost: 150,
     description: "攻击力永久+3。",
@@ -360,7 +360,7 @@ export const GUILD_DONATIONS: GuildDonationDef[] = [
   { itemId: "prismatic_shard", points: 80 },
 ];
 
-/** 公会等级表（10级） */
+/** 仙盟等级表（10级） */
 export const GUILD_LEVELS: GuildLevelDef[] = [
   { level: 1, expRequired: 100 },
   { level: 2, expRequired: 300 },
@@ -374,7 +374,7 @@ export const GUILD_LEVELS: GuildLevelDef[] = [
   { level: 10, expRequired: 7500 },
 ];
 
-/** 每公会等级的被动增益 */
+/** 每仙盟等级的被动增益 */
 export const GUILD_BONUS_PER_LEVEL = {
   attack: 1, // 每级+1攻击力
   maxHp: 5, // 每级+5最大生命值

@@ -36,7 +36,7 @@ export const useSettingsStore = defineStore("settings", () => {
   const qmsgShowIcon = ref(false);
   const qmsgShowReverse = ref(false);
 
-  /** 背包物品筛选：选中的分类（空数组 = 显示全部） */
+  /** 纳戒物品筛选：选中的分类（空数组 = 显示全部） */
   const inventoryFilter = ref<ItemCategory[]>([]);
 
   const applyFontSize = () => {

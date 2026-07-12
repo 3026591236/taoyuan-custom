@@ -6,7 +6,7 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
   {
     type: "delivery",
     targets: [
-      // 常见作物 — 混合季节
+      // 常见灵植 — 混合季节
       {
         itemId: "cabbage",
         name: "青菜",
@@ -532,7 +532,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 4,
   },
 
-  // === 内容纵深 V1.3：宗门灵植订单，把种田、修仙、秘境材料串起来 ===
+  // === 内容纵深 V1.3：宗门灵植订单，把灵田经营、修仙、秘境材料串起来 ===
   {
     name: "宗门灵膳备料",
     targetItemId: "spirit_rice",
@@ -548,7 +548,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     npcId: "lin_lao",
     tier: 1,
     orderTag: "宗门灵植",
-    description: "宗门膳房需要蕴灵稻熬制灵粥，交付后可换取灵石与凝露草种子。",
+    description: "宗门膳房需要蕴灵稻熬制灵粥，交付后可换取灵石与凝露草灵种。",
   },
   {
     name: "丹房凝露单",

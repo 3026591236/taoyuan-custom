@@ -30,7 +30,7 @@ export const HATS: HatDef[] = [
   {
     id: "miner_helmet",
     name: "矿工帽",
-    description: "带有灯座的皮帽，矿洞探索体力大幅降低。",
+    description: "带有灯座的皮帽，玄矿幽脉探索体力大幅降低。",
     effects: [{ type: "mining_stamina", value: 0.12 }],
     shopPrice: 800,
     recipe: null,
@@ -41,7 +41,7 @@ export const HATS: HatDef[] = [
   {
     id: "fisher_hat",
     name: "渔夫帽",
-    description: "宽檐遮阳帽，钓鱼时更加专注。",
+    description: "宽檐遮阳帽，垂钓时更加专注。",
     effects: [
       { type: "fishing_stamina", value: 0.1 },
       { type: "fishing_calm", value: 0.05 },
@@ -82,7 +82,7 @@ export const HATS: HatDef[] = [
   {
     id: "herbalist_hat",
     name: "药师帽",
-    description: "采药人常戴的宽帽，农耕时减少体力且提高作物品质。",
+    description: "采药人常戴的宽帽，灵耕时减少体力且提高灵植品质。",
     effects: [
       { type: "farming_stamina", value: 0.06 },
       { type: "crop_quality_bonus", value: 0.05 },
@@ -239,11 +239,11 @@ export const HATS: HatDef[] = [
     shopPrice: null,
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "矿洞宝箱",
+    obtainSource: "玄矿幽脉宝箱",
     sellPrice: 250,
   },
 
-  // ===== 新增商店帽子（绸缎庄）=====
+  // ===== 新增万象铺帽子（绸缎庄）=====
   {
     id: "lotus_hat",
     name: "莲花帽",
@@ -258,7 +258,7 @@ export const HATS: HatDef[] = [
   {
     id: "fur_cap",
     name: "皮毛帽",
-    description: "柔软的兽皮帽，矿洞中格外实用。",
+    description: "柔软的兽皮帽，玄矿幽脉中格外实用。",
     effects: [
       { type: "mining_stamina", value: 0.08 },
       { type: "defense_bonus", value: 0.03 },
@@ -341,7 +341,7 @@ export const HATS: HatDef[] = [
   {
     id: "frost_queen_tiara",
     name: "冰后冠冕",
-    description: "冰霜女王的冠冕，蕴含寒冰之力，钓鱼格外专注。",
+    description: "冰霜女王的冠冕，蕴含寒冰之力，垂钓格外专注。",
     effects: [
       { type: "fishing_calm", value: 0.08 },
       { type: "fishing_stamina", value: 0.08 },
@@ -396,15 +396,15 @@ export const HATS: HatDef[] = [
     shopPrice: null,
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "矿洞宝箱",
+    obtainSource: "玄矿幽脉宝箱",
     sellPrice: 400,
   },
 
-  // === 公会专属 ===
+  // === 仙盟专属 ===
   {
     id: "guild_war_helm",
-    name: "公会战盔",
-    description: "冒险家公会精英成员的战斗头盔，坚固而威严。",
+    name: "仙盟战盔",
+    description: "冒险家仙盟精英成员的战斗头盔，坚固而威严。",
     effects: [
       { type: "attack_bonus", value: 3 },
       { type: "max_hp_bonus", value: 15 },
@@ -412,7 +412,7 @@ export const HATS: HatDef[] = [
     shopPrice: null,
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "公会商店",
+    obtainSource: "仙盟万象铺",
     sellPrice: 800,
   },
   // === 通商兑换 ===
@@ -430,11 +430,11 @@ export const HATS: HatDef[] = [
     obtainSource: "通商积分兑换",
     sellPrice: 750,
   },
-  // === 竹林野兽材料制作 ===
+  // === 青篁秘林野兽材料制作 ===
   {
     id: "wolf_pelt_hood",
     name: "狼皮兜帽",
-    description: "以竹林灰狼的毛皮缝制的兜帽，保暖且防护力强。",
+    description: "以青篁秘林灰狼的毛皮缝制的兜帽，保暖且防护力强。",
     effects: [
       { type: "defense_bonus", value: 0.08 },
       { type: "max_hp_bonus", value: 10 },
@@ -479,7 +479,7 @@ export const SHOP_HATS: HatDef[] = HATS.filter((h) => h.shopPrice !== null);
 /** 铁匠铺可合成的帽子 */
 export const CRAFTABLE_HATS: HatDef[] = HATS.filter((h) => h.recipe !== null);
 
-/** 怪物掉落帽子（按矿洞区域） */
+/** 怪物掉落帽子（按玄矿幽脉区域） */
 export const MONSTER_DROP_HATS: Record<
   string,
   { hatId: string; chance: number }[]
@@ -500,7 +500,7 @@ export const BOSS_DROP_HATS: Record<number, string> = {
   120: "abyss_dragon_horns",
 };
 
-/** 宝箱掉落帽子（按矿洞区域） */
+/** 宝箱掉落帽子（按玄矿幽脉区域） */
 export const TREASURE_DROP_HATS: Record<
   string,
   { hatId: string; chance: number }[]

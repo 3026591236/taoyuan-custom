@@ -64,7 +64,7 @@ const CRAB_POT_LOOT: {
   },
 ];
 
-/** 钓鱼垃圾池 */
+/** 垂钓垃圾池 */
 const FISHING_JUNK = ["trash", "driftwood", "broken_cd", "soggy_newspaper"];
 
 /** 宝箱奖品池 */
@@ -96,10 +96,10 @@ export const useFishingStore = defineStore("fishing", () => {
   const inventoryStore = useInventoryStore();
   const skillStore = useSkillStore();
 
-  /** 当前钓鱼地点 */
+  /** 当前垂钓地点 */
   const fishingLocation = ref<FishingLocation>("creek");
 
-  /** 切换钓鱼地点 */
+  /** 切换垂钓地点 */
   const setLocation = (loc: FishingLocation) => {
     fishingLocation.value = loc;
   };
@@ -113,10 +113,10 @@ export const useFishingStore = defineStore("fishing", () => {
     ),
   );
 
-  /** 当前钓鱼会话状态 */
+  /** 当前垂钓会话状态 */
   const currentFish = ref<FishDef | null>(null);
 
-  /** 上次钓鱼的宝箱结果 */
+  /** 上次垂钓的宝箱结果 */
   const lastTreasure = ref<{
     items: { itemId: string; name: string; quantity: number }[];
     money: number;
@@ -130,19 +130,19 @@ export const useFishingStore = defineStore("fishing", () => {
   const equippedTackle = ref<TackleType | null>(null);
   const tackleDurability = ref(0);
 
-  /** 当次钓鱼会话的鱼饵/浮漂 */
+  /** 当次垂钓会话的鱼饵/浮漂 */
   const activeBaitDef = ref<BaitDef | null>(null);
   const activeTackleDef = ref<TackleDef | null>(null);
 
   /** 蟹笼 */
   const crabPots = ref<CrabPotState[]>([]);
 
-  /** 装备鱼饵（仅标记类型，不从背包取出） */
+  /** 装备鱼饵（仅标记类型，不从纳戒取出） */
   const equipBait = (type: BaitType): { success: boolean; message: string } => {
     const def = getBaitById(type);
     if (!def) return { success: false, message: "无效的鱼饵。" };
     if (inventoryStore.getItemCount(type) <= 0)
-      return { success: false, message: "背包中没有该鱼饵。" };
+      return { success: false, message: "纳戒中没有该鱼饵。" };
     equippedBait.value = type;
     return { success: true, message: `装备了${def.name}。` };
   };
@@ -165,7 +165,7 @@ export const useFishingStore = defineStore("fishing", () => {
     if (rodTier === "basic")
       return { success: false, message: "需要铁制或更好的鱼竿才能装备浮漂。" };
     if (!inventoryStore.removeItem(type, 1))
-      return { success: false, message: "背包中没有该浮漂。" };
+      return { success: false, message: "纳戒中没有该浮漂。" };
     if (equippedTackle.value) unequipTackle();
     equippedTackle.value = type;
     tackleDurability.value = def.maxDurability;
@@ -187,7 +187,7 @@ export const useFishingStore = defineStore("fishing", () => {
     return `卸下了${def?.name ?? "浮漂"}。`;
   };
 
-  /** 开始钓鱼 */
+  /** 开始垂钓 */
   const startFishing = (): {
     success: boolean;
     message: string;
@@ -215,7 +215,7 @@ export const useFishingStore = defineStore("fishing", () => {
       ),
     );
     if (!playerStore.consumeStamina(staminaCost)) {
-      return { success: false, message: "体力不足，无法钓鱼。" };
+      return { success: false, message: "体力不足，无法垂钓。" };
     }
 
     // 确定鱼池：magic_bait 忽略季节但仍限地点
@@ -235,7 +235,7 @@ export const useFishingStore = defineStore("fishing", () => {
       return { success: false, message: "当前季节和天气没有可钓的鱼。" };
     }
 
-    // 消耗鱼饵（从背包扣除1个，用完才取消装备）
+    // 消耗鱼饵（从纳戒扣除1个，用完才取消装备）
     activeBaitDef.value = baitDef ?? null;
     if (equippedBait.value) {
       inventoryStore.removeItem(equippedBait.value, 1);
@@ -253,7 +253,7 @@ export const useFishingStore = defineStore("fishing", () => {
       }
     }
 
-    // 垃圾判定：基础12%概率钓到垃圾，钓鱼等级每级-1%，使用鱼饵减半
+    // 垃圾判定：基础12%概率钓到垃圾，垂钓等级每级-1%，使用鱼饵减半
     const junkBase = 0.12 - skillStore.fishingLevel * 0.01;
     const junkChance = Math.max(0, baitDef ? junkBase * 0.5 : junkBase);
     if (Math.random() < junkChance) {
@@ -377,7 +377,7 @@ export const useFishingStore = defineStore("fishing", () => {
     };
   };
 
-  /** 根据难度、钓鱼等级和鱼竿等级加权随机选鱼 */
+  /** 根据难度、垂钓等级和鱼竿等级加权随机选鱼 */
   const pickRandomFish = (pool?: FishDef[]): FishDef => {
     const fishPool = pool ?? availableFish.value;
     const cookingStore = useCookingStore();
@@ -435,7 +435,7 @@ export const useFishingStore = defineStore("fishing", () => {
     return fishPool[0]!;
   };
 
-  /** 完成钓鱼（小游戏结束后调用） */
+  /** 完成垂钓（小游戏结束后调用） */
   const completeFishing = (
     rating: MiniGameRating,
   ): {
@@ -504,7 +504,7 @@ export const useFishingStore = defineStore("fishing", () => {
       quality = qualityOrder[newIdx]!;
     }
 
-    // 溪流田庄雨天品质+1档
+    // 溪流灵田洞天雨天品质+1档
     if (gameStore.farmMapType === "riverland" && gameStore.isRainy) {
       const idx = qualityOrder.indexOf(quality);
       if (idx < qualityOrder.length - 1) {
@@ -512,7 +512,7 @@ export const useFishingStore = defineStore("fishing", () => {
       }
     }
 
-    // 仙缘能力：龙泽（long_ling_1）瀑布钓鱼品质+1
+    // 仙缘能力：龙泽（long_ling_1）瀑布垂钓品质+1
     if (
       fishingLocation.value === "waterfall" &&
       useHiddenNpcStore().isAbilityActive("long_ling_1")
@@ -573,7 +573,7 @@ export const useFishingStore = defineStore("fishing", () => {
     const ratingTag = rating === "perfect" ? " [完美!]" : "";
     let message = "";
     if (!added) {
-      message = `钓上了${currentFish.value.name}，但背包已满，鱼丢失了！`;
+      message = `钓上了${currentFish.value.name}，但纳戒已满，鱼丢失了！`;
     } else {
       message =
         catchQty > 1
@@ -610,7 +610,7 @@ export const useFishingStore = defineStore("fishing", () => {
     };
   };
 
-  /** 钓鱼宝箱 */
+  /** 垂钓宝箱 */
   const rollTreasureChest = (): {
     items: { itemId: string; name: string; quantity: number }[];
     money: number;
@@ -686,7 +686,7 @@ export const useFishingStore = defineStore("fishing", () => {
       };
     }
     if (!inventoryStore.removeItem("crab_pot", 1)) {
-      return { success: false, message: "背包中没有蟹笼。" };
+      return { success: false, message: "纳戒中没有蟹笼。" };
     }
     crabPots.value.push({ location, hasBait: false });
     return { success: true, message: "蟹笼已放置。" };
@@ -794,7 +794,7 @@ export const useFishingStore = defineStore("fishing", () => {
             itemId: loot.itemId,
             name: itemDef?.name ?? loot.itemId,
           });
-          // 水产也算钓鱼经验
+          // 水产也算垂钓经验
           if (itemDef) {
             skillStore.addExp("fishing", Math.floor(itemDef.sellPrice * 0.5));
           }

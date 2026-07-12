@@ -52,7 +52,7 @@ type FamilyCommissionId =
 
 const FAMILY_SPECIALTY_NAMES: Record<FamilySpecialty, string> = {
   farming: "农务助手",
-  ranching: "牧场管家",
+  ranching: "灵牧苑管家",
   foraging: "采集搭档",
   cultivation: "修行伴侣",
 };
@@ -95,8 +95,8 @@ const VILLAGE_REQUESTS: {
   {
     id: "clinic_herbs",
     title: "医馆药篓",
-    desc: "医馆缺基础草药，送去能提升村庄人情。",
-    npcHint: "医馆与村民都会承你一份情。",
+    desc: "医馆缺基础草药，送去能提升万象集人情。",
+    npcHint: "医馆与集民都会承你一份情。",
     itemId: "herb",
     itemName: "草药",
     quantity: 5,
@@ -177,7 +177,7 @@ const CHILD_LONG_TERM_EVENTS: {
   {
     id: "study_trip",
     title: "子女远学·村塾游历",
-    desc: "送孩子去村塾和博物馆旁听，提升学识与家族见闻。",
+    desc: "送孩子去村塾和藏珍阁旁听，提升学识与家族见闻。",
     itemId: "spirit_ink",
     itemName: "灵墨",
     quantity: 1,
@@ -221,8 +221,8 @@ const WORLD_FEEDBACKS: {
 }[] = [
   {
     id: "village_reputation",
-    title: "村庄回响·人情渐暖",
-    desc: "你常帮村里备席、送药、回信，桃源村开始把你当成真正的自家人。",
+    title: "万象集回响·人情渐暖",
+    desc: "你常帮村里备席、送药、回信，万象集开始把你当成真正的自家人。",
     requirement: "全村平均好感达到2心/500",
     rewardText: "铜钱+1600，全村好感+8，家传经验+18",
   },
@@ -243,8 +243,8 @@ const WORLD_FEEDBACKS: {
   {
     id: "sect_public_praise",
     title: "宗门回响·乡里传名",
-    desc: "公会和宗门贡献会反哺村庄声望，战斗与社交开始互相回应。",
-    requirement: "公会贡献达到300",
+    desc: "仙盟和宗门贡献会反哺万象集声望，战斗与社交开始互相回应。",
+    requirement: "仙盟贡献达到300",
     rewardText: "铜钱+2600，全村好感+10，家传经验+35",
   },
 ];
@@ -375,7 +375,7 @@ export const useNpcStore = defineStore("npc", () => {
     bait: 80,
   };
 
-  /** 雇工任务名称 */
+  /** 雇工委托名称 */
   const HELPER_TASK_NAMES: Record<FarmHelperTask, string> = {
     water: "浇水",
     feed: "喂食",
@@ -458,7 +458,7 @@ export const useNpcStore = defineStore("npc", () => {
     let allFed = false;
 
     for (const helper of [...hiredHelpers.value]) {
-      // 按任务类型过滤
+      // 按委托类型过滤
       if (taskFilter && !taskFilter.includes(helper.task)) continue;
 
       const npcDef = getNpcById(helper.npcId);
@@ -518,14 +518,16 @@ export const useNpcStore = defineStore("npc", () => {
           allFed = result.noFeedCount === 0 && result.fedCount > 0;
           if (result.fedCount > 0 && fedFish) {
             messages.push(
-              `${name}帮你喂了${result.fedCount}只牲畜和鱼塘的鱼。(-${helper.dailyWage}文)`,
+              `${name}帮你喂了${result.fedCount}只牲畜和灵泉鱼池的鱼。(-${helper.dailyWage}文)`,
             );
           } else if (result.fedCount > 0) {
             messages.push(
               `${name}帮你喂了${result.fedCount}只牲畜。(-${helper.dailyWage}文)`,
             );
           } else if (fedFish) {
-            messages.push(`${name}帮你喂了鱼塘的鱼。(-${helper.dailyWage}文)`);
+            messages.push(
+              `${name}帮你喂了灵泉鱼池的鱼。(-${helper.dailyWage}文)`,
+            );
           } else if (result.noFeedCount > 0) {
             messages.push(
               `${name}发现草料不足，${result.noFeedCount}只牲畜未能喂食。(-${helper.dailyWage}文)`,
@@ -1432,7 +1434,7 @@ export const useNpcStore = defineStore("npc", () => {
           cookingStore.unlockedRecipes.includes(r.id),
         );
         if (unlockedRecipes.length === 0) return NO_RECIPE_TIP;
-        // 每周推荐一个固定食谱（基于年+周数的种子）
+        // 每周推荐一个固定食谱（基于年+周数的灵种）
         const weekIndex = Math.floor((gameStore.day - 1) / 7);
         const seed =
           (gameStore.year - 1) * 16 +
@@ -1497,11 +1499,11 @@ export const useNpcStore = defineStore("npc", () => {
   );
   const villageReputationText = computed(() => {
     const avg = villageFriendshipAvg.value;
-    if (avg >= 1800) return "桃源村声望：一呼百应 · 村民会主动谈起你的善举。";
+    if (avg >= 1800) return "万象集声望：一呼百应 · 集民会主动谈起你的善举。";
     if (avg >= 1000)
-      return "桃源村声望：乡里熟人 · 委托与来信开始更频繁地回馈你。";
-    if (avg >= 500) return "桃源村声望：渐有名声 · 村民记得你帮过的忙。";
-    return "桃源村声望：初来乍到 · 多聊天、送礼、完成村庄请求可提升人情。";
+      return "万象集声望：乡里熟人 · 委托与来信开始更频繁地回馈你。";
+    if (avg >= 500) return "万象集声望：渐有名声 · 集民记得你帮过的忙。";
+    return "万象集声望：初来乍到 · 多聊天、送礼、完成万象集请求可提升人情。";
   });
 
   const worldFeedbackCards = computed(() => {
@@ -1625,7 +1627,7 @@ export const useNpcStore = defineStore("npc", () => {
     id: VillageRequestId,
   ): { success: boolean; message: string } => {
     const req = VILLAGE_REQUESTS.find((r) => r.id === id);
-    if (!req) return { success: false, message: "村庄请求不存在。" };
+    if (!req) return { success: false, message: "万象集请求不存在。" };
     const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:village:${id}`;
     if (familyCommissionClaimed.value.includes(key))
       return { success: false, message: "今日已完成。" };

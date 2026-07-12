@@ -143,7 +143,7 @@
       </p>
       <div v-if="!homeStore.greenhouseUnlocked">
         <p class="text-xs text-muted mb-2">
-          解锁温室后可在任何季节种植作物，作物自动浇水。
+          解锁温室后可在任何季节种植灵植，灵植自动浇水。
         </p>
         <div
           class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5"
@@ -157,7 +157,7 @@
       </div>
       <div v-else class="space-y-2">
         <p class="text-xs text-success">
-          温室已开放，可在农场面板中种植四季作物。
+          温室已开放，可在灵田界面中种植四季灵植。
         </p>
         <div class="grid grid-cols-3 gap-2 text-center">
           <div class="border border-accent/10 rounded-xs py-1">
@@ -201,14 +201,16 @@
           仓库
         </p>
         <span v-if="warehouseStore.unlocked" class="text-xs text-muted">
-          箱子 {{ warehouseStore.chests.length }}/{{ warehouseStore.maxChests }}
+          储物匣 {{ warehouseStore.chests.length }}/{{
+            warehouseStore.maxChests
+          }}
         </span>
       </div>
 
       <!-- 未解锁 -->
       <div v-if="!warehouseStore.unlocked">
         <p class="text-xs text-muted mb-2">
-          解锁仓库后可放置箱子分类存放物品。
+          解锁仓库后可放置储物匣分类存放物品。
         </p>
         <div
           class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5"
@@ -223,7 +225,7 @@
 
       <!-- 已解锁 -->
       <template v-else>
-        <!-- 箱子列表 -->
+        <!-- 储物匣列表 -->
         <div
           v-if="warehouseStore.chests.length > 0"
           class="flex flex-col space-y-1.5 mb-2"
@@ -325,7 +327,7 @@
           <p class="text-xs mt-1">仓库空空如也</p>
         </div>
 
-        <!-- 添加箱子 -->
+        <!-- 添加储物匣 -->
         <Button
           v-if="warehouseStore.chests.length < warehouseStore.maxChests"
           class="w-full"
@@ -333,7 +335,7 @@
           :icon-size="12"
           @click="showAddChestModal = true"
         >
-          添加箱子
+          添加储物匣
         </Button>
       </template>
     </div>
@@ -357,7 +359,7 @@
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <p class="text-xs text-muted">
-              解锁后可在任何季节种植作物，作物自动浇水。
+              解锁后可在任何季节种植灵植，灵植自动浇水。
             </p>
           </div>
 
@@ -430,7 +432,7 @@
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <p class="text-xs text-muted">
-              解锁后可放置箱子分类存放物品，初始可放3个箱子，可在商店升级。
+              解锁后可放置储物匣分类存放物品，初始可放3个储物匣，可在万象铺升级。
             </p>
           </div>
 
@@ -483,7 +485,7 @@
       </div>
     </Transition>
 
-    <!-- 箱子详情弹窗 -->
+    <!-- 储物匣详情弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="openChestId"
@@ -518,7 +520,7 @@
             />
           </div>
 
-          <!-- 箱子物品列表 -->
+          <!-- 储物匣物品列表 -->
           <div
             v-if="currentOpenChest.items.length > 0"
             class="flex flex-col space-y-1 mb-2 max-h-48 overflow-y-auto"
@@ -567,7 +569,7 @@
             class="flex flex-col items-center justify-center py-6 mb-2"
           >
             <Warehouse :size="36" class="text-accent/20 mb-2" />
-            <p class="text-xs text-muted">箱子是空的</p>
+            <p class="text-xs text-muted">储物匣是空的</p>
             <p class="text-[10px] text-muted/50 mt-0.5">
               点击下方「存入物品」添加
             </p>
@@ -607,7 +609,7 @@
       </div>
     </Transition>
 
-    <!-- 箱子存入弹窗 -->
+    <!-- 储物匣存入弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showChestDepositModal && openChestId"
@@ -655,7 +657,7 @@
       </div>
     </Transition>
 
-    <!-- 箱子数量选择弹窗 -->
+    <!-- 储物匣数量选择弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="chestQtyModal"
@@ -738,7 +740,7 @@
       </div>
     </Transition>
 
-    <!-- 拆卸箱子确认弹窗 -->
+    <!-- 拆卸储物匣确认弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="dismantleChestId"
@@ -759,7 +761,7 @@
             <p class="text-xs mb-2">
               确定要拆卸「{{ dismantleChestInfo.label }}」吗？
               <span v-if="dismantleChestInfo.itemCount > 0" class="text-danger">
-                箱内{{ dismantleChestInfo.itemCount }}格物品将返还背包。
+                箱内{{ dismantleChestInfo.itemCount }}格物品将返还纳戒。
               </span>
             </p>
             <div class="border border-accent/10 rounded-xs p-2 mb-3">
@@ -794,7 +796,7 @@
       </div>
     </Transition>
 
-    <!-- 箱子道具信息弹窗 -->
+    <!-- 储物匣道具信息弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="chestItemDetail && chestItemDef"
@@ -859,7 +861,7 @@
       </div>
     </Transition>
 
-    <!-- 添加箱子弹窗 -->
+    <!-- 添加储物匣弹窗 -->
     <Transition name="panel-fade">
       <div
         v-if="showAddChestModal"
@@ -868,7 +870,7 @@
       >
         <div class="game-panel max-w-sm w-full">
           <div class="flex items-center justify-between mb-2">
-            <p class="text-sm text-accent">制作箱子</p>
+            <p class="text-sm text-accent">制作储物匣</p>
             <Button
               class="py-0 px-1"
               :icon="X"
@@ -1080,7 +1082,7 @@ const goGreenhouse = () => {
 
 const handleUnlockFromModal = () => {
   if (homeStore.unlockGreenhouse()) {
-    addLog("温室已解锁！可在农场面板中切换至温室进行种植。");
+    addLog("温室已解锁！可在灵田界面中切换至温室进行种植。");
     showGreenhouseModal.value = false;
   } else {
     addLog("铜钱或材料不足，无法解锁温室。");
@@ -1111,9 +1113,9 @@ const handleUnlockWarehouse = () => {
   addLog(`仓库已解锁！（-${warehouseStore.UNLOCK_COST}文）`);
 };
 
-// === 箱子管理 ===
+// === 储物匣管理 ===
 
-/** 箱子道具信息弹窗 */
+/** 储物匣道具信息弹窗 */
 const chestItemDetail = ref<{
   itemId: string;
   quality: Quality;
@@ -1149,7 +1151,7 @@ const currentOpenChest = computed(() => {
   return warehouseStore.getChest(openChestId.value) ?? null;
 });
 
-/** 背包中可存入箱子的物品（排除种子和锁定物品） */
+/** 纳戒中可存入储物匣的物品（排除灵种和锁定物品） */
 const depositableItems = computed(() =>
   inventoryStore.items.filter((i) => {
     if (i.locked) return false;
@@ -1158,7 +1160,7 @@ const depositableItems = computed(() =>
   }),
 );
 
-/** 背包中可一键存入的重复物品（箱子中已有且未锁定、非种子） */
+/** 纳戒中可一键存入的重复物品（储物匣中已有且未锁定、非灵种） */
 const duplicateDepositItems = computed(() => {
   if (!currentOpenChest.value) return [];
   const chestItemIds = new Set(
@@ -1172,7 +1174,7 @@ const duplicateDepositItems = computed(() => {
   });
 });
 
-/** 制作箱子 */
+/** 制作储物匣 */
 const canCraftChest = (tier: ChestTier): boolean => {
   if (warehouseStore.chests.length >= warehouseStore.maxChests) return false;
   return processingStore.canCraft(
@@ -1202,7 +1204,7 @@ const handleCraftChest = (tier: ChestTier) => {
   }
 };
 
-/** 拆卸箱子确认 */
+/** 拆卸储物匣确认 */
 const dismantleChestId = ref<string | null>(null);
 
 const dismantleChestInfo = computed(() => {
@@ -1235,12 +1237,12 @@ const confirmDismantle = () => {
   if (!chest) return;
   const info = dismantleChestInfo.value;
   if (!info) return;
-  // 箱内物品返还背包
+  // 箱内物品返还纳戒
   for (const item of [...chest.items]) {
     inventoryStore.addItem(item.itemId, item.quantity, item.quality);
   }
   chest.items.length = 0;
-  // 拆除箱子
+  // 拆除储物匣
   const name = chest.label;
   warehouseStore.removeChest(chestId);
   // 返还50%材料
@@ -1255,7 +1257,7 @@ const confirmDismantle = () => {
   if (openChestId.value === chestId) openChestId.value = null;
 };
 
-/** 重命名箱子 */
+/** 重命名储物匣 */
 const startRenameChest = (chestId: string, currentLabel: string) => {
   renamingChestId.value = chestId;
   renameInput.value = currentLabel;
@@ -1279,7 +1281,7 @@ const handleSetVoidRole = (chestId: string, role: VoidChestRole) => {
   else addLog(`${chest.label}已设为成品箱，作坊产品将自动放入此箱。`);
 };
 
-// === 箱子数量选择 ===
+// === 储物匣数量选择 ===
 interface ChestQtyModalData {
   mode: "withdraw" | "deposit";
   chestId: string;
@@ -1323,7 +1325,7 @@ const executeChestWithdraw = (
   qty: number,
 ) => {
   if (!warehouseStore.withdrawFromChest(chestId, itemId, qty, quality)) {
-    addLog("背包已满，无法取出。");
+    addLog("纳戒已满，无法取出。");
     return;
   }
   addLog(`取出了${getItemName(itemId)}×${qty}。`);
@@ -1342,7 +1344,7 @@ const executeChestDeposit = (
     quality,
   );
   if (actualQty <= 0) {
-    addLog("箱子已满，无法存入。");
+    addLog("储物匣已满，无法存入。");
     return;
   }
   addLog(`存入了${getItemName(itemId)}×${actualQty}。`);
@@ -1389,7 +1391,7 @@ const handleDepositDuplicates = () => {
   if (totalDeposited > 0) {
     addLog(`一键存入了${kindCount}种物品，共${totalDeposited}个。`);
   } else {
-    addLog("箱子已满，无法存入。");
+    addLog("储物匣已满，无法存入。");
   }
 };
 </script>

@@ -79,7 +79,7 @@ export const WEAPON_TYPE_NAMES: Record<WeaponType, string> = {
 
 /** 所有武器定义 */
 export const WEAPONS: Record<string, WeaponDef> = {
-  // === 商店可购买 ===
+  // === 万象铺可购买 ===
   wooden_stick: {
     id: "wooden_stick",
     name: "木棒",
@@ -237,7 +237,7 @@ export const WEAPONS: Record<string, WeaponDef> = {
     shopMaterials: [],
     fixedEnchantment: null,
   },
-  // === 新区域商店武器 ===
+  // === 新区域万象铺武器 ===
   crystal_blade: {
     id: "crystal_blade",
     name: "水晶长剑",
@@ -306,7 +306,7 @@ export const WEAPONS: Record<string, WeaponDef> = {
     fixedEnchantment: "fierce",
   },
 
-  // === 新增商店武器 ===
+  // === 新增万象铺武器 ===
   bamboo_staff: {
     id: "bamboo_staff",
     name: "竹杖",
@@ -422,14 +422,14 @@ export const WEAPONS: Record<string, WeaponDef> = {
     fixedEnchantment: null,
   },
 
-  // === 公会专属 ===
+  // === 仙盟专属 ===
   guild_war_blade: {
     id: "guild_war_blade",
-    name: "公会战刃",
+    name: "仙盟战刃",
     type: "sword",
     attack: 36,
     critRate: 0.1,
-    description: "冒险家公会为精英成员锻造的佩剑，剑身刻有公会徽记。",
+    description: "冒险家仙盟为精英成员锻造的佩剑，剑身刻有仙盟徽记。",
     shopPrice: null,
     shopMaterials: [],
     fixedEnchantment: null,
@@ -528,7 +528,7 @@ export const getWeaponDisplayName = (
   return `${enchant.name}的${weapon.name}`;
 };
 
-/** 宝箱掉落武器（按矿洞区域） */
+/** 宝箱掉落武器（按玄矿幽脉区域） */
 export const TREASURE_DROP_WEAPONS: Record<
   string,
   { weaponId: string; chance: number }[]

@@ -8,7 +8,7 @@
         :icon="Sprout"
         @click="farmTab = 'field'"
       >
-        田庄
+        灵田洞天
       </Button>
       <Button
         class="flex-1 justify-center"
@@ -20,12 +20,14 @@
       </Button>
     </div>
 
-    <!-- 田庄标签 -->
+    <!-- 灵田洞天标签 -->
     <div v-if="farmTab === 'field'">
       <div class="flex items-center justify-between mb-1">
         <div class="flex items-center space-x-1.5 text-sm text-accent">
           <Sprout :size="14" />
-          <span>田庄 ({{ farmStore.farmSize }}×{{ farmStore.farmSize }})</span>
+          <span
+            >灵田洞天 ({{ farmStore.farmSize }}×{{ farmStore.farmSize }})</span
+          >
         </div>
         <div class="text-xs text-muted flex space-x-3">
           <span
@@ -124,7 +126,7 @@
         >
       </div>
 
-      <!-- 田庄特殊功能 -->
+      <!-- 灵田洞天特殊功能 -->
       <div
         v-if="
           gameStore.farmMapType === 'riverland' &&
@@ -270,7 +272,7 @@
         </div>
       </Transition>
 
-      <!-- 像素农场地图 -->
+      <!-- 像素灵灵畦图 -->
       <div class="pixel-farm-shell">
         <div class="pixel-farm-topbar">
           <div class="pixel-farm-title">
@@ -471,7 +473,7 @@
               v-if="activePlot.giantCropGroup !== null"
               class="text-xs text-accent mb-2"
             >
-              收获可获得大量作物！
+              收获可获得大量灵植！
             </p>
 
             <!-- 操作列表 -->
@@ -576,7 +578,7 @@
                   plantableBreedingSeeds.length > 0
                 "
               >
-                <Divider label="育种种子" class="!my-2" />
+                <Divider label="育种灵种" class="!my-2" />
                 <button
                   v-for="seed in plantableBreedingSeeds"
                   :key="seed.genetics.id"
@@ -597,7 +599,7 @@
                   </span>
                 </button>
               </template>
-              <!-- 种子空状态 -->
+              <!-- 灵种空状态 -->
               <div
                 v-if="
                   activePlot.state === 'tilled' &&
@@ -608,7 +610,7 @@
               >
                 <Sprout :size="32" class="text-muted/30" />
                 <p class="text-xs text-muted mt-2">
-                  背包中没有当季可种植的种子
+                  纳戒中没有当季可种植的灵种
                 </p>
                 <Button
                   v-if="isWanwupuOpen"
@@ -616,7 +618,7 @@
                   :icon-size="12"
                   :icon="Store"
                   @click="goToShop"
-                  >前往商店购买</Button
+                  >前往万象铺购买</Button
                 >
                 <p v-else class="text-[10px] text-muted/60 mt-1">
                   {{ wanwupuClosedReason }}
@@ -675,7 +677,7 @@
             </button>
             <p class="text-accent text-sm mb-2">一键种植</p>
             <p class="text-xs text-muted mb-2">
-              空耕地 {{ tilledEmptyCount }} 块，选择要种植的种子：
+              空耕地 {{ tilledEmptyCount }} 块，选择要种植的灵种：
             </p>
             <div class="flex flex-col space-y-1 max-h-40 overflow-y-auto">
               <button
@@ -699,7 +701,7 @@
               </button>
             </div>
             <template v-if="batchBreedingSeedGroups.length > 0">
-              <Divider label="育种种子" class="!my-2" />
+              <Divider label="育种灵种" class="!my-2" />
               <div class="flex flex-col space-y-1 max-h-40 overflow-y-auto">
                 <button
                   v-for="group in batchBreedingSeedGroups"
@@ -728,14 +730,14 @@
               class="flex flex-col items-center py-4"
             >
               <Sprout :size="32" class="text-muted/30" />
-              <p class="text-xs text-muted mt-2">没有当季可种植的种子</p>
+              <p class="text-xs text-muted mt-2">没有当季可种植的灵种</p>
               <Button
                 v-if="isWanwupuOpen"
                 class="mt-2"
                 :icon-size="12"
                 :icon="Store"
                 @click="goToShop"
-                >前往商店购买</Button
+                >前往万象铺购买</Button
               >
               <p v-else class="text-[10px] text-muted/60 mt-1">
                 {{ wanwupuClosedReason }}
@@ -814,14 +816,14 @@
         </div>
       </div>
 
-      <!-- 出货箱入口 -->
+      <!-- 出货灵匣入口 -->
       <div
         class="mt-3 flex items-center justify-between border border-accent/20 rounded-xs px-3 py-2 cursor-pointer hover:bg-accent/5"
         @click="showShippingBox = true"
       >
         <div class="flex items-center space-x-1.5">
           <Package :size="14" class="text-accent" />
-          <span class="text-sm text-accent">出货箱</span>
+          <span class="text-sm text-accent">出货灵匣</span>
           <span
             v-if="shopStore.shippingBox.length > 0"
             class="text-xs text-muted"
@@ -834,7 +836,7 @@
         <span v-else class="text-xs text-muted">空</span>
       </div>
 
-      <!-- 出货箱弹窗 -->
+      <!-- 出货灵匣弹窗 -->
       <Transition name="panel-fade">
         <div
           v-if="showShippingBox"
@@ -850,7 +852,7 @@
             </button>
             <div class="flex items-center space-x-1.5 text-sm text-accent mb-1">
               <Package :size="14" />
-              <span>出货箱</span>
+              <span>出货灵匣</span>
             </div>
             <p class="text-xs text-muted mb-2">放入的物品将在次日结算。</p>
             <p
@@ -918,15 +920,15 @@
               class="flex flex-col items-center justify-center py-4 text-muted mb-2"
             >
               <Package :size="32" class="text-muted/30" />
-              <p class="text-xs mt-2">出货箱是空的</p>
+              <p class="text-xs mt-2">出货灵匣是空的</p>
             </div>
 
-            <!-- 可放入的背包物品 -->
+            <!-- 可放入的纳戒物品 -->
             <div
               v-if="shippableItems.length > 0"
               class="border border-accent/10 rounded-xs p-2"
             >
-              <p class="text-xs text-muted mb-1">背包物品</p>
+              <p class="text-xs text-muted mb-1">纳戒物品</p>
               <div class="flex flex-col space-y-1 overflow-auto max-h-48">
                 <div
                   v-for="item in shippableItems"
@@ -969,7 +971,7 @@
             </div>
             <div v-else class="flex flex-col items-center py-3 text-muted">
               <Wheat :size="32" class="text-muted/30" />
-              <p class="text-xs mt-2">背包中没有可出货的物品</p>
+              <p class="text-xs mt-2">纳戒中没有可出货的物品</p>
             </div>
           </div>
         </div>
@@ -1083,7 +1085,7 @@
         >
           <TreeDeciduous :size="32" class="text-muted/30" />
           <p class="text-xs mt-2">暂无果树</p>
-          <p class="text-[10px] text-muted/60 mt-0.5">可在商店购买树苗种植</p>
+          <p class="text-[10px] text-muted/60 mt-0.5">可在万象铺购买树苗种植</p>
         </div>
         <div
           v-if="
@@ -1330,7 +1332,7 @@
         >
           <TreePine :size="32" class="text-muted/30" />
           <p class="text-xs mt-2">暂无野树</p>
-          <p class="text-[10px] text-muted/60 mt-0.5">可使用野树种子种植</p>
+          <p class="text-[10px] text-muted/60 mt-0.5">可使用野树灵种种植</p>
         </div>
         <div
           v-if="
@@ -1534,7 +1536,7 @@
           </button>
           <p class="text-accent text-sm mb-2">温室一键种植</p>
           <p class="text-xs text-muted mb-2">
-            空耕地 {{ ghTilledEmptyCount }} 块，选择要种植的种子：
+            空耕地 {{ ghTilledEmptyCount }} 块，选择要种植的灵种：
           </p>
           <div class="flex flex-col space-y-1 max-h-60 overflow-y-auto">
             <button
@@ -1562,7 +1564,7 @@
             class="flex flex-col items-center py-4"
           >
             <Sprout :size="32" class="text-muted/30" />
-            <p class="text-xs text-muted mt-2">没有可种植的种子</p>
+            <p class="text-xs text-muted mt-2">没有可种植的灵种</p>
           </div>
         </div>
       </div>
@@ -1596,7 +1598,7 @@
                 v-if="activeGhPlot.cropId"
                 class="flex items-center justify-between"
               >
-                <span class="text-xs text-muted">作物</span>
+                <span class="text-xs text-muted">灵植</span>
                 <span class="text-xs">
                   {{ getCropName(activeGhPlot.cropId) }}
                   <span v-if="ghPlotCropRegrowth" class="text-success ml-1">
@@ -1660,7 +1662,7 @@
 
           <!-- 操作区 -->
           <div class="flex flex-col space-y-1.5">
-            <!-- 已耕 → 种植（所有种子） -->
+            <!-- 已耕 → 种植（所有灵种） -->
             <div
               v-if="activeGhPlot.state === 'tilled' && allSeeds.length > 0"
               class="border border-accent/10 rounded-xs p-2"
@@ -1687,14 +1689,14 @@
                 </Button>
               </div>
             </div>
-            <!-- 已耕 → 育种种子种植 -->
+            <!-- 已耕 → 育种灵种种植 -->
             <template
               v-if="
                 activeGhPlot.state === 'tilled' &&
                 ghPlantableBreedingSeeds.length > 0
               "
             >
-              <Divider label="育种种子" class="!my-2" />
+              <Divider label="育种灵种" class="!my-2" />
               <button
                 v-for="seed in ghPlantableBreedingSeeds"
                 :key="seed.genetics.id"
@@ -1715,7 +1717,7 @@
                 </span>
               </button>
             </template>
-            <!-- 已耕无种子空状态 -->
+            <!-- 已耕无灵种空状态 -->
             <div
               v-else-if="
                 activeGhPlot.state === 'tilled' && allSeeds.length === 0
@@ -1723,14 +1725,14 @@
               class="flex flex-col items-center py-4"
             >
               <Sprout :size="32" class="text-muted/30" />
-              <p class="text-xs text-muted mt-2">背包中没有种子</p>
+              <p class="text-xs text-muted mt-2">纳戒中没有灵种</p>
               <Button
                 v-if="isWanwupuOpen"
                 class="mt-2"
                 :icon-size="12"
                 :icon="Store"
                 @click="goToShop"
-                >前往商店购买</Button
+                >前往万象铺购买</Button
               >
               <p v-else class="text-[10px] text-muted/60 mt-1">
                 {{ wanwupuClosedReason }}
@@ -1861,7 +1863,7 @@ const shopStore = useShopStore();
 const breedingStore = useBreedingStore();
 const cultivationStore = useCultivationStore();
 
-// === 田庄特殊功能 ===
+// === 灵田洞天特殊功能 ===
 
 const tutorialStore = useTutorialStore();
 const tutorialHint = computed(() => {
@@ -1875,16 +1877,16 @@ const tutorialHint = computed(() => {
       p.state === "harvestable",
   );
   if (!hasPlanted && farmStore.plots.some((p) => p.state === "tilled"))
-    return "已开垦的地块可以种植作物。使用「一键种植」可批量播种背包中的种子。";
+    return "已开垦的地块可以种植灵植。使用「一键种植」可批量播种纳戒中的灵种。";
   if (
     farmStore.plots.some(
       (p) => (p.state === "planted" || p.state === "growing") && !p.watered,
     ) &&
     !gameStore.isRainy
   )
-    return "作物需要每天浇水才会生长。「一键浇水」可一次浇完所有作物。";
+    return "灵植需要每天浇水才会生长。「一键浇水」可一次浇完所有灵植。";
   if (farmStore.plots.some((p) => p.state === "harvestable"))
-    return "金色高亮的地块表示作物已成熟，点击「一键收获」即可批量收获。";
+    return "金色高亮的地块表示灵植已成熟，点击「一键收获」即可批量收获。";
   return null;
 });
 
@@ -1913,7 +1915,7 @@ const handleCollectCreekCatch = () => {
     addLog(`收取了溪流鱼获：${names.join("、")}。`);
   }
   if (failed.length > 0) {
-    addLog("背包已满，部分鱼获未能收取。");
+    addLog("纳戒已满，部分鱼获未能收取。");
   }
 };
 
@@ -1927,20 +1929,20 @@ const handleMineSurfaceOre = () => {
   const added = inventoryStore.addItem(patch.oreId, patch.quantity);
   if (!added) {
     playerStore.restoreStamina(5);
-    addLog("背包已满，无法开采。");
+    addLog("纳戒已满，无法开采。");
     return;
   }
   const oreName = getItemById(patch.oreId)?.name ?? "矿石";
   const skillStore = useSkillStore();
   skillStore.addExp("mining", 8);
   gameStore.surfaceOrePatch = null;
-  addLog(`开采了地表矿脉，获得了${patch.quantity}个${oreName}。(+8挖矿经验)`);
+  addLog(`开采了地表矿脉，获得了${patch.quantity}个${oreName}。(+8采玄矿经验)`);
   const tr = gameStore.advanceTime(1);
   if (tr.message) addLog(tr.message);
   if (tr.passedOut) handleEndDay();
 };
 
-// === 出货箱 ===
+// === 出货灵匣 ===
 
 const showShippingBox = ref(false);
 const showBatchPlant = ref(false);
@@ -2060,7 +2062,7 @@ const shippingBoxTotal = computed(() => {
 const handleAddToBox = (itemId: string, quantity: number, quality: Quality) => {
   if (shopStore.addToShippingBox(itemId, quantity, quality)) {
     const name = getItemName(itemId);
-    addLog(`将${name}×${quantity}放入了出货箱。`);
+    addLog(`将${name}×${quantity}放入了出货灵匣。`);
   }
 };
 
@@ -2071,7 +2073,7 @@ const handleRemoveFromBox = (
 ) => {
   if (shopStore.removeFromShippingBox(itemId, quantity, quality)) {
     const name = getItemName(itemId);
-    addLog(`从出货箱取出了${name}×${quantity}。`);
+    addLog(`从出货灵匣取出了${name}×${quantity}。`);
   }
 };
 
@@ -2178,7 +2180,7 @@ const canFertilize = computed(() => {
   return activePlot.value.state !== "wasteland" && !activePlot.value.fertilizer;
 });
 
-// === 背包物品列表 ===
+// === 纳戒物品列表 ===
 
 const sprinklerItems = computed(() => {
   const types: {
@@ -2254,7 +2256,7 @@ const plantableSeeds = computed(() => {
   return result;
 });
 
-/** 当季可种的育种种子 */
+/** 当季可种的育种灵种 */
 const plantableBreedingSeeds = computed(() => {
   const season = gameStore.season;
   return breedingStore.breedingBox.filter((seed) => {
@@ -2264,7 +2266,7 @@ const plantableBreedingSeeds = computed(() => {
   });
 });
 
-/** 根据作物售价返回品质颜色 */
+/** 根据灵植售价返回品质颜色 */
 const cropValueColor = (sellPrice: number): string => {
   if (sellPrice >= 180) return "text-quality-supreme";
   if (sellPrice >= 100) return "text-quality-excellent";
@@ -2472,7 +2474,7 @@ const doBatchAction = (
   else if (action === "curePest") handleBatchCurePest();
   else if (action === "clearWeed") handleBatchClearWeed();
 };
-/** 按cropId分组的当季育种种子（用于一键种植弹窗） */
+/** 按cropId分组的当季育种灵种（用于一键种植弹窗） */
 const batchBreedingSeedGroups = computed(() => {
   const groups: Record<
     string,
@@ -2552,7 +2554,7 @@ const doBatchPlantBreeding = (cropId: string) => {
   }
   if (planted > 0) {
     addLog(
-      `一键种植了${planted}株育种种子（${getCropName(cropId)}）。(-${planted}体力)`,
+      `一键种植了${planted}株育种灵种（${getCropName(cropId)}）。(-${planted}体力)`,
     );
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.plant * planted);
     if (tr.message) addLog(tr.message);
@@ -2587,7 +2589,7 @@ const doClearWeed = () => {
 const getPlotDisplay = (
   plot: (typeof farmStore.plots)[number],
 ): { icon: Component; color: string; bg: string } => {
-  // 巨型作物特殊显示（仅在已成熟时才显示巨型图标）
+  // 巨型灵植特殊显示（仅在已成熟时才显示巨型图标）
   if (plot.giantCropGroup !== null && plot.state === "harvestable") {
     return { icon: Star, color: "text-accent", bg: "bg-accent/10" };
   }
@@ -2671,7 +2673,7 @@ const getPlotTooltip = (plot: (typeof farmStore.plots)[number]): string => {
   return tip;
 };
 
-// === 弹窗操作：农场 ===
+// === 弹窗操作：灵田 ===
 
 const doTill = () => {
   if (activePlotId.value === null) return;
@@ -2695,7 +2697,7 @@ const doPlantGeneticSeed = (seedId: string) => {
   if (farmStore.plantGeneticSeed(activePlotId.value, seed.genetics)) {
     breedingStore.removeFromBox(seedId);
     addLog(
-      `种下了育种种子：${getCropName(seed.genetics.cropId)} G${seed.genetics.generation}。`,
+      `种下了育种灵种：${getCropName(seed.genetics.cropId)} G${seed.genetics.generation}。`,
     );
     const tr = gameStore.advanceTime(ACTION_TIME_COSTS.plant);
     if (tr.message) addLog(tr.message);
@@ -2767,11 +2769,11 @@ const doRemoveSprinkler = () => {
   const type = farmStore.removeSprinkler(plotId);
   if (type) {
     if (inventoryStore.addItem(type)) {
-      addLog("拆除了洒水器，已回收到背包。");
+      addLog("拆除了洒水器，已回收到纳戒。");
     } else {
-      // 背包满，放回原处
+      // 纳戒满，放回原处
       farmStore.placeSprinkler(plotId, type);
-      addLog("背包已满，无法回收洒水器。");
+      addLog("纳戒已满，无法回收洒水器。");
     }
   }
   activePlotId.value = null;
@@ -2817,7 +2819,7 @@ const handlePlantTree = (treeType: FruitTreeType) => {
   const def = FRUIT_TREE_DEFS.find((d) => d.type === treeType);
   if (!def) return;
   if (!inventoryStore.removeItem(def.saplingId)) {
-    addLog("背包中没有该树苗。");
+    addLog("纳戒中没有该树苗。");
     return;
   }
   if (farmStore.plantFruitTree(treeType)) {
@@ -2875,7 +2877,7 @@ const handlePlantWildTree = (treeType: WildTreeType) => {
   const def = WILD_TREE_DEFS.find((d) => d.type === treeType);
   if (!def) return;
   if (!inventoryStore.removeItem(def.seedItemId)) {
-    addLog("背包中没有该种子。");
+    addLog("纳戒中没有该灵种。");
     return;
   }
   if (farmStore.plantWildTree(treeType)) {
@@ -2890,7 +2892,7 @@ const handlePlantWildTree = (treeType: WildTreeType) => {
 
 const handleAttachTapper = (treeId: number) => {
   if (!inventoryStore.removeItem("tapper")) {
-    addLog("背包中没有采脂器。");
+    addLog("纳戒中没有采脂器。");
     return;
   }
   if (farmStore.attachTapper(treeId)) {
@@ -3005,18 +3007,18 @@ const doGhPlant = (cropId: string) => {
   const crop = getCropById(cropId);
   if (!crop) return;
   if (!inventoryStore.hasItem(crop.seedId)) {
-    addLog("背包中没有该种子了。");
+    addLog("纳戒中没有该灵种了。");
     return;
   }
   if (!inventoryStore.removeItem(crop.seedId)) {
-    addLog("种子扣除失败，请整理背包后重试。");
+    addLog("灵种扣除失败，请整理纳戒后重试。");
     return;
   }
   if (farmStore.greenhousePlantCrop(activeGhPlotId.value, cropId)) {
     addLog(`在温室中播种了${crop.name}。`);
   } else {
     inventoryStore.addItem(crop.seedId);
-    addLog("温室地块状态异常，种子已返还。");
+    addLog("温室地块状态异常，灵种已返还。");
   }
   activeGhPlotId.value = null;
 };
@@ -3065,13 +3067,13 @@ const doGhHarvest = () => {
     if (genetics?.isHybrid && genetics.hybridId) {
       breedingStore.recordHybridGrown(genetics.hybridId);
     }
-    // 育种种子回收
+    // 育种灵种回收
     if (genetics && shouldReturnBreedingSeed(quality)) {
       const returned: SeedGenetics = { ...genetics, id: generateGeneticsId() };
       if (breedingStore.addToBox(returned)) {
-        msg += " 育种种子已回收。";
+        msg += " 育种灵种已回收。";
       } else {
-        msg += " 种子箱已满，育种种子丢失！";
+        msg += " 灵种箱已满，育种灵种丢失！";
       }
     }
     addLog(msg);
@@ -3122,7 +3124,7 @@ const doGhBatchHarvest = () => {
     if (genetics?.isHybrid && genetics.hybridId) {
       breedingStore.recordHybridGrown(genetics.hybridId);
     }
-    // 育种种子回收
+    // 育种灵种回收
     if (genetics && shouldReturnBreedingSeed(quality)) {
       const returned: SeedGenetics = { ...genetics, id: generateGeneticsId() };
       if (breedingStore.addToBox(returned)) seedsReturned++;
@@ -3131,20 +3133,20 @@ const doGhBatchHarvest = () => {
   if (harvested > 0) {
     sfxHarvest();
     showFloat(`温室收获 ×${harvested}`, "success");
-    let msg = `在温室一键收获了${harvested}株作物。(-${harvested}体力)`;
+    let msg = `在温室一键收获了${harvested}株灵植。(-${harvested}体力)`;
     if (totalBonusMoney > 0) msg += ` 甜度加成+${totalBonusMoney}文`;
     addLog(msg);
     if (harvested < harvestablePlots.length)
-      addLog("体力不足，剩余成熟作物已保留在温室中。");
+      addLog("体力不足，剩余成熟灵植已保留在温室中。");
   } else {
-    addLog("体力不足，无法收获温室作物。");
+    addLog("体力不足，无法收获温室灵植。");
   }
   if (seedsReturned > 0) {
-    addLog(`${seedsReturned}颗育种种子已回收到种子箱。`);
+    addLog(`${seedsReturned}颗育种灵种已回收到灵种箱。`);
   }
 };
 
-/** 温室可种育种种子（温室无季节限制，所有育种种子都可种） */
+/** 温室可种育种灵种（温室无季节限制，所有育种灵种都可种） */
 const ghPlantableBreedingSeeds = computed(() => {
   return breedingStore.breedingBox.filter((seed) => {
     const crop = getCropById(seed.genetics.cropId);
@@ -3161,7 +3163,7 @@ const doGhPlantGeneticSeed = (seedId: string) => {
   ) {
     breedingStore.removeFromBox(seedId);
     addLog(
-      `在温室种下了育种种子：${getCropName(seed.genetics.cropId)} G${seed.genetics.generation}。`,
+      `在温室种下了育种灵种：${getCropName(seed.genetics.cropId)} G${seed.genetics.generation}。`,
     );
   }
   activeGhPlotId.value = null;
@@ -3192,7 +3194,7 @@ const doGhBatchPlant = (cropId: string) => {
     showFloat(`温室种植 ${crop.name} ×${planted}`, "success");
     addLog(`在温室一键种植了${planted}株${crop.name}。(-${planted}体力)`);
   } else {
-    addLog("体力不足或种子不够，无法种植。");
+    addLog("体力不足或灵种不够，无法种植。");
   }
   showGhBatchPlant.value = false;
 };
@@ -3832,7 +3834,7 @@ const handleGhUpgrade = () => {
     11px 13px 0 currentColor;
 }
 
-/* V0.6.6：真正像素化农场地图层 */
+/* V0.6.6：真正像素化灵灵畦图层 */
 .pixel-farm-shell {
   position: relative;
   padding: 10px;

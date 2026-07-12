@@ -28,13 +28,13 @@ export const useAchievementStore = defineStore("achievement", () => {
   /** 物品发现时间记录 { itemId: "第X年 春 第Y天" } */
   const discoveryTimes = ref<Record<string, string>>({});
 
-  /** 已完成的成就ID集合 */
+  /** 已完成的功业ID集合 */
   const completedAchievements = ref<string[]>([]);
 
-  /** 祠堂任务已提交物品 */
+  /** 祠堂委托已提交物品 */
   const bundleSubmissions = ref<Record<string, Record<string, number>>>({});
 
-  /** 已完成的祠堂任务 */
+  /** 已完成的祠堂委托 */
   const completedBundles = ref<string[]>([]);
 
   /** 统计计数器 */
@@ -126,9 +126,9 @@ export const useAchievementStore = defineStore("achievement", () => {
     }
   };
 
-  // === 成就检查 ===
+  // === 功业检查 ===
 
-  /** 判断单个成就条件是否满足 */
+  /** 判断单个功业条件是否满足 */
   const isConditionMet = (c: AchievementCondition): boolean => {
     switch (c.type) {
       case "itemCount":
@@ -275,7 +275,7 @@ export const useAchievementStore = defineStore("achievement", () => {
     return newlyCompleted;
   };
 
-  // === 祠堂任务 ===
+  // === 祠堂委托 ===
 
   const submitToBundle = (
     bundleId: string,
@@ -348,7 +348,7 @@ export const useAchievementStore = defineStore("achievement", () => {
   const perfectionPercent = computed(() => {
     const shopStore = useShopStore();
 
-    // 成就 25%
+    // 功业 25%
     const achievementRate =
       completedAchievements.value.length / ACHIEVEMENTS.length;
     // 出货 20%
@@ -356,7 +356,7 @@ export const useAchievementStore = defineStore("achievement", () => {
       shippableItemCount > 0
         ? shopStore.shippedItems.length / shippableItemCount
         : 0;
-    // 祠堂任务 15%
+    // 祠堂委托 15%
     const bundleRate =
       COMMUNITY_BUNDLES.length > 0
         ? completedBundles.value.length / COMMUNITY_BUNDLES.length
@@ -364,7 +364,7 @@ export const useAchievementStore = defineStore("achievement", () => {
     // 图鉴 15%
     const collectionRate =
       ITEMS.length > 0 ? discoveredItems.value.length / ITEMS.length : 0;
-    // 技能 15%
+    // 百艺 15%
     const avgSkillLevel =
       skillStore.skills.reduce((sum, s) => sum + s.level, 0) /
       skillStore.skills.length;
@@ -447,7 +447,7 @@ export const useAchievementStore = defineStore("achievement", () => {
     for (const r of inventoryStore.ownedRings) discoverItem(r.defId);
     for (const h of inventoryStore.ownedHats) discoverItem(h.defId);
     for (const s of inventoryStore.ownedShoes) discoverItem(s.defId);
-    // 同步背包中已有物品到图鉴
+    // 同步纳戒中已有物品到图鉴
     const seen = new Set<string>();
     for (const slot of inventoryStore.items) {
       if (!seen.has(slot.itemId)) {

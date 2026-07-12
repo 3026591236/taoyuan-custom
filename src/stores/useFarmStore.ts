@@ -67,7 +67,7 @@ export const useFarmStore = defineStore("farm", () => {
     () => plots.value.filter((p) => p.state === "harvestable").length,
   );
 
-  /** 重置农场为指定大小（用于新游戏初始化） */
+  /** 重置灵田为指定大小（用于新游戏初始化） */
   const resetFarm = (size: FarmSize) => {
     farmSize.value = size;
     plots.value = createPlots(size);
@@ -108,7 +108,7 @@ export const useFarmStore = defineStore("farm", () => {
     return true;
   };
 
-  /** 种下育种种子 */
+  /** 种下育种灵种 */
   const plantGeneticSeed = (
     plotId: number,
     genetics: SeedGenetics,
@@ -143,7 +143,7 @@ export const useFarmStore = defineStore("farm", () => {
     return true;
   };
 
-  /** 收获，返回作物ID（支持多茬作物） */
+  /** 收获，返回灵植ID（支持多茬灵植） */
   const harvestPlot = (
     plotId: number,
   ): { cropId: string | null; genetics: SeedGenetics | null } => {
@@ -154,7 +154,7 @@ export const useFarmStore = defineStore("farm", () => {
     const crop = cropId ? getCropById(cropId) : null;
     const genetics = plot.seedGenetics;
 
-    // 如果属于巨型作物组，清除同组所有地块的 giantCropGroup（防止残留）
+    // 如果属于巨型灵植组，清除同组所有地块的 giantCropGroup（防止残留）
     if (plot.giantCropGroup !== null) {
       const groupId = plot.giantCropGroup;
       for (const p of plots.value) {
@@ -162,11 +162,11 @@ export const useFarmStore = defineStore("farm", () => {
       }
     }
 
-    // 多茬作物：收获后回到生长状态（有次数上限）
+    // 多茬灵植：收获后回到生长状态（有次数上限）
     if (crop && crop.regrowth && crop.regrowthDays) {
       plot.harvestCount++;
       if (crop.maxHarvests && plot.harvestCount >= crop.maxHarvests) {
-        // 达到最大收获次数，清除作物
+        // 达到最大收获次数，清除灵植
         plot.state = "tilled";
         plot.cropId = null;
         plot.growthDays = 0;
@@ -187,7 +187,7 @@ export const useFarmStore = defineStore("farm", () => {
           getAllWateredBySprinklers().has(plotId) || useGameStore().isRainy;
         plot.unwateredDays = 0;
         plot.giantCropGroup = null;
-        // seedGenetics 保留（多茬作物继续使用同一基因）
+        // seedGenetics 保留（多茬灵植继续使用同一基因）
       }
     } else {
       plot.state = "tilled";
@@ -208,7 +208,7 @@ export const useFarmStore = defineStore("farm", () => {
     return { cropId, genetics };
   };
 
-  /** 铲除作物：将有作物的地块恢复为已耕状态（保留肥料） */
+  /** 铲除灵植：将有灵植的地块恢复为已耕状态（保留肥料） */
   const removeCrop = (plotId: number): { cropId: string | null } => {
     const plot = plots.value[plotId];
     if (!plot) return { cropId: null };
@@ -220,7 +220,7 @@ export const useFarmStore = defineStore("farm", () => {
       return { cropId: null };
     }
     const cropId = plot.cropId;
-    // 如果属于巨型作物组，清除同组所有地块的 giantCropGroup
+    // 如果属于巨型灵植组，清除同组所有地块的 giantCropGroup
     if (plot.giantCropGroup !== null) {
       const groupId = plot.giantCropGroup;
       for (const p of plots.value) {
@@ -366,7 +366,7 @@ export const useFarmStore = defineStore("farm", () => {
     return true;
   };
 
-  /** 桃源田庄：季初给所有已耕但无肥料的地块施加肥料（按种植等级升级） */
+  /** 桃源灵田洞天：季初给所有已耕但无肥料的地块施加肥料（按种植等级升级） */
   const applyFertileSoil = (
     farmingLevel: number,
   ): { count: number; fertilizerName: string } => {
@@ -410,7 +410,7 @@ export const useFarmStore = defineStore("farm", () => {
     const sprinklerWatered = getAllWateredBySprinklers();
     const walletGrowth = useWalletStore().getCropGrowthBonus();
     const gameStore = useGameStore();
-    // 仙缘能力：春息（tao_yao_2）春季作物生长加速
+    // 仙缘能力：春息（tao_yao_2）春季灵植生长加速
     const spiritGrowth =
       gameStore.season === "spring"
         ? useHiddenNpcStore().getAbilityValue("tao_yao_2") / 100
@@ -475,7 +475,7 @@ export const useFarmStore = defineStore("farm", () => {
 
       // 处理浇水状态
       if (plot.watered) {
-        // 肥料加速：减少作物所需生长天数
+        // 肥料加速：减少灵植所需生长天数
         const fertDef = plot.fertilizer
           ? getFertilizerById(plot.fertilizer)
           : null;
@@ -532,7 +532,7 @@ export const useFarmStore = defineStore("farm", () => {
           plot.watered = false;
         }
       }
-      // 虫害感染检查（未感染的 planted/growing 地块，跳过巨型作物）
+      // 虫害感染检查（未感染的 planted/growing 地块，跳过巨型灵植）
       if (
         !plot.infested &&
         plot.giantCropGroup === null &&
@@ -546,7 +546,7 @@ export const useFarmStore = defineStore("farm", () => {
           newInfestations++;
         }
       }
-      // 杂草滋生检查（未长草的 planted/growing 地块，跳过巨型作物）
+      // 杂草滋生检查（未长草的 planted/growing 地块，跳过巨型灵植）
       if (
         !plot.weedy &&
         plot.giantCropGroup === null &&
@@ -578,7 +578,7 @@ export const useFarmStore = defineStore("farm", () => {
         .map((p) => p.id),
     );
 
-    // 作物枯萎检查（肥料保留在土壤中）
+    // 灵植枯萎检查（肥料保留在土壤中）
     for (const plot of plots.value) {
       if (
         (plot.state === "planted" ||
@@ -645,7 +645,7 @@ export const useFarmStore = defineStore("farm", () => {
     const target =
       croppedPlots[Math.floor(Math.random() * croppedPlots.length)]!;
     const crop = getCropById(target.cropId!);
-    const cropName = crop?.name ?? "作物";
+    const cropName = crop?.name ?? "灵植";
 
     target.state = "tilled";
     target.cropId = null;
@@ -663,7 +663,7 @@ export const useFarmStore = defineStore("farm", () => {
     return { hit: true, absorbed: false, cropName };
   };
 
-  /** 乌鸦袭击：无稻草人时 15% 概率毁一株作物 */
+  /** 乌鸦袭击：无稻草人时 15% 概率毁一株灵植 */
   const crowAttack = (): { attacked: boolean; cropName?: string } => {
     if (scarecrows.value > 0) return { attacked: false };
     if (Math.random() > 0.15) return { attacked: false };
@@ -678,7 +678,7 @@ export const useFarmStore = defineStore("farm", () => {
     const target =
       croppedPlots[Math.floor(Math.random() * croppedPlots.length)]!;
     const crop = getCropById(target.cropId!);
-    const cropName = crop?.name ?? "作物";
+    const cropName = crop?.name ?? "灵植";
     target.state = "tilled";
     target.cropId = null;
     target.growthDays = 0;
@@ -694,7 +694,7 @@ export const useFarmStore = defineStore("farm", () => {
     return { attacked: true, cropName };
   };
 
-  /** 检测并形成巨型作物：3×3 同种 harvestable 且 giantCropEligible，1% 概率 */
+  /** 检测并形成巨型灵植：3×3 同种 harvestable 且 giantCropEligible，1% 概率 */
   const checkGiantCrops = (): { cropId: string; cropName: string }[] => {
     const size = farmSize.value;
     if (size < 4) return [];
@@ -741,7 +741,7 @@ export const useFarmStore = defineStore("farm", () => {
     return formed;
   };
 
-  /** 收获巨型作物：清除同组 9 块，返回作物ID和总产出数量 */
+  /** 收获巨型灵植：清除同组 9 块，返回灵植ID和总产出数量 */
   const harvestGiantCrop = (
     plotId: number,
   ): { cropId: string; quantity: number } | null => {
@@ -770,7 +770,7 @@ export const useFarmStore = defineStore("farm", () => {
     return { cropId, quantity: groupPlots.length * 2 };
   };
 
-  /** 扩建农场 */
+  /** 扩建灵田 */
   const expandFarm = (): FarmSize | null => {
     const sizes: FarmSize[] = [4, 6, 8, 10];
     const currentIndex = sizes.indexOf(farmSize.value);
@@ -1003,7 +1003,7 @@ export const useFarmStore = defineStore("farm", () => {
     return true;
   };
 
-  /** 温室播种育种种子 */
+  /** 温室播种育种灵种 */
   const greenhousePlantGeneticSeed = (
     plotId: number,
     genetics: SeedGenetics,

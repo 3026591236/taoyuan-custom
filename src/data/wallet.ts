@@ -1,11 +1,11 @@
 import type { WalletItemDef } from "@/types";
 
-/** 钱袋物品定义 */
+/** 财库物品定义 */
 export const WALLET_ITEMS: WalletItemDef[] = [
   {
     id: "merchant_seal",
     name: "商人印章",
-    description: "商店购物价格降低10%。",
+    description: "万象铺购物价格降低10%。",
     effect: { type: "shopDiscount", value: 0.1 },
     unlockCondition: "累计赚取10000文",
   },
@@ -19,14 +19,14 @@ export const WALLET_ITEMS: WalletItemDef[] = [
   {
     id: "miners_charm",
     name: "矿工护符",
-    description: "挖矿体力消耗降低15%。",
+    description: "采玄矿体力消耗降低15%。",
     effect: { type: "miningStamina", value: 0.15 },
-    unlockCondition: "矿洞到达50层",
+    unlockCondition: "玄矿幽脉到达50层",
   },
   {
     id: "anglers_token",
     name: "钓翁令牌",
-    description: "钓鱼小游戏中鱼移动速度降低10%。",
+    description: "垂钓小游戏中鱼移动速度降低10%。",
     effect: { type: "fishingCalm", value: 0.1 },
     unlockCondition: "钓到30种不同的鱼",
   },
@@ -40,9 +40,9 @@ export const WALLET_ITEMS: WalletItemDef[] = [
   {
     id: "earth_totem",
     name: "土地图腾",
-    description: "作物生长速度+10%。",
+    description: "灵植生长速度+10%。",
     effect: { type: "cropGrowth", value: 0.1 },
-    unlockCondition: "收获100次作物",
+    unlockCondition: "收获100次灵植",
   },
   {
     id: "trade_prosperity_seal",
