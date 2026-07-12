@@ -2201,7 +2201,7 @@ const returnToWorld = () => {
   content: "";
   position: absolute;
   z-index: 2;
-  inset: 6% 16% 4%;
+  inset: 0 5% 0;
   border-radius: 44% 44% 28% 28%;
   background: linear-gradient(
     115deg,
@@ -5341,14 +5341,14 @@ const returnToWorld = () => {
 .immortal-artwork-motion {
   position: absolute;
   z-index: 7;
-  inset: -42px -24px -18px;
+  inset: 0;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   pointer-events: none;
   transform-origin: 50% 84%;
-  animation: immortalPortraitFloat 3.6s ease-in-out infinite;
-  will-change: transform, filter;
+  animation: immortalPortraitStill 6s ease-in-out infinite;
+  will-change: filter;
 }
 .immortal-artwork-motion::before {
   content: "";
@@ -5378,38 +5378,30 @@ const returnToWorld = () => {
   height: 100%;
   max-width: none;
   max-height: none;
-  object-fit: contain;
-  object-position: center bottom;
-  border-radius: 0;
-  animation: immortalRobeBreath 3.6s ease-in-out infinite;
+  object-fit: cover;
+  object-position: center center;
+  border-radius: 26px;
+  animation: immortalRobeBreath 5.2s ease-in-out infinite;
   will-change: transform, filter;
 }
-@keyframes immortalPortraitFloat {
+@keyframes immortalPortraitStill {
   0%,
   100% {
-    transform: translate3d(0, 0, 0) rotate(-0.25deg);
-    filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.28));
-  }
-  25% {
-    transform: translate3d(-12px, -22px, 0) rotate(0.45deg);
+    filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.28));
   }
   50% {
-    transform: translate3d(5px, -34px, 0) rotate(-0.1deg);
-    filter: drop-shadow(0 24px 26px rgba(72, 196, 255, 0.26));
-  }
-  75% {
-    transform: translate3d(14px, -18px, 0) rotate(-0.48deg);
+    filter: drop-shadow(0 22px 30px rgba(72, 196, 255, 0.3));
   }
 }
 @keyframes immortalRobeBreath {
   0%,
   100% {
-    transform: scale(0.965);
+    transform: scale(1);
     filter: saturate(1.08) brightness(1);
   }
   50% {
-    transform: scale(1.055);
-    filter: saturate(1.18) brightness(1.08);
+    transform: scale(1.012);
+    filter: saturate(1.16) brightness(1.07);
   }
 }
 @keyframes immortalAuraPulse {
@@ -5425,7 +5417,7 @@ const returnToWorld = () => {
 }
 @media (max-width: 700px) {
   .immortal-artwork-motion {
-    inset: -20px -12px -8px;
+    inset: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
