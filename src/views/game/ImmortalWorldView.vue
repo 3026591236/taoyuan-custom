@@ -556,6 +556,103 @@
           >
         </div>
       </div>
+      <div class="rift-combat-stage" :class="`art-${ascensionStore.lastArtId}`">
+        <div class="combat-card player-card">
+          <div class="card-aura"></div>
+          <img
+            src="/assets/immortal/immortal-sovereign-anime.png"
+            alt="仙身卡"
+            draggable="false"
+          />
+          <div class="card-shade"></div>
+          <div class="card-meta">
+            <span class="text-[10px] text-muted">己方仙身</span>
+            <b>{{ ascensionStore.immortalTitle || "飞升仙身" }}</b>
+            <em>{{ currentArt.icon }} {{ currentArt.name }}</em>
+          </div>
+          <div class="card-stats">
+            <span>仙战 {{ ascensionStore.immortalPower }}</span>
+            <span
+              >气血 {{ ascensionStore.immortalHp }}/{{
+                ascensionStore.immortalMaxHp
+              }}</span
+            >
+            <span
+              >仙力 {{ ascensionStore.immortalQi }}/{{
+                ascensionStore.immortalMaxQi
+              }}</span
+            >
+          </div>
+        </div>
+        <div class="combat-center">
+          <span class="duel-mark">VS</span>
+          <i></i>
+          <small>点击仙术卡切换流派，再点首领卡发动本回合</small>
+        </div>
+        <div
+          class="combat-card boss-preview-card"
+          :class="
+            ascensionStore.riftBossInfo(selectedRift.id).turns >= 4
+              ? 'boss-fury'
+              : ''
+          "
+        >
+          <div class="card-aura boss-aura"></div>
+          <img :src="ART.rift" alt="首领卡" draggable="false" />
+          <div class="card-shade"></div>
+          <div class="card-meta">
+            <span class="text-[10px] text-muted">当前首领</span>
+            <b>{{ selectedRift.bossName }}</b>
+            <em
+              >{{ selectedRift.icon }} {{ selectedRift.name }} ·
+              {{ ascensionStore.riftBossInfo(selectedRift.id).phaseName }}</em
+            >
+          </div>
+          <div class="mini-boss-bars">
+            <span
+              ><i
+                :style="{
+                  width: `${Math.max(0, (ascensionStore.riftBossInfo(selectedRift.id).hp / ascensionStore.riftBossInfo(selectedRift.id).maxHp) * 100)}%`,
+                }"
+              ></i
+            ></span>
+            <span class="shield"
+              ><i
+                :style="{
+                  width: `${Math.max(0, (ascensionStore.riftBossInfo(selectedRift.id).shield / ascensionStore.riftBossInfo(selectedRift.id).maxShield) * 100)}%`,
+                }"
+              ></i
+            ></span>
+          </div>
+        </div>
+      </div>
+      <div class="art-card-row">
+        <button
+          v-for="art in IMMORTAL_ARTS"
+          :key="art.id"
+          class="battle-art-card"
+          :class="[
+            ascensionStore.lastArtId === art.id ? 'active' : '',
+            selectedRift.weakness === art.id ? 'weakness' : '',
+            ascensionStore.activeRiftAffix.favor === art.id ? 'favored' : '',
+          ]"
+          @click="ascensionStore.castImmortalArt(art.id)"
+        >
+          <b>{{ art.icon }} {{ art.name }}</b>
+          <span>{{ art.element }}</span>
+          <small>{{
+            selectedRift.weakness === art.id
+              ? "首领弱点"
+              : ascensionStore.activeRiftAffix.favor === art.id
+                ? "词缀顺应"
+                : "可切换流派"
+          }}</small>
+        </button>
+      </div>
+      <div class="battle-log-panel">
+        <b>战斗播报</b>
+        <span>{{ ascensionStore.lastBattleText }}</span>
+      </div>
       <div class="grid grid-cols-2 gap-2">
         <button
           v-for="rift in CHAOS_RIFTS"
@@ -1387,6 +1484,12 @@ const currentArt = computed(
     IMMORTAL_ARTS.find((art) => art.id === ascensionStore.lastArtId) ||
     IMMORTAL_ARTS[0]!,
 );
+const selectedRift = computed(() => {
+  const weakMatch = CHAOS_RIFTS.find(
+    (rift) => rift.weakness === ascensionStore.lastArtId,
+  );
+  return weakMatch || CHAOS_RIFTS[0]!;
+});
 const immortalTab = computed(() => String(route.query.tab || "home"));
 const isTab = (...keys: string[]) => keys.includes(immortalTab.value);
 const triggerRealmBreakthrough = () => {
@@ -2516,6 +2619,347 @@ const returnToWorld = () => {
   border-color: rgba(255, 72, 92, 0.7) !important;
   box-shadow: 0 0 22px rgba(255, 55, 80, 0.27) !important;
 }
+
+.rift-combat-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
+  gap: 8px;
+  align-items: stretch;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 226, 138, 0.24);
+  border-radius: 10px;
+  background:
+    radial-gradient(
+      circle at 18% 20%,
+      rgba(255, 226, 138, 0.14),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 82% 24%,
+      rgba(147, 51, 234, 0.18),
+      transparent 30%
+    ),
+    linear-gradient(135deg, rgba(7, 12, 34, 0.86), rgba(26, 8, 44, 0.82));
+  overflow: hidden;
+}
+.rift-combat-stage::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(102, 222, 255, 0.12),
+    transparent,
+    rgba(255, 226, 138, 0.12),
+    transparent
+  );
+  animation: cardBattleSpin 8s linear infinite;
+  opacity: 0.72;
+}
+.combat-card {
+  position: relative;
+  min-height: 190px;
+  overflow: hidden;
+  border: 1px solid rgba(142, 222, 255, 0.28);
+  border-radius: 10px;
+  background: #080c23;
+  isolation: isolate;
+  box-shadow: inset 0 0 30px rgba(102, 222, 255, 0.08);
+}
+.combat-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  z-index: -3;
+  filter: saturate(1.1) contrast(1.06);
+  animation: portraitBreath 3.2s ease-in-out infinite alternate;
+}
+.boss-preview-card img {
+  object-position: center;
+  filter: saturate(1.25) contrast(1.12) hue-rotate(12deg);
+}
+.card-aura {
+  position: absolute;
+  inset: 10%;
+  z-index: -2;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 226, 138, 0.28),
+    transparent 58%
+  );
+  filter: blur(10px);
+  animation: auraPulse 1.8s ease-in-out infinite alternate;
+}
+.boss-aura {
+  background: radial-gradient(
+    circle,
+    rgba(255, 73, 116, 0.28),
+    rgba(126, 34, 206, 0.18),
+    transparent 62%
+  );
+}
+.card-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(4, 7, 22, 0.08),
+    rgba(4, 7, 22, 0.9) 78%
+  );
+}
+.card-meta {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.card-meta b {
+  color: #ffe28a;
+  font-size: 13px;
+  text-shadow: 0 0 12px rgba(255, 226, 138, 0.55);
+}
+.card-meta em {
+  color: #bcecff;
+  font-size: 10px;
+  font-style: normal;
+}
+.card-stats {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.card-stats span {
+  padding: 1px 5px;
+  border: 1px solid rgba(255, 226, 138, 0.22);
+  border-radius: 999px;
+  color: rgba(235, 246, 255, 0.82);
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.34);
+}
+.combat-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #ffe28a;
+  text-align: center;
+}
+.duel-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 226, 138, 0.55);
+  border-radius: 50%;
+  background: rgba(4, 7, 22, 0.72);
+  box-shadow: 0 0 18px rgba(255, 226, 138, 0.28);
+  font-size: 13px;
+  font-weight: 700;
+}
+.combat-center i {
+  width: 2px;
+  height: 42px;
+  background: linear-gradient(180deg, transparent, #66dfff, transparent);
+  animation: beamPulse 1.1s infinite alternate;
+}
+.combat-center small {
+  max-width: 58px;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 9px;
+  line-height: 1.25;
+}
+.mini-boss-bars {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  gap: 4px;
+}
+.mini-boss-bars span {
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 120, 150, 0.42);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.46);
+}
+.mini-boss-bars i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff476a, #ffbe58);
+  box-shadow: 0 0 10px rgba(255, 71, 106, 0.72);
+}
+.mini-boss-bars .shield {
+  border-color: rgba(102, 222, 255, 0.42);
+}
+.mini-boss-bars .shield i {
+  background: linear-gradient(90deg, #66dfff, #a78bfa);
+  box-shadow: 0 0 10px rgba(102, 222, 255, 0.72);
+}
+.art-card-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+.battle-art-card {
+  position: relative;
+  min-height: 62px;
+  padding: 7px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(142, 222, 255, 0.22);
+  border-radius: 8px;
+  background: linear-gradient(
+    145deg,
+    rgba(9, 16, 42, 0.82),
+    rgba(28, 11, 54, 0.72)
+  );
+  text-align: left;
+}
+.battle-art-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.18),
+    transparent
+  );
+}
+.battle-art-card.active::after,
+.battle-art-card:hover::after {
+  animation: cardSweep 1.15s ease-out;
+}
+.battle-art-card b,
+.battle-art-card span,
+.battle-art-card small {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+.battle-art-card b {
+  color: #ffe28a;
+  font-size: 11px;
+}
+.battle-art-card span {
+  margin-top: 2px;
+  color: rgba(235, 246, 255, 0.72);
+  font-size: 9px;
+}
+.battle-art-card small {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 9px;
+}
+.battle-art-card.active {
+  border-color: rgba(255, 226, 138, 0.75);
+  box-shadow: 0 0 18px rgba(255, 226, 138, 0.2);
+}
+.battle-art-card.weakness small {
+  color: #ffbe58;
+}
+.battle-art-card.favored small {
+  color: #66dfff;
+}
+.battle-log-panel {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 8px 0 10px;
+  padding: 8px;
+  border: 1px solid rgba(255, 226, 138, 0.18);
+  border-radius: 8px;
+  background: rgba(4, 7, 22, 0.48);
+}
+.battle-log-panel b {
+  flex: 0 0 auto;
+  color: #ffe28a;
+  font-size: 11px;
+}
+.battle-log-panel span {
+  color: rgba(235, 246, 255, 0.72);
+  font-size: 10px;
+  line-height: 1.45;
+}
+@keyframes cardBattleSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes portraitBreath {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.045);
+  }
+}
+@keyframes auraPulse {
+  from {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+@keyframes beamPulse {
+  from {
+    opacity: 0.45;
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    filter: blur(1px);
+  }
+}
+@keyframes cardSweep {
+  to {
+    transform: translateX(120%);
+  }
+}
+@media (max-width: 520px) {
+  .rift-combat-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .combat-center {
+    flex-direction: row;
+  }
+  .combat-center i {
+    width: 48px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #66dfff, transparent);
+  }
+  .combat-center small {
+    max-width: none;
+  }
+  .art-card-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .hunt-panel,
 .relic-panel {
   margin-top: 10px;
