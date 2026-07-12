@@ -1,8 +1,15 @@
 <template>
   <Transition name="panel-fade">
-    <div v-if="open" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" @click.self="$emit('close')">
+    <div
+      v-if="open"
+      class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      @click.self="$emit('close')"
+    >
       <div class="game-panel w-full max-w-xs text-center relative">
-        <button class="absolute top-2 right-2 text-muted hover:text-text" @click="$emit('close')">
+        <button
+          class="absolute top-2 right-2 text-muted hover:text-text"
+          @click="$emit('close')"
+        >
           <X :size="14" />
         </button>
         <Divider title class="my-4" label="设置" />
@@ -12,10 +19,18 @@
             v-for="tab in SETTINGS_TABS"
             :key="tab.key"
             class="text-xs py-1 px-3 border rounded-xs transition-colors"
-            :class="activeTab === tab.key ? 'border-accent bg-accent/20 text-accent' : 'border-accent/20 text-muted hover:text-text'"
+            :class="
+              activeTab === tab.key
+                ? 'border-accent bg-accent/20 text-accent'
+                : 'border-accent/20 text-muted hover:text-text'
+            "
             @click="activeTab = tab.key"
           >
-            <component :is="tab.icon" :size="12" class="inline-block align-[-2px] mr-1" />
+            <component
+              :is="tab.icon"
+              :size="12"
+              class="inline-block align-[-2px] mr-1"
+            />
             {{ tab.label }}
           </button>
         </div>
@@ -28,10 +43,17 @@
               <div class="border border-accent/20 rounded-xs p-3 mr-1 mb-2">
                 <p class="text-xs text-muted mb-2">时间控制</p>
                 <div class="flex items-center justify-center space-x-2">
-                  <Button :icon="isPaused ? Play : Pause" :icon-size="12" class="py-1 px-3" @click="togglePause">
-                    {{ isPaused ? '继续' : '暂停' }}
+                  <Button
+                    :icon="isPaused ? Play : Pause"
+                    :icon-size="12"
+                    class="py-1 px-3"
+                    @click="togglePause"
+                  >
+                    {{ isPaused ? "继续" : "暂停" }}
                   </Button>
-                  <Button class="py-1 px-3" @click="cycleSpeed">速度 {{ gameSpeed }}×</Button>
+                  <Button class="py-1 px-3" @click="cycleSpeed"
+                    >速度 {{ gameSpeed }}×</Button
+                  >
                 </div>
               </div>
 
@@ -39,17 +61,35 @@
               <div class="border border-accent/20 rounded-xs p-3 mr-1 mb-2">
                 <p class="text-xs text-muted mb-2">音频</p>
                 <div class="flex items-center justify-center space-x-2">
-                  <Button :icon="sfxEnabled ? Volume2 : VolumeX" :icon-size="12" class="py-1 px-3" @click="toggleSfx">音效</Button>
-                  <Button :icon="bgmEnabled ? Headphones : HeadphoneOff" :icon-size="12" class="py-1 px-3" @click="toggleBgm">音乐</Button>
+                  <Button
+                    :icon="sfxEnabled ? Volume2 : VolumeX"
+                    :icon-size="12"
+                    class="py-1 px-3"
+                    @click="toggleSfx"
+                    >音效</Button
+                  >
+                  <Button
+                    :icon="bgmEnabled ? Headphones : HeadphoneOff"
+                    :icon-size="12"
+                    class="py-1 px-3"
+                    @click="toggleBgm"
+                    >音乐</Button
+                  >
                 </div>
               </div>
 
               <!-- 新手提示 -->
               <div class="border border-accent/20 rounded-xs p-3 mr-1 mb-2">
                 <p class="text-xs text-muted mb-2">新手提示</p>
-                <p class="text-[10px] text-muted/50 mb-2">柳村长的晨间建议和面板引导文字</p>
+                <p class="text-[10px] text-muted/50 mb-2">
+                  柳村长的晨间建议和面板引导文字
+                </p>
                 <div class="flex items-center justify-center space-x-2">
-                  <Button class="py-1 px-3" :class="{ '!bg-accent !text-bg': tutorialStore.enabled }" @click="tutorialStore.enabled = true">
+                  <Button
+                    class="py-1 px-3"
+                    :class="{ '!bg-accent !text-bg': tutorialStore.enabled }"
+                    @click="tutorialStore.enabled = true"
+                  >
                     开
                   </Button>
                   <Button
@@ -86,7 +126,9 @@
                 <template v-if="webdavConfig.enabled">
                   <div class="flex flex-col space-y-2">
                     <div>
-                      <label class="text-[10px] text-muted mb-0.5 block">服务器地址</label>
+                      <label class="text-[10px] text-muted mb-0.5 block"
+                        >服务器地址</label
+                      >
                       <input
                         v-model="webdavConfig.serverUrl"
                         placeholder="请输入WebDAV云同步服务器地址"
@@ -95,18 +137,24 @@
                       />
                     </div>
                     <div>
-                      <label class="text-[10px] text-muted mb-0.5 block">存储路径</label>
+                      <label class="text-[10px] text-muted mb-0.5 block"
+                        >存储路径</label
+                      >
                       <input
                         v-model="webdavConfig.path"
                         placeholder="如果没有路径需求的话可以为空"
                         class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors"
                         @change="saveWebdavConfig"
                       />
-                      <p class="text-[10px] text-muted/50 mt-0.5">填写网盘中已有的文件夹名，留空则存到根目录</p>
+                      <p class="text-[10px] text-muted/50 mt-0.5">
+                        填写网盘中已有的文件夹名，留空则存到根目录
+                      </p>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
-                        <label class="text-[10px] text-muted mb-0.5 block">用户名</label>
+                        <label class="text-[10px] text-muted mb-0.5 block"
+                          >用户名</label
+                        >
                         <input
                           v-model="webdavConfig.username"
                           placeholder="请输入用户名"
@@ -115,7 +163,9 @@
                         />
                       </div>
                       <div>
-                        <label class="text-[10px] text-muted mb-0.5 block">密码</label>
+                        <label class="text-[10px] text-muted mb-0.5 block"
+                          >密码</label
+                        >
                         <input
                           v-model="webdavConfig.password"
                           type="password"
@@ -127,26 +177,57 @@
                     </div>
                     <Button
                       class="py-1 px-3 text-xs w-full justify-center"
-                      :disabled="webdavTestStatus === 'testing' || !webdavConfig.serverUrl"
+                      :disabled="
+                        webdavTestStatus === 'testing' ||
+                        !webdavConfig.serverUrl
+                      "
                       @click="handleTestWebdav"
                     >
-                      {{ webdavTestStatus === 'testing' ? '测试中...' : '测试连接' }}
+                      {{
+                        webdavTestStatus === "testing"
+                          ? "测试中..."
+                          : "测试连接"
+                      }}
                     </Button>
-                    <p v-if="webdavTestStatus === 'success'" class="text-success text-xs text-center mt-1 break-words">连接成功</p>
-                    <p v-if="webdavTestStatus === 'failed'" class="text-danger text-xs text-center mt-1 break-words">
-                      {{ webdavTestError || '连接失败' }}
+                    <p
+                      v-if="webdavTestStatus === 'success'"
+                      class="text-success text-xs text-center mt-1 break-words"
+                    >
+                      连接成功
                     </p>
-                    <div v-if="webdavTraceLogs.length" class="border border-accent/20 rounded-xs p-2 bg-bg/40">
+                    <p
+                      v-if="webdavTestStatus === 'failed'"
+                      class="text-danger text-xs text-center mt-1 break-words"
+                    >
+                      {{ webdavTestError || "连接失败" }}
+                    </p>
+                    <div
+                      v-if="webdavTraceLogs.length"
+                      class="border border-accent/20 rounded-xs p-2 bg-bg/40"
+                    >
                       <div class="flex items-center justify-between mb-1">
                         <p class="text-[10px] text-muted">请求流程日志</p>
-                        <button class="text-[10px] text-muted hover:text-text" @click="clearWebdavTrace">清空</button>
+                        <button
+                          class="text-[10px] text-muted hover:text-text"
+                          @click="clearWebdavTrace"
+                        >
+                          清空
+                        </button>
                       </div>
                       <div class="max-h-28 overflow-y-auto text-left">
-                        <p v-for="(line, idx) in webdavTraceLogs" :key="idx" class="text-[10px] text-muted/80 leading-4 break-all">
+                        <p
+                          v-for="(line, idx) in webdavTraceLogs"
+                          :key="idx"
+                          class="text-[10px] text-muted/80 leading-4 break-all"
+                        >
                           {{ line }}
                         </p>
                       </div>
-                      <button class="webdav-log-copy text-[10px] text-muted hover:text-text">复制日志</button>
+                      <button
+                        class="webdav-log-copy text-[10px] text-muted hover:text-text"
+                      >
+                        复制日志
+                      </button>
                     </div>
                   </div>
                 </template>
@@ -167,7 +248,9 @@
                   :disabled="settingsStore.fontSize <= 12"
                   @click="settingsStore.changeFontSize(-1)"
                 />
-                <span class="text-sm w-8 text-center">{{ settingsStore.fontSize }}</span>
+                <span class="text-sm w-8 text-center">{{
+                  settingsStore.fontSize
+                }}</span>
                 <Button
                   class="py-1 px-3"
                   :icon="Plus"
@@ -186,7 +269,11 @@
                   v-for="t in THEMES"
                   :key="t.key"
                   class="w-8 h-8 border rounded-xs flex items-center justify-center text-[10px] transition-colors"
-                  :class="settingsStore.theme === t.key ? 'border-accent' : 'border-accent/20'"
+                  :class="
+                    settingsStore.theme === t.key
+                      ? 'border-accent'
+                      : 'border-accent/20'
+                  "
                   :style="{ backgroundColor: t.bg, color: t.text }"
                   :title="t.name"
                   @click="settingsStore.changeTheme(t.key)"
@@ -209,7 +296,9 @@
                     :key="pos.value"
                     class="w-8 h-6 border rounded-xs transition-colors flex items-center justify-center"
                     :class="
-                      settingsStore.qmsgPosition === pos.value ? 'border-accent bg-accent/20 text-accent' : 'border-accent/20 text-muted'
+                      settingsStore.qmsgPosition === pos.value
+                        ? 'border-accent bg-accent/20 text-accent'
+                        : 'border-accent/20 text-muted'
                     "
                     :title="pos.label"
                     @click="settingsStore.changeQmsgPosition(pos.value)"
@@ -230,7 +319,9 @@
                     :disabled="settingsStore.qmsgTimeout <= 500"
                     @click="changeTimeout(-500)"
                   />
-                  <span class="text-xs w-12 text-center">{{ (settingsStore.qmsgTimeout / 1000).toFixed(1) }}s</span>
+                  <span class="text-xs w-12 text-center"
+                    >{{ (settingsStore.qmsgTimeout / 1000).toFixed(1) }}s</span
+                  >
                   <Button
                     class="py-0 px-1.5"
                     :icon="Plus"
@@ -252,7 +343,9 @@
                     :disabled="settingsStore.qmsgMaxNums <= 1"
                     @click="changeMaxNums(-1)"
                   />
-                  <span class="text-xs w-6 text-center">{{ settingsStore.qmsgMaxNums }}</span>
+                  <span class="text-xs w-6 text-center">{{
+                    settingsStore.qmsgMaxNums
+                  }}</span>
                   <Button
                     class="py-0 px-1.5"
                     :icon="Plus"
@@ -269,14 +362,22 @@
                 <div class="flex items-center justify-center space-x-1 mb-2">
                   <Button
                     class="py-0 px-2"
-                    :class="settingsStore.qmsgIsLimitWidth ? '!bg-accent/20 !text-accent !border-accent' : ''"
+                    :class="
+                      settingsStore.qmsgIsLimitWidth
+                        ? '!bg-accent/20 !text-accent !border-accent'
+                        : ''
+                    "
                     @click="setBool('qmsgIsLimitWidth', true)"
                   >
                     开
                   </Button>
                   <Button
                     class="py-0 px-2"
-                    :class="!settingsStore.qmsgIsLimitWidth ? '!bg-accent/20 !text-accent !border-accent' : ''"
+                    :class="
+                      !settingsStore.qmsgIsLimitWidth
+                        ? '!bg-accent/20 !text-accent !border-accent'
+                        : ''
+                    "
                     @click="setBool('qmsgIsLimitWidth', false)"
                   >
                     关
@@ -292,7 +393,9 @@
                       :disabled="settingsStore.qmsgLimitWidthNum <= 100"
                       @click="changeLimitWidth(-50)"
                     />
-                    <span class="text-xs w-10 text-center">{{ settingsStore.qmsgLimitWidthNum }}</span>
+                    <span class="text-xs w-10 text-center">{{
+                      settingsStore.qmsgLimitWidthNum
+                    }}</span>
                     <Button
                       class="py-0 px-1.5"
                       :icon="Plus"
@@ -307,7 +410,11 @@
                       v-for="opt in WRAP_OPTIONS"
                       :key="opt.value"
                       class="!text-[10px] py-0 px-1.5"
-                      :class="settingsStore.qmsgLimitWidthWrap === opt.value ? '!bg-accent/20 !text-accent !border-accent' : ''"
+                      :class="
+                        settingsStore.qmsgLimitWidthWrap === opt.value
+                          ? '!bg-accent/20 !text-accent !border-accent'
+                          : ''
+                      "
                       @click="changeWrap(opt.value)"
                     >
                       {{ opt.label }}
@@ -317,20 +424,34 @@
               </div>
 
               <!-- 开关选项 -->
-              <div class="border border-accent/20 rounded-xs p-3 mr-1 flex flex-col space-y-2">
-                <div v-for="opt in TOGGLE_OPTIONS" :key="opt.key" class="flex flex-col items-center space-y-1">
+              <div
+                class="border border-accent/20 rounded-xs p-3 mr-1 flex flex-col space-y-2"
+              >
+                <div
+                  v-for="opt in TOGGLE_OPTIONS"
+                  :key="opt.key"
+                  class="flex flex-col items-center space-y-1"
+                >
                   <span class="text-xs text-muted">{{ opt.label }}</span>
                   <div class="flex items-center space-x-1">
                     <Button
                       class="py-0 px-2"
-                      :class="settingsStore[opt.key] ? '!bg-accent/20 !text-accent !border-accent' : ''"
+                      :class="
+                        settingsStore[opt.key]
+                          ? '!bg-accent/20 !text-accent !border-accent'
+                          : ''
+                      "
                       @click="setBool(opt.key, true)"
                     >
                       开
                     </Button>
                     <Button
                       class="py-0 px-2"
-                      :class="!settingsStore[opt.key] ? '!bg-accent/20 !text-accent !border-accent' : ''"
+                      :class="
+                        !settingsStore[opt.key]
+                          ? '!bg-accent/20 !text-accent !border-accent'
+                          : ''
+                      "
                       @click="setBool(opt.key, false)"
                     >
                       关
@@ -342,62 +463,94 @@
           </template>
         </div>
 
-          <!-- ===== 反馈 ===== -->
-          <template v-if="activeTab === 'feedback'">
-            <div class="max-h-[40vh] overflow-y-auto flex flex-col space-y-3">
-              <div class="border border-accent/20 rounded-xs p-3 mr-1">
-                <p class="text-xs text-muted mb-2">提交反馈</p>
-                <div class="flex space-x-2 mb-3">
-                  <button
-                    v-for="cat in FEEDBACK_CATEGORIES"
-                    :key="cat.key"
-                    class="flex-1 py-2 px-1 border rounded-xs text-xs transition-colors"
-                    :class="feedbackCategory === cat.key ? 'border-accent bg-accent/20 text-accent' : 'border-accent/20 text-muted hover:text-text'"
-                    @click="feedbackCategory = cat.key"
+        <!-- ===== 反馈 ===== -->
+        <template v-if="activeTab === 'feedback'">
+          <div class="max-h-[40vh] overflow-y-auto flex flex-col space-y-3">
+            <div class="border border-accent/20 rounded-xs p-3 mr-1">
+              <p class="text-xs text-muted mb-2">提交反馈</p>
+              <div class="flex space-x-2 mb-3">
+                <button
+                  v-for="cat in FEEDBACK_CATEGORIES"
+                  :key="cat.key"
+                  class="flex-1 py-2 px-1 border rounded-xs text-xs transition-colors"
+                  :class="
+                    feedbackCategory === cat.key
+                      ? 'border-accent bg-accent/20 text-accent'
+                      : 'border-accent/20 text-muted hover:text-text'
+                  "
+                  @click="feedbackCategory = cat.key"
+                >
+                  <component
+                    :is="cat.icon"
+                    :size="14"
+                    class="block mx-auto mb-1"
+                  />
+                  {{ cat.label }}
+                </button>
+              </div>
+              <div class="flex flex-col space-y-2">
+                <div>
+                  <label class="text-[10px] text-muted mb-0.5 block"
+                    >标题</label
                   >
-                    <component :is="cat.icon" :size="14" class="block mx-auto mb-1" />
-                    {{ cat.label }}
-                  </button>
+                  <input
+                    v-model="feedbackTitle"
+                    placeholder="简要描述你的反馈"
+                    maxlength="100"
+                    class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors"
+                  />
                 </div>
-                <div class="flex flex-col space-y-2">
-                  <div>
-                    <label class="text-[10px] text-muted mb-0.5 block">标题</label>
-                    <input
-                      v-model="feedbackTitle"
-                      placeholder="简要描述你的反馈"
-                      maxlength="100"
-                      class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label class="text-[10px] text-muted mb-0.5 block">详细内容</label>
-                    <textarea
-                      v-model="feedbackContent"
-                      placeholder="请详细描述..."
-                      maxlength="2000"
-                      rows="4"
-                      class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors resize-none"
-                    ></textarea>
-                  </div>
-                  <Button
-                    class="py-1 px-3 w-full justify-center"
-                    :disabled="feedbackBusy || !feedbackTitle.trim() || !feedbackContent.trim()"
-                    @click="submitFeedback"
+                <div>
+                  <label class="text-[10px] text-muted mb-0.5 block"
+                    >详细内容</label
                   >
-                    {{ feedbackBusy ? '提交中...' : '提交反馈' }}
-                  </Button>
-                  <p v-if="feedbackMsg" class="text-xs text-center" :class="feedbackOk ? 'text-success' : 'text-danger'">{{ feedbackMsg }}</p>
+                  <textarea
+                    v-model="feedbackContent"
+                    placeholder="请详细描述..."
+                    maxlength="2000"
+                    rows="4"
+                    class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors resize-none"
+                  ></textarea>
                 </div>
+                <Button
+                  class="py-1 px-3 w-full justify-center"
+                  :disabled="
+                    feedbackBusy ||
+                    !feedbackTitle.trim() ||
+                    !feedbackContent.trim()
+                  "
+                  @click="submitFeedback"
+                >
+                  {{ feedbackBusy ? "提交中..." : "提交反馈" }}
+                </Button>
+                <p
+                  v-if="feedbackMsg"
+                  class="text-xs text-center"
+                  :class="feedbackOk ? 'text-success' : 'text-danger'"
+                >
+                  {{ feedbackMsg }}
+                </p>
               </div>
             </div>
-          </template>
+          </div>
+        </template>
 
         <!-- 全局底部操作 -->
         <div class="grid grid-cols-2 gap-2 mt-3">
-          <Button :icon="Home" :icon-size="12" class="py-1 px-3 w-full justify-center" @click="goHome">
+          <Button
+            :icon="Home"
+            :icon-size="12"
+            class="py-1 px-3 w-full justify-center"
+            @click="goHome"
+          >
             首页
           </Button>
-          <Button :icon="FolderOpen" :icon-size="12" class="py-1 px-3 w-full justify-center" @click="showSaveManager = true">
+          <Button
+            :icon="FolderOpen"
+            :icon-size="12"
+            class="py-1 px-3 w-full justify-center"
+            @click="showSaveManager = true"
+          >
             存档管理
           </Button>
         </div>
@@ -412,219 +565,258 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, type Component } from 'vue'
-  import {
-    X,
-    Pause,
-    Play,
-    Volume2,
-    VolumeX,
-    Headphones,
-    HeadphoneOff,
-    FolderOpen,
-    Home,
-    Minus,
-    Plus,
-    ArrowUpLeft,
-    ArrowUp,
-    ArrowUpRight,
-    ArrowLeft,
-    Circle,
-    ArrowRight,
-    ArrowDownLeft,
-    ArrowDown,
-    ArrowDownRight,
-    Settings,
-    Palette,
-    Bell,
-    Bug,
-    Lightbulb,
-    MessageSquare
-  } from 'lucide-vue-next'
-  import Button from '@/components/game/Button.vue'
-  import Divider from '@/components/game/Divider.vue'
-  import { useAudio } from '@/composables/useAudio'
-  import { useGameClock } from '@/composables/useGameClock'
-  import { useGameLog } from '@/composables/useGameLog'
-  import { useSettingsStore, type QmsgPosition, type QmsgLimitWidthWrap } from '@/stores/useSettingsStore'
-  import { useTutorialStore } from '@/stores/useTutorialStore'
-  import { useWebdav } from '@/composables/useWebdav'
-  import { THEMES } from '@/data/themes'
-  import SaveManager from '@/components/game/SaveManager.vue'
-  import ClipboardJS from 'clipboard'
+import { ref, onMounted, onBeforeUnmount, type Component } from "vue";
+import {
+  X,
+  Pause,
+  Play,
+  Volume2,
+  VolumeX,
+  Headphones,
+  HeadphoneOff,
+  FolderOpen,
+  Home,
+  Minus,
+  Plus,
+  ArrowUpLeft,
+  ArrowUp,
+  ArrowUpRight,
+  ArrowLeft,
+  Circle,
+  ArrowRight,
+  ArrowDownLeft,
+  ArrowDown,
+  ArrowDownRight,
+  Settings,
+  Palette,
+  Bell,
+  Bug,
+  Lightbulb,
+  MessageSquare,
+} from "lucide-vue-next";
+import Button from "@/components/game/Button.vue";
+import Divider from "@/components/game/Divider.vue";
+import { useAudio } from "@/composables/useAudio";
+import { useGameClock } from "@/composables/useGameClock";
+import { useGameLog } from "@/composables/useGameLog";
+import {
+  useSettingsStore,
+  type QmsgPosition,
+  type QmsgLimitWidthWrap,
+} from "@/stores/useSettingsStore";
+import { useTutorialStore } from "@/stores/useTutorialStore";
+import { useWebdav } from "@/composables/useWebdav";
+import { THEMES } from "@/data/themes";
+import SaveManager from "@/components/game/SaveManager.vue";
+import ClipboardJS from "clipboard";
 
-  type SettingsTab = 'general' | 'display' | 'notification' | 'feedback'
+type SettingsTab = "general" | "display" | "notification" | "feedback";
 
-  type BoolSettingKey = 'qmsgIsLimitWidth' | 'qmsgAnimation' | 'qmsgAutoClose' | 'qmsgShowClose' | 'qmsgShowIcon' | 'qmsgShowReverse'
+type BoolSettingKey =
+  | "qmsgIsLimitWidth"
+  | "qmsgAnimation"
+  | "qmsgAutoClose"
+  | "qmsgShowClose"
+  | "qmsgShowIcon"
+  | "qmsgShowReverse";
 
-  const SETTINGS_TABS: { key: SettingsTab; label: string; icon: Component }[] = [
-    { key: 'general', label: '通用', icon: Settings },
-    { key: 'display', label: '外观', icon: Palette },
-    { key: 'notification', label: '通知', icon: Bell },
-  { key: 'feedback', label: '反馈', icon: MessageSquare }
-  ]
+const SETTINGS_TABS: { key: SettingsTab; label: string; icon: Component }[] = [
+  { key: "general", label: "通用", icon: Settings },
+  { key: "display", label: "外观", icon: Palette },
+  { key: "notification", label: "通知", icon: Bell },
+  { key: "feedback", label: "反馈", icon: MessageSquare },
+];
 
-  const QMSG_POSITIONS: { value: QmsgPosition; label: string; icon: Component }[] = [
-    { value: 'topleft', label: '左上', icon: ArrowUpLeft },
-    { value: 'top', label: '上', icon: ArrowUp },
-    { value: 'topright', label: '右上', icon: ArrowUpRight },
-    { value: 'left', label: '左', icon: ArrowLeft },
-    { value: 'center', label: '中', icon: Circle },
-    { value: 'right', label: '右', icon: ArrowRight },
-    { value: 'bottomleft', label: '左下', icon: ArrowDownLeft },
-    { value: 'bottom', label: '下', icon: ArrowDown },
-    { value: 'bottomright', label: '右下', icon: ArrowDownRight }
-  ]
+const QMSG_POSITIONS: {
+  value: QmsgPosition;
+  label: string;
+  icon: Component;
+}[] = [
+  { value: "topleft", label: "左上", icon: ArrowUpLeft },
+  { value: "top", label: "上", icon: ArrowUp },
+  { value: "topright", label: "右上", icon: ArrowUpRight },
+  { value: "left", label: "左", icon: ArrowLeft },
+  { value: "center", label: "中", icon: Circle },
+  { value: "right", label: "右", icon: ArrowRight },
+  { value: "bottomleft", label: "左下", icon: ArrowDownLeft },
+  { value: "bottom", label: "下", icon: ArrowDown },
+  { value: "bottomright", label: "右下", icon: ArrowDownRight },
+];
 
-  const WRAP_OPTIONS: { value: QmsgLimitWidthWrap; label: string }[] = [
-    { value: 'no-wrap', label: '不处理' },
-    { value: 'wrap', label: '换行' },
-    { value: 'ellipsis', label: '省略号' }
-  ]
+const WRAP_OPTIONS: { value: QmsgLimitWidthWrap; label: string }[] = [
+  { value: "no-wrap", label: "不处理" },
+  { value: "wrap", label: "换行" },
+  { value: "ellipsis", label: "省略号" },
+];
 
-  const TOGGLE_OPTIONS: { key: BoolSettingKey; label: string }[] = [
-    { key: 'qmsgAnimation', label: '弹出动画' },
-    { key: 'qmsgAutoClose', label: '自动关闭' },
-    { key: 'qmsgShowClose', label: '显示关闭图标' },
-    { key: 'qmsgShowIcon', label: '显示左侧图标' },
-    { key: 'qmsgShowReverse', label: '弹出方向逆反' }
-  ]
+const TOGGLE_OPTIONS: { key: BoolSettingKey; label: string }[] = [
+  { key: "qmsgAnimation", label: "弹出动画" },
+  { key: "qmsgAutoClose", label: "自动关闭" },
+  { key: "qmsgShowClose", label: "显示关闭图标" },
+  { key: "qmsgShowIcon", label: "显示左侧图标" },
+  { key: "qmsgShowReverse", label: "弹出方向逆反" },
+];
 
-  import { useRouter } from 'vue-router'
+import { useRouter } from "vue-router";
 
-  defineProps<{ open: boolean }>()
-  const emit = defineEmits<{ close: [] }>()
-  const router = useRouter()
+defineProps<{ open: boolean }>();
+const emit = defineEmits<{ close: [] }>();
+const router = useRouter();
 
-  const goHome = () => {
-    emit('close')
-    void router.push('/')
+const goHome = () => {
+  emit("close");
+  void router.push("/");
+};
+
+const activeTab = ref<SettingsTab>("general");
+const { sfxEnabled, bgmEnabled, toggleSfx, toggleBgm } = useAudio();
+const { isPaused, gameSpeed, togglePause, cycleSpeed } = useGameClock();
+const { showFloat } = useGameLog();
+const settingsStore = useSettingsStore();
+const tutorialStore = useTutorialStore();
+const {
+  webdavConfig,
+  webdavTestStatus,
+  webdavTestError,
+  webdavTraceLogs,
+  saveConfig: saveWebdavConfig,
+  clearTrace: clearWebdavTrace,
+  testConnection,
+} = useWebdav();
+
+const showSaveManager = ref(false);
+const FEEDBACK_CATEGORIES: { key: string; label: string; icon: Component }[] = [
+  { key: "feature", label: "功能建议", icon: Lightbulb },
+  { key: "bug", label: "BUG反馈", icon: Bug },
+  { key: "suggestion", label: "意见提交", icon: MessageSquare },
+];
+const feedbackCategory = ref("feature");
+const feedbackTitle = ref("");
+const feedbackContent = ref("");
+const feedbackBusy = ref(false);
+const feedbackMsg = ref("");
+const feedbackOk = ref(false);
+const accountToken = () =>
+  localStorage.getItem("taoyuan_account_token") ||
+  localStorage.getItem("taoyuan_token") ||
+  "";
+const playerName = () => {
+  try {
+    const d: any = JSON.parse(localStorage.getItem("taoyuan_data_0") || "{}");
+    return d.player?.playerName || d.playerName || "";
+  } catch {
+    return "";
   }
+};
 
-  const activeTab = ref<SettingsTab>('general')
-  const { sfxEnabled, bgmEnabled, toggleSfx, toggleBgm } = useAudio()
-  const { isPaused, gameSpeed, togglePause, cycleSpeed } = useGameClock()
-  const { showFloat } = useGameLog()
-  const settingsStore = useSettingsStore()
-  const tutorialStore = useTutorialStore()
-  const {
-    webdavConfig,
-    webdavTestStatus,
-    webdavTestError,
-    webdavTraceLogs,
-    saveConfig: saveWebdavConfig,
-    clearTrace: clearWebdavTrace,
-    testConnection
-  } = useWebdav()
-
-  const showSaveManager = ref(false)
-  const FEEDBACK_CATEGORIES: { key: string; label: string; icon: Component }[] = [
-    { key: 'feature', label: '功能建议', icon: Lightbulb },
-    { key: 'bug', label: 'BUG反馈', icon: Bug },
-    { key: 'suggestion', label: '意见提交', icon: MessageSquare }
-  ]
-  const feedbackCategory = ref('feature')
-  const feedbackTitle = ref('')
-  const feedbackContent = ref('')
-  const feedbackBusy = ref(false)
-  const feedbackMsg = ref('')
-  const feedbackOk = ref(false)
-  const accountToken = () => localStorage.getItem('taoyuan_account_token') || localStorage.getItem('taoyuan_token') || ''
-  const playerName = () => { try { const d: any = JSON.parse(localStorage.getItem('taoyuan_data_0')||'{}'); return d.player?.playerName||d.playerName||'' } catch { return '' } }
-
-  const submitFeedback = async () => {
-    if (feedbackBusy.value) return
-    feedbackBusy.value = true
-    feedbackMsg.value = ''
-    try {
-      const t = accountToken()
-      const headers: Record<string,string> = { 'Content-Type': 'application/json' }
-      if (t) headers['Authorization'] = 'Bearer ' + t
-      const res = await fetch('/api/feedbacks', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ category: feedbackCategory.value, title: feedbackTitle.value.trim(), content: feedbackContent.value.trim(), playerName: playerName() })
-      })
-      if (res.ok) {
-        feedbackOk.value = true
-        feedbackMsg.value = '感谢反馈！管理员会尽快查看。'
-        feedbackTitle.value = ''
-        feedbackContent.value = ''
-        feedbackCategory.value = 'feature'
-      } else {
-        const d = await res.json().catch(()=>({}))
-        feedbackOk.value = false
-        feedbackMsg.value = d.error || '提交失败，请稍后重试。'
-      }
-    } catch {
-      feedbackOk.value = false
-      feedbackMsg.value = '网络错误，请稍后重试。'
-    } finally {
-      feedbackBusy.value = false
+const submitFeedback = async () => {
+  if (feedbackBusy.value) return;
+  feedbackBusy.value = true;
+  feedbackMsg.value = "";
+  try {
+    const t = accountToken();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (t) headers["Authorization"] = "Bearer " + t;
+    const res = await fetch("/api/feedbacks", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        category: feedbackCategory.value,
+        title: feedbackTitle.value.trim(),
+        content: feedbackContent.value.trim(),
+        playerName: playerName(),
+      }),
+    });
+    if (res.ok) {
+      feedbackOk.value = true;
+      feedbackMsg.value = "感谢反馈！管理员会尽快查看。";
+      feedbackTitle.value = "";
+      feedbackContent.value = "";
+      feedbackCategory.value = "feature";
+    } else {
+      const d = await res.json().catch(() => ({}));
+      feedbackOk.value = false;
+      feedbackMsg.value = d.error || "提交失败，请稍后重试。";
     }
+  } catch {
+    feedbackOk.value = false;
+    feedbackMsg.value = "网络错误，请稍后重试。";
+  } finally {
+    feedbackBusy.value = false;
   }
+};
 
+let clipboard: ClipboardJS | null = null;
 
-  let clipboard: ClipboardJS | null = null
+onMounted(() => {
+  clipboard = new ClipboardJS(".webdav-log-copy", {
+    text: () => webdavTraceLogs.value.join("\n"),
+  });
+  clipboard.on("success", (e) => {
+    e.clearSelection();
+    showFloat("日志已复制", "success");
+  });
+  clipboard.on("error", () => {
+    document.body.classList.remove("select-none");
+    showFloat("复制失败，请手动复制", "danger");
+  });
+});
 
-  onMounted(() => {
-    clipboard = new ClipboardJS('.webdav-log-copy', {
-      text: () => webdavTraceLogs.value.join('\n')
-    })
-    clipboard.on('success', e => {
-      e.clearSelection()
-      showFloat('日志已复制', 'success')
-    })
-    clipboard.on('error', () => {
-      document.body.classList.remove('select-none')
-      showFloat('复制失败，请手动复制', 'danger')
-    })
-  })
+onBeforeUnmount(() => {
+  clipboard?.destroy();
+  clipboard = null;
+});
 
-  onBeforeUnmount(() => {
-    clipboard?.destroy()
-    clipboard = null
-  })
+const handleTestWebdav = async () => {
+  await testConnection();
+};
 
-  const handleTestWebdav = async () => {
-    await testConnection()
-  }
+const setWebdavEnabled = (val: boolean) => {
+  webdavConfig.value.enabled = val;
+  saveWebdavConfig();
+};
 
-  const setWebdavEnabled = (val: boolean) => {
-    webdavConfig.value.enabled = val
-    saveWebdavConfig()
-  }
+const changeTimeout = (delta: number) => {
+  settingsStore.qmsgTimeout = Math.min(
+    10000,
+    Math.max(500, settingsStore.qmsgTimeout + delta),
+  );
+  settingsStore.syncQmsgConfig();
+};
 
-  const changeTimeout = (delta: number) => {
-    settingsStore.qmsgTimeout = Math.min(10000, Math.max(500, settingsStore.qmsgTimeout + delta))
-    settingsStore.syncQmsgConfig()
-  }
+const changeMaxNums = (delta: number) => {
+  settingsStore.qmsgMaxNums = Math.min(
+    20,
+    Math.max(1, settingsStore.qmsgMaxNums + delta),
+  );
+  settingsStore.syncQmsgConfig();
+};
 
-  const changeMaxNums = (delta: number) => {
-    settingsStore.qmsgMaxNums = Math.min(20, Math.max(1, settingsStore.qmsgMaxNums + delta))
-    settingsStore.syncQmsgConfig()
-  }
+const changeLimitWidth = (delta: number) => {
+  settingsStore.qmsgLimitWidthNum = Math.min(
+    800,
+    Math.max(100, settingsStore.qmsgLimitWidthNum + delta),
+  );
+  settingsStore.syncQmsgConfig();
+};
 
-  const changeLimitWidth = (delta: number) => {
-    settingsStore.qmsgLimitWidthNum = Math.min(800, Math.max(100, settingsStore.qmsgLimitWidthNum + delta))
-    settingsStore.syncQmsgConfig()
-  }
+const changeWrap = (value: QmsgLimitWidthWrap) => {
+  settingsStore.qmsgLimitWidthWrap = value;
+  settingsStore.syncQmsgConfig();
+};
 
-  const changeWrap = (value: QmsgLimitWidthWrap) => {
-    settingsStore.qmsgLimitWidthWrap = value
-    settingsStore.syncQmsgConfig()
-  }
-
-  const setBool = (key: BoolSettingKey, value: boolean) => {
-    settingsStore[key] = value
-    settingsStore.syncQmsgConfig()
-  }
+const setBool = (key: BoolSettingKey, value: boolean) => {
+  settingsStore[key] = value;
+  settingsStore.syncQmsgConfig();
+};
 </script>
 
 <style scoped>
-  .yes-select {
-    -webkit-user-select: unset;
-    user-select: unset;
-    -webkit-touch-callout: unset;
-  }
+.yes-select {
+  -webkit-user-select: unset;
+  user-select: unset;
+  -webkit-touch-callout: unset;
+}
 </style>

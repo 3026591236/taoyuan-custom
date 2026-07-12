@@ -1,13 +1,13 @@
 <script setup lang="ts">
-  import { type Component } from 'vue'
+import { type Component } from "vue";
 
-  withDefaults(
-    defineProps<{
-      icon?: Component
-      iconSize?: number
-    }>(),
-    { iconSize: 14 }
-  )
+withDefaults(
+  defineProps<{
+    icon?: Component;
+    iconSize?: number;
+  }>(),
+  { iconSize: 14 },
+);
 </script>
 
 <template>

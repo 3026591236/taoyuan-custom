@@ -5,15 +5,15 @@
 - [x] 确定新游戏正式名：万象仙乡
 - [ ] 确定新作者/团队名
 - [ ] 新建原创世界观关键词表
-- [ ] 梳理所有公开页面中的“桃源乡”字样
+- [x] 梳理并清理主要玩家可见“桃源乡”字样（合规文档中的原版署名保留）
 - [ ] 梳理 package / app / manifest / title / meta 信息
-- [ ] 建立资产台账：原版、第三方、后续生成、后续原创
+- [x] 建立资产台账：原版、第三方、后续生成、后续原创（见 ASSET_LEDGER.md）
 
 ## B. 品牌替换
 
 - [ ] `package.json` name / author / description
 - [ ] 首页标题、浏览器标题、PWA/Capacitor 名称
-- [ ] Logo、favicon、首页主视觉
+- [x] Logo、首页主视觉（favicon/App icon 源图待继续生成多尺寸）
 - [ ] README 项目介绍
 - [ ] 后台/接口版本信息中的项目名
 

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="万象仙乡徽记">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="62%">
+      <stop offset="0" stop-color="#fff7c2"/>
+      <stop offset="0.28" stop-color="#71ffe4"/>
+      <stop offset="0.56" stop-color="#6b4dff"/>
+      <stop offset="1" stop-color="#12072f"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7b0"/>
+      <stop offset="0.45" stop-color="#f2b94d"/>
+      <stop offset="1" stop-color="#f8e28a"/>
+    </linearGradient>
+    <linearGradient id="jade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#baffef"/>
+      <stop offset="0.5" stop-color="#49d8ca"/>
+      <stop offset="1" stop-color="#4377ff"/>
+    </linearGradient>
+    <filter id="glow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feColorMatrix in="b" type="matrix" values="1 0 0 0 0.9 0 1 0 0 0.72 0 0 1 0 0.34 0 0 0 0.75 0"/>
+      <feBlend in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <circle cx="256" cy="256" r="238" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="232" fill="none" stroke="url(#gold)" stroke-width="14"/>
+  <circle cx="256" cy="256" r="198" fill="none" stroke="#e7d7ff" stroke-width="2" stroke-dasharray="10 16" opacity=".7"/>
+  <g opacity=".75" filter="url(#glow)">
+    <path d="M86 226c56-78 100-92 139-60 18 15 29 39 47 44 26 8 50-29 85-18 24 8 45 34 69 67-72-24-130-13-176 18-57 38-104 26-164-51z" fill="#92ffe4" opacity=".32"/>
+    <path d="M94 316h324" stroke="#ffe995" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+    <path d="M112 344h288" stroke="#7bfce8" stroke-width="3" stroke-linecap="round" opacity=".42"/>
+  </g>
+  <g fill="none" stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <path d="M256 90c57 42 93 89 105 140H151c12-51 48-98 105-140z" stroke-width="13"/>
+    <path d="M171 230c18-37 46-68 85-94 39 26 67 57 85 94" stroke-width="8" opacity=".9"/>
+    <path d="M256 136v230" stroke-width="8"/>
+    <path d="M146 276c52-28 89-28 110 0 21-28 58-28 110 0" stroke-width="8"/>
+  </g>
+  <g fill="url(#jade)">
+    <path d="M128 370c40-34 72-39 96-16 19 18 45 17 64-1 28-27 64-21 96 17-82 35-171 35-256 0z"/>
+    <path d="M177 319h36v54h-36zM236 304h40v74h-40zM300 326h35v48h-35z" opacity=".8"/>
+  </g>
+  <g fill="#fff6bd">
+    <circle cx="164" cy="132" r="5"/><circle cx="360" cy="150" r="4"/><circle cx="398" cy="245" r="3"/><circle cx="116" cy="250" r="3"/><circle cx="313" cy="96" r="3"/>
+  </g>
+  <text x="256" y="438" text-anchor="middle" font-family="serif" font-size="52" font-weight="700" fill="url(#gold)" letter-spacing="8">万象</text>
+</svg>

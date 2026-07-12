@@ -13,21 +13,21 @@
       </h1>
     </div>
 
-    <!-- 首页像素田园修仙图 -->
+    <!-- 万象仙乡首页主视觉 -->
     <div
-      class="home-pixel-scene w-full md:w-6/12"
-      aria-label="万象仙乡像素田园修仙图"
+      class="home-pixel-scene wanxiang-hero-card w-full md:w-6/12"
+      aria-label="万象仙乡主视觉：灵田村落、仙山云阙与星河仙门"
     >
       <img
-        :src="homePixelTaoyuan"
-        alt="万象仙乡像素田园修仙图"
+        :src="wanxiangHero"
+        alt="万象仙乡主视觉：灵田村落、仙山云阙与星河仙门"
         class="home-pixel-scene__image"
         draggable="false"
       />
       <div class="home-pixel-scene__caption">
-        <span>灵田初醒</span>
-        <span>炊烟入云</span>
-        <span>踏入仙途</span>
+        <span>万象灵田</span>
+        <span>星河仙门</span>
+        <span>云阙洞天</span>
       </div>
     </div>
 
@@ -455,7 +455,7 @@
             <div class="border border-accent/20 rounded-xs p-3">
               <p class="text-muted text-xs mb-1">原作品</p>
               <p class="text-xs">
-                原版《桃源乡》 by
+                原版项目署名：
                 <a
                   href="https://github.com/setube/taoyuan"
                   target="_blank"
@@ -864,7 +864,7 @@ import { FARM_MAP_DEFS } from "@/data/farmMaps";
 import _pkg from "../../package.json";
 import alipayImg from "@/assets/alipay.png";
 import wechatImg from "@/assets/wechat.png";
-import homePixelTaoyuan from "@/assets/home-pixel-taoyuan.svg";
+import wanxiangHero from "@/assets/wanxiang-hero.svg";
 import { useAudio } from "@/composables/useAudio";
 import { showFloat, addLog } from "@/composables/useGameLog";
 import { resetAllStoresForNewGame } from "@/composables/useResetGame";
@@ -1411,8 +1411,66 @@ const handleIdentityConfirm = () => {
 .logo {
   width: 50px;
   height: 50px;
-  background: url(@/assets/logo.png) center / contain no-repeat;
-  image-rendering: pixelated;
+  background: url(@/assets/wanxiang-logo.svg) center / contain no-repeat;
+  filter: drop-shadow(0 0 12px rgba(247, 211, 105, 0.55));
   flex-shrink: 0;
+}
+
+.wanxiang-hero-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(248, 211, 105, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(107, 255, 232, 0.18),
+    0 22px 70px rgba(31, 13, 80, 0.38),
+    inset 0 0 34px rgba(122, 93, 255, 0.2);
+}
+.wanxiang-hero-card::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  background: conic-gradient(
+    from 120deg,
+    transparent,
+    rgba(255, 239, 151, 0.24),
+    rgba(113, 255, 228, 0.18),
+    transparent 42%
+  );
+  animation: wanxiangHeroHalo 11s linear infinite;
+  pointer-events: none;
+}
+.wanxiang-hero-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 0 38%,
+    rgba(255, 255, 255, 0.22) 48%,
+    transparent 58% 100%
+  );
+  transform: translateX(-120%);
+  animation: wanxiangHeroSweep 5.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.wanxiang-hero-card .home-pixel-scene__image,
+.wanxiang-hero-card .home-pixel-scene__caption {
+  position: relative;
+  z-index: 1;
+}
+@keyframes wanxiangHeroHalo {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes wanxiangHeroSweep {
+  0%,
+  42% {
+    transform: translateX(-125%);
+  }
+  64%,
+  100% {
+    transform: translateX(125%);
+  }
 }
 </style>

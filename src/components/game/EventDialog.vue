@@ -13,7 +13,9 @@
         </p>
       </div>
       <div class="flex justify-center">
-        <Button v-if="!allLinesShown" class="w-full" @click="showNextLine">继续</Button>
+        <Button v-if="!allLinesShown" class="w-full" @click="showNextLine"
+          >继续</Button
+        >
         <Button v-else class="w-full" @click="emit('close')">关闭</Button>
       </div>
     </div>
@@ -21,26 +23,30 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
-  import type { SeasonEventDef } from '@/data/events'
-  import Button from '@/components/game/Button.vue'
+import { ref, computed } from "vue";
+import type { SeasonEventDef } from "@/data/events";
+import Button from "@/components/game/Button.vue";
 
-  const props = defineProps<{
-    event: SeasonEventDef
-  }>()
+const props = defineProps<{
+  event: SeasonEventDef;
+}>();
 
-  const emit = defineEmits<{
-    close: []
-  }>()
+const emit = defineEmits<{
+  close: [];
+}>();
 
-  const lineIndex = ref(1)
+const lineIndex = ref(1);
 
-  const displayedLines = computed(() => props.event.narrative.slice(0, lineIndex.value))
-  const allLinesShown = computed(() => lineIndex.value >= props.event.narrative.length)
+const displayedLines = computed(() =>
+  props.event.narrative.slice(0, lineIndex.value),
+);
+const allLinesShown = computed(
+  () => lineIndex.value >= props.event.narrative.length,
+);
 
-  const showNextLine = () => {
-    if (lineIndex.value < props.event.narrative.length) {
-      lineIndex.value++
-    }
+const showNextLine = () => {
+  if (lineIndex.value < props.event.narrative.length) {
+    lineIndex.value++;
   }
+};
 </script>

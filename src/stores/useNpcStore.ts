@@ -1,5 +1,5 @@
-import { ref, computed } from 'vue'
-import { defineStore } from 'pinia'
+import { ref, computed } from "vue";
+import { defineStore } from "pinia";
 import type {
   NpcState,
   FriendshipLevel,
@@ -10,76 +10,301 @@ import type {
   PregnancyStage,
   ProposalResponse,
   FarmHelperTask,
-  HiredHelper
-} from '@/types'
-import { NPCS, getNpcById, getHeartEventsForNpc, RECIPES } from '@/data'
-import { WEATHER_TIPS, getFortuneTip, getLivingTip, getRecipeTipMessage, NO_RECIPE_TIP, TIP_NPC_IDS } from '@/data/npcTips'
-import { getItemById } from '@/data/items'
-import { useInventoryStore } from './useInventoryStore'
-import { useGameStore } from './useGameStore'
-import { usePlayerStore } from './usePlayerStore'
-import { useCookingStore } from './useCookingStore'
-import { useFarmStore } from './useFarmStore'
-import { useAnimalStore } from './useAnimalStore'
-import { useFishPondStore } from './useFishPondStore'
-import { useGuildStore } from './useGuildStore'
-import { useFishingStore } from './useFishingStore'
-import { addLog } from '@/composables/useGameLog'
+  HiredHelper,
+} from "@/types";
+import { NPCS, getNpcById, getHeartEventsForNpc, RECIPES } from "@/data";
+import {
+  WEATHER_TIPS,
+  getFortuneTip,
+  getLivingTip,
+  getRecipeTipMessage,
+  NO_RECIPE_TIP,
+  TIP_NPC_IDS,
+} from "@/data/npcTips";
+import { getItemById } from "@/data/items";
+import { useInventoryStore } from "./useInventoryStore";
+import { useGameStore } from "./useGameStore";
+import { usePlayerStore } from "./usePlayerStore";
+import { useCookingStore } from "./useCookingStore";
+import { useFarmStore } from "./useFarmStore";
+import { useAnimalStore } from "./useAnimalStore";
+import { useFishPondStore } from "./useFishPondStore";
+import { useGuildStore } from "./useGuildStore";
+import { useFishingStore } from "./useFishingStore";
+import { addLog } from "@/composables/useGameLog";
 
 /** 好感等级阈值 (10心制, 每心250点, 上限2500) */
 const FRIENDSHIP_THRESHOLDS: { level: FriendshipLevel; min: number }[] = [
-  { level: 'bestFriend', min: 2000 },
-  { level: 'friendly', min: 1000 },
-  { level: 'acquaintance', min: 500 },
-  { level: 'stranger', min: 0 }
-]
+  { level: "bestFriend", min: 2000 },
+  { level: "friendly", min: 1000 },
+  { level: "acquaintance", min: 500 },
+  { level: "stranger", min: 0 },
+];
 
-type FamilySpecialty = 'farming' | 'ranching' | 'foraging' | 'cultivation'
-type ChildAptitude = 'farm' | 'animal' | 'study' | 'combat'
-type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project' | 'family_forge' | 'family_dongtian'
+type FamilySpecialty = "farming" | "ranching" | "foraging" | "cultivation";
+type ChildAptitude = "farm" | "animal" | "study" | "combat";
+type FamilyCommissionId =
+  | "family_meal"
+  | "child_study"
+  | "spouse_project"
+  | "family_forge"
+  | "family_dongtian";
 
-const FAMILY_SPECIALTY_NAMES: Record<FamilySpecialty, string> = { farming: '农务助手', ranching: '牧场管家', foraging: '采集搭档', cultivation: '修行伴侣' }
-const CHILD_APTITUDE_NAMES: Record<ChildAptitude, string> = { farm: '灵田', animal: '牧养', study: '读书', combat: '护院' }
-type VillageRequestId = 'village_feast' | 'clinic_herbs' | 'forge_delivery'
-type NpcLetterId = 'chen_spring' | 'liu_market' | 'lin_medicine'
-type ChildLongTermId = 'study_trip' | 'martial_drill' | 'family_archive'
-type WorldFeedbackId = 'village_reputation' | 'spouse_hearth' | 'children_growth' | 'sect_public_praise'
-const VILLAGE_REQUESTS: { id: VillageRequestId; title: string; desc: string; npcHint: string; itemId: string; itemName: string; quantity: number; friendship: number; money: number }[] = [
-  { id: 'village_feast', title: '村宴备席', desc: '村里准备节令小宴，需要灵米撑场面。', npcHint: '陈伯会记得你帮村里备席。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 2, friendship: 18, money: 900 },
-  { id: 'clinic_herbs', title: '医馆药篓', desc: '医馆缺基础草药，送去能提升村庄人情。', npcHint: '医馆与村民都会承你一份情。', itemId: 'herb', itemName: '草药', quantity: 5, friendship: 14, money: 650 },
-  { id: 'forge_delivery', title: '铁匠急件', desc: '铁匠铺赶制农具，需要铁锭周转。', npcHint: '铁匠铺会更愿意帮你留意好材料。', itemId: 'iron_bar', itemName: '铁锭', quantity: 2, friendship: 16, money: 850 }
-]
+const FAMILY_SPECIALTY_NAMES: Record<FamilySpecialty, string> = {
+  farming: "农务助手",
+  ranching: "牧场管家",
+  foraging: "采集搭档",
+  cultivation: "修行伴侣",
+};
+const CHILD_APTITUDE_NAMES: Record<ChildAptitude, string> = {
+  farm: "灵田",
+  animal: "牧养",
+  study: "读书",
+  combat: "护院",
+};
+type VillageRequestId = "village_feast" | "clinic_herbs" | "forge_delivery";
+type NpcLetterId = "chen_spring" | "liu_market" | "lin_medicine";
+type ChildLongTermId = "study_trip" | "martial_drill" | "family_archive";
+type WorldFeedbackId =
+  | "village_reputation"
+  | "spouse_hearth"
+  | "children_growth"
+  | "sect_public_praise";
+const VILLAGE_REQUESTS: {
+  id: VillageRequestId;
+  title: string;
+  desc: string;
+  npcHint: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  friendship: number;
+  money: number;
+}[] = [
+  {
+    id: "village_feast",
+    title: "村宴备席",
+    desc: "村里准备节令小宴，需要灵米撑场面。",
+    npcHint: "陈伯会记得你帮村里备席。",
+    itemId: "spirit_rice",
+    itemName: "蕴灵稻",
+    quantity: 2,
+    friendship: 18,
+    money: 900,
+  },
+  {
+    id: "clinic_herbs",
+    title: "医馆药篓",
+    desc: "医馆缺基础草药，送去能提升村庄人情。",
+    npcHint: "医馆与村民都会承你一份情。",
+    itemId: "herb",
+    itemName: "草药",
+    quantity: 5,
+    friendship: 14,
+    money: 650,
+  },
+  {
+    id: "forge_delivery",
+    title: "铁匠急件",
+    desc: "铁匠铺赶制农具，需要铁锭周转。",
+    npcHint: "铁匠铺会更愿意帮你留意好材料。",
+    itemId: "iron_bar",
+    itemName: "铁锭",
+    quantity: 2,
+    friendship: 16,
+    money: 850,
+  },
+];
 
-const NPC_LETTERS: { id: NpcLetterId; title: string; from: string; desc: string; itemId: string; itemName: string; quantity: number; friendship: number; rewardMoney: number }[] = [
-  { id: 'chen_spring', title: '陈伯来信·春耕托付', from: '陈伯', desc: '陈伯请你捐些蕴灵稻给村社粮仓，村里会记下这份人情。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 2, friendship: 20, rewardMoney: 1000 },
-  { id: 'liu_market', title: '柳娘来信·市集布置', from: '柳娘', desc: '柳娘想把市集布置得热闹些，需要云纹丝作彩缎。', itemId: 'cloud_silk', itemName: '云纹丝', quantity: 1, friendship: 24, rewardMoney: 1400 },
-  { id: 'lin_medicine', title: '林老来信·药庐补缺', from: '林老', desc: '林老说最近雨湿伤寒多，请你送一批草药去药庐。', itemId: 'herb', itemName: '草药', quantity: 8, friendship: 16, rewardMoney: 900 }
-]
+const NPC_LETTERS: {
+  id: NpcLetterId;
+  title: string;
+  from: string;
+  desc: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  friendship: number;
+  rewardMoney: number;
+}[] = [
+  {
+    id: "chen_spring",
+    title: "陈伯来信·春耕托付",
+    from: "陈伯",
+    desc: "陈伯请你捐些蕴灵稻给村社粮仓，村里会记下这份人情。",
+    itemId: "spirit_rice",
+    itemName: "蕴灵稻",
+    quantity: 2,
+    friendship: 20,
+    rewardMoney: 1000,
+  },
+  {
+    id: "liu_market",
+    title: "柳娘来信·市集布置",
+    from: "柳娘",
+    desc: "柳娘想把市集布置得热闹些，需要云纹丝作彩缎。",
+    itemId: "cloud_silk",
+    itemName: "云纹丝",
+    quantity: 1,
+    friendship: 24,
+    rewardMoney: 1400,
+  },
+  {
+    id: "lin_medicine",
+    title: "林老来信·药庐补缺",
+    from: "林老",
+    desc: "林老说最近雨湿伤寒多，请你送一批草药去药庐。",
+    itemId: "herb",
+    itemName: "草药",
+    quantity: 8,
+    friendship: 16,
+    rewardMoney: 900,
+  },
+];
 
-const CHILD_LONG_TERM_EVENTS: { id: ChildLongTermId; title: string; desc: string; itemId: string; itemName: string; quantity: number; money: number; study: number; bond: number; legacy: number }[] = [
-  { id: 'study_trip', title: '子女远学·村塾游历', desc: '送孩子去村塾和博物馆旁听，提升学识与家族见闻。', itemId: 'spirit_ink', itemName: '灵墨', quantity: 1, money: 1800, study: 18, bond: 8, legacy: 30 },
-  { id: 'martial_drill', title: '子女护院·晨练', desc: '安排孩子跟随巡山弟子晨练，积累护院胆气。', itemId: 'spirit_bone', itemName: '灵骨', quantity: 1, money: 2200, study: 8, bond: 12, legacy: 38 },
-  { id: 'family_archive', title: '族谱修订·家传札记', desc: '整理族谱与家传札记，让家族传承更像长期资产。', itemId: 'paper', itemName: '纸', quantity: 5, money: 1200, study: 12, bond: 16, legacy: 42 }
-]
+const CHILD_LONG_TERM_EVENTS: {
+  id: ChildLongTermId;
+  title: string;
+  desc: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  money: number;
+  study: number;
+  bond: number;
+  legacy: number;
+}[] = [
+  {
+    id: "study_trip",
+    title: "子女远学·村塾游历",
+    desc: "送孩子去村塾和博物馆旁听，提升学识与家族见闻。",
+    itemId: "spirit_ink",
+    itemName: "灵墨",
+    quantity: 1,
+    money: 1800,
+    study: 18,
+    bond: 8,
+    legacy: 30,
+  },
+  {
+    id: "martial_drill",
+    title: "子女护院·晨练",
+    desc: "安排孩子跟随巡山弟子晨练，积累护院胆气。",
+    itemId: "spirit_bone",
+    itemName: "灵骨",
+    quantity: 1,
+    money: 2200,
+    study: 8,
+    bond: 12,
+    legacy: 38,
+  },
+  {
+    id: "family_archive",
+    title: "族谱修订·家传札记",
+    desc: "整理族谱与家传札记，让家族传承更像长期资产。",
+    itemId: "paper",
+    itemName: "纸",
+    quantity: 5,
+    money: 1200,
+    study: 12,
+    bond: 16,
+    legacy: 42,
+  },
+];
 
-const WORLD_FEEDBACKS: { id: WorldFeedbackId; title: string; desc: string; requirement: string; rewardText: string }[] = [
-  { id: 'village_reputation', title: '村庄回响·人情渐暖', desc: '你常帮村里备席、送药、回信，桃源村开始把你当成真正的自家人。', requirement: '全村平均好感达到2心/500', rewardText: '铜钱+1600，全村好感+8，家传经验+18' },
-  { id: 'spouse_hearth', title: '家宅回响·灯火有人等', desc: '伴侣会根据婚后天数和日常照料给出回应，让婚姻不只是状态标签。', requirement: '结婚满7天', rewardText: '铜钱+1800，伴侣好感+28，家传经验+45' },
-  { id: 'children_growth', title: '后代回响·家学成章', desc: '子女的学识与羁绊沉淀为家族名望，村里会谈起这家的家风。', requirement: '任一子女学识+羁绊达到80', rewardText: '铜钱+2200，子女羁绊+8，家传经验+65' },
-  { id: 'sect_public_praise', title: '宗门回响·乡里传名', desc: '公会和宗门贡献会反哺村庄声望，战斗与社交开始互相回应。', requirement: '公会贡献达到300', rewardText: '铜钱+2600，全村好感+10，家传经验+35' }
-]
+const WORLD_FEEDBACKS: {
+  id: WorldFeedbackId;
+  title: string;
+  desc: string;
+  requirement: string;
+  rewardText: string;
+}[] = [
+  {
+    id: "village_reputation",
+    title: "村庄回响·人情渐暖",
+    desc: "你常帮村里备席、送药、回信，桃源村开始把你当成真正的自家人。",
+    requirement: "全村平均好感达到2心/500",
+    rewardText: "铜钱+1600，全村好感+8，家传经验+18",
+  },
+  {
+    id: "spouse_hearth",
+    title: "家宅回响·灯火有人等",
+    desc: "伴侣会根据婚后天数和日常照料给出回应，让婚姻不只是状态标签。",
+    requirement: "结婚满7天",
+    rewardText: "铜钱+1800，伴侣好感+28，家传经验+45",
+  },
+  {
+    id: "children_growth",
+    title: "后代回响·家学成章",
+    desc: "子女的学识与羁绊沉淀为家族名望，村里会谈起这家的家风。",
+    requirement: "任一子女学识+羁绊达到80",
+    rewardText: "铜钱+2200，子女羁绊+8，家传经验+65",
+  },
+  {
+    id: "sect_public_praise",
+    title: "宗门回响·乡里传名",
+    desc: "公会和宗门贡献会反哺村庄声望，战斗与社交开始互相回应。",
+    requirement: "公会贡献达到300",
+    rewardText: "铜钱+2600，全村好感+10，家传经验+35",
+  },
+];
 
 const FAMILY_COMMISSIONS = [
-  { id: 'family_meal' as FamilyCommissionId, title: '家宴备料', desc: '准备一桌家宴，凝聚家人心气。', itemId: 'spirit_rice', itemName: '蕴灵稻', quantity: 3, rewardMoney: 1800, legacyExp: 25 },
-  { id: 'child_study' as FamilyCommissionId, title: '启蒙读书', desc: '为孩子准备启蒙材料，提升成长资质。', itemId: 'spirit_ink', itemName: '灵墨', quantity: 1, rewardMoney: 1200, legacyExp: 35 },
-  { id: 'spouse_project' as FamilyCommissionId, title: '家业筹划', desc: '与配偶共同筹划家业，沉淀家传经验。', itemId: 'wood', itemName: '木材', quantity: 20, rewardMoney: 2200, legacyExp: 30 },
-  { id: 'family_forge' as FamilyCommissionId, title: '家传护器', desc: '家人协助整理修仙装备维护材料，提升家族护道经验。', itemId: 'mystic_iron', itemName: '玄铁', quantity: 1, rewardMoney: 3600, legacyExp: 55 },
-  { id: 'family_dongtian' as FamilyCommissionId, title: '洞天祭扫', desc: '配偶与子女共同维护洞府/洞天香火，沉淀凡界回响。', itemId: 'spirit_stone', itemName: '灵石', quantity: 12, rewardMoney: 4200, legacyExp: 65 }
-]
+  {
+    id: "family_meal" as FamilyCommissionId,
+    title: "家宴备料",
+    desc: "准备一桌家宴，凝聚家人心气。",
+    itemId: "spirit_rice",
+    itemName: "蕴灵稻",
+    quantity: 3,
+    rewardMoney: 1800,
+    legacyExp: 25,
+  },
+  {
+    id: "child_study" as FamilyCommissionId,
+    title: "启蒙读书",
+    desc: "为孩子准备启蒙材料，提升成长资质。",
+    itemId: "spirit_ink",
+    itemName: "灵墨",
+    quantity: 1,
+    rewardMoney: 1200,
+    legacyExp: 35,
+  },
+  {
+    id: "spouse_project" as FamilyCommissionId,
+    title: "家业筹划",
+    desc: "与配偶共同筹划家业，沉淀家传经验。",
+    itemId: "wood",
+    itemName: "木材",
+    quantity: 20,
+    rewardMoney: 2200,
+    legacyExp: 30,
+  },
+  {
+    id: "family_forge" as FamilyCommissionId,
+    title: "家传护器",
+    desc: "家人协助整理修仙装备维护材料，提升家族护道经验。",
+    itemId: "mystic_iron",
+    itemName: "玄铁",
+    quantity: 1,
+    rewardMoney: 3600,
+    legacyExp: 55,
+  },
+  {
+    id: "family_dongtian" as FamilyCommissionId,
+    title: "洞天祭扫",
+    desc: "配偶与子女共同维护洞府/洞天香火，沉淀凡界回响。",
+    itemId: "spirit_stone",
+    itemName: "灵石",
+    quantity: 12,
+    rewardMoney: 4200,
+    legacyExp: 65,
+  },
+];
 
-export const useNpcStore = defineStore('npc', () => {
+export const useNpcStore = defineStore("npc", () => {
   const npcStates = ref<NpcState[]>(
-    NPCS.map(npc => ({
+    NPCS.map((npc) => ({
       npcId: npc.id,
       friendship: 0,
       talkedToday: false,
@@ -88,55 +313,58 @@ export const useNpcStore = defineStore('npc', () => {
       dating: false,
       married: false,
       zhiji: false,
-      triggeredHeartEvents: []
-    }))
-  )
+      triggeredHeartEvents: [],
+    })),
+  );
 
   /** 每日提示NPC是否已给过提示 */
-  const tipGivenToday = ref<Record<string, boolean>>({})
+  const tipGivenToday = ref<Record<string, boolean>>({});
 
   /** 子女列表 */
-  const children = ref<ChildState[]>([])
+  const children = ref<ChildState[]>([]);
 
   /** 子女ID自增计数器（避免释放后ID冲突） */
-  const nextChildId = ref<number>(0)
+  const nextChildId = ref<number>(0);
 
   /** 结婚天数计数 */
-  const daysMarried = ref<number>(0)
+  const daysMarried = ref<number>(0);
 
   /** 知己天数计数 */
-  const daysZhiji = ref<number>(0)
+  const daysZhiji = ref<number>(0);
 
   /** 孕期状态（null = 无孕期） */
-  const pregnancy = ref<PregnancyState | null>(null)
+  const pregnancy = ref<PregnancyState | null>(null);
 
   /** 配偶是否已提议要孩子（等待玩家回应） */
-  const childProposalPending = ref<boolean>(false)
+  const childProposalPending = ref<boolean>(false);
 
   /** 提议被拒绝次数（影响再次提议冷却） */
-  const childProposalDeclinedCount = ref<number>(0)
+  const childProposalDeclinedCount = ref<number>(0);
 
   /** 距上次拒绝/等待的天数 */
-  const daysSinceProposalDecline = ref<number>(0)
+  const daysSinceProposalDecline = ref<number>(0);
 
   /** 婚礼倒计时 (0=无婚礼待举行) */
-  const weddingCountdown = ref<number>(0)
+  const weddingCountdown = ref<number>(0);
 
   /** 婚礼对象NPC ID */
-  const weddingNpcId = ref<string | null>(null)
+  const weddingNpcId = ref<string | null>(null);
 
   // ============================================================
   // 雇工系统
   // ============================================================
 
-  const hiredHelpers = ref<HiredHelper[]>([])
-  const familyLegacyNeed = computed(() => 80 + familyLegacyLevel.value * 60)
-  const familyBonusText = computed(() => `家传Lv.${familyLegacyLevel.value}：家业/子女/配偶协助收益+${Math.min(25, familyLegacyLevel.value * 2)}%`)
-  const spouseSpecialty = ref<FamilySpecialty | null>(null)
-  const familyLegacyLevel = ref(1)
-  const familyLegacyExp = ref(0)
-  const familyCommissionClaimed = ref<string[]>([])
-  const MAX_HELPERS = 2
+  const hiredHelpers = ref<HiredHelper[]>([]);
+  const familyLegacyNeed = computed(() => 80 + familyLegacyLevel.value * 60);
+  const familyBonusText = computed(
+    () =>
+      `家传Lv.${familyLegacyLevel.value}：家业/子女/配偶协助收益+${Math.min(25, familyLegacyLevel.value * 2)}%`,
+  );
+  const spouseSpecialty = ref<FamilySpecialty | null>(null);
+  const familyLegacyLevel = ref(1);
+  const familyLegacyExp = ref(0);
+  const familyCommissionClaimed = ref<string[]>([]);
+  const MAX_HELPERS = 2;
 
   /** 雇工日薪 */
   const HELPER_WAGES: Record<FarmHelperTask, number> = {
@@ -144,1100 +372,1391 @@ export const useNpcStore = defineStore('npc', () => {
     feed: 150,
     harvest: 200,
     weed: 100,
-    bait: 80
-  }
+    bait: 80,
+  };
 
   /** 雇工任务名称 */
   const HELPER_TASK_NAMES: Record<FarmHelperTask, string> = {
-    water: '浇水',
-    feed: '喂食',
-    harvest: '收获',
-    weed: '除草除虫',
-    bait: '装饵'
-  }
+    water: "浇水",
+    feed: "喂食",
+    harvest: "收获",
+    weed: "除草除虫",
+    bait: "装饵",
+  };
 
   /** 可雇佣的NPC列表（好感>=1000 且 未被雇佣 且 非配偶/知己） */
-  const getHireableNpcs = (): { npcId: string; name: string; friendship: number }[] => {
+  const getHireableNpcs = (): {
+    npcId: string;
+    name: string;
+    friendship: number;
+  }[] => {
     return npcStates.value
-      .filter(s => {
-        if (s.friendship < 1000) return false
-        if (s.married || s.zhiji) return false
-        if (hiredHelpers.value.some(h => h.npcId === s.npcId)) return false
-        return true
+      .filter((s) => {
+        if (s.friendship < 1000) return false;
+        if (s.married || s.zhiji) return false;
+        if (hiredHelpers.value.some((h) => h.npcId === s.npcId)) return false;
+        return true;
       })
-      .map(s => {
-        const def = getNpcById(s.npcId)
-        return { npcId: s.npcId, name: def?.name ?? s.npcId, friendship: s.friendship }
-      })
-  }
+      .map((s) => {
+        const def = getNpcById(s.npcId);
+        return {
+          npcId: s.npcId,
+          name: def?.name ?? s.npcId,
+          friendship: s.friendship,
+        };
+      });
+  };
 
   /** 雇佣NPC */
-  const hireHelper = (npcId: string, task: FarmHelperTask): { success: boolean; message: string } => {
-    const state = getNpcState(npcId)
-    if (!state) return { success: false, message: 'NPC不存在。' }
-    if (state.friendship < 1000) return { success: false, message: '好感度不足（需要4心/1000）。' }
-    if (state.married || state.zhiji) return { success: false, message: '伴侣和知己不可雇佣。' }
-    if (hiredHelpers.value.length >= MAX_HELPERS) return { success: false, message: `最多雇佣${MAX_HELPERS}名帮手。` }
-    if (hiredHelpers.value.some(h => h.npcId === npcId)) return { success: false, message: '此人已被雇佣。' }
+  const hireHelper = (
+    npcId: string,
+    task: FarmHelperTask,
+  ): { success: boolean; message: string } => {
+    const state = getNpcState(npcId);
+    if (!state) return { success: false, message: "NPC不存在。" };
+    if (state.friendship < 1000)
+      return { success: false, message: "好感度不足（需要4心/1000）。" };
+    if (state.married || state.zhiji)
+      return { success: false, message: "伴侣和知己不可雇佣。" };
+    if (hiredHelpers.value.length >= MAX_HELPERS)
+      return { success: false, message: `最多雇佣${MAX_HELPERS}名帮手。` };
+    if (hiredHelpers.value.some((h) => h.npcId === npcId))
+      return { success: false, message: "此人已被雇佣。" };
 
-    const npcDef = getNpcById(npcId)
-    const name = npcDef?.name ?? npcId
-    hiredHelpers.value.push({ npcId, task, dailyWage: HELPER_WAGES[task] })
-    return { success: true, message: `${name}开始帮你${HELPER_TASK_NAMES[task]}了！(日薪${HELPER_WAGES[task]}文)` }
-  }
+    const npcDef = getNpcById(npcId);
+    const name = npcDef?.name ?? npcId;
+    hiredHelpers.value.push({ npcId, task, dailyWage: HELPER_WAGES[task] });
+    return {
+      success: true,
+      message: `${name}开始帮你${HELPER_TASK_NAMES[task]}了！(日薪${HELPER_WAGES[task]}文)`,
+    };
+  };
 
   /** 解雇 */
-  const dismissHelper = (npcId: string): { success: boolean; message: string } => {
-    const idx = hiredHelpers.value.findIndex(h => h.npcId === npcId)
-    if (idx < 0) return { success: false, message: '此人未被雇佣。' }
+  const dismissHelper = (
+    npcId: string,
+  ): { success: boolean; message: string } => {
+    const idx = hiredHelpers.value.findIndex((h) => h.npcId === npcId);
+    if (idx < 0) return { success: false, message: "此人未被雇佣。" };
 
-    const npcDef = getNpcById(npcId)
-    const name = npcDef?.name ?? npcId
-    hiredHelpers.value.splice(idx, 1)
-    return { success: true, message: `${name}已离开。` }
-  }
+    const npcDef = getNpcById(npcId);
+    const name = npcDef?.name ?? npcId;
+    hiredHelpers.value.splice(idx, 1);
+    return { success: true, message: `${name}已离开。` };
+  };
 
   /** 每日雇工结算（useEndDay调用） */
-  const processDailyHelpers = (taskFilter?: FarmHelperTask[]): { messages: string[]; dismissedNpcs: string[]; allFed: boolean } => {
-    const playerStore = usePlayerStore()
-    const farmStore = useFarmStore()
-    const animalStore = useAnimalStore()
-    const inventoryStore = useInventoryStore()
-    const messages: string[] = []
-    const dismissed: string[] = []
-    let allFed = false
+  const processDailyHelpers = (
+    taskFilter?: FarmHelperTask[],
+  ): { messages: string[]; dismissedNpcs: string[]; allFed: boolean } => {
+    const playerStore = usePlayerStore();
+    const farmStore = useFarmStore();
+    const animalStore = useAnimalStore();
+    const inventoryStore = useInventoryStore();
+    const messages: string[] = [];
+    const dismissed: string[] = [];
+    let allFed = false;
 
     for (const helper of [...hiredHelpers.value]) {
       // 按任务类型过滤
-      if (taskFilter && !taskFilter.includes(helper.task)) continue
+      if (taskFilter && !taskFilter.includes(helper.task)) continue;
 
-      const npcDef = getNpcById(helper.npcId)
-      const name = npcDef?.name ?? '雇工'
-      const state = getNpcState(helper.npcId)
+      const npcDef = getNpcById(helper.npcId);
+      const name = npcDef?.name ?? "雇工";
+      const state = getNpcState(helper.npcId);
 
       // 已变为配偶/知己 → 自动解雇（不收工资）
       if (state && (state.married || state.zhiji)) {
-        hiredHelpers.value = hiredHelpers.value.filter(h => h.npcId !== helper.npcId)
-        messages.push(`${name}已成为你的${state.married ? '伴侣' : '知己'}，不再担任雇工。`)
-        dismissed.push(helper.npcId)
-        continue
+        hiredHelpers.value = hiredHelpers.value.filter(
+          (h) => h.npcId !== helper.npcId,
+        );
+        messages.push(
+          `${name}已成为你的${state.married ? "伴侣" : "知己"}，不再担任雇工。`,
+        );
+        dismissed.push(helper.npcId);
+        continue;
       }
 
-      const efficiency = state && state.friendship >= 2000 ? 1.5 : 1.0
+      const efficiency = state && state.friendship >= 2000 ? 1.5 : 1.0;
 
       // 扣工资
       if (!playerStore.spendMoney(helper.dailyWage)) {
-        hiredHelpers.value = hiredHelpers.value.filter(h => h.npcId !== helper.npcId)
-        messages.push(`付不起${name}的工资，${name}不干了。`)
-        dismissed.push(helper.npcId)
-        continue
+        hiredHelpers.value = hiredHelpers.value.filter(
+          (h) => h.npcId !== helper.npcId,
+        );
+        messages.push(`付不起${name}的工资，${name}不干了。`);
+        dismissed.push(helper.npcId);
+        continue;
       }
 
       switch (helper.task) {
-        case 'water': {
-          const unwatered = farmStore.plots.filter(p => (p.state === 'planted' || p.state === 'growing') && !p.watered)
-          const count = Math.min(unwatered.length, Math.floor(4 * efficiency) + Math.floor(Math.random() * 3))
-          for (let i = 0; i < count; i++) farmStore.waterPlot(unwatered[i]!.id)
-          if (count > 0) messages.push(`${name}帮你浇了${count}块地。(-${helper.dailyWage}文)`)
-          else messages.push(`${name}今天没什么可浇的。(-${helper.dailyWage}文)`)
-          break
+        case "water": {
+          const unwatered = farmStore.plots.filter(
+            (p) =>
+              (p.state === "planted" || p.state === "growing") && !p.watered,
+          );
+          const count = Math.min(
+            unwatered.length,
+            Math.floor(4 * efficiency) + Math.floor(Math.random() * 3),
+          );
+          for (let i = 0; i < count; i++) farmStore.waterPlot(unwatered[i]!.id);
+          if (count > 0)
+            messages.push(
+              `${name}帮你浇了${count}块地。(-${helper.dailyWage}文)`,
+            );
+          else
+            messages.push(`${name}今天没什么可浇的。(-${helper.dailyWage}文)`);
+          break;
         }
-        case 'feed': {
-          const result = animalStore.feedAll()
-          const fishPondStore = useFishPondStore()
-          const fedFish = fishPondStore.pond.built && !fishPondStore.pond.fedToday ? fishPondStore.feedFish() : false
-          allFed = result.noFeedCount === 0 && result.fedCount > 0
+        case "feed": {
+          const result = animalStore.feedAll();
+          const fishPondStore = useFishPondStore();
+          const fedFish =
+            fishPondStore.pond.built && !fishPondStore.pond.fedToday
+              ? fishPondStore.feedFish()
+              : false;
+          allFed = result.noFeedCount === 0 && result.fedCount > 0;
           if (result.fedCount > 0 && fedFish) {
-            messages.push(`${name}帮你喂了${result.fedCount}只牲畜和鱼塘的鱼。(-${helper.dailyWage}文)`)
+            messages.push(
+              `${name}帮你喂了${result.fedCount}只牲畜和鱼塘的鱼。(-${helper.dailyWage}文)`,
+            );
           } else if (result.fedCount > 0) {
-            messages.push(`${name}帮你喂了${result.fedCount}只牲畜。(-${helper.dailyWage}文)`)
+            messages.push(
+              `${name}帮你喂了${result.fedCount}只牲畜。(-${helper.dailyWage}文)`,
+            );
           } else if (fedFish) {
-            messages.push(`${name}帮你喂了鱼塘的鱼。(-${helper.dailyWage}文)`)
+            messages.push(`${name}帮你喂了鱼塘的鱼。(-${helper.dailyWage}文)`);
           } else if (result.noFeedCount > 0) {
-            messages.push(`${name}发现草料不足，${result.noFeedCount}只牲畜未能喂食。(-${helper.dailyWage}文)`)
+            messages.push(
+              `${name}发现草料不足，${result.noFeedCount}只牲畜未能喂食。(-${helper.dailyWage}文)`,
+            );
           } else {
-            messages.push(`${name}今天没什么需要喂的。(-${helper.dailyWage}文)`)
+            messages.push(
+              `${name}今天没什么需要喂的。(-${helper.dailyWage}文)`,
+            );
           }
-          break
+          break;
         }
-        case 'harvest': {
-          const harvestable = farmStore.plots.filter(p => p.state === 'harvestable')
-          const count = Math.min(harvestable.length, Math.floor(5 * efficiency))
-          let harvested = 0
+        case "harvest": {
+          const harvestable = farmStore.plots.filter(
+            (p) => p.state === "harvestable",
+          );
+          const count = Math.min(
+            harvestable.length,
+            Math.floor(5 * efficiency),
+          );
+          let harvested = 0;
           for (let i = 0; i < count; i++) {
-            const result = farmStore.harvestPlot(harvestable[i]!.id)
+            const result = farmStore.harvestPlot(harvestable[i]!.id);
             if (result.cropId) {
-              inventoryStore.addItem(result.cropId, 1, 'normal')
-              harvested++
+              inventoryStore.addItem(result.cropId, 1, "normal");
+              harvested++;
             }
           }
-          if (harvested > 0) messages.push(`${name}帮你收了${harvested}块地的庄稼。(-${helper.dailyWage}文)`)
-          else messages.push(`${name}今天没什么可收的。(-${helper.dailyWage}文)`)
-          break
+          if (harvested > 0)
+            messages.push(
+              `${name}帮你收了${harvested}块地的庄稼。(-${helper.dailyWage}文)`,
+            );
+          else
+            messages.push(`${name}今天没什么可收的。(-${helper.dailyWage}文)`);
+          break;
         }
-        case 'weed': {
-          let cleared = 0
+        case "weed": {
+          let cleared = 0;
           for (const plot of farmStore.plots) {
             if (plot.weedy) {
-              farmStore.clearWeed(plot.id)
-              cleared++
+              farmStore.clearWeed(plot.id);
+              cleared++;
             }
             if (plot.infested) {
-              farmStore.curePest(plot.id)
-              cleared++
+              farmStore.curePest(plot.id);
+              cleared++;
             }
           }
-          if (cleared > 0) messages.push(`${name}清理了${cleared}处杂草和虫害。(-${helper.dailyWage}文)`)
-          else messages.push(`${name}今天田里挺干净的。(-${helper.dailyWage}文)`)
-          break
+          if (cleared > 0)
+            messages.push(
+              `${name}清理了${cleared}处杂草和虫害。(-${helper.dailyWage}文)`,
+            );
+          else
+            messages.push(`${name}今天田里挺干净的。(-${helper.dailyWage}文)`);
+          break;
         }
-        case 'bait': {
-          const fishingStore = useFishingStore()
-          const baited = fishingStore.baitAllCrabPots()
-          if (baited > 0) messages.push(`${name}帮你给${baited}个蟹笼装了饵。(-${helper.dailyWage}文)`)
-          else messages.push(`${name}今天蟹笼都有饵了。(-${helper.dailyWage}文)`)
-          break
+        case "bait": {
+          const fishingStore = useFishingStore();
+          const baited = fishingStore.baitAllCrabPots();
+          if (baited > 0)
+            messages.push(
+              `${name}帮你给${baited}个蟹笼装了饵。(-${helper.dailyWage}文)`,
+            );
+          else
+            messages.push(`${name}今天蟹笼都有饵了。(-${helper.dailyWage}文)`);
+          break;
         }
       }
     }
-    return { messages, dismissedNpcs: dismissed, allFed }
-  }
+    return { messages, dismissedNpcs: dismissed, allFed };
+  };
 
   /** 子女名字池（按性别） */
-  const CHILD_NAMES_MALE = ['小龙', '小宝', '团子', '年年']
-  const CHILD_NAMES_FEMALE = ['小凤', '阿花', '豆豆', '圆圆']
+  const CHILD_NAMES_MALE = ["小龙", "小宝", "团子", "年年"];
+  const CHILD_NAMES_FEMALE = ["小凤", "阿花", "豆豆", "圆圆"];
 
   /** 获取NPC状态 */
   const getNpcState = (npcId: string): NpcState | undefined => {
-    return npcStates.value.find(s => s.npcId === npcId)
-  }
+    return npcStates.value.find((s) => s.npcId === npcId);
+  };
 
   /** 获取好感等级 */
   const getFriendshipLevel = (npcId: string): FriendshipLevel => {
-    const state = getNpcState(npcId)
-    if (!state) return 'stranger'
+    const state = getNpcState(npcId);
+    if (!state) return "stranger";
     for (const t of FRIENDSHIP_THRESHOLDS) {
-      if (state.friendship >= t.min) return t.level
+      if (state.friendship >= t.min) return t.level;
     }
-    return 'stranger'
-  }
+    return "stranger";
+  };
 
   /** 检查NPC今天是否生日 */
   const isBirthday = (npcId: string): boolean => {
-    const npcDef = getNpcById(npcId)
-    if (!npcDef?.birthday) return false
-    const gameStore = useGameStore()
-    return npcDef.birthday.season === gameStore.season && npcDef.birthday.day === gameStore.day
-  }
+    const npcDef = getNpcById(npcId);
+    if (!npcDef?.birthday) return false;
+    const gameStore = useGameStore();
+    return (
+      npcDef.birthday.season === gameStore.season &&
+      npcDef.birthday.day === gameStore.day
+    );
+  };
 
   /** 获取今天过生日的NPC (null if none) */
   const getTodayBirthdayNpc = (): string | null => {
-    const gameStore = useGameStore()
+    const gameStore = useGameStore();
     for (const npc of NPCS) {
-      if (npc.birthday && npc.birthday.season === gameStore.season && npc.birthday.day === gameStore.day) {
-        return npc.id
+      if (
+        npc.birthday &&
+        npc.birthday.season === gameStore.season &&
+        npc.birthday.day === gameStore.day
+      ) {
+        return npc.id;
       }
     }
-    return null
-  }
+    return null;
+  };
 
   /** 检查是否有可触发的心事件（对话后调用） */
   const checkHeartEvent = (npcId: string): HeartEventDef | null => {
-    const state = getNpcState(npcId)
-    if (!state) return null
-    const events = getHeartEventsForNpc(npcId)
+    const state = getNpcState(npcId);
+    if (!state) return null;
+    const events = getHeartEventsForNpc(npcId);
     for (const event of events) {
       // 知己事件仅知己触发
-      if (event.requiresZhiji && !state.zhiji) continue
+      if (event.requiresZhiji && !state.zhiji) continue;
       // 知己不触发恋爱告白（heart_8）
-      if (!event.requiresZhiji && state.zhiji && event.id.endsWith('_heart_8')) continue
-      if (state.friendship >= event.requiredFriendship && !state.triggeredHeartEvents.includes(event.id)) {
-        return event
+      if (!event.requiresZhiji && state.zhiji && event.id.endsWith("_heart_8"))
+        continue;
+      if (
+        state.friendship >= event.requiredFriendship &&
+        !state.triggeredHeartEvents.includes(event.id)
+      ) {
+        return event;
       }
     }
-    return null
-  }
+    return null;
+  };
 
   /** 标记心事件为已触发 */
   const markHeartEventTriggered = (npcId: string, eventId: string) => {
-    const state = getNpcState(npcId)
+    const state = getNpcState(npcId);
     if (state && !state.triggeredHeartEvents.includes(eventId)) {
-      state.triggeredHeartEvents.push(eventId)
+      state.triggeredHeartEvents.push(eventId);
     }
-  }
+  };
 
   /** 调整好感度（心事件选择结果） */
   const adjustFriendship = (npcId: string, amount: number) => {
-    const state = getNpcState(npcId)
+    const state = getNpcState(npcId);
     if (state) {
-      state.friendship = Math.max(0, state.friendship + amount)
+      state.friendship = Math.max(0, state.friendship + amount);
     }
-  }
+  };
 
   /** 替换对话中的占位符 */
   const replaceDialoguePlaceholders = (text: string): string => {
-    const playerStore = usePlayerStore()
-    return text.replace(/\{player\}/g, playerStore.playerName).replace(/\{title\}/g, playerStore.honorific)
-  }
+    const playerStore = usePlayerStore();
+    return text
+      .replace(/\{player\}/g, playerStore.playerName)
+      .replace(/\{title\}/g, playerStore.honorific);
+  };
 
   /** 与NPC对话 (+20好感) */
-  const talkTo = (npcId: string): { message: string; friendshipGain: number } | null => {
-    const state = getNpcState(npcId)
-    if (!state) return null
-    if (state.talkedToday) return null
+  const talkTo = (
+    npcId: string,
+  ): { message: string; friendshipGain: number } | null => {
+    const state = getNpcState(npcId);
+    if (!state) return null;
+    if (state.talkedToday) return null;
 
-    state.talkedToday = true
-    state.friendship += 20
+    state.talkedToday = true;
+    state.friendship += 20;
 
-    const npcDef = getNpcById(npcId)
-    if (!npcDef) return null
+    const npcDef = getNpcById(npcId);
+    if (!npcDef) return null;
 
     // 已婚NPC有特殊对话
     if (state.married) {
-      const playerStore = usePlayerStore()
-      const gameStore = useGameStore()
-      const name = playerStore.playerName
+      const playerStore = usePlayerStore();
+      const gameStore = useGameStore();
+      const name = playerStore.playerName;
 
       const marriedDialogues = [
         `${name}，今天辛苦了，早点回来吃饭。`,
         `我给${name}留了饭菜，还热着呢。`,
-        '田里的活干完了吗？别太累了。',
+        "田里的活干完了吗？别太累了。",
         `有${name}在身边，每天都很开心。`,
-        '今天想吃什么？我去准备。',
-        '家里收拾好了，你歇会儿吧。',
+        "今天想吃什么？我去准备。",
+        "家里收拾好了，你歇会儿吧。",
         `和${name}在一起的日子，真好。`,
-        `${name}，今天精神不错嘛。`
-      ]
+        `${name}，今天精神不错嘛。`,
+      ];
 
       const seasonDialogues: Record<string, string[]> = {
         spring: [`春天到了，院子里的花都开了呢。`, `${name}，春播忙完了吗？`],
-        summer: [`好热啊……${name}多喝水。`, '夏天的西瓜最解暑了。'],
-        autumn: [`秋天的风真舒服。${name}，要不要一起散步？`, '丰收的季节，辛苦种的东西都有了回报。'],
-        winter: [`外面好冷，${name}快进屋暖和暖和。`, '冬天就该窝在家里喝热茶。']
-      }
+        summer: [`好热啊……${name}多喝水。`, "夏天的西瓜最解暑了。"],
+        autumn: [
+          `秋天的风真舒服。${name}，要不要一起散步？`,
+          "丰收的季节，辛苦种的东西都有了回报。",
+        ],
+        winter: [
+          `外面好冷，${name}快进屋暖和暖和。`,
+          "冬天就该窝在家里喝热茶。",
+        ],
+      };
 
       const weatherDialogues: Record<string, string | null> = {
-        rainy: '下雨了，田里不用浇水，在家歇歇吧。',
-        stormy: '外面风雨好大，今天别出远门了。',
-        snowy: '下雪了呢，外面白茫茫的，真好看。',
-        windy: '风好大，出门小心别着凉了。',
+        rainy: "下雨了，田里不用浇水，在家歇歇吧。",
+        stormy: "外面风雨好大，今天别出远门了。",
+        snowy: "下雪了呢，外面白茫茫的，真好看。",
+        windy: "风好大，出门小心别着凉了。",
         sunny: null,
         cloudy: null,
-        green_rain: null
-      }
+        green_rain: null,
+      };
 
-      const pool = [...marriedDialogues, ...(seasonDialogues[gameStore.season] ?? [])]
-      const weatherLine = weatherDialogues[gameStore.weather]
-      if (weatherLine) pool.push(weatherLine)
+      const pool = [
+        ...marriedDialogues,
+        ...(seasonDialogues[gameStore.season] ?? []),
+      ];
+      const weatherLine = weatherDialogues[gameStore.weather];
+      if (weatherLine) pool.push(weatherLine);
 
-      const message = pool[Math.floor(Math.random() * pool.length)]!
-      return { message, friendshipGain: 20 }
+      const message = pool[Math.floor(Math.random() * pool.length)]!;
+      return { message, friendshipGain: 20 };
     }
 
     // 知己NPC使用知己专属对话
     if (state.zhiji && npcDef.zhijiDialogues?.length) {
-      const raw = npcDef.zhijiDialogues[Math.floor(Math.random() * npcDef.zhijiDialogues.length)]!
-      const message = replaceDialoguePlaceholders(raw)
-      return { message, friendshipGain: 20 }
+      const raw =
+        npcDef.zhijiDialogues[
+          Math.floor(Math.random() * npcDef.zhijiDialogues.length)
+        ]!;
+      const message = replaceDialoguePlaceholders(raw);
+      return { message, friendshipGain: 20 };
     }
 
     // 约会中NPC使用约会对话
-    if (state.dating && npcDef.datingDialogues && npcDef.datingDialogues.length > 0) {
-      const raw = npcDef.datingDialogues[Math.floor(Math.random() * npcDef.datingDialogues.length)]!
-      const message = replaceDialoguePlaceholders(raw)
-      return { message, friendshipGain: 20 }
+    if (
+      state.dating &&
+      npcDef.datingDialogues &&
+      npcDef.datingDialogues.length > 0
+    ) {
+      const raw =
+        npcDef.datingDialogues[
+          Math.floor(Math.random() * npcDef.datingDialogues.length)
+        ]!;
+      const message = replaceDialoguePlaceholders(raw);
+      return { message, friendshipGain: 20 };
     }
 
-    const level = getFriendshipLevel(npcId)
-    const dialogues = npcDef.dialogues[level]
-    const raw = dialogues[Math.floor(Math.random() * dialogues.length)]!
-    const message = replaceDialoguePlaceholders(raw)
+    const level = getFriendshipLevel(npcId);
+    const dialogues = npcDef.dialogues[level];
+    const raw = dialogues[Math.floor(Math.random() * dialogues.length)]!;
+    const message = replaceDialoguePlaceholders(raw);
 
-    return { message, friendshipGain: 20 }
-  }
+    return { message, friendshipGain: 20 };
+  };
 
   /** 送礼给NPC (每天1次, 每周2次) */
   const giveGift = (
     npcId: string,
     itemId: string,
     giftBonusMultiplier: number = 1,
-    quality: Quality = 'normal'
+    quality: Quality = "normal",
   ): { gain: number; reaction: string } | null => {
-    const state = getNpcState(npcId)
-    if (!state) return null
-    if (state.giftedToday) return null
-    if (state.giftsThisWeek >= 2) return null
+    const state = getNpcState(npcId);
+    if (!state) return null;
+    if (state.giftedToday) return null;
+    if (state.giftsThisWeek >= 2) return null;
 
-    const inventoryStore = useInventoryStore()
-    if (!inventoryStore.removeItem(itemId, 1, quality)) return null
+    const inventoryStore = useInventoryStore();
+    if (!inventoryStore.removeItem(itemId, 1, quality)) return null;
 
-    state.giftedToday = true
-    state.giftsThisWeek++
-    const npcDef = getNpcById(npcId)
-    if (!npcDef) return null
+    state.giftedToday = true;
+    state.giftsThisWeek++;
+    const npcDef = getNpcById(npcId);
+    if (!npcDef) return null;
 
-    let gain: number
-    let reaction: string
+    let gain: number;
+    let reaction: string;
 
     if (npcDef.lovedItems.includes(itemId)) {
-      gain = 80
-      reaction = '非常喜欢'
+      gain = 80;
+      reaction = "非常喜欢";
     } else if (npcDef.likedItems.includes(itemId)) {
-      gain = 45
-      reaction = '还不错'
+      gain = 45;
+      reaction = "还不错";
     } else if (npcDef.hatedItems.includes(itemId)) {
-      gain = -40
-      reaction = '讨厌'
+      gain = -40;
+      reaction = "讨厌";
     } else {
-      gain = 20
-      reaction = '一般'
+      gain = 20;
+      reaction = "一般";
     }
 
     // 品质加成
-    const qualityMultiplier: Record<string, number> = { normal: 1.0, fine: 1.25, excellent: 1.5, supreme: 2.0, rare: 1.25, magic: 1.5, legendary: 2.0 }
+    const qualityMultiplier: Record<string, number> = {
+      normal: 1.0,
+      fine: 1.25,
+      excellent: 1.5,
+      supreme: 2.0,
+      rare: 1.25,
+      magic: 1.5,
+      legendary: 2.0,
+    };
     // 生日加成 (4倍)
-    const birthdayMultiplier = isBirthday(npcId) ? 4 : 1
+    const birthdayMultiplier = isBirthday(npcId) ? 4 : 1;
 
-    gain = Math.floor(gain * (qualityMultiplier[String(quality)] ?? 1.0) * birthdayMultiplier * giftBonusMultiplier)
-    state.friendship = Math.max(0, state.friendship + gain)
+    gain = Math.floor(
+      gain *
+        (qualityMultiplier[String(quality)] ?? 1.0) *
+        birthdayMultiplier *
+        giftBonusMultiplier,
+    );
+    state.friendship = Math.max(0, state.friendship + gain);
 
-    return { gain, reaction }
-  }
+    return { gain, reaction };
+  };
 
   /** 赠帕开启约会 (需2000好感/8心) */
-  const startDating = (npcId: string): { success: boolean; message: string } => {
-    const state = getNpcState(npcId)
-    if (!state) return { success: false, message: 'NPC不存在。' }
+  const startDating = (
+    npcId: string,
+  ): { success: boolean; message: string } => {
+    const state = getNpcState(npcId);
+    if (!state) return { success: false, message: "NPC不存在。" };
 
-    const npcDef = getNpcById(npcId)
-    if (!npcDef?.marriageable) return { success: false, message: '无法与此人约会。' }
+    const npcDef = getNpcById(npcId);
+    if (!npcDef?.marriageable)
+      return { success: false, message: "无法与此人约会。" };
 
-    const playerStore = usePlayerStore()
+    const playerStore = usePlayerStore();
     if (npcDef.gender === playerStore.gender) {
-      return { success: false, message: '只能向异性赠帕。' }
+      return { success: false, message: "只能向异性赠帕。" };
     }
 
-    if (state.dating) return { success: false, message: '你们已经在约会了。' }
-    if (state.married) return { success: false, message: '你们已经结婚了。' }
-    if (npcStates.value.some(s => s.married)) return { success: false, message: '你已经结婚了。' }
-    if (state.friendship < 2000) return { success: false, message: '好感度不足（需要8心/2000）。' }
+    if (state.dating) return { success: false, message: "你们已经在约会了。" };
+    if (state.married) return { success: false, message: "你们已经结婚了。" };
+    if (npcStates.value.some((s) => s.married))
+      return { success: false, message: "你已经结婚了。" };
+    if (state.friendship < 2000)
+      return { success: false, message: "好感度不足（需要8心/2000）。" };
 
-    const inventoryStore = useInventoryStore()
-    if (!inventoryStore.removeItem('silk_ribbon')) {
-      return { success: false, message: '需要一条丝帕。' }
+    const inventoryStore = useInventoryStore();
+    if (!inventoryStore.removeItem("silk_ribbon")) {
+      return { success: false, message: "需要一条丝帕。" };
     }
 
-    state.dating = true
-    state.friendship += 160
-    return { success: true, message: `${npcDef.name}羞红了脸，接过了你的丝帕……你们开始约会了！` }
-  }
+    state.dating = true;
+    state.friendship += 160;
+    return {
+      success: true,
+      message: `${npcDef.name}羞红了脸，接过了你的丝帕……你们开始约会了！`,
+    };
+  };
 
   /** 求婚 (需2500好感/10心) */
   const propose = (npcId: string): { success: boolean; message: string } => {
-    const state = getNpcState(npcId)
-    if (!state) return { success: false, message: 'NPC不存在。' }
+    const state = getNpcState(npcId);
+    if (!state) return { success: false, message: "NPC不存在。" };
 
-    const npcDef = getNpcById(npcId)
-    if (!npcDef?.marriageable) return { success: false, message: '这个人无法求婚。' }
+    const npcDef = getNpcById(npcId);
+    if (!npcDef?.marriageable)
+      return { success: false, message: "这个人无法求婚。" };
 
     // 只允许异性求婚
-    const playerStore = usePlayerStore()
+    const playerStore = usePlayerStore();
     if (npcDef.gender === playerStore.gender) {
-      return { success: false, message: '只能向异性求婚。' }
+      return { success: false, message: "只能向异性求婚。" };
     }
 
     // 检查是否已有配偶
-    const alreadyMarried = npcStates.value.some(s => s.married)
-    if (alreadyMarried) return { success: false, message: '你已经结婚了。' }
+    const alreadyMarried = npcStates.value.some((s) => s.married);
+    if (alreadyMarried) return { success: false, message: "你已经结婚了。" };
 
     // 检查是否正在筹备婚礼
-    if (weddingCountdown.value > 0) return { success: false, message: '婚礼正在筹备中。' }
+    if (weddingCountdown.value > 0)
+      return { success: false, message: "婚礼正在筹备中。" };
 
     // 需要先约会
-    if (!state.dating) return { success: false, message: '需要先赠帕约会。' }
+    if (!state.dating) return { success: false, message: "需要先赠帕约会。" };
 
-    if (state.friendship < 2500) return { success: false, message: '好感度不足（需要10心/2500）。' }
+    if (state.friendship < 2500)
+      return { success: false, message: "好感度不足（需要10心/2500）。" };
 
-    const inventoryStore = useInventoryStore()
-    if (!inventoryStore.removeItem('jade_ring')) {
-      return { success: false, message: '需要一枚翡翠戒指。' }
+    const inventoryStore = useInventoryStore();
+    if (!inventoryStore.removeItem("jade_ring")) {
+      return { success: false, message: "需要一枚翡翠戒指。" };
     }
 
     // 设置婚礼倒计时而非立即结婚
-    weddingCountdown.value = 3
-    weddingNpcId.value = npcId
-    state.friendship += 400
-    return { success: true, message: `${npcDef.name}含泪接受了你的翡翠戒指……婚礼将在3天后举行！` }
-  }
+    weddingCountdown.value = 3;
+    weddingNpcId.value = npcId;
+    state.friendship += 400;
+    return {
+      success: true,
+      message: `${npcDef.name}含泪接受了你的翡翠戒指……婚礼将在3天后举行！`,
+    };
+  };
 
   /** 获取已婚配偶状态 */
   const getSpouse = (): NpcState | null => {
-    return npcStates.value.find(s => s.married) ?? null
-  }
+    return npcStates.value.find((s) => s.married) ?? null;
+  };
 
   /** 获取知己状态 */
   const getZhiji = (): NpcState | null => {
-    return npcStates.value.find(s => s.zhiji) ?? null
-  }
+    return npcStates.value.find((s) => s.zhiji) ?? null;
+  };
 
   /** 赠玉结为知己 (需同性+2000好感) */
-  const becomeZhiji = (npcId: string): { success: boolean; message: string } => {
-    const state = getNpcState(npcId)
-    if (!state) return { success: false, message: 'NPC不存在。' }
+  const becomeZhiji = (
+    npcId: string,
+  ): { success: boolean; message: string } => {
+    const state = getNpcState(npcId);
+    if (!state) return { success: false, message: "NPC不存在。" };
 
-    const npcDef = getNpcById(npcId)
-    if (!npcDef?.marriageable) return { success: false, message: '无法与此人结为知己。' }
+    const npcDef = getNpcById(npcId);
+    if (!npcDef?.marriageable)
+      return { success: false, message: "无法与此人结为知己。" };
 
-    const playerStore = usePlayerStore()
+    const playerStore = usePlayerStore();
     if (npcDef.gender !== playerStore.gender) {
-      return { success: false, message: '只能与同性结为知己。' }
+      return { success: false, message: "只能与同性结为知己。" };
     }
 
-    if (state.zhiji) return { success: false, message: '你们已经是知己了。' }
-    if (state.dating || state.married) return { success: false, message: '无法与恋人或伴侣结为知己。' }
-    if (npcStates.value.some(s => s.zhiji)) return { success: false, message: '你已经有知己了。' }
-    if (state.friendship < 2000) return { success: false, message: '好感度不足（需要8心/2000）。' }
+    if (state.zhiji) return { success: false, message: "你们已经是知己了。" };
+    if (state.dating || state.married)
+      return { success: false, message: "无法与恋人或伴侣结为知己。" };
+    if (npcStates.value.some((s) => s.zhiji))
+      return { success: false, message: "你已经有知己了。" };
+    if (state.friendship < 2000)
+      return { success: false, message: "好感度不足（需要8心/2000）。" };
 
-    const inventoryStore = useInventoryStore()
-    if (!inventoryStore.removeItem('zhiji_jade')) {
-      return { success: false, message: '需要一块知己玉佩。' }
+    const inventoryStore = useInventoryStore();
+    if (!inventoryStore.removeItem("zhiji_jade")) {
+      return { success: false, message: "需要一块知己玉佩。" };
     }
 
-    state.zhiji = true
-    state.friendship += 160
-    const label = playerStore.gender === 'male' ? '蓝颜知己' : '红颜知己'
-    return { success: true, message: `${npcDef.name}郑重地接过了玉佩……你们结为了${label}！` }
-  }
+    state.zhiji = true;
+    state.friendship += 160;
+    const label = playerStore.gender === "male" ? "蓝颜知己" : "红颜知己";
+    return {
+      success: true,
+      message: `${npcDef.name}郑重地接过了玉佩……你们结为了${label}！`,
+    };
+  };
 
   /** 断绝知己之缘 */
   const dissolveZhiji = (): { success: boolean; message: string } => {
-    const zhijiState = getZhiji()
-    if (!zhijiState) return { success: false, message: '你还没有知己。' }
+    const zhijiState = getZhiji();
+    if (!zhijiState) return { success: false, message: "你还没有知己。" };
 
-    const playerStore = usePlayerStore()
+    const playerStore = usePlayerStore();
     if (!playerStore.spendMoney(10000)) {
-      return { success: false, message: '金钱不足（需要10000文）。' }
+      return { success: false, message: "金钱不足（需要10000文）。" };
     }
 
-    const npcDef = getNpcById(zhijiState.npcId)
-    zhijiState.zhiji = false
-    zhijiState.friendship = 1000
-    daysZhiji.value = 0
+    const npcDef = getNpcById(zhijiState.npcId);
+    zhijiState.zhiji = false;
+    zhijiState.friendship = 1000;
+    daysZhiji.value = 0;
 
-    return { success: true, message: `你和${npcDef?.name ?? '知己'}的知己之缘已断。` }
-  }
+    return {
+      success: true,
+      message: `你和${npcDef?.name ?? "知己"}的知己之缘已断。`,
+    };
+  };
 
   /** 每日婚礼倒计时更新 */
-  const dailyWeddingUpdate = (): { weddingToday: boolean; npcId: string | null } => {
+  const dailyWeddingUpdate = (): {
+    weddingToday: boolean;
+    npcId: string | null;
+  } => {
     if (weddingCountdown.value <= 0 || !weddingNpcId.value) {
-      return { weddingToday: false, npcId: null }
+      return { weddingToday: false, npcId: null };
     }
-    weddingCountdown.value--
+    weddingCountdown.value--;
     if (weddingCountdown.value <= 0) {
-      const npcId = weddingNpcId.value
-      const state = getNpcState(npcId)
+      const npcId = weddingNpcId.value;
+      const state = getNpcState(npcId);
       if (state) {
-        state.married = true
-        state.dating = false
-        state.friendship = Math.max(state.friendship, 3500)
+        state.married = true;
+        state.dating = false;
+        state.friendship = Math.max(state.friendship, 3500);
       }
-      weddingNpcId.value = null
-      return { weddingToday: true, npcId }
+      weddingNpcId.value = null;
+      return { weddingToday: true, npcId };
     }
-    return { weddingToday: false, npcId: null }
-  }
+    return { weddingToday: false, npcId: null };
+  };
 
   /** 取消婚礼 */
   const cancelWedding = () => {
-    weddingCountdown.value = 0
-    weddingNpcId.value = null
-  }
+    weddingCountdown.value = 0;
+    weddingNpcId.value = null;
+  };
 
   /** 离婚 */
   const divorce = (): { success: boolean; message: string } => {
-    const spouse = getSpouse()
-    if (!spouse) return { success: false, message: '你还没有结婚。' }
+    const spouse = getSpouse();
+    if (!spouse) return { success: false, message: "你还没有结婚。" };
 
-    const playerStore = usePlayerStore()
+    const playerStore = usePlayerStore();
     if (!playerStore.spendMoney(30000)) {
-      return { success: false, message: '金钱不足（需要30000文）。' }
+      return { success: false, message: "金钱不足（需要30000文）。" };
     }
 
-    const npcDef = getNpcById(spouse.npcId)
-    spouse.married = false
-    spouse.dating = false
-    spouse.friendship = 1000
-    pregnancy.value = null
-    childProposalPending.value = false
-    daysMarried.value = 0
-    cancelWedding()
+    const npcDef = getNpcById(spouse.npcId);
+    spouse.married = false;
+    spouse.dating = false;
+    spouse.friendship = 1000;
+    pregnancy.value = null;
+    childProposalPending.value = false;
+    daysMarried.value = 0;
+    cancelWedding();
 
-    return { success: true, message: `你和${npcDef?.name ?? '配偶'}的婚姻结束了。` }
-  }
+    return {
+      success: true,
+      message: `你和${npcDef?.name ?? "配偶"}的婚姻结束了。`,
+    };
+  };
 
   /** 放生子女 */
-  const releaseChild = (childId: number): { success: boolean; message: string } => {
-    const child = children.value.find(c => c.id === childId)
-    if (!child) return { success: false, message: '找不到这个孩子。' }
+  const releaseChild = (
+    childId: number,
+  ): { success: boolean; message: string } => {
+    const child = children.value.find((c) => c.id === childId);
+    if (!child) return { success: false, message: "找不到这个孩子。" };
 
-    const playerStore = usePlayerStore()
+    const playerStore = usePlayerStore();
     if (!playerStore.spendMoney(10000)) {
-      return { success: false, message: '金钱不足（需要10000文）。' }
+      return { success: false, message: "金钱不足（需要10000文）。" };
     }
 
-    const name = child.name
-    children.value = children.value.filter(c => c.id !== childId)
-    return { success: true, message: `${name}被送往了远方亲戚家。` }
-  }
+    const name = child.name;
+    children.value = children.value.filter((c) => c.id !== childId);
+    return { success: true, message: `${name}被送往了远方亲戚家。` };
+  };
 
   // ============================================================
   // 孕期养成系统
   // ============================================================
 
-  const PREGNANCY_STAGE_CONFIG: Record<PregnancyStage, { days: number; label: string }> = {
-    early: { days: 5, label: '初期' },
-    mid: { days: 5, label: '中期' },
-    late: { days: 5, label: '后期' },
-    ready: { days: 3, label: '待产期' }
-  }
+  const PREGNANCY_STAGE_CONFIG: Record<
+    PregnancyStage,
+    { days: number; label: string }
+  > = {
+    early: { days: 5, label: "初期" },
+    mid: { days: 5, label: "中期" },
+    late: { days: 5, label: "后期" },
+    ready: { days: 3, label: "待产期" },
+  };
 
-  const STAGE_ORDER: PregnancyStage[] = ['early', 'mid', 'late', 'ready']
+  const STAGE_ORDER: PregnancyStage[] = ["early", "mid", "late", "ready"];
 
   const MEDICAL_PLANS = {
-    normal: { cost: 1000, successRate: 0.8, label: '普通接生' },
-    advanced: { cost: 5000, successRate: 0.95, label: '高级接生' },
-    luxury: { cost: 15000, successRate: 1.0, label: '豪华接生' }
-  } as const
+    normal: { cost: 1000, successRate: 0.8, label: "普通接生" },
+    advanced: { cost: 5000, successRate: 0.95, label: "高级接生" },
+    luxury: { cost: 15000, successRate: 1.0, label: "豪华接生" },
+  } as const;
 
   /** 检查配偶是否应提议要孩子（每日调用） */
   const checkChildProposal = (): boolean => {
-    const spouse = getSpouse()
-    if (!spouse) return false
-    if (children.value.length >= 2) return false
-    if (pregnancy.value !== null) return false
-    if (childProposalPending.value) return false
-    if (daysMarried.value < 7) return false
-    if (spouse.friendship < 3000) return false
+    const spouse = getSpouse();
+    if (!spouse) return false;
+    if (children.value.length >= 2) return false;
+    if (pregnancy.value !== null) return false;
+    if (childProposalPending.value) return false;
+    if (daysMarried.value < 7) return false;
+    if (spouse.friendship < 3000) return false;
     // 拒绝冷却：7天基础 + 每次拒绝额外7天
     if (childProposalDeclinedCount.value > 0) {
-      const cooldownDays = 7 + childProposalDeclinedCount.value * 7
-      if (daysSinceProposalDecline.value < cooldownDays) return false
+      const cooldownDays = 7 + childProposalDeclinedCount.value * 7;
+      if (daysSinceProposalDecline.value < cooldownDays) return false;
     }
-    return Math.random() < 0.05
-  }
+    return Math.random() < 0.05;
+  };
 
   /** 触发提议（设置等待标记） */
   const triggerChildProposal = () => {
-    childProposalPending.value = true
-  }
+    childProposalPending.value = true;
+  };
 
   /** 玩家回应提议 */
-  const respondToChildProposal = (response: ProposalResponse): { message: string; friendshipChange: number } => {
-    childProposalPending.value = false
-    const spouse = getSpouse()
+  const respondToChildProposal = (
+    response: ProposalResponse,
+  ): { message: string; friendshipChange: number } => {
+    childProposalPending.value = false;
+    const spouse = getSpouse();
 
     switch (response) {
-      case 'accept':
+      case "accept":
         pregnancy.value = {
-          stage: 'early',
+          stage: "early",
           daysInStage: 0,
           stageDays: PREGNANCY_STAGE_CONFIG.early.days,
           careScore: 50,
           caredToday: false,
           giftedForPregnancy: false,
           companionToday: false,
-          medicalPlan: null
-        }
-        if (spouse) spouse.friendship += 100
-        childProposalDeclinedCount.value = 0
-        daysSinceProposalDecline.value = 0
-        return { message: '你们决定迎接新的家庭成员。', friendshipChange: 100 }
+          medicalPlan: null,
+        };
+        if (spouse) spouse.friendship += 100;
+        childProposalDeclinedCount.value = 0;
+        daysSinceProposalDecline.value = 0;
+        return { message: "你们决定迎接新的家庭成员。", friendshipChange: 100 };
 
-      case 'decline':
-        if (spouse) spouse.friendship = Math.max(0, spouse.friendship - 50)
-        childProposalDeclinedCount.value++
-        daysSinceProposalDecline.value = 0
-        return { message: '你委婉地拒绝了。', friendshipChange: -50 }
+      case "decline":
+        if (spouse) spouse.friendship = Math.max(0, spouse.friendship - 50);
+        childProposalDeclinedCount.value++;
+        daysSinceProposalDecline.value = 0;
+        return { message: "你委婉地拒绝了。", friendshipChange: -50 };
 
-      case 'wait':
-        daysSinceProposalDecline.value = 0
-        childProposalDeclinedCount.value++ // 也计入冷却
-        return { message: '你说了再等等看。', friendshipChange: 0 }
+      case "wait":
+        daysSinceProposalDecline.value = 0;
+        childProposalDeclinedCount.value++; // 也计入冷却
+        return { message: "你说了再等等看。", friendshipChange: 0 };
     }
-  }
+  };
 
   /** 孕期照料操作 */
   const performPregnancyCare = (
-    action: 'gift' | 'companion' | 'supplement' | 'rest'
+    action: "gift" | "companion" | "supplement" | "rest",
   ): { success: boolean; message: string; careGain: number } => {
-    if (!pregnancy.value) return { success: false, message: '没有待产。', careGain: 0 }
+    if (!pregnancy.value)
+      return { success: false, message: "没有待产。", careGain: 0 };
 
-    let careGain = 0
-    let message = ''
+    let careGain = 0;
+    let message = "";
 
     switch (action) {
-      case 'gift': {
+      case "gift": {
         if (pregnancy.value.giftedForPregnancy) {
-          return { success: false, message: '今天已经送过礼物了。', careGain: 0 }
+          return {
+            success: false,
+            message: "今天已经送过礼物了。",
+            careGain: 0,
+          };
         }
-        pregnancy.value.giftedForPregnancy = true
-        careGain = pregnancy.value.stage === 'early' ? 5 : 3
-        message = '你送了一份贴心的礼物。'
-        break
+        pregnancy.value.giftedForPregnancy = true;
+        careGain = pregnancy.value.stage === "early" ? 5 : 3;
+        message = "你送了一份贴心的礼物。";
+        break;
       }
-      case 'companion': {
+      case "companion": {
         if (pregnancy.value.companionToday) {
-          return { success: false, message: '今天已经陪伴过了。', careGain: 0 }
+          return { success: false, message: "今天已经陪伴过了。", careGain: 0 };
         }
-        pregnancy.value.companionToday = true
-        careGain = pregnancy.value.stage === 'mid' ? 5 : 3
-        message = '你陪伴了一会儿，聊了很多。'
-        break
+        pregnancy.value.companionToday = true;
+        careGain = pregnancy.value.stage === "mid" ? 5 : 3;
+        message = "你陪伴了一会儿，聊了很多。";
+        break;
       }
-      case 'supplement': {
-        const inventoryStore = useInventoryStore()
+      case "supplement": {
+        const inventoryStore = useInventoryStore();
         const supplementItems: { id: string; gain: number }[] = [
-          { id: 'ginseng', gain: 6 },
-          { id: 'ginseng_tea', gain: 5 },
-          { id: 'herb', gain: 3 },
-          { id: 'green_tea_drink', gain: 3 },
-          { id: 'chrysanthemum_tea', gain: 3 },
-          { id: 'osmanthus_tea', gain: 3 }
-        ]
-        let found = false
+          { id: "ginseng", gain: 6 },
+          { id: "ginseng_tea", gain: 5 },
+          { id: "herb", gain: 3 },
+          { id: "green_tea_drink", gain: 3 },
+          { id: "chrysanthemum_tea", gain: 3 },
+          { id: "osmanthus_tea", gain: 3 },
+        ];
+        let found = false;
         for (const si of supplementItems) {
           if (inventoryStore.removeItem(si.id, 1)) {
-            found = true
-            careGain = si.gain
-            const itemDef = getItemById(si.id)
-            message = `服用了${itemDef?.name ?? '补品'}。`
-            break
+            found = true;
+            careGain = si.gain;
+            const itemDef = getItemById(si.id);
+            message = `服用了${itemDef?.name ?? "补品"}。`;
+            break;
           }
         }
         if (!found) {
-          return { success: false, message: '没有合适的补品（人参/草药/茶饮）。', careGain: 0 }
+          return {
+            success: false,
+            message: "没有合适的补品（人参/草药/茶饮）。",
+            careGain: 0,
+          };
         }
-        break
+        break;
       }
-      case 'rest': {
+      case "rest": {
         if (pregnancy.value.caredToday) {
-          return { success: false, message: '今天已经安排过休息了。', careGain: 0 }
+          return {
+            success: false,
+            message: "今天已经安排过休息了。",
+            careGain: 0,
+          };
         }
-        careGain = pregnancy.value.stage === 'late' ? 5 : 2
-        message = '你让配偶好好休息了一天。'
-        break
+        careGain = pregnancy.value.stage === "late" ? 5 : 2;
+        message = "你让配偶好好休息了一天。";
+        break;
       }
     }
 
-    pregnancy.value.careScore = Math.min(100, pregnancy.value.careScore + careGain)
-    pregnancy.value.caredToday = true
-    return { success: true, message, careGain }
-  }
+    pregnancy.value.careScore = Math.min(
+      100,
+      pregnancy.value.careScore + careGain,
+    );
+    pregnancy.value.caredToday = true;
+    return { success: true, message, careGain };
+  };
 
   /** 选择接生方式（仅待产期） */
-  const chooseMedicalPlan = (plan: 'normal' | 'advanced' | 'luxury'): { success: boolean; message: string } => {
-    if (!pregnancy.value) return { success: false, message: '没有待产。' }
-    if (pregnancy.value.stage !== 'ready') return { success: false, message: '还没到待产期。' }
+  const chooseMedicalPlan = (
+    plan: "normal" | "advanced" | "luxury",
+  ): { success: boolean; message: string } => {
+    if (!pregnancy.value) return { success: false, message: "没有待产。" };
+    if (pregnancy.value.stage !== "ready")
+      return { success: false, message: "还没到待产期。" };
 
-    const planInfo = MEDICAL_PLANS[plan]
-    const playerStore = usePlayerStore()
+    const planInfo = MEDICAL_PLANS[plan];
+    const playerStore = usePlayerStore();
     if (!playerStore.spendMoney(planInfo.cost)) {
-      return { success: false, message: `金钱不足（需要${planInfo.cost}文）。` }
+      return {
+        success: false,
+        message: `金钱不足（需要${planInfo.cost}文）。`,
+      };
     }
 
-    pregnancy.value.medicalPlan = plan
-    return { success: true, message: `选择了${planInfo.label}（${planInfo.cost}文）。` }
-  }
+    pregnancy.value.medicalPlan = plan;
+    return {
+      success: true,
+      message: `选择了${planInfo.label}（${planInfo.cost}文）。`,
+    };
+  };
 
   /** 分娩处理（内部方法） */
   const handleDelivery = (): {
-    born?: { name: string; quality: 'normal' | 'premature' | 'healthy' }
-    miscarriage?: boolean
+    born?: { name: string; quality: "normal" | "premature" | "healthy" };
+    miscarriage?: boolean;
   } => {
-    if (!pregnancy.value) return {}
+    if (!pregnancy.value) return {};
 
-    const plan = pregnancy.value.medicalPlan ?? 'normal'
-    const planInfo = MEDICAL_PLANS[plan]
+    const plan = pregnancy.value.medicalPlan ?? "normal";
+    const planInfo = MEDICAL_PLANS[plan];
 
     // 成功率 = 医疗方案基础率 + 安产分加成（最高+15%）
-    const careBonus = (pregnancy.value.careScore / 100) * 0.15
-    const totalSuccessRate = Math.min(1.0, planInfo.successRate + careBonus)
+    const careBonus = (pregnancy.value.careScore / 100) * 0.15;
+    const totalSuccessRate = Math.min(1.0, planInfo.successRate + careBonus);
 
-    const success = Math.random() < totalSuccessRate
+    const success = Math.random() < totalSuccessRate;
 
     if (!success) {
-      pregnancy.value = null
-      const spouse = getSpouse()
+      pregnancy.value = null;
+      const spouse = getSpouse();
       if (spouse) {
-        spouse.friendship = Math.max(0, spouse.friendship - 200)
+        spouse.friendship = Math.max(0, spouse.friendship - 200);
       }
-      return { miscarriage: true }
+      return { miscarriage: true };
     }
 
     // 根据安产分决定出生品质
-    const birthQuality: 'normal' | 'premature' | 'healthy' =
-      pregnancy.value.careScore >= 80 ? 'healthy' : pregnancy.value.careScore < 40 ? 'premature' : 'normal'
+    const birthQuality: "normal" | "premature" | "healthy" =
+      pregnancy.value.careScore >= 80
+        ? "healthy"
+        : pregnancy.value.careScore < 40
+          ? "premature"
+          : "normal";
 
-    const isBoy = Math.random() < 0.5
-    const namePool = isBoy ? CHILD_NAMES_MALE : CHILD_NAMES_FEMALE
-    const usedNames = children.value.map(c => c.name)
-    const availableNames = namePool.filter(n => !usedNames.includes(n))
-    const name = availableNames[Math.floor(Math.random() * availableNames.length)] ?? '小宝'
+    const isBoy = Math.random() < 0.5;
+    const namePool = isBoy ? CHILD_NAMES_MALE : CHILD_NAMES_FEMALE;
+    const usedNames = children.value.map((c) => c.name);
+    const availableNames = namePool.filter((n) => !usedNames.includes(n));
+    const name =
+      availableNames[Math.floor(Math.random() * availableNames.length)] ??
+      "小宝";
 
     children.value.push({
       id: nextChildId.value++,
       name,
       daysOld: 0,
-      stage: 'baby',
-      friendship: birthQuality === 'healthy' ? 30 : 0,
+      stage: "baby",
+      friendship: birthQuality === "healthy" ? 30 : 0,
       interactedToday: false,
       birthQuality,
-      aptitude: (['farm', 'animal', 'study', 'combat'] as ChildAptitude[])[Math.floor(Math.random() * 4)],
+      aptitude: (["farm", "animal", "study", "combat"] as ChildAptitude[])[
+        Math.floor(Math.random() * 4)
+      ],
       studyExp: 0,
-      legacyBond: birthQuality === 'healthy' ? 10 : 0
-    })
+      legacyBond: birthQuality === "healthy" ? 10 : 0,
+    });
 
-    pregnancy.value = null
-    return { born: { name, quality: birthQuality } }
-  }
+    pregnancy.value = null;
+    return { born: { name, quality: birthQuality } };
+  };
 
   /** 每日孕期更新 */
   const dailyPregnancyUpdate = (): {
-    stageChanged?: { from: PregnancyStage; to: PregnancyStage }
-    born?: { name: string; quality: 'normal' | 'premature' | 'healthy' }
-    miscarriage?: boolean
+    stageChanged?: { from: PregnancyStage; to: PregnancyStage };
+    born?: { name: string; quality: "normal" | "premature" | "healthy" };
+    miscarriage?: boolean;
   } => {
     // 结婚天数递增
-    if (getSpouse()) daysMarried.value++
+    if (getSpouse()) daysMarried.value++;
 
     // 拒绝冷却计时递增
     if (childProposalDeclinedCount.value > 0) {
-      daysSinceProposalDecline.value++
+      daysSinceProposalDecline.value++;
     }
 
-    if (!pregnancy.value) return {}
+    if (!pregnancy.value) return {};
 
     // 重置每日照料标记
-    pregnancy.value.caredToday = false
-    pregnancy.value.giftedForPregnancy = false
-    pregnancy.value.companionToday = false
+    pregnancy.value.caredToday = false;
+    pregnancy.value.giftedForPregnancy = false;
+    pregnancy.value.companionToday = false;
 
-    pregnancy.value.daysInStage++
+    pregnancy.value.daysInStage++;
 
     // 检查阶段完成
     if (pregnancy.value.daysInStage >= pregnancy.value.stageDays) {
-      const currentStageIndex = STAGE_ORDER.indexOf(pregnancy.value.stage)
+      const currentStageIndex = STAGE_ORDER.indexOf(pregnancy.value.stage);
 
-      if (pregnancy.value.stage === 'ready') {
+      if (pregnancy.value.stage === "ready") {
         // 分娩
-        return handleDelivery()
+        return handleDelivery();
       }
 
       // 进入下一阶段
-      const from = pregnancy.value.stage
-      const nextStage = STAGE_ORDER[currentStageIndex + 1]!
-      pregnancy.value.stage = nextStage
-      pregnancy.value.daysInStage = 0
-      pregnancy.value.stageDays = PREGNANCY_STAGE_CONFIG[nextStage].days
+      const from = pregnancy.value.stage;
+      const nextStage = STAGE_ORDER[currentStageIndex + 1]!;
+      pregnancy.value.stage = nextStage;
+      pregnancy.value.daysInStage = 0;
+      pregnancy.value.stageDays = PREGNANCY_STAGE_CONFIG[nextStage].days;
 
-      return { stageChanged: { from, to: nextStage } }
+      return { stageChanged: { from, to: nextStage } };
     }
 
-    return {}
-  }
+    return {};
+  };
 
   /** 每日子女成长更新（仅已出生子女） */
   const dailyChildUpdate = () => {
     for (const child of children.value) {
-      child.daysOld++
-      child.interactedToday = false
-      if (child.stage === 'baby' && child.daysOld >= 14) {
-        child.stage = 'toddler'
-      } else if (child.stage === 'toddler' && child.daysOld >= 28) {
-        child.stage = 'child'
-      } else if (child.stage === 'child' && child.daysOld >= 56) {
-        child.stage = 'teen'
+      child.daysOld++;
+      child.interactedToday = false;
+      if (child.stage === "baby" && child.daysOld >= 14) {
+        child.stage = "toddler";
+      } else if (child.stage === "toddler" && child.daysOld >= 28) {
+        child.stage = "child";
+      } else if (child.stage === "child" && child.daysOld >= 56) {
+        child.stage = "teen";
       }
-      ;(child as any).studyExp = ((child as any).studyExp || 0) + (child.stage === 'teen' ? 2 : child.stage === 'child' ? 1 : 0)
+      (child as any).studyExp =
+        ((child as any).studyExp || 0) +
+        (child.stage === "teen" ? 2 : child.stage === "child" ? 1 : 0);
     }
-  }
+  };
 
   /** 与子女互动 */
-  const interactWithChild = (childId: number): { message: string; item?: string } | null => {
-    const child = children.value.find(c => c.id === childId)
-    if (!child) return null
-    if (child.interactedToday) return null
-    if (child.stage === 'baby') return null
+  const interactWithChild = (
+    childId: number,
+  ): { message: string; item?: string } | null => {
+    const child = children.value.find((c) => c.id === childId);
+    if (!child) return null;
+    if (child.interactedToday) return null;
+    if (child.stage === "baby") return null;
 
-    child.interactedToday = true
-    child.friendship = Math.min(300, child.friendship + 2)
-    ;(child as any).legacyBond = Math.min(100, ((child as any).legacyBond || 0) + 3)
-    ;(child as any).studyExp = ((child as any).studyExp || 0) + 2
+    child.interactedToday = true;
+    child.friendship = Math.min(300, child.friendship + 2);
+    (child as any).legacyBond = Math.min(
+      100,
+      ((child as any).legacyBond || 0) + 3,
+    );
+    (child as any).studyExp = ((child as any).studyExp || 0) + 2;
 
-    if (child.stage === 'child' && Math.random() < 0.1) {
-      const finds = ['wood', 'herb', 'pine_cone', 'wild_berry']
-      const item = finds[Math.floor(Math.random() * finds.length)]!
-      return { message: `${child.name}递给你一个东西。`, item }
+    if (child.stage === "child" && Math.random() < 0.1) {
+      const finds = ["wood", "herb", "pine_cone", "wild_berry"];
+      const item = finds[Math.floor(Math.random() * finds.length)]!;
+      return { message: `${child.name}递给你一个东西。`, item };
     }
 
-    return { message: `你和${child.name}玩了一会儿。(+2好感)` }
-  }
+    return { message: `你和${child.name}玩了一会儿。(+2好感)` };
+  };
 
   /** 检查NPC是否有每日提示功能 */
   const hasDailyTip = (npcId: string): boolean => {
-    return (TIP_NPC_IDS as readonly string[]).includes(npcId)
-  }
+    return (TIP_NPC_IDS as readonly string[]).includes(npcId);
+  };
 
   /** 检查NPC今天是否已给过提示 */
   const isTipGivenToday = (npcId: string): boolean => {
-    return tipGivenToday.value[npcId] ?? false
-  }
+    return tipGivenToday.value[npcId] ?? false;
+  };
 
   /** 获取NPC的每日提示 */
   const getDailyTip = (npcId: string): string | null => {
-    if (!hasDailyTip(npcId)) return null
-    if (tipGivenToday.value[npcId]) return null
+    if (!hasDailyTip(npcId)) return null;
+    if (tipGivenToday.value[npcId]) return null;
 
-    tipGivenToday.value[npcId] = true
-    const gameStore = useGameStore()
+    tipGivenToday.value[npcId] = true;
+    const gameStore = useGameStore();
 
     switch (npcId) {
-      case 'li_yu':
-        return WEATHER_TIPS[gameStore.tomorrowWeather]
-      case 'zhou_xiucai':
-        return getFortuneTip(gameStore.dailyLuck)
-      case 'wang_dashen': {
-        const cookingStore = useCookingStore()
-        const unlockedRecipes = RECIPES.filter(r => cookingStore.unlockedRecipes.includes(r.id))
-        if (unlockedRecipes.length === 0) return NO_RECIPE_TIP
+      case "li_yu":
+        return WEATHER_TIPS[gameStore.tomorrowWeather];
+      case "zhou_xiucai":
+        return getFortuneTip(gameStore.dailyLuck);
+      case "wang_dashen": {
+        const cookingStore = useCookingStore();
+        const unlockedRecipes = RECIPES.filter((r) =>
+          cookingStore.unlockedRecipes.includes(r.id),
+        );
+        if (unlockedRecipes.length === 0) return NO_RECIPE_TIP;
         // 每周推荐一个固定食谱（基于年+周数的种子）
-        const weekIndex = Math.floor((gameStore.day - 1) / 7)
-        const seed = (gameStore.year - 1) * 16 + ['spring', 'summer', 'autumn', 'winter'].indexOf(gameStore.season) * 4 + weekIndex
-        const recipe = unlockedRecipes[seed % unlockedRecipes.length]!
-        const ingredientNames = recipe.ingredients.map(ing => {
-          const item = getItemById(ing.itemId)
-          return item ? `${item.name}×${ing.quantity}` : ing.itemId
-        })
-        return getRecipeTipMessage(recipe.name, ingredientNames)
+        const weekIndex = Math.floor((gameStore.day - 1) / 7);
+        const seed =
+          (gameStore.year - 1) * 16 +
+          ["spring", "summer", "autumn", "winter"].indexOf(gameStore.season) *
+            4 +
+          weekIndex;
+        const recipe = unlockedRecipes[seed % unlockedRecipes.length]!;
+        const ingredientNames = recipe.ingredients.map((ing) => {
+          const item = getItemById(ing.itemId);
+          return item ? `${item.name}×${ing.quantity}` : ing.itemId;
+        });
+        return getRecipeTipMessage(recipe.name, ingredientNames);
       }
-      case 'liu_cunzhang':
-        return getLivingTip(gameStore.day, gameStore.year)
+      case "liu_cunzhang":
+        return getLivingTip(gameStore.day, gameStore.year);
       default:
-        return null
+        return null;
     }
-  }
+  };
 
-
-  const setSpouseSpecialty = (specialty: FamilySpecialty): { success: boolean; message: string } => {
-    const spouse = getSpouse()
-    if (!spouse) return { success: false, message: '需要先结婚。' }
-    spouseSpecialty.value = specialty
-    return { success: true, message: `配偶专精调整为${FAMILY_SPECIALTY_NAMES[specialty]}。` }
-  }
+  const setSpouseSpecialty = (
+    specialty: FamilySpecialty,
+  ): { success: boolean; message: string } => {
+    const spouse = getSpouse();
+    if (!spouse) return { success: false, message: "需要先结婚。" };
+    spouseSpecialty.value = specialty;
+    return {
+      success: true,
+      message: `配偶专精调整为${FAMILY_SPECIALTY_NAMES[specialty]}。`,
+    };
+  };
 
   const addFamilyLegacyExp = (amount: number) => {
-    familyLegacyExp.value += amount
+    familyLegacyExp.value += amount;
     while (familyLegacyExp.value >= familyLegacyNeed.value) {
-      familyLegacyExp.value -= familyLegacyNeed.value
-      familyLegacyLevel.value++
+      familyLegacyExp.value -= familyLegacyNeed.value;
+      familyLegacyLevel.value++;
     }
-  }
+  };
 
   const dayIndex = computed(() => {
-    const seasonIndex = ['spring', 'summer', 'autumn', 'winter'].indexOf(useGameStore().season)
-    return (useGameStore().year - 1) * 112 + Math.max(0, seasonIndex) * 28 + useGameStore().day
-  })
+    const seasonIndex = ["spring", "summer", "autumn", "winter"].indexOf(
+      useGameStore().season,
+    );
+    return (
+      (useGameStore().year - 1) * 112 +
+      Math.max(0, seasonIndex) * 28 +
+      useGameStore().day
+    );
+  });
 
-  const weekKey = computed(() => `Y${useGameStore().year}-W${Math.floor((dayIndex.value - 1) / 7) + 1}`)
+  const weekKey = computed(
+    () =>
+      `Y${useGameStore().year}-W${Math.floor((dayIndex.value - 1) / 7) + 1}`,
+  );
 
-  const villageFriendshipAvg = computed(() => Math.floor(npcStates.value.reduce((sum, s) => sum + s.friendship, 0) / Math.max(1, npcStates.value.length)))
+  const villageFriendshipAvg = computed(() =>
+    Math.floor(
+      npcStates.value.reduce((sum, s) => sum + s.friendship, 0) /
+        Math.max(1, npcStates.value.length),
+    ),
+  );
   const villageReputationText = computed(() => {
-    const avg = villageFriendshipAvg.value
-    if (avg >= 1800) return '桃源村声望：一呼百应 · 村民会主动谈起你的善举。'
-    if (avg >= 1000) return '桃源村声望：乡里熟人 · 委托与来信开始更频繁地回馈你。'
-    if (avg >= 500) return '桃源村声望：渐有名声 · 村民记得你帮过的忙。'
-    return '桃源村声望：初来乍到 · 多聊天、送礼、完成村庄请求可提升人情。'
-  })
+    const avg = villageFriendshipAvg.value;
+    if (avg >= 1800) return "桃源村声望：一呼百应 · 村民会主动谈起你的善举。";
+    if (avg >= 1000)
+      return "桃源村声望：乡里熟人 · 委托与来信开始更频繁地回馈你。";
+    if (avg >= 500) return "桃源村声望：渐有名声 · 村民记得你帮过的忙。";
+    return "桃源村声望：初来乍到 · 多聊天、送礼、完成村庄请求可提升人情。";
+  });
 
   const worldFeedbackCards = computed(() => {
-    const guild = useGuildStore()
-    const spouse = getSpouse()
-    const childReady = children.value.some(c => (((c as any).studyExp || 0) + ((c as any).legacyBond || 0)) >= 80)
+    const guild = useGuildStore();
+    const spouse = getSpouse();
+    const childReady = children.value.some(
+      (c) => ((c as any).studyExp || 0) + ((c as any).legacyBond || 0) >= 80,
+    );
     const checks: Record<WorldFeedbackId, boolean> = {
       village_reputation: villageFriendshipAvg.value >= 500,
       spouse_hearth: !!spouse && daysMarried.value >= 7,
       children_growth: childReady,
-      sect_public_praise: guild.contributionPoints >= 300
-    }
-    return WORLD_FEEDBACKS.map(f => ({
+      sect_public_praise: guild.contributionPoints >= 300,
+    };
+    return WORLD_FEEDBACKS.map((f) => ({
       ...f,
       done: checks[f.id],
-      claimed: familyCommissionClaimed.value.includes(`${weekKey.value}:feedback:${f.id}`)
-    }))
-  })
+      claimed: familyCommissionClaimed.value.includes(
+        `${weekKey.value}:feedback:${f.id}`,
+      ),
+    }));
+  });
 
-  const claimWorldFeedback = (id: WorldFeedbackId): { success: boolean; message: string } => {
-    const card = worldFeedbackCards.value.find(c => c.id === id)
-    if (!card) return { success: false, message: '世界反馈不存在。' }
-    if (!card.done) return { success: false, message: `条件未达成：${card.requirement}` }
-    const key = `${weekKey.value}:feedback:${id}`
-    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '本周已经领取过这项回响。' }
-    const player = usePlayerStore()
-    if (id === 'village_reputation') {
-      player.earnMoney(1600)
-      for (const state of npcStates.value) state.friendship = Math.min(2500, state.friendship + 8)
-      addFamilyLegacyExp(18)
-    } else if (id === 'spouse_hearth') {
-      player.earnMoney(1800)
-      const spouse = getSpouse()
-      if (spouse) spouse.friendship = Math.min(2500, spouse.friendship + 28)
-      addFamilyLegacyExp(45)
-    } else if (id === 'children_growth') {
-      player.earnMoney(2200)
+  const claimWorldFeedback = (
+    id: WorldFeedbackId,
+  ): { success: boolean; message: string } => {
+    const card = worldFeedbackCards.value.find((c) => c.id === id);
+    if (!card) return { success: false, message: "世界反馈不存在。" };
+    if (!card.done)
+      return { success: false, message: `条件未达成：${card.requirement}` };
+    const key = `${weekKey.value}:feedback:${id}`;
+    if (familyCommissionClaimed.value.includes(key))
+      return { success: false, message: "本周已经领取过这项回响。" };
+    const player = usePlayerStore();
+    if (id === "village_reputation") {
+      player.earnMoney(1600);
+      for (const state of npcStates.value)
+        state.friendship = Math.min(2500, state.friendship + 8);
+      addFamilyLegacyExp(18);
+    } else if (id === "spouse_hearth") {
+      player.earnMoney(1800);
+      const spouse = getSpouse();
+      if (spouse) spouse.friendship = Math.min(2500, spouse.friendship + 28);
+      addFamilyLegacyExp(45);
+    } else if (id === "children_growth") {
+      player.earnMoney(2200);
       for (const child of children.value) {
-        if (child.stage !== 'baby') {
-          child.friendship += 8
-          ;(child as any).legacyBond = ((child as any).legacyBond || 0) + 8
+        if (child.stage !== "baby") {
+          child.friendship += 8;
+          (child as any).legacyBond = ((child as any).legacyBond || 0) + 8;
         }
       }
-      addFamilyLegacyExp(65)
-    } else if (id === 'sect_public_praise') {
-      player.earnMoney(2600)
-      for (const state of npcStates.value) state.friendship = Math.min(2500, state.friendship + 10)
-      addFamilyLegacyExp(35)
+      addFamilyLegacyExp(65);
+    } else if (id === "sect_public_praise") {
+      player.earnMoney(2600);
+      for (const state of npcStates.value)
+        state.friendship = Math.min(2500, state.friendship + 10);
+      addFamilyLegacyExp(35);
     }
-    familyCommissionClaimed.value.push(key)
-    addLog(`领取${card.title}：${card.rewardText}。`)
-    return { success: true, message: `领取「${card.title}」：${card.rewardText}。` }
-  }
+    familyCommissionClaimed.value.push(key);
+    addLog(`领取${card.title}：${card.rewardText}。`);
+    return {
+      success: true,
+      message: `领取「${card.title}」：${card.rewardText}。`,
+    };
+  };
 
   const familyCommissionCards = computed(() => {
-    return FAMILY_COMMISSIONS.map(c => ({ ...c, claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:${c.id}`) }))
-  })
+    return FAMILY_COMMISSIONS.map((c) => ({
+      ...c,
+      claimed: familyCommissionClaimed.value.includes(
+        `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:${c.id}`,
+      ),
+    }));
+  });
 
+  const villageRequestCards = computed(() =>
+    VILLAGE_REQUESTS.map((r) => ({
+      ...r,
+      claimed: familyCommissionClaimed.value.includes(
+        `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:village:${r.id}`,
+      ),
+    })),
+  );
 
-  const villageRequestCards = computed(() => VILLAGE_REQUESTS.map(r => ({
-    ...r,
-    claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:village:${r.id}`)
-  })))
+  const npcLetterCards = computed(() =>
+    NPC_LETTERS.map((l) => ({
+      ...l,
+      claimed: familyCommissionClaimed.value.includes(
+        `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:letter:${l.id}`,
+      ),
+    })),
+  );
 
+  const completeNpcLetter = (
+    id: NpcLetterId,
+  ): { success: boolean; message: string } => {
+    const letter = NPC_LETTERS.find((l) => l.id === id);
+    if (!letter) return { success: false, message: "来信不存在。" };
+    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:letter:${id}`;
+    if (familyCommissionClaimed.value.includes(key))
+      return { success: false, message: "今日已回复这封来信。" };
+    const inv = useInventoryStore();
+    if (inv.getItemCount(letter.itemId) < letter.quantity)
+      return {
+        success: false,
+        message: `${letter.itemName}不足，需要${letter.quantity}。`,
+      };
+    inv.removeItem(letter.itemId, letter.quantity);
+    usePlayerStore().earnMoney(letter.rewardMoney);
+    const npc = NPCS.find((n) => n.name === letter.from);
+    if (npc) adjustFriendship(npc.id, letter.friendship);
+    familyCommissionClaimed.value.push(key);
+    return {
+      success: true,
+      message: `回复「${letter.title}」：${letter.from}好感+${letter.friendship}，铜钱+${letter.rewardMoney}。`,
+    };
+  };
 
-  const npcLetterCards = computed(() => NPC_LETTERS.map(l => ({
-    ...l,
-    claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:letter:${l.id}`)
-  })))
+  const completeVillageRequest = (
+    id: VillageRequestId,
+  ): { success: boolean; message: string } => {
+    const req = VILLAGE_REQUESTS.find((r) => r.id === id);
+    if (!req) return { success: false, message: "村庄请求不存在。" };
+    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:village:${id}`;
+    if (familyCommissionClaimed.value.includes(key))
+      return { success: false, message: "今日已完成。" };
+    const inv = useInventoryStore();
+    if (inv.getItemCount(req.itemId) < req.quantity)
+      return {
+        success: false,
+        message: `${req.itemName}不足，需要${req.quantity}。`,
+      };
+    inv.removeItem(req.itemId, req.quantity);
+    usePlayerStore().earnMoney(req.money);
+    for (const state of npcStates.value) state.friendship += req.friendship;
+    familyCommissionClaimed.value.push(key);
+    addLog(`完成${req.title}，全村好感+${req.friendship}。`);
+    return { success: true, message: `${req.title}完成：${req.npcHint}` };
+  };
 
-  const completeNpcLetter = (id: NpcLetterId): { success: boolean; message: string } => {
-    const letter = NPC_LETTERS.find(l => l.id === id)
-    if (!letter) return { success: false, message: '来信不存在。' }
-    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:letter:${id}`
-    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '今日已回复这封来信。' }
-    const inv = useInventoryStore()
-    if (inv.getItemCount(letter.itemId) < letter.quantity) return { success: false, message: `${letter.itemName}不足，需要${letter.quantity}。` }
-    inv.removeItem(letter.itemId, letter.quantity)
-    usePlayerStore().earnMoney(letter.rewardMoney)
-    const npc = NPCS.find(n => n.name === letter.from)
-    if (npc) adjustFriendship(npc.id, letter.friendship)
-    familyCommissionClaimed.value.push(key)
-    return { success: true, message: `回复「${letter.title}」：${letter.from}好感+${letter.friendship}，铜钱+${letter.rewardMoney}。` }
-  }
+  const claimFamilyCommission = (
+    id: FamilyCommissionId,
+  ): { success: boolean; message: string } => {
+    const spouse = getSpouse();
+    if (!spouse) return { success: false, message: "需要有家人一起完成委托。" };
+    const commission = FAMILY_COMMISSIONS.find((c) => c.id === id);
+    if (!commission) return { success: false, message: "家族委托不存在。" };
+    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:${id}`;
+    if (familyCommissionClaimed.value.includes(key))
+      return { success: false, message: "今天已完成这个家族委托。" };
+    const inv = useInventoryStore();
+    if (inv.getItemCount(commission.itemId) < commission.quantity)
+      return {
+        success: false,
+        message: `需要${commission.itemName}×${commission.quantity}。`,
+      };
+    inv.removeItem(commission.itemId, commission.quantity);
+    usePlayerStore().money += commission.rewardMoney;
+    addFamilyLegacyExp(commission.legacyExp + children.value.length * 5);
+    familyCommissionClaimed.value.push(key);
+    return {
+      success: true,
+      message: `完成${commission.title}：铜钱+${commission.rewardMoney}，家传经验+${commission.legacyExp + children.value.length * 5}`,
+    };
+  };
 
-  const completeVillageRequest = (id: VillageRequestId): { success: boolean; message: string } => {
-    const req = VILLAGE_REQUESTS.find(r => r.id === id)
-    if (!req) return { success: false, message: '村庄请求不存在。' }
-    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:village:${id}`
-    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '今日已完成。' }
-    const inv = useInventoryStore()
-    if (inv.getItemCount(req.itemId) < req.quantity) return { success: false, message: `${req.itemName}不足，需要${req.quantity}。` }
-    inv.removeItem(req.itemId, req.quantity)
-    usePlayerStore().earnMoney(req.money)
-    for (const state of npcStates.value) state.friendship += req.friendship
-    familyCommissionClaimed.value.push(key)
-    addLog(`完成${req.title}，全村好感+${req.friendship}。`)
-    return { success: true, message: `${req.title}完成：${req.npcHint}` }
-  }
+  const childGrowthCards = computed(() =>
+    children.value.map((c) => ({
+      ...c,
+      aptitudeName:
+        CHILD_APTITUDE_NAMES[((c as any).aptitude || "study") as ChildAptitude],
+      studyExp: (c as any).studyExp || 0,
+      legacyBond: (c as any).legacyBond || 0,
+      bonusText:
+        c.stage === "teen"
+          ? `可参与家族护器/洞天祭扫，家传收益+${Math.min(20, ((c as any).legacyBond || 0) / 5).toFixed(0)}%`
+          : c.stage === "child"
+            ? "学习中，互动可积累家传羁绊"
+            : "成长中",
+    })),
+  );
 
-  const claimFamilyCommission = (id: FamilyCommissionId): { success: boolean; message: string } => {
-    const spouse = getSpouse()
-    if (!spouse) return { success: false, message: '需要有家人一起完成委托。' }
-    const commission = FAMILY_COMMISSIONS.find(c => c.id === id)
-    if (!commission) return { success: false, message: '家族委托不存在。' }
-    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:${id}`
-    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '今天已完成这个家族委托。' }
-    const inv = useInventoryStore()
-    if (inv.getItemCount(commission.itemId) < commission.quantity) return { success: false, message: `需要${commission.itemName}×${commission.quantity}。` }
-    inv.removeItem(commission.itemId, commission.quantity)
-    usePlayerStore().money += commission.rewardMoney
-    addFamilyLegacyExp(commission.legacyExp + children.value.length * 5)
-    familyCommissionClaimed.value.push(key)
-    return { success: true, message: `完成${commission.title}：铜钱+${commission.rewardMoney}，家传经验+${commission.legacyExp + children.value.length * 5}` }
-  }
+  const childLongTermEventCards = computed(() =>
+    CHILD_LONG_TERM_EVENTS.map((e) => ({
+      ...e,
+      enabled: children.value.some((c) => c.stage !== "baby"),
+      claimed: familyCommissionClaimed.value.includes(
+        `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:child:${e.id}`,
+      ),
+    })),
+  );
 
-  const childGrowthCards = computed(() => children.value.map(c => ({
-    ...c,
-    aptitudeName: CHILD_APTITUDE_NAMES[((c as any).aptitude || 'study') as ChildAptitude],
-    studyExp: (c as any).studyExp || 0,
-    legacyBond: (c as any).legacyBond || 0,
-    bonusText: c.stage === 'teen' ? `可参与家族护器/洞天祭扫，家传收益+${Math.min(20, ((c as any).legacyBond || 0) / 5).toFixed(0)}%` : c.stage === 'child' ? '学习中，互动可积累家传羁绊' : '成长中'
-  })))
-
-
-  const childLongTermEventCards = computed(() => CHILD_LONG_TERM_EVENTS.map(e => ({
-    ...e,
-    enabled: children.value.some(c => c.stage !== 'baby'),
-    claimed: familyCommissionClaimed.value.includes(`${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:child:${e.id}`)
-  })))
-
-  const completeChildLongTermEvent = (id: ChildLongTermId): { success: boolean; message: string } => {
-    const event = CHILD_LONG_TERM_EVENTS.find(e => e.id === id)
-    if (!event) return { success: false, message: '子女事件不存在。' }
-    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:child:${id}`
-    if (familyCommissionClaimed.value.includes(key)) return { success: false, message: '今日已完成这个子女事件。' }
-    const targets = children.value.filter(c => c.stage !== 'baby')
-    if (targets.length === 0) return { success: false, message: '需要至少一个已会走动的孩子。' }
-    const inv = useInventoryStore()
-    if (inv.getItemCount(event.itemId) < event.quantity) return { success: false, message: `${event.itemName}不足，需要${event.quantity}。` }
-    if (!usePlayerStore().spendMoney(event.money)) return { success: false, message: `铜钱不足，需要${event.money}文。` }
-    inv.removeItem(event.itemId, event.quantity)
+  const completeChildLongTermEvent = (
+    id: ChildLongTermId,
+  ): { success: boolean; message: string } => {
+    const event = CHILD_LONG_TERM_EVENTS.find((e) => e.id === id);
+    if (!event) return { success: false, message: "子女事件不存在。" };
+    const key = `${useGameStore().year}-${useGameStore().season}-${useGameStore().day}:child:${id}`;
+    if (familyCommissionClaimed.value.includes(key))
+      return { success: false, message: "今日已完成这个子女事件。" };
+    const targets = children.value.filter((c) => c.stage !== "baby");
+    if (targets.length === 0)
+      return { success: false, message: "需要至少一个已会走动的孩子。" };
+    const inv = useInventoryStore();
+    if (inv.getItemCount(event.itemId) < event.quantity)
+      return {
+        success: false,
+        message: `${event.itemName}不足，需要${event.quantity}。`,
+      };
+    if (!usePlayerStore().spendMoney(event.money))
+      return { success: false, message: `铜钱不足，需要${event.money}文。` };
+    inv.removeItem(event.itemId, event.quantity);
     for (const child of targets) {
-      ;(child as any).studyExp = ((child as any).studyExp || 0) + event.study
-      ;(child as any).legacyBond = ((child as any).legacyBond || 0) + event.bond
-      child.friendship += event.bond
+      (child as any).studyExp = ((child as any).studyExp || 0) + event.study;
+      (child as any).legacyBond = ((child as any).legacyBond || 0) + event.bond;
+      child.friendship += event.bond;
     }
-    addFamilyLegacyExp(event.legacy + targets.length * 6)
-    familyCommissionClaimed.value.push(key)
-    return { success: true, message: `${event.title}完成：子女学识+${event.study}，羁绊+${event.bond}，家传经验+${event.legacy + targets.length * 6}。` }
-  }
+    addFamilyLegacyExp(event.legacy + targets.length * 6);
+    familyCommissionClaimed.value.push(key);
+    return {
+      success: true,
+      message: `${event.title}完成：子女学识+${event.study}，羁绊+${event.bond}，家传经验+${event.legacy + targets.length * 6}。`,
+    };
+  };
 
   /** 每日重置对话和送礼状态 + 伴侣好感衰减 */
   const dailyReset = () => {
-    const gameStore = useGameStore()
+    const gameStore = useGameStore();
 
     // 重置每日提示
-    tipGivenToday.value = {}
+    tipGivenToday.value = {};
 
     for (const state of npcStates.value) {
       // 只有已婚伴侣不聊天才会掉好感，普通NPC不衰减
       if (!state.talkedToday && state.married) {
-        state.friendship = Math.max(0, state.friendship - 10)
+        state.friendship = Math.max(0, state.friendship - 10);
       }
       // 知己不聊天也会掉好感（衰减较少）
       if (!state.talkedToday && state.zhiji) {
-        state.friendship = Math.max(0, state.friendship - 5)
+        state.friendship = Math.max(0, state.friendship - 5);
       }
-      state.talkedToday = false
-      state.giftedToday = false
+      state.talkedToday = false;
+      state.giftedToday = false;
       // 每周日重置周送礼计数 (day 7,14,21,28)
       if (gameStore.day % 7 === 0) {
-        state.giftsThisWeek = 0
+        state.giftsThisWeek = 0;
       }
     }
 
-    familyCommissionClaimed.value = familyCommissionClaimed.value.slice(-30)
+    familyCommissionClaimed.value = familyCommissionClaimed.value.slice(-30);
 
     // 知己天数递增
-    if (getZhiji()) daysZhiji.value++
-  }
+    if (getZhiji()) daysZhiji.value++;
+  };
 
   const serialize = () => {
     return {
@@ -1260,13 +1779,14 @@ export const useNpcStore = defineStore('npc', () => {
       familyLegacyLevel: familyLegacyLevel.value,
       familyLegacyExp: familyLegacyExp.value,
       familyCommissionClaimed: familyCommissionClaimed.value,
-      friendshipVersion: 2
-    }
-  }
+      friendshipVersion: 2,
+    };
+  };
 
   const deserialize = (data: ReturnType<typeof serialize>) => {
-    const isOldScale = !(data as any).friendshipVersion || (data as any).friendshipVersion < 2
-    const savedStates = data.npcStates.map(s => ({
+    const isOldScale =
+      !(data as any).friendshipVersion || (data as any).friendshipVersion < 2;
+    const savedStates = data.npcStates.map((s) => ({
       ...s,
       // 旧存档好感度迁移: ×8 (300制→2500制)
       friendship: isOldScale ? Math.round(s.friendship * 8) : s.friendship,
@@ -1274,11 +1794,13 @@ export const useNpcStore = defineStore('npc', () => {
       dating: s.dating ?? false,
       zhiji: (s as any).zhiji ?? false,
       giftsThisWeek: (s as any).giftsThisWeek ?? 0,
-      triggeredHeartEvents: s.triggeredHeartEvents ?? []
-    }))
+      triggeredHeartEvents: s.triggeredHeartEvents ?? [],
+    }));
     // 合并：保留已保存的状态，为新增NPC补充默认状态
-    const savedIds = new Set(savedStates.map(s => s.npcId))
-    const newNpcStates: NpcState[] = NPCS.filter(npc => !savedIds.has(npc.id)).map(npc => ({
+    const savedIds = new Set(savedStates.map((s) => s.npcId));
+    const newNpcStates: NpcState[] = NPCS.filter(
+      (npc) => !savedIds.has(npc.id),
+    ).map((npc) => ({
       npcId: npc.id,
       friendship: 0,
       talkedToday: false,
@@ -1287,35 +1809,40 @@ export const useNpcStore = defineStore('npc', () => {
       dating: false,
       married: false,
       zhiji: false,
-      triggeredHeartEvents: []
-    }))
-    npcStates.value = [...savedStates, ...newNpcStates]
+      triggeredHeartEvents: [],
+    }));
+    npcStates.value = [...savedStates, ...newNpcStates];
     children.value = ((data as any).children ?? []).map((c: any) => ({
       ...c,
-      birthQuality: c.birthQuality ?? 'normal',
-      aptitude: c.aptitude ?? 'study',
+      birthQuality: c.birthQuality ?? "normal",
+      aptitude: c.aptitude ?? "study",
       studyExp: c.studyExp ?? 0,
-      legacyBond: c.legacyBond ?? 0
-    }))
+      legacyBond: c.legacyBond ?? 0,
+    }));
     // 旧存档无 nextChildId → 从已有子女推算
     nextChildId.value =
-      (data as any).nextChildId ?? (children.value.length > 0 ? Math.max(...children.value.map((c: ChildState) => c.id)) + 1 : 0)
-    daysMarried.value = (data as any).daysMarried ?? 0
-    daysZhiji.value = (data as any).daysZhiji ?? 0
+      (data as any).nextChildId ??
+      (children.value.length > 0
+        ? Math.max(...children.value.map((c: ChildState) => c.id)) + 1
+        : 0);
+    daysMarried.value = (data as any).daysMarried ?? 0;
+    daysZhiji.value = (data as any).daysZhiji ?? 0;
 
     // 新孕期系统
-    pregnancy.value = (data as any).pregnancy ?? null
-    childProposalPending.value = (data as any).childProposalPending ?? false
-    childProposalDeclinedCount.value = (data as any).childProposalDeclinedCount ?? 0
-    daysSinceProposalDecline.value = (data as any).daysSinceProposalDecline ?? 0
+    pregnancy.value = (data as any).pregnancy ?? null;
+    childProposalPending.value = (data as any).childProposalPending ?? false;
+    childProposalDeclinedCount.value =
+      (data as any).childProposalDeclinedCount ?? 0;
+    daysSinceProposalDecline.value =
+      (data as any).daysSinceProposalDecline ?? 0;
 
     // 旧存档迁移：pendingChild → pregnancy
     if ((data as any).pendingChild && !pregnancy.value) {
-      const oldCountdown: number = (data as any).childCountdown ?? 0
-      let stage: PregnancyStage = 'early'
-      if (oldCountdown <= 3) stage = 'ready'
-      else if (oldCountdown <= 8) stage = 'late'
-      else if (oldCountdown <= 13) stage = 'mid'
+      const oldCountdown: number = (data as any).childCountdown ?? 0;
+      let stage: PregnancyStage = "early";
+      if (oldCountdown <= 3) stage = "ready";
+      else if (oldCountdown <= 8) stage = "late";
+      else if (oldCountdown <= 13) stage = "mid";
       pregnancy.value = {
         stage,
         daysInStage: 0,
@@ -1324,18 +1851,22 @@ export const useNpcStore = defineStore('npc', () => {
         caredToday: false,
         giftedForPregnancy: false,
         companionToday: false,
-        medicalPlan: null
-      }
+        medicalPlan: null,
+      };
     }
 
-    weddingCountdown.value = (data as any).weddingCountdown ?? 0
-    weddingNpcId.value = (data as any).weddingNpcId ?? null
-    hiredHelpers.value = (data as any).hiredHelpers ?? []
-    spouseSpecialty.value = (data as any).spouseSpecialty ?? null
-    familyLegacyLevel.value = Number((data as any).familyLegacyLevel ?? 1)
-    familyLegacyExp.value = Number((data as any).familyLegacyExp ?? 0)
-    familyCommissionClaimed.value = Array.isArray((data as any).familyCommissionClaimed) ? (data as any).familyCommissionClaimed : []
-  }
+    weddingCountdown.value = (data as any).weddingCountdown ?? 0;
+    weddingNpcId.value = (data as any).weddingNpcId ?? null;
+    hiredHelpers.value = (data as any).hiredHelpers ?? [];
+    spouseSpecialty.value = (data as any).spouseSpecialty ?? null;
+    familyLegacyLevel.value = Number((data as any).familyLegacyLevel ?? 1);
+    familyLegacyExp.value = Number((data as any).familyLegacyExp ?? 0);
+    familyCommissionClaimed.value = Array.isArray(
+      (data as any).familyCommissionClaimed,
+    )
+      ? (data as any).familyCommissionClaimed
+      : [];
+  };
 
   return {
     npcStates,
@@ -1411,6 +1942,6 @@ export const useNpcStore = defineStore('npc', () => {
     PREGNANCY_STAGE_CONFIG,
     MEDICAL_PLANS,
     serialize,
-    deserialize
-  }
-})
+    deserialize,
+  };
+});

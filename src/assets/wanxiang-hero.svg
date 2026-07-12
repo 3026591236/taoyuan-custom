@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-label="万象仙乡主视觉：灵田村落、仙山云阙与星河仙门">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#120a31"/><stop offset="0.42" stop-color="#293f88"/><stop offset="0.72" stop-color="#7fe9dc"/><stop offset="1" stop-color="#fff0b4"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8b9"/><stop offset="0.5" stop-color="#f4bd55"/><stop offset="1" stop-color="#fff0a6"/></linearGradient>
+    <radialGradient id="gate" cx="50%" cy="48%" r="45%"><stop offset="0" stop-color="#fffde0"/><stop offset="0.2" stop-color="#aafff3"/><stop offset="0.48" stop-color="#806dff" stop-opacity=".8"/><stop offset="1" stop-color="#23104a" stop-opacity="0"/></radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="12"/></filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="b"/><feBlend in="SourceGraphic" in2="b" mode="screen"/></filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#sky)"/>
+  <rect width="1280" height="720" fill="url(#gate)"/>
+  <g fill="#fff9c9" opacity=".9"><circle cx="160" cy="82" r="3"/><circle cx="245" cy="152" r="2"/><circle cx="1048" cy="92" r="3"/><circle cx="1117" cy="198" r="2"/><circle cx="792" cy="74" r="2"/><circle cx="596" cy="128" r="2"/><circle cx="384" cy="58" r="2"/></g>
+  <g fill="none" stroke="url(#gold)" stroke-width="4" opacity=".8"><path d="M210 100c190 130 368 110 548 38 117-47 211-44 302 22"/><path d="M232 122c210 88 369 91 520 9" stroke-dasharray="10 16"/></g>
+  <g transform="translate(640 292)" filter="url(#glow)">
+    <circle r="168" fill="none" stroke="url(#gold)" stroke-width="8"/>
+    <circle r="132" fill="none" stroke="#9affec" stroke-width="3" stroke-dasharray="18 18"/>
+    <path d="M0-178C72-118 112-60 122 14h-244c10-74 50-132 122-192z" fill="none" stroke="url(#gold)" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M0-108V148M-92 28c54-24 82-24 92 0 10-24 38-24 92 0" fill="none" stroke="#fff4aa" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g opacity=".72" filter="url(#blur)"><ellipse cx="640" cy="430" rx="420" ry="68" fill="#cffff3"/><ellipse cx="270" cy="475" rx="240" ry="42" fill="#e8fff7"/><ellipse cx="1010" cy="462" rx="260" ry="48" fill="#e8fff7"/></g>
+  <g>
+    <path d="M0 455c102-76 194-96 275-58 63 30 102 17 154-32 56-53 122-62 195-9 70 51 132 59 198 16 99-64 213-30 318 89v260H0z" fill="#223b5f" opacity=".95"/>
+    <path d="M0 512c130-72 242-68 338 12 80 67 158 53 239-22 63-58 141-56 236 5 111 71 225 64 467-15v228H0z" fill="#2a654e"/>
+    <path d="M0 586c198-77 385-72 560 15 155 77 338 73 720-31v150H0z" fill="#5fa65d"/>
+  </g>
+  <g opacity=".72"><path d="M80 610h1120" stroke="#fff0a1" stroke-width="2"/><path d="M0 660c190-42 395-48 614-16 215 31 437 25 666-18" stroke="#c5ff9d" stroke-width="10" opacity=".45"/><path d="M90 590c140 36 288 48 445 36 235-18 400-4 562 42" fill="none" stroke="#90f7ba" stroke-width="7" opacity=".5"/></g>
+  <g fill="#8b5a2b" stroke="#ffdf87" stroke-width="3"><path d="M180 546h78v62h-78z"/><path d="M169 546l50-42 50 42z" fill="#bd7042"/><path d="M294 552h92v72h-92z"/><path d="M278 552l62-48 62 48z" fill="#bd7042"/><path d="M938 544h94v74h-94z"/><path d="M922 544l63-50 64 50z" fill="#bd7042"/></g>
+  <g fill="none" stroke="#fff1b2" stroke-linecap="round" opacity=".55"><path d="M218 505c-12-28 22-38 8-72"/><path d="M340 504c-15-30 20-45 2-78"/><path d="M986 494c-10-22 18-34 4-58"/></g>
+  <g filter="url(#glow)"><text x="640" y="622" text-anchor="middle" font-family="serif" font-size="76" font-weight="700" fill="url(#gold)" letter-spacing="14">万象仙乡</text><text x="640" y="670" text-anchor="middle" font-family="serif" font-size="26" fill="#eaffff" letter-spacing="8">一亩灵田起，万象入仙途</text></g>
+</svg>

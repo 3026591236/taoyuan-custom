@@ -2,10 +2,17 @@
   <div>
     <h3 class="text-accent text-sm mb-3 flex items-center justify-between">
       <span>
-        <component :is="npcStore.getSpouse() ? Heart : Home" :size="14" class="inline" />
+        <component
+          :is="npcStore.getSpouse() ? Heart : Home"
+          :size="14"
+          class="inline"
+        />
         小屋
       </span>
-      <button class="text-muted hover:text-accent transition-colors" @click="showCalendarModal = true">
+      <button
+        class="text-muted hover:text-accent transition-colors"
+        @click="showCalendarModal = true"
+      >
         <Calendar :size="14" />
       </button>
     </h3>
@@ -14,7 +21,9 @@
     <div class="border border-accent/20 rounded-xs p-3 mb-4">
       <div class="flex items-center justify-between mb-1">
         <span class="text-sm text-accent">{{ homeStore.farmhouseName }}</span>
-        <span class="text-xs text-muted">等级 {{ homeStore.farmhouseLevel }}</span>
+        <span class="text-xs text-muted"
+          >等级 {{ homeStore.farmhouseLevel }}</span
+        >
       </div>
       <p class="text-xs text-muted mb-2">{{ currentBenefit }}</p>
 
@@ -23,13 +32,26 @@
           <div>
             <p class="text-xs text-accent">庄园维护</p>
             <p class="text-xs text-muted mt-0.5">
-              {{ homeStore.manorMaintenanceActive ? `维护中：剩余${homeStore.manorMaintenanceDays}天，睡眠恢复额外+5%` : '消耗铜钱与木石维护屋舍，获得7天睡眠恢复加成。' }}
+              {{
+                homeStore.manorMaintenanceActive
+                  ? `维护中：剩余${homeStore.manorMaintenanceDays}天，睡眠恢复额外+5%`
+                  : "消耗铜钱与木石维护屋舍，获得7天睡眠恢复加成。"
+              }}
             </p>
             <p class="text-xs text-muted mt-0.5">
-              费用：{{ homeStore.manorMaintenanceCost.money }}文；材料：{{ homeStore.manorMaintenanceCost.materials.map(m => getItemName(m.itemId) + '×' + m.quantity).join('、') }}
+              费用：{{ homeStore.manorMaintenanceCost.money }}文；材料：{{
+                homeStore.manorMaintenanceCost.materials
+                  .map((m) => getItemName(m.itemId) + "×" + m.quantity)
+                  .join("、")
+              }}
             </p>
           </div>
-          <Button class="shrink-0" size="sm" :disabled="!canMaintainManor" @click="handleMaintainManor">
+          <Button
+            class="shrink-0"
+            size="sm"
+            :disabled="!canMaintainManor"
+            @click="handleMaintainManor"
+          >
             维护
           </Button>
         </div>
@@ -40,35 +62,70 @@
         @click="showUpgradeModal = true"
       >
         <span class="text-xs">升级为「{{ homeStore.nextUpgrade.name }}」</span>
-        <span class="text-xs text-accent whitespace-nowrap">{{ homeStore.nextUpgrade.cost }}文</span>
+        <span class="text-xs text-accent whitespace-nowrap"
+          >{{ homeStore.nextUpgrade.cost }}文</span
+        >
       </div>
     </div>
 
     <!-- 家人 -->
-    <div v-if="npcStore.getSpouse()" class="border border-accent/20 rounded-xs p-3 mb-4">
+    <div
+      v-if="npcStore.getSpouse()"
+      class="border border-accent/20 rounded-xs p-3 mb-4"
+    >
       <p class="text-sm text-accent mb-2">
         <Users :size="14" class="inline" />
         家人
       </p>
 
-
       <!-- 家族传承 -->
       <div class="border border-accent/20 rounded-xs p-2 mb-2 bg-accent/5">
         <div class="flex items-center justify-between mb-1">
           <p class="text-xs text-accent">家族传承</p>
-          <span class="text-[10px] text-muted">Lv.{{ npcStore.familyLegacyLevel }} · {{ npcStore.familyLegacyExp }}/{{ npcStore.familyLegacyNeed }}</span>
+          <span class="text-[10px] text-muted"
+            >Lv.{{ npcStore.familyLegacyLevel }} ·
+            {{ npcStore.familyLegacyExp }}/{{ npcStore.familyLegacyNeed }}</span
+          >
         </div>
-        <p class="text-[10px] text-muted mb-2">{{ npcStore.familyBonusText }}</p>
+        <p class="text-[10px] text-muted mb-2">
+          {{ npcStore.familyBonusText }}
+        </p>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-1 mb-2">
-          <Button v-for="option in familySpecialtyOptions" :key="option.id" class="py-0.5 px-1 text-[10px] justify-center" :class="npcStore.spouseSpecialty === option.id ? '!bg-accent !text-bg' : ''" @click="handleSetSpouseSpecialty(option.id)">
+          <Button
+            v-for="option in familySpecialtyOptions"
+            :key="option.id"
+            class="py-0.5 px-1 text-[10px] justify-center"
+            :class="
+              npcStore.spouseSpecialty === option.id
+                ? '!bg-accent !text-bg'
+                : ''
+            "
+            @click="handleSetSpouseSpecialty(option.id)"
+          >
             {{ option.name }}
           </Button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
-          <div v-for="task in npcStore.familyCommissionCards" :key="task.id" class="border border-accent/10 rounded-xs p-1.5">
-            <div class="flex items-center justify-between"><span class="text-[10px] text-accent">{{ task.title }}</span><span class="text-[10px] text-muted">{{ task.itemName }}×{{ task.quantity }}</span></div>
-            <p class="text-[10px] text-muted leading-relaxed">{{ task.desc }}</p>
-            <Button class="w-full py-0.5 px-1 text-[10px] justify-center mt-1" :disabled="task.claimed" @click="handleFamilyCommission(task.id)">{{ task.claimed ? '今日已完成' : '完成委托' }}</Button>
+          <div
+            v-for="task in npcStore.familyCommissionCards"
+            :key="task.id"
+            class="border border-accent/10 rounded-xs p-1.5"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-accent">{{ task.title }}</span
+              ><span class="text-[10px] text-muted"
+                >{{ task.itemName }}×{{ task.quantity }}</span
+              >
+            </div>
+            <p class="text-[10px] text-muted leading-relaxed">
+              {{ task.desc }}
+            </p>
+            <Button
+              class="w-full py-0.5 px-1 text-[10px] justify-center mt-1"
+              :disabled="task.claimed"
+              @click="handleFamilyCommission(task.id)"
+              >{{ task.claimed ? "今日已完成" : "完成委托" }}</Button
+            >
           </div>
         </div>
       </div>
@@ -82,8 +139,13 @@
             伴侣
           </span>
         </div>
-        <div v-if="spouseDialogue" class="border border-accent/10 rounded-xs p-2 mb-1.5">
-          <p class="text-[10px] text-accent mb-0.5">「{{ spouseDef?.name }}」</p>
+        <div
+          v-if="spouseDialogue"
+          class="border border-accent/10 rounded-xs p-2 mb-1.5"
+        >
+          <p class="text-[10px] text-accent mb-0.5">
+            「{{ spouseDef?.name }}」
+          </p>
           <p class="text-xs">{{ spouseDialogue }}</p>
         </div>
         <div class="flex space-x-1.5">
@@ -94,39 +156,68 @@
             :disabled="spouseState?.talkedToday"
             @click="handleSpouseTalk"
           >
-            {{ spouseState?.talkedToday ? '已聊天' : '聊天' }}
+            {{ spouseState?.talkedToday ? "已聊天" : "聊天" }}
           </Button>
           <Button
             class="flex-1 justify-center py-0.5"
             :icon="Gift"
             :icon-size="10"
-            :disabled="spouseState?.giftedToday || (spouseState?.giftsThisWeek ?? 0) >= 2"
+            :disabled="
+              spouseState?.giftedToday || (spouseState?.giftsThisWeek ?? 0) >= 2
+            "
             @click="showSpouseGiftModal = true"
           >
-            {{ spouseState?.giftedToday ? '已送礼' : (spouseState?.giftsThisWeek ?? 0) >= 2 ? '本周已满' : '送礼' }}
+            {{
+              spouseState?.giftedToday
+                ? "已送礼"
+                : (spouseState?.giftsThisWeek ?? 0) >= 2
+                  ? "本周已满"
+                  : "送礼"
+            }}
           </Button>
         </div>
       </div>
 
       <!-- 提议通知 -->
-      <div v-if="npcStore.childProposalPending" class="border border-accent/30 rounded-xs p-2 mb-2">
+      <div
+        v-if="npcStore.childProposalPending"
+        class="border border-accent/30 rounded-xs p-2 mb-2"
+      >
         <p class="text-xs text-accent mb-1.5">配偶有话想和你说……</p>
-        <Button class="w-full justify-center" @click="showChildProposalDialog">回应</Button>
+        <Button class="w-full justify-center" @click="showChildProposalDialog"
+          >回应</Button
+        >
       </div>
 
       <!-- 孕期面板 -->
-      <div v-if="npcStore.pregnancy" class="border border-success/20 rounded-xs p-2 mb-2">
-        <p class="text-xs text-success mb-2">孕期 · {{ PREGNANCY_STAGE_LABELS[npcStore.pregnancy.stage] }}</p>
+      <div
+        v-if="npcStore.pregnancy"
+        class="border border-success/20 rounded-xs p-2 mb-2"
+      >
+        <p class="text-xs text-success mb-2">
+          孕期 · {{ PREGNANCY_STAGE_LABELS[npcStore.pregnancy.stage] }}
+        </p>
         <!-- 阶段进度条 -->
         <div class="flex items-center space-x-1 mb-1.5">
           <span class="text-[10px] text-muted w-8 shrink-0">进度</span>
           <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
             <div
               class="h-full rounded-xs bg-success transition-all"
-              :style="{ width: Math.floor((npcStore.pregnancy.daysInStage / npcStore.pregnancy.stageDays) * 100) + '%' }"
+              :style="{
+                width:
+                  Math.floor(
+                    (npcStore.pregnancy.daysInStage /
+                      npcStore.pregnancy.stageDays) *
+                      100,
+                  ) + '%',
+              }"
             />
           </div>
-          <span class="text-[10px] text-muted shrink-0">{{ npcStore.pregnancy.daysInStage }}/{{ npcStore.pregnancy.stageDays }}天</span>
+          <span class="text-[10px] text-muted shrink-0"
+            >{{ npcStore.pregnancy.daysInStage }}/{{
+              npcStore.pregnancy.stageDays
+            }}天</span
+          >
         </div>
         <!-- 安产率条 -->
         <div class="flex items-center space-x-1 mb-2">
@@ -134,14 +225,24 @@
           <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
             <div
               class="h-full rounded-xs transition-all"
-              :class="npcStore.pregnancy.careScore >= 70 ? 'bg-success' : npcStore.pregnancy.careScore >= 40 ? 'bg-accent' : 'bg-danger'"
+              :class="
+                npcStore.pregnancy.careScore >= 70
+                  ? 'bg-success'
+                  : npcStore.pregnancy.careScore >= 40
+                    ? 'bg-accent'
+                    : 'bg-danger'
+              "
               :style="{ width: npcStore.pregnancy.careScore + '%' }"
             />
           </div>
-          <span class="text-[10px] text-muted shrink-0">{{ npcStore.pregnancy.careScore }}%</span>
+          <span class="text-[10px] text-muted shrink-0"
+            >{{ npcStore.pregnancy.careScore }}%</span
+          >
         </div>
         <!-- 阶段提示 -->
-        <p class="text-[10px] text-muted/60 mb-2">{{ STAGE_TIPS[npcStore.pregnancy.stage] }}</p>
+        <p class="text-[10px] text-muted/60 mb-2">
+          {{ STAGE_TIPS[npcStore.pregnancy.stage] }}
+        </p>
         <!-- 照料操作 -->
         <div class="grid grid-cols-2 gap-1 mb-1">
           <Button
@@ -149,70 +250,131 @@
             :disabled="npcStore.pregnancy.giftedForPregnancy"
             @click="handlePregnancyCare('gift')"
           >
-            {{ npcStore.pregnancy.giftedForPregnancy ? '已送礼' : '送礼物' }}
+            {{ npcStore.pregnancy.giftedForPregnancy ? "已送礼" : "送礼物" }}
           </Button>
           <Button
             class="py-0.5 px-1 text-[10px] justify-center"
             :disabled="npcStore.pregnancy.companionToday"
             @click="handlePregnancyCare('companion')"
           >
-            {{ npcStore.pregnancy.companionToday ? '已陪伴' : '陪伴聊天' }}
+            {{ npcStore.pregnancy.companionToday ? "已陪伴" : "陪伴聊天" }}
           </Button>
-          <Button class="py-0.5 px-1 text-[10px] justify-center" @click="handlePregnancyCare('supplement')">服用补品</Button>
+          <Button
+            class="py-0.5 px-1 text-[10px] justify-center"
+            @click="handlePregnancyCare('supplement')"
+            >服用补品</Button
+          >
           <Button
             class="py-0.5 px-1 text-[10px] justify-center"
             :disabled="npcStore.pregnancy.caredToday"
             @click="handlePregnancyCare('rest')"
           >
-            {{ npcStore.pregnancy.caredToday ? '已休息' : '安排休息' }}
+            {{ npcStore.pregnancy.caredToday ? "已休息" : "安排休息" }}
           </Button>
         </div>
         <!-- 医疗方案（待产期） -->
-        <div v-if="npcStore.pregnancy.stage === 'ready'" class="border border-accent/20 rounded-xs p-2 mt-2">
+        <div
+          v-if="npcStore.pregnancy.stage === 'ready'"
+          class="border border-accent/20 rounded-xs p-2 mt-2"
+        >
           <p class="text-[10px] text-accent mb-1.5">选择接生方式</p>
-          <div v-if="!npcStore.pregnancy.medicalPlan" class="flex flex-col space-y-1">
-            <Button class="py-0.5 px-1 text-[10px] w-full justify-center" @click="handleChooseMedical('normal')">
+          <div
+            v-if="!npcStore.pregnancy.medicalPlan"
+            class="flex flex-col space-y-1"
+          >
+            <Button
+              class="py-0.5 px-1 text-[10px] w-full justify-center"
+              @click="handleChooseMedical('normal')"
+            >
               普通接生（1000文 · 80%安全）
             </Button>
-            <Button class="py-0.5 px-1 text-[10px] w-full justify-center" @click="handleChooseMedical('advanced')">
+            <Button
+              class="py-0.5 px-1 text-[10px] w-full justify-center"
+              @click="handleChooseMedical('advanced')"
+            >
               高级接生（5000文 · 95%安全）
             </Button>
-            <Button class="py-0.5 px-1 text-[10px] w-full justify-center text-accent" @click="handleChooseMedical('luxury')">
+            <Button
+              class="py-0.5 px-1 text-[10px] w-full justify-center text-accent"
+              @click="handleChooseMedical('luxury')"
+            >
               豪华接生（15000文 · 100%安全）
             </Button>
           </div>
-          <p v-else class="text-[10px] text-success">已选择：{{ MEDICAL_LABELS[npcStore.pregnancy.medicalPlan] }}</p>
+          <p v-else class="text-[10px] text-success">
+            已选择：{{ MEDICAL_LABELS[npcStore.pregnancy.medicalPlan] }}
+          </p>
         </div>
       </div>
 
       <!-- 无子女无孕期 -->
-      <div v-if="npcStore.children.length === 0 && !npcStore.pregnancy && !npcStore.childProposalPending">
+      <div
+        v-if="
+          npcStore.children.length === 0 &&
+          !npcStore.pregnancy &&
+          !npcStore.childProposalPending
+        "
+      >
         <div class="flex flex-col items-center justify-center py-6 text-muted">
           <Users :size="32" class="mb-2" />
           <p class="text-xs">婚后生活安稳，也许将来会有小生命到来。</p>
         </div>
       </div>
 
-      <div v-if="npcStore.children.length > 0" class="border border-accent/20 rounded-xs p-2 mb-2 bg-bg/40">
-        <div class="flex items-center justify-between mb-2"><p class="text-xs text-accent">家族后代长期线</p><span class="text-[10px] text-muted">每日培养，沉淀学识/羁绊/家传</span></div>
+      <div
+        v-if="npcStore.children.length > 0"
+        class="border border-accent/20 rounded-xs p-2 mb-2 bg-bg/40"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs text-accent">家族后代长期线</p>
+          <span class="text-[10px] text-muted"
+            >每日培养，沉淀学识/羁绊/家传</span
+          >
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div v-for="ev in npcStore.childLongTermEventCards" :key="ev.id" class="border border-accent/10 rounded-xs p-2">
+          <div
+            v-for="ev in npcStore.childLongTermEventCards"
+            :key="ev.id"
+            class="border border-accent/10 rounded-xs p-2"
+          >
             <p class="text-xs text-accent">{{ ev.title }}</p>
-            <p class="text-[10px] text-muted leading-relaxed mt-1">{{ ev.desc }}</p>
-            <p class="text-[10px] text-warning mt-1">{{ ev.itemName }}×{{ ev.quantity }} / {{ ev.money }}文</p>
-            <button class="mini-btn mt-2" :disabled="!ev.enabled || ev.claimed" @click="handleChildLongTerm(ev.id)">{{ ev.claimed ? '已完成' : ev.enabled ? '安排' : '需要子女成长' }}</button>
+            <p class="text-[10px] text-muted leading-relaxed mt-1">
+              {{ ev.desc }}
+            </p>
+            <p class="text-[10px] text-warning mt-1">
+              {{ ev.itemName }}×{{ ev.quantity }} / {{ ev.money }}文
+            </p>
+            <button
+              class="mini-btn mt-2"
+              :disabled="!ev.enabled || ev.claimed"
+              @click="handleChildLongTerm(ev.id)"
+            >
+              {{ ev.claimed ? "已完成" : ev.enabled ? "安排" : "需要子女成长" }}
+            </button>
           </div>
         </div>
       </div>
 
       <!-- 子女列表 -->
       <div v-if="npcStore.children.length > 0" class="flex flex-col space-y-1">
-        <div v-for="child in npcStore.children" :key="child.id" class="border border-accent/10 rounded-xs p-2">
+        <div
+          v-for="child in npcStore.children"
+          :key="child.id"
+          class="border border-accent/10 rounded-xs p-2"
+        >
           <div class="flex items-center justify-between mb-1">
             <span class="text-xs text-accent">
               {{ child.name }}
-              <span v-if="child.birthQuality === 'healthy'" class="text-[10px] text-success ml-0.5">[健康]</span>
-              <span v-else-if="child.birthQuality === 'premature'" class="text-[10px] text-muted/60 ml-0.5">[早产]</span>
+              <span
+                v-if="child.birthQuality === 'healthy'"
+                class="text-[10px] text-success ml-0.5"
+                >[健康]</span
+              >
+              <span
+                v-else-if="child.birthQuality === 'premature'"
+                class="text-[10px] text-muted/60 ml-0.5"
+                >[早产]</span
+              >
             </span>
             <div class="flex items-center space-x-1">
               <Button
@@ -223,27 +385,62 @@
               >
                 互动
               </Button>
-              <span v-else-if="child.stage !== 'baby'" class="text-xs text-muted">已互动</span>
+              <span
+                v-else-if="child.stage !== 'baby'"
+                class="text-xs text-muted"
+                >已互动</span
+              >
               <span v-else class="text-xs text-muted">还太小</span>
-              <Button class="py-0 px-1 text-danger" @click="releaseConfirmChildId = child.id">送走</Button>
+              <Button
+                class="py-0 px-1 text-danger"
+                @click="releaseConfirmChildId = child.id"
+                >送走</Button
+              >
             </div>
           </div>
-          <p class="text-[10px] text-muted mb-0.5">{{ CHILD_STAGE_NAMES[child.stage] }} · {{ child.daysOld }}天 · 资质：{{ child.aptitude ? ({ farm: '灵田', animal: '牧养', study: '读书', combat: '护院' } as any)[child.aptitude] : '读书' }} · 学识{{ child.studyExp || 0 }} · 羁绊{{ child.legacyBond || 0 }}</p>
-          <div v-if="child.stage !== 'baby'" class="flex items-center space-x-0.5">
+          <p class="text-[10px] text-muted mb-0.5">
+            {{ CHILD_STAGE_NAMES[child.stage] }} · {{ child.daysOld }}天 ·
+            资质：{{
+              child.aptitude
+                ? (
+                    {
+                      farm: "灵田",
+                      animal: "牧养",
+                      study: "读书",
+                      combat: "护院",
+                    } as any
+                  )[child.aptitude]
+                : "读书"
+            }}
+            · 学识{{ child.studyExp || 0 }} · 羁绊{{ child.legacyBond || 0 }}
+          </p>
+          <div
+            v-if="child.stage !== 'baby'"
+            class="flex items-center space-x-0.5"
+          >
             <Heart
               v-for="h in 10"
               :key="h"
               :size="10"
               class="flex-shrink-0"
-              :class="child.friendship >= h * 30 ? 'text-danger' : 'text-muted/30'"
+              :class="
+                child.friendship >= h * 30 ? 'text-danger' : 'text-muted/30'
+              "
               :fill="child.friendship >= h * 30 ? 'currentColor' : 'none'"
             />
           </div>
         </div>
       </div>
       <!-- 送走子女确认 -->
-      <div v-if="releaseConfirmChildId !== null" class="mt-2 game-panel border-danger/40">
-        <p class="text-xs text-danger mb-2">确定将{{ getChildName(releaseConfirmChildId) }}送往远方亲戚家吗？（花费10000文）</p>
+      <div
+        v-if="releaseConfirmChildId !== null"
+        class="mt-2 game-panel border-danger/40"
+      >
+        <p class="text-xs text-danger mb-2">
+          确定将{{
+            getChildName(releaseConfirmChildId)
+          }}送往远方亲戚家吗？（花费10000文）
+        </p>
         <div class="grid grid-cols-2 gap-2">
           <Button class="text-danger" @click="handleReleaseChild">确认</Button>
           <Button @click="releaseConfirmChildId = null">取消</Button>
@@ -258,73 +455,132 @@
           <Hammer :size="14" class="inline" />
           雇工
         </p>
-        <Button v-if="currentHelpers.length < 2" class="py-0 px-1.5" :icon="UserPlus" :icon-size="12" @click="showHireModal = true">
+        <Button
+          v-if="currentHelpers.length < 2"
+          class="py-0 px-1.5"
+          :icon="UserPlus"
+          :icon-size="12"
+          @click="showHireModal = true"
+        >
           招募
         </Button>
       </div>
-      <p class="text-xs text-muted mb-2">雇佣好感度≥4心的村民帮忙打理农场，每日支付工资。</p>
+      <p class="text-xs text-muted mb-2">
+        雇佣好感度≥4心的村民帮忙打理农场，每日支付工资。
+      </p>
 
       <!-- 当前雇工 -->
-      <div v-if="currentHelpers.length > 0" class="flex flex-col space-y-1 mb-2">
+      <div
+        v-if="currentHelpers.length > 0"
+        class="flex flex-col space-y-1 mb-2"
+      >
         <div
           v-for="h in currentHelpers"
           :key="h.npcId"
           class="flex items-center justify-between border border-accent/10 rounded-xs px-3 py-1.5"
         >
           <div>
-            <span class="text-xs text-accent">{{ getNpcById(h.npcId)?.name }}</span>
-            <span class="text-xs text-muted ml-1">{{ npcStore.HELPER_TASK_NAMES[h.task] }}</span>
+            <span class="text-xs text-accent">{{
+              getNpcById(h.npcId)?.name
+            }}</span>
+            <span class="text-xs text-muted ml-1">{{
+              npcStore.HELPER_TASK_NAMES[h.task]
+            }}</span>
           </div>
           <div class="flex items-center space-x-1.5">
             <span class="text-[10px] text-muted">{{ h.dailyWage }}文/天</span>
-            <Button class="py-0 px-1 btn-danger" :icon="X" :icon-size="10" @click="dismissConfirmNpcId = h.npcId" />
+            <Button
+              class="py-0 px-1 btn-danger"
+              :icon="X"
+              :icon-size="10"
+              @click="dismissConfirmNpcId = h.npcId"
+            />
           </div>
         </div>
       </div>
-      <div v-if="currentHelpers.length === 0" class="flex flex-col items-center justify-center py-6 text-muted">
+      <div
+        v-if="currentHelpers.length === 0"
+        class="flex flex-col items-center justify-center py-6 text-muted"
+      >
         <Hammer :size="32" class="mb-2" />
         <p class="text-xs">暂未雇佣</p>
       </div>
     </div>
 
     <!-- 酒窖 -->
-    <div v-if="homeStore.hasCellar" class="border border-accent/20 rounded-xs p-3">
+    <div
+      v-if="homeStore.hasCellar"
+      class="border border-accent/20 rounded-xs p-3"
+    >
       <div class="flex items-center justify-between mb-2">
         <p class="text-sm text-accent">
           <Wine :size="14" class="inline" />
           酒窖·Lv.{{ homeStore.cellarLevel }}
-          <span class="text-[10px] text-muted ml-1">（{{ homeStore.cellarSlots.length }}/{{ homeStore.cellarMaxSlots }}）</span>
+          <span class="text-[10px] text-muted ml-1"
+            >（{{ homeStore.cellarSlots.length }}/{{
+              homeStore.cellarMaxSlots
+            }}）</span
+          >
         </p>
-        <Button v-if="homeStore.nextCellarUpgrade" class="py-0 px-1" @click="showCellarUpgradeModal = true">
+        <Button
+          v-if="homeStore.nextCellarUpgrade"
+          class="py-0 px-1"
+          @click="showCellarUpgradeModal = true"
+        >
           <ArrowUp :size="12" class="inline" />
           升级
         </Button>
       </div>
-      <div v-if="homeStore.cellarSlots.length > 0" class="flex flex-col space-y-1.5 mb-3">
-        <div v-for="(slot, idx) in homeStore.cellarSlots" :key="idx" class="border border-accent/10 rounded-xs p-2">
+      <div
+        v-if="homeStore.cellarSlots.length > 0"
+        class="flex flex-col space-y-1.5 mb-3"
+      >
+        <div
+          v-for="(slot, idx) in homeStore.cellarSlots"
+          :key="idx"
+          class="border border-accent/10 rounded-xs p-2"
+        >
           <div class="flex items-center justify-between mb-1">
             <div class="flex items-center space-x-1">
-              <span class="text-xs text-accent">{{ getItemName(slot.itemId) }}</span>
-              <span v-if="slot.upgradeCount >= 16" class="text-[10px] text-success">陈酿{{ Math.floor(slot.upgradeCount / 16) }}年</span>
+              <span class="text-xs text-accent">{{
+                getItemName(slot.itemId)
+              }}</span>
+              <span
+                v-if="slot.upgradeCount >= 16"
+                class="text-[10px] text-success"
+                >陈酿{{ Math.floor(slot.upgradeCount / 16) }}年</span
+              >
             </div>
-            <Button class="py-0 px-1" @click="removeAgingConfirmIdx = idx">取出</Button>
+            <Button class="py-0 px-1" @click="removeAgingConfirmIdx = idx"
+              >取出</Button
+            >
           </div>
           <div class="flex items-center justify-between mb-0.5">
-            <span class="text-[10px] text-muted">已增值+{{ slot.addedValue }}文（提升{{ slot.upgradeCount }}次）</span>
+            <span class="text-[10px] text-muted"
+              >已增值+{{ slot.addedValue }}文（提升{{
+                slot.upgradeCount
+              }}次）</span
+            >
           </div>
           <div class="flex items-center space-x-1">
             <span class="text-[10px] text-muted w-6">周期</span>
             <div class="flex-1 h-1.5 bg-bg rounded-xs border border-accent/10">
               <div
                 class="h-full rounded-xs bg-accent transition-all"
-                :style="{ width: Math.min(100, Math.floor((slot.daysAging / 7) * 100)) + '%' }"
+                :style="{
+                  width:
+                    Math.min(100, Math.floor((slot.daysAging / 7) * 100)) + '%',
+                }"
               />
             </div>
             <span class="text-[10px] text-muted">{{ slot.daysAging }}/7天</span>
           </div>
         </div>
       </div>
-      <div v-if="homeStore.cellarSlots.length === 0" class="flex flex-col items-center justify-center py-6 text-muted mb-3">
+      <div
+        v-if="homeStore.cellarSlots.length === 0"
+        class="flex flex-col items-center justify-center py-6 text-muted mb-3"
+      >
         <Wine :size="32" class="mb-2" />
         <p class="text-xs">酒窖空空如也</p>
       </div>
@@ -332,7 +588,10 @@
       <!-- 放入新酒 -->
       <Button
         class="w-full"
-        v-if="homeStore.cellarSlots.length < homeStore.cellarMaxSlots && ageableInInventory.length > 0"
+        v-if="
+          homeStore.cellarSlots.length < homeStore.cellarMaxSlots &&
+          ageableInInventory.length > 0
+        "
         @click="showAgingModal = true"
       >
         放入陈酿
@@ -347,7 +606,10 @@
         @click.self="showUpgradeModal = false"
       >
         <div class="game-panel max-w-xs w-full relative">
-          <button class="absolute top-2 right-2 text-muted hover:text-text" @click="showUpgradeModal = false">
+          <button
+            class="absolute top-2 right-2 text-muted hover:text-text"
+            @click="showUpgradeModal = false"
+          >
             <X :size="14" />
           </button>
 
@@ -355,20 +617,42 @@
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
             <p class="text-xs">升级为「{{ homeStore.nextUpgrade.name }}」</p>
-            <p class="text-xs text-muted mt-0.5">{{ homeStore.nextUpgrade.description }}</p>
+            <p class="text-xs text-muted mt-0.5">
+              {{ homeStore.nextUpgrade.description }}
+            </p>
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2 space-y-1">
             <p class="text-xs text-muted mb-1">所需材料</p>
-            <div v-for="mat in homeStore.nextUpgrade.materialCost" :key="mat.itemId" class="flex items-center justify-between">
-              <span class="text-xs text-muted">{{ getItemName(mat.itemId) }}</span>
-              <span class="text-xs" :class="getCombinedItemCount(mat.itemId) >= mat.quantity ? '' : 'text-danger'">
+            <div
+              v-for="mat in homeStore.nextUpgrade.materialCost"
+              :key="mat.itemId"
+              class="flex items-center justify-between"
+            >
+              <span class="text-xs text-muted">{{
+                getItemName(mat.itemId)
+              }}</span>
+              <span
+                class="text-xs"
+                :class="
+                  getCombinedItemCount(mat.itemId) >= mat.quantity
+                    ? ''
+                    : 'text-danger'
+                "
+              >
                 {{ getCombinedItemCount(mat.itemId) }}/{{ mat.quantity }}
               </span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs text-muted">铜钱</span>
-              <span class="text-xs" :class="playerStore.money >= homeStore.nextUpgrade.cost ? '' : 'text-danger'">
+              <span
+                class="text-xs"
+                :class="
+                  playerStore.money >= homeStore.nextUpgrade.cost
+                    ? ''
+                    : 'text-danger'
+                "
+              >
                 {{ homeStore.nextUpgrade.cost }}文
               </span>
             </div>
@@ -398,7 +682,12 @@
         <div class="game-panel max-w-xs w-full">
           <div class="flex items-center justify-between mb-2">
             <p class="text-sm text-accent">放入陈酿</p>
-            <Button class="py-0 px-1" :icon="X" :icon-size="12" @click="showAgingModal = false" />
+            <Button
+              class="py-0 px-1"
+              :icon="X"
+              :icon-size="12"
+              @click="showAgingModal = false"
+            />
           </div>
           <div class="flex flex-col space-y-1">
             <div
@@ -412,7 +701,7 @@
                 :class="{
                   'text-quality-fine': item.quality === 'fine',
                   'text-quality-excellent': item.quality === 'excellent',
-                  'text-quality-supreme': item.quality === 'supreme'
+                  'text-quality-supreme': item.quality === 'supreme',
                 }"
               >
                 {{ getItemName(item.itemId) }}
@@ -432,7 +721,10 @@
         @click.self="showCalendarModal = false"
       >
         <div class="game-panel max-w-xs w-full relative">
-          <button class="absolute top-2 right-2 text-muted hover:text-text" @click="showCalendarModal = false">
+          <button
+            class="absolute top-2 right-2 text-muted hover:text-text"
+            @click="showCalendarModal = false"
+          >
             <X :size="14" />
           </button>
 
@@ -447,7 +739,11 @@
               v-for="s in SEASONS"
               :key="s"
               class="text-[10px] px-2 py-0.5 border rounded-xs transition-colors"
-              :class="calendarSeason === s ? 'bg-accent/20 border-accent/40 text-accent' : 'border-accent/10 text-muted hover:text-text'"
+              :class="
+                calendarSeason === s
+                  ? 'bg-accent/20 border-accent/40 text-accent'
+                  : 'border-accent/10 text-muted hover:text-text'
+              "
               @click="handleSelectSeason(s)"
             >
               {{ SEASON_NAMES[s] }}
@@ -457,7 +753,13 @@
           <!-- 28天网格 -->
           <div class="grid grid-cols-7 gap-px">
             <div v-for="wd in WEEKDAYS" :key="wd" class="text-center py-0.5">
-              <span class="text-[10px]" :class="wd === 'sat' || wd === 'sun' ? 'text-accent' : 'text-muted'">{{ WEEKDAY_NAMES[wd] }}</span>
+              <span
+                class="text-[10px]"
+                :class="
+                  wd === 'sat' || wd === 'sun' ? 'text-accent' : 'text-muted'
+                "
+                >{{ WEEKDAY_NAMES[wd] }}</span
+              >
             </div>
             <div
               v-for="entry in calendarDays"
@@ -465,17 +767,28 @@
               class="text-center py-1 border border-transparent transition-colors"
               :class="[
                 entry.isToday ? 'bg-accent/20 border-accent/40' : '',
-                entry.festivals.length > 0 || entry.birthdays.length > 0 ? 'cursor-pointer hover:bg-accent/10 rounded-sm' : '',
-                selectedCalendarDay === entry.day ? 'border-accent/30' : ''
+                entry.festivals.length > 0 || entry.birthdays.length > 0
+                  ? 'cursor-pointer hover:bg-accent/10 rounded-sm'
+                  : '',
+                selectedCalendarDay === entry.day ? 'border-accent/30' : '',
               ]"
               @click="handleSelectDay(entry)"
             >
-              <span class="text-[10px]" :class="entry.isToday ? 'text-accent' : 'text-muted'">
+              <span
+                class="text-[10px]"
+                :class="entry.isToday ? 'text-accent' : 'text-muted'"
+              >
                 {{ entry.day }}
               </span>
               <div class="flex justify-center space-x-px mt-px min-h-1.5">
-                <span v-if="entry.festivals.length > 0" class="w-1 h-1 rounded-full bg-danger inline-block" />
-                <span v-if="entry.birthdays.length > 0" class="w-1 h-1 rounded-full bg-success inline-block" />
+                <span
+                  v-if="entry.festivals.length > 0"
+                  class="w-1 h-1 rounded-full bg-danger inline-block"
+                />
+                <span
+                  v-if="entry.birthdays.length > 0"
+                  class="w-1 h-1 rounded-full bg-success inline-block"
+                />
               </div>
             </div>
           </div>
@@ -494,19 +807,33 @@
 
           <!-- 选中日详情 -->
           <div
-            v-if="selectedDayEntry && (selectedDayEntry.festivals.length > 0 || selectedDayEntry.birthdays.length > 0)"
+            v-if="
+              selectedDayEntry &&
+              (selectedDayEntry.festivals.length > 0 ||
+                selectedDayEntry.birthdays.length > 0)
+            "
             class="border border-accent/10 rounded-xs p-2 mt-2"
           >
             <p class="text-[10px] text-accent mb-1">
               {{ SEASON_NAMES[calendarSeason] }}{{ selectedCalendarDay }}日
-              <span v-if="selectedDayEntry.isToday" class="text-danger ml-1">(今天)</span>
+              <span v-if="selectedDayEntry.isToday" class="text-danger ml-1"
+                >(今天)</span
+              >
             </p>
-            <div v-for="f in selectedDayEntry.festivals" :key="f.name" class="mb-0.5">
+            <div
+              v-for="f in selectedDayEntry.festivals"
+              :key="f.name"
+              class="mb-0.5"
+            >
               <span class="text-[10px] text-danger">{{ f.name }}</span>
-              <span class="text-[10px] text-muted ml-1">{{ f.description }}</span>
+              <span class="text-[10px] text-muted ml-1">{{
+                f.description
+              }}</span>
             </div>
             <div v-for="b in selectedDayEntry.birthdays" :key="b.npcName">
-              <span class="text-[10px] text-success">{{ b.npcName }}的生日</span>
+              <span class="text-[10px] text-success"
+                >{{ b.npcName }}的生日</span
+              >
             </div>
           </div>
         </div>
@@ -523,7 +850,12 @@
         <div class="game-panel max-w-sm w-full">
           <div class="flex items-center justify-between mb-2">
             <p class="text-sm text-accent">送礼给{{ spouseDef?.name }}</p>
-            <Button class="py-0 px-1" :icon="X" :icon-size="12" @click="showSpouseGiftModal = false" />
+            <Button
+              class="py-0 px-1"
+              :icon="X"
+              :icon-size="12"
+              @click="showSpouseGiftModal = false"
+            />
           </div>
           <div class="flex flex-col space-y-1 max-h-60 overflow-y-auto">
             <div
@@ -547,18 +879,32 @@
               <span class="text-xs text-muted">&times;{{ item.quantity }}</span>
             </div>
           </div>
-          <div v-if="spouseGiftableItems.length === 0" class="py-4 text-center text-xs text-muted">背包中没有可赠送的物品</div>
+          <div
+            v-if="spouseGiftableItems.length === 0"
+            class="py-4 text-center text-xs text-muted"
+          >
+            背包中没有可赠送的物品
+          </div>
         </div>
       </div>
     </Transition>
 
     <!-- 招募雇工弹窗 -->
     <Transition name="panel-fade">
-      <div v-if="showHireModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" @click.self="closeHireModal">
+      <div
+        v-if="showHireModal"
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        @click.self="closeHireModal"
+      >
         <div class="game-panel max-w-sm w-full">
           <div class="flex items-center justify-between mb-2">
             <p class="text-sm text-accent">招募雇工</p>
-            <Button class="py-0 px-1" :icon="X" :icon-size="12" @click="closeHireModal" />
+            <Button
+              class="py-0 px-1"
+              :icon="X"
+              :icon-size="12"
+              @click="closeHireModal"
+            />
           </div>
 
           <!-- 任务选择 -->
@@ -568,27 +914,48 @@
               v-for="(label, key) in npcStore.HELPER_TASK_NAMES"
               :key="key"
               class="text-xs py-1 rounded-xs border"
-              :class="selectedHireTask === key ? 'border-accent text-accent' : 'border-accent/20 text-muted'"
+              :class="
+                selectedHireTask === key
+                  ? 'border-accent text-accent'
+                  : 'border-accent/20 text-muted'
+              "
               @click="selectHireTask(key as FarmHelperTask)"
             >
               {{ label }}
             </button>
           </div>
-          <p class="text-xs text-muted mb-2">日薪：{{ npcStore.HELPER_WAGES[selectedHireTask] }}文</p>
+          <p class="text-xs text-muted mb-2">
+            日薪：{{ npcStore.HELPER_WAGES[selectedHireTask] }}文
+          </p>
 
           <!-- 确认雇佣 -->
-          <div v-if="hireConfirmNpc" class="border border-accent/30 rounded-xs p-3 mb-2">
+          <div
+            v-if="hireConfirmNpc"
+            class="border border-accent/30 rounded-xs p-3 mb-2"
+          >
             <p class="text-xs text-accent mb-2">
               确定雇佣
               <span class="text-text">{{ hireConfirmNpc.name }}</span>
               负责
-              <span class="text-text">{{ npcStore.HELPER_TASK_NAMES[selectedHireTask] }}</span>
+              <span class="text-text">{{
+                npcStore.HELPER_TASK_NAMES[selectedHireTask]
+              }}</span>
               吗？
             </p>
-            <p class="text-[10px] text-muted mb-2">日薪：{{ npcStore.HELPER_WAGES[selectedHireTask] }}文</p>
+            <p class="text-[10px] text-muted mb-2">
+              日薪：{{ npcStore.HELPER_WAGES[selectedHireTask] }}文
+            </p>
             <div class="flex space-x-2">
-              <Button class="py-0.5 px-2 text-xs" @click="handleHire(hireConfirmNpcId!)">确定</Button>
-              <Button class="py-0.5 px-2 text-xs" @click="hireConfirmNpcId = null">取消</Button>
+              <Button
+                class="py-0.5 px-2 text-xs"
+                @click="handleHire(hireConfirmNpcId!)"
+                >确定</Button
+              >
+              <Button
+                class="py-0.5 px-2 text-xs"
+                @click="hireConfirmNpcId = null"
+                >取消</Button
+              >
             </div>
           </div>
 
@@ -607,7 +974,10 @@
               </span>
             </div>
           </div>
-          <p v-if="!hireConfirmNpc && hireableNpcs.length === 0" class="text-xs text-muted text-center py-3">
+          <p
+            v-if="!hireConfirmNpc && hireableNpcs.length === 0"
+            class="text-xs text-muted text-center py-3"
+          >
             没有可雇佣的村民（需好感≥4心，且非伴侣/知己）
           </p>
         </div>
@@ -622,11 +992,17 @@
         @click.self="dismissConfirmNpcId = null"
       >
         <div class="game-panel max-w-xs w-full text-center">
-          <p class="text-sm text-danger mb-3">确定解雇{{ getNpcById(dismissConfirmNpcId)?.name }}吗？</p>
+          <p class="text-sm text-danger mb-3">
+            确定解雇{{ getNpcById(dismissConfirmNpcId)?.name }}吗？
+          </p>
           <p class="text-xs text-muted mb-4">解雇后需要重新招募。</p>
           <div class="flex space-x-3 justify-center">
             <Button @click="dismissConfirmNpcId = null">取消</Button>
-            <Button class="btn-danger" @click="handleDismiss(dismissConfirmNpcId!)">确认解雇</Button>
+            <Button
+              class="btn-danger"
+              @click="handleDismiss(dismissConfirmNpcId!)"
+              >确认解雇</Button
+            >
           </div>
         </div>
       </div>
@@ -640,20 +1016,36 @@
         @click.self="removeAgingConfirmIdx = null"
       >
         <div class="game-panel max-w-xs w-full text-center">
-          <p class="text-sm text-accent mb-3">确定取出{{ getItemName(removeAgingConfirmSlot.itemId) }}吗？</p>
+          <p class="text-sm text-accent mb-3">
+            确定取出{{ getItemName(removeAgingConfirmSlot.itemId) }}吗？
+          </p>
           <p class="text-xs text-muted mb-2">
-            已增值+{{ removeAgingConfirmSlot.addedValue }}文（提升{{ removeAgingConfirmSlot.upgradeCount }}次）
+            已增值+{{ removeAgingConfirmSlot.addedValue }}文（提升{{
+              removeAgingConfirmSlot.upgradeCount
+            }}次）
           </p>
-          <p v-if="removeAgingConfirmSlot.upgradeCount >= 16" class="text-xs text-success mb-2">
-            已成为陈酿{{ Math.floor(removeAgingConfirmSlot.upgradeCount / 16) }}年，取出将点亮图鉴！
+          <p
+            v-if="removeAgingConfirmSlot.upgradeCount >= 16"
+            class="text-xs text-success mb-2"
+          >
+            已成为陈酿{{
+              Math.floor(removeAgingConfirmSlot.upgradeCount / 16)
+            }}年，取出将点亮图鉴！
           </p>
-          <p v-if="removeAgingConfirmSlot.addedValue > 0" class="text-xs text-accent mb-4">
+          <p
+            v-if="removeAgingConfirmSlot.addedValue > 0"
+            class="text-xs text-accent mb-4"
+          >
             取出时将获得{{ removeAgingConfirmSlot.addedValue }}文增值铜钱。
           </p>
-          <p v-else class="text-xs text-muted mb-4">尚未增值，满7天可提升价值。</p>
+          <p v-else class="text-xs text-muted mb-4">
+            尚未增值，满7天可提升价值。
+          </p>
           <div class="flex space-x-3 justify-center">
             <Button @click="removeAgingConfirmIdx = null">取消</Button>
-            <Button @click="handleRemoveAging(removeAgingConfirmIdx!)">确认取出</Button>
+            <Button @click="handleRemoveAging(removeAgingConfirmIdx!)"
+              >确认取出</Button
+            >
           </div>
         </div>
       </div>
@@ -667,30 +1059,57 @@
         @click.self="showCellarUpgradeModal = false"
       >
         <div class="game-panel max-w-xs w-full relative">
-          <button class="absolute top-2 right-2 text-muted hover:text-text" @click="showCellarUpgradeModal = false">
+          <button
+            class="absolute top-2 right-2 text-muted hover:text-text"
+            @click="showCellarUpgradeModal = false"
+          >
             <X :size="14" />
           </button>
 
           <p class="text-sm text-accent mb-2">升级酒窖</p>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
-            <p class="text-xs">升级为「{{ homeStore.nextCellarUpgrade.name }}」</p>
+            <p class="text-xs">
+              升级为「{{ homeStore.nextCellarUpgrade.name }}」
+            </p>
             <p class="text-xs text-muted mt-0.5">
-              每次增值{{ homeStore.nextCellarUpgrade.valuePerCycle }}文，最大容量{{ homeStore.nextCellarUpgrade.maxSlots }}个
+              每次增值{{
+                homeStore.nextCellarUpgrade.valuePerCycle
+              }}文，最大容量{{ homeStore.nextCellarUpgrade.maxSlots }}个
             </p>
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2 space-y-1">
             <p class="text-xs text-muted mb-1">所需材料</p>
-            <div v-for="mat in homeStore.nextCellarUpgrade.materialCost" :key="mat.itemId" class="flex items-center justify-between">
-              <span class="text-xs text-muted">{{ getItemName(mat.itemId) }}</span>
-              <span class="text-xs" :class="getCombinedItemCount(mat.itemId) >= mat.quantity ? '' : 'text-danger'">
+            <div
+              v-for="mat in homeStore.nextCellarUpgrade.materialCost"
+              :key="mat.itemId"
+              class="flex items-center justify-between"
+            >
+              <span class="text-xs text-muted">{{
+                getItemName(mat.itemId)
+              }}</span>
+              <span
+                class="text-xs"
+                :class="
+                  getCombinedItemCount(mat.itemId) >= mat.quantity
+                    ? ''
+                    : 'text-danger'
+                "
+              >
                 {{ getCombinedItemCount(mat.itemId) }}/{{ mat.quantity }}
               </span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs text-muted">铜钱</span>
-              <span class="text-xs" :class="playerStore.money >= homeStore.nextCellarUpgrade.cost ? '' : 'text-danger'">
+              <span
+                class="text-xs"
+                :class="
+                  playerStore.money >= homeStore.nextCellarUpgrade.cost
+                    ? ''
+                    : 'text-danger'
+                "
+              >
                 {{ homeStore.nextCellarUpgrade.cost }}文
               </span>
             </div>
@@ -713,395 +1132,497 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
-  import { ArrowUp, Calendar, Gift, Hammer, Home, Heart, MessageCircle, UserPlus, Users, Wine, X } from 'lucide-vue-next'
-  import { useCookingStore } from '@/stores/useCookingStore'
-  import { useGameStore } from '@/stores/useGameStore'
-  import { useHomeStore } from '@/stores/useHomeStore'
-  import { useInventoryStore } from '@/stores/useInventoryStore'
-  import { useNpcStore } from '@/stores/useNpcStore'
-  import { useAchievementStore } from '@/stores/useAchievementStore'
-  import { usePlayerStore } from '@/stores/usePlayerStore'
-  import { SEASON_NAMES } from '@/stores/useGameStore'
-  import { getCombinedItemCount } from '@/composables/useCombinedInventory'
-  import { getItemById, getNpcById, NPCS } from '@/data'
-  import { SEASON_EVENTS } from '@/data/events'
-  import { ACTION_TIME_COSTS, WEEKDAYS, WEEKDAY_NAMES } from '@/data/timeConstants'
-  import type { Quality, ChildStage, PregnancyStage, Season, FarmHelperTask } from '@/types'
-  import { addLog } from '@/composables/useGameLog'
-  import { showChildProposal, triggerHeartEvent } from '@/composables/useDialogs'
-  import { handleEndDay } from '@/composables/useEndDay'
-  import Button from '@/components/game/Button.vue'
+import { computed, ref } from "vue";
+import {
+  ArrowUp,
+  Calendar,
+  Gift,
+  Hammer,
+  Home,
+  Heart,
+  MessageCircle,
+  UserPlus,
+  Users,
+  Wine,
+  X,
+} from "lucide-vue-next";
+import { useCookingStore } from "@/stores/useCookingStore";
+import { useGameStore } from "@/stores/useGameStore";
+import { useHomeStore } from "@/stores/useHomeStore";
+import { useInventoryStore } from "@/stores/useInventoryStore";
+import { useNpcStore } from "@/stores/useNpcStore";
+import { useAchievementStore } from "@/stores/useAchievementStore";
+import { usePlayerStore } from "@/stores/usePlayerStore";
+import { SEASON_NAMES } from "@/stores/useGameStore";
+import { getCombinedItemCount } from "@/composables/useCombinedInventory";
+import { getItemById, getNpcById, NPCS } from "@/data";
+import { SEASON_EVENTS } from "@/data/events";
+import {
+  ACTION_TIME_COSTS,
+  WEEKDAYS,
+  WEEKDAY_NAMES,
+} from "@/data/timeConstants";
+import type {
+  Quality,
+  ChildStage,
+  PregnancyStage,
+  Season,
+  FarmHelperTask,
+} from "@/types";
+import { addLog } from "@/composables/useGameLog";
+import { showChildProposal, triggerHeartEvent } from "@/composables/useDialogs";
+import { handleEndDay } from "@/composables/useEndDay";
+import Button from "@/components/game/Button.vue";
 
-  const homeStore = useHomeStore()
-  const inventoryStore = useInventoryStore()
-  const gameStore = useGameStore()
-  const npcStore = useNpcStore()
-  const playerStore = usePlayerStore()
+const homeStore = useHomeStore();
+const inventoryStore = useInventoryStore();
+const gameStore = useGameStore();
+const npcStore = useNpcStore();
+const playerStore = usePlayerStore();
 
-  const releaseConfirmChildId = ref<number | null>(null)
-  const showUpgradeModal = ref(false)
-  const showAgingModal = ref(false)
-  const showCalendarModal = ref(false)
-  const showSpouseGiftModal = ref(false)
-  const showHireModal = ref(false)
-  const selectedHireTask = ref<FarmHelperTask>('water')
-  const hireConfirmNpcId = ref<string | null>(null)
-  const dismissConfirmNpcId = ref<string | null>(null)
-  const removeAgingConfirmIdx = ref<number | null>(null)
-  const showCellarUpgradeModal = ref(false)
-  const removeAgingConfirmSlot = computed(() =>
-    removeAgingConfirmIdx.value !== null ? (homeStore.cellarSlots[removeAgingConfirmIdx.value] ?? null) : null
-  )
+const releaseConfirmChildId = ref<number | null>(null);
+const showUpgradeModal = ref(false);
+const showAgingModal = ref(false);
+const showCalendarModal = ref(false);
+const showSpouseGiftModal = ref(false);
+const showHireModal = ref(false);
+const selectedHireTask = ref<FarmHelperTask>("water");
+const hireConfirmNpcId = ref<string | null>(null);
+const dismissConfirmNpcId = ref<string | null>(null);
+const removeAgingConfirmIdx = ref<number | null>(null);
+const showCellarUpgradeModal = ref(false);
+const removeAgingConfirmSlot = computed(() =>
+  removeAgingConfirmIdx.value !== null
+    ? (homeStore.cellarSlots[removeAgingConfirmIdx.value] ?? null)
+    : null,
+);
 
-  const hireableNpcs = computed(() => npcStore.getHireableNpcs())
-  const currentHelpers = computed(() => npcStore.hiredHelpers)
-  const hireConfirmNpc = computed(() => (hireConfirmNpcId.value ? getNpcById(hireConfirmNpcId.value) : null))
+const hireableNpcs = computed(() => npcStore.getHireableNpcs());
+const currentHelpers = computed(() => npcStore.hiredHelpers);
+const hireConfirmNpc = computed(() =>
+  hireConfirmNpcId.value ? getNpcById(hireConfirmNpcId.value) : null,
+);
 
-  const handleChildLongTerm = (id: any) => {
-    const result = npcStore.completeChildLongTermEvent(id)
-    addLog(result.message)
+const handleChildLongTerm = (id: any) => {
+  const result = npcStore.completeChildLongTermEvent(id);
+  addLog(result.message);
+};
+
+const handleHire = (npcId: string) => {
+  const result = npcStore.hireHelper(npcId, selectedHireTask.value);
+  addLog(result.message);
+  if (result.success) {
+    hireConfirmNpcId.value = null;
+    showHireModal.value = false;
   }
+};
 
-  const handleHire = (npcId: string) => {
-    const result = npcStore.hireHelper(npcId, selectedHireTask.value)
-    addLog(result.message)
-    if (result.success) {
-      hireConfirmNpcId.value = null
-      showHireModal.value = false
+const closeHireModal = () => {
+  showHireModal.value = false;
+  hireConfirmNpcId.value = null;
+};
+
+const selectHireTask = (task: FarmHelperTask) => {
+  selectedHireTask.value = task;
+  hireConfirmNpcId.value = null;
+};
+
+const handleDismiss = (npcId: string) => {
+  const result = npcStore.dismissHelper(npcId);
+  addLog(result.message);
+  dismissConfirmNpcId.value = null;
+};
+
+// === 配偶互动 ===
+
+const spouseState = computed(() => npcStore.getSpouse());
+const spouseDef = computed(() =>
+  spouseState.value ? getNpcById(spouseState.value.npcId) : null,
+);
+const spouseDialogue = ref<string | null>(null);
+
+type FamilySpecialty = "farming" | "ranching" | "foraging" | "cultivation";
+type FamilyCommissionId =
+  | "family_meal"
+  | "child_study"
+  | "spouse_project"
+  | "family_forge"
+  | "family_dongtian";
+const familySpecialtyOptions = computed<
+  { id: FamilySpecialty; name: string }[]
+>(() => [
+  { id: "farming", name: npcStore.FAMILY_SPECIALTY_NAMES.farming },
+  { id: "ranching", name: npcStore.FAMILY_SPECIALTY_NAMES.ranching },
+  { id: "foraging", name: npcStore.FAMILY_SPECIALTY_NAMES.foraging },
+  { id: "cultivation", name: npcStore.FAMILY_SPECIALTY_NAMES.cultivation },
+]);
+
+const handleSetSpouseSpecialty = (specialty: FamilySpecialty) => {
+  const result = npcStore.setSpouseSpecialty(specialty);
+  addLog(result.message);
+};
+
+const handleFamilyCommission = (id: FamilyCommissionId) => {
+  const result = npcStore.claimFamilyCommission(id);
+  addLog(result.message);
+};
+
+const handleSpouseTalk = () => {
+  if (!spouseState.value) return;
+  if (gameStore.isPastBedtime) {
+    addLog("太晚了，该休息了。");
+    handleEndDay();
+    return;
+  }
+  const result = npcStore.talkTo(spouseState.value.npcId);
+  if (result) {
+    spouseDialogue.value = result.message;
+    addLog(`与${spouseDef.value?.name}聊天。(+${result.friendshipGain}好感)`);
+    const tr = gameStore.advanceTime(ACTION_TIME_COSTS.talk);
+    if (tr.message) addLog(tr.message);
+    if (tr.passedOut) {
+      handleEndDay();
+      return;
     }
+    const heartEvent = npcStore.checkHeartEvent(spouseState.value.npcId);
+    if (heartEvent) triggerHeartEvent(heartEvent);
   }
+};
 
-  const closeHireModal = () => {
-    showHireModal.value = false
-    hireConfirmNpcId.value = null
-  }
+type GiftPreference = "loved" | "liked" | "hated" | "neutral";
 
-  const selectHireTask = (task: FarmHelperTask) => {
-    selectedHireTask.value = task
-    hireConfirmNpcId.value = null
-  }
+const getSpouseGiftPref = (itemId: string): GiftPreference => {
+  if (!spouseDef.value) return "neutral";
+  if (spouseDef.value.lovedItems.includes(itemId)) return "loved";
+  if (spouseDef.value.likedItems.includes(itemId)) return "liked";
+  if (spouseDef.value.hatedItems.includes(itemId)) return "hated";
+  return "neutral";
+};
 
-  const handleDismiss = (npcId: string) => {
-    const result = npcStore.dismissHelper(npcId)
-    addLog(result.message)
-    dismissConfirmNpcId.value = null
-  }
+const GIFT_PREF_LABELS: Record<GiftPreference, string> = {
+  loved: "最爱",
+  liked: "喜欢",
+  hated: "讨厌",
+  neutral: "",
+};
+const GIFT_PREF_CLASS: Record<GiftPreference, string> = {
+  loved: "text-danger",
+  liked: "text-success",
+  hated: "text-muted",
+  neutral: "",
+};
+const GIFT_PREF_ORDER: Record<GiftPreference, number> = {
+  loved: 0,
+  liked: 1,
+  neutral: 2,
+  hated: 3,
+};
 
-  // === 配偶互动 ===
+const spouseGiftableItems = computed(() => {
+  const filtered = inventoryStore.items.filter((i) => {
+    const def = getItemById(i.itemId);
+    return def && def.category !== "seed";
+  });
+  if (!spouseDef.value) return filtered;
+  return [...filtered].sort(
+    (a, b) =>
+      GIFT_PREF_ORDER[getSpouseGiftPref(a.itemId)] -
+      GIFT_PREF_ORDER[getSpouseGiftPref(b.itemId)],
+  );
+});
 
-  const spouseState = computed(() => npcStore.getSpouse())
-  const spouseDef = computed(() => (spouseState.value ? getNpcById(spouseState.value.npcId) : null))
-  const spouseDialogue = ref<string | null>(null)
-
-  type FamilySpecialty = 'farming' | 'ranching' | 'foraging' | 'cultivation'
-  type FamilyCommissionId = 'family_meal' | 'child_study' | 'spouse_project' | 'family_forge' | 'family_dongtian'
-  const familySpecialtyOptions = computed<{ id: FamilySpecialty; name: string }[]>(() => [
-    { id: 'farming', name: npcStore.FAMILY_SPECIALTY_NAMES.farming },
-    { id: 'ranching', name: npcStore.FAMILY_SPECIALTY_NAMES.ranching },
-    { id: 'foraging', name: npcStore.FAMILY_SPECIALTY_NAMES.foraging },
-    { id: 'cultivation', name: npcStore.FAMILY_SPECIALTY_NAMES.cultivation }
-  ])
-
-  const handleSetSpouseSpecialty = (specialty: FamilySpecialty) => {
-    const result = npcStore.setSpouseSpecialty(specialty)
-    addLog(result.message)
-  }
-
-  const handleFamilyCommission = (id: FamilyCommissionId) => {
-    const result = npcStore.claimFamilyCommission(id)
-    addLog(result.message)
-  }
-
-
-  const handleSpouseTalk = () => {
-    if (!spouseState.value) return
-    if (gameStore.isPastBedtime) {
-      addLog('太晚了，该休息了。')
-      handleEndDay()
-      return
-    }
-    const result = npcStore.talkTo(spouseState.value.npcId)
-    if (result) {
-      spouseDialogue.value = result.message
-      addLog(`与${spouseDef.value?.name}聊天。(+${result.friendshipGain}好感)`)
-      const tr = gameStore.advanceTime(ACTION_TIME_COSTS.talk)
-      if (tr.message) addLog(tr.message)
-      if (tr.passedOut) {
-        handleEndDay()
-        return
-      }
-      const heartEvent = npcStore.checkHeartEvent(spouseState.value.npcId)
-      if (heartEvent) triggerHeartEvent(heartEvent)
-    }
-  }
-
-  type GiftPreference = 'loved' | 'liked' | 'hated' | 'neutral'
-
-  const getSpouseGiftPref = (itemId: string): GiftPreference => {
-    if (!spouseDef.value) return 'neutral'
-    if (spouseDef.value.lovedItems.includes(itemId)) return 'loved'
-    if (spouseDef.value.likedItems.includes(itemId)) return 'liked'
-    if (spouseDef.value.hatedItems.includes(itemId)) return 'hated'
-    return 'neutral'
-  }
-
-  const GIFT_PREF_LABELS: Record<GiftPreference, string> = { loved: '最爱', liked: '喜欢', hated: '讨厌', neutral: '' }
-  const GIFT_PREF_CLASS: Record<GiftPreference, string> = { loved: 'text-danger', liked: 'text-success', hated: 'text-muted', neutral: '' }
-  const GIFT_PREF_ORDER: Record<GiftPreference, number> = { loved: 0, liked: 1, neutral: 2, hated: 3 }
-
-  const spouseGiftableItems = computed(() => {
-    const filtered = inventoryStore.items.filter(i => {
-      const def = getItemById(i.itemId)
-      return def && def.category !== 'seed'
-    })
-    if (!spouseDef.value) return filtered
-    return [...filtered].sort((a, b) => GIFT_PREF_ORDER[getSpouseGiftPref(a.itemId)] - GIFT_PREF_ORDER[getSpouseGiftPref(b.itemId)])
-  })
-
-  const handleSpouseGift = (itemId: string, quality: Quality) => {
-    if (!spouseState.value) return
-    const cookingStore = useCookingStore()
-    const cookingGiftBonus = cookingStore.activeBuff?.type === 'giftBonus' ? cookingStore.activeBuff.value : 1
-    const ringGiftBonus = inventoryStore.getRingEffectValue('gift_friendship')
-    const giftMultiplier = cookingGiftBonus * (1 + ringGiftBonus)
-    const result = npcStore.giveGift(spouseState.value.npcId, itemId, giftMultiplier, quality)
-    if (result) {
-      const itemName = getItemById(itemId)?.name ?? itemId
-      const name = spouseDef.value?.name
-      if (result.gain > 0) {
-        addLog(`送给${name}${itemName}，${name}觉得${result.reaction}。(+${result.gain}好感)`)
-      } else if (result.gain < 0) {
-        addLog(`送给${name}${itemName}，${name}${result.reaction}这个……(${result.gain}好感)`)
-      } else {
-        addLog(`送给${name}${itemName}，${name}觉得${result.reaction}。`)
-      }
-      showSpouseGiftModal.value = false
-      const heartEvent = npcStore.checkHeartEvent(spouseState.value.npcId)
-      if (heartEvent) triggerHeartEvent(heartEvent)
-    }
-  }
-
-  const qualityTextClass = (q: Quality): string => {
-    if (q === 'fine') return 'text-quality-fine'
-    if (q === 'excellent') return 'text-quality-excellent'
-    if (q === 'supreme') return 'text-quality-supreme'
-    return ''
-  }
-
-  const CHILD_STAGE_NAMES: Record<ChildStage, string> = {
-    baby: '婴儿',
-    toddler: '幼儿',
-    child: '孩童',
-    teen: '少年'
-  }
-
-  const PREGNANCY_STAGE_LABELS: Record<PregnancyStage, string> = {
-    early: '初期（需要营养）',
-    mid: '中期（需要陪伴）',
-    late: '后期（需要休息）',
-    ready: '待产期（准备迎接）'
-  }
-
-  const STAGE_TIPS: Record<PregnancyStage, string> = {
-    early: '孕初期需要注意营养，送些食物或补品效果最好。',
-    mid: '孕中期需要更多陪伴，多聊天可以大幅提升安产率。',
-    late: '孕后期要注意休息，让配偶好好休养。',
-    ready: '即将临盆，请选择接生方式并做好最后的准备。'
-  }
-
-  const MEDICAL_LABELS: Record<string, string> = {
-    normal: '普通接生',
-    advanced: '高级接生',
-    luxury: '豪华接生'
-  }
-
-  const AGEABLE_ITEMS = ['watermelon_wine', 'osmanthus_wine', 'peach_wine', 'jujube_wine', 'corn_wine', 'rice_vinegar']
-
-  // === 日历 ===
-
-  const SEASONS: Season[] = ['spring', 'summer', 'autumn', 'winter']
-  const calendarSeason = ref<Season>(gameStore.season)
-  const selectedCalendarDay = ref<number | null>(null)
-
-  const calendarDays = computed(() => {
-    const s = calendarSeason.value
-    const entries = []
-    for (let d = 1; d <= 28; d++) {
-      const festivals = SEASON_EVENTS.filter(e => e.season === s && e.day === d).map(e => ({ name: e.name, description: e.description }))
-      const birthdays = NPCS.filter(npc => npc.birthday?.season === s && npc.birthday?.day === d).map(npc => ({ npcName: npc.name }))
-      entries.push({ day: d, festivals, birthdays, isToday: s === gameStore.season && d === gameStore.day })
-    }
-    return entries
-  })
-
-  const selectedDayEntry = computed(() => {
-    if (selectedCalendarDay.value === null) return null
-    return calendarDays.value[selectedCalendarDay.value - 1] ?? null
-  })
-
-  const handleSelectSeason = (s: Season) => {
-    calendarSeason.value = s
-    selectedCalendarDay.value = null
-  }
-
-  const handleSelectDay = (entry: { day: number; festivals: { name: string }[]; birthdays: { npcName: string }[] }) => {
-    if (entry.festivals.length > 0 || entry.birthdays.length > 0) {
-      selectedCalendarDay.value = selectedCalendarDay.value === entry.day ? null : entry.day
-    }
-  }
-
-  const currentBenefit = computed(() => {
-    switch (homeStore.farmhouseLevel) {
-      case 0:
-        return '简陋的茅屋。'
-      case 1:
-        return '厨房升级，烹饪恢复+20%。'
-      case 2:
-        return '宅院扩建，每晚额外恢复10%体力。'
-      case 3:
-        return '地下酒窖开放，可陈酿美酒提升品质。'
-      default:
-        return ''
-    }
-  })
-
-  const canUpgradeFarmhouse = computed(() => {
-    const upgrade = homeStore.nextUpgrade
-    if (!upgrade) return false
-    if (playerStore.money < upgrade.cost) return false
-    return upgrade.materialCost.every(mat => getCombinedItemCount(mat.itemId) >= mat.quantity)
-  })
-
-
-
-  const canMaintainManor = computed(() => {
-    const cost = homeStore.manorMaintenanceCost
-    if (playerStore.money < cost.money) return false
-    return cost.materials.every(mat => getCombinedItemCount(mat.itemId) >= mat.quantity)
-  })
-
-  const handleMaintainManor = () => {
-    if (homeStore.maintainManor()) {
-      addLog(`完成庄园维护，未来${homeStore.manorMaintenanceCost.days}天睡眠恢复额外+5%。`)
+const handleSpouseGift = (itemId: string, quality: Quality) => {
+  if (!spouseState.value) return;
+  const cookingStore = useCookingStore();
+  const cookingGiftBonus =
+    cookingStore.activeBuff?.type === "giftBonus"
+      ? cookingStore.activeBuff.value
+      : 1;
+  const ringGiftBonus = inventoryStore.getRingEffectValue("gift_friendship");
+  const giftMultiplier = cookingGiftBonus * (1 + ringGiftBonus);
+  const result = npcStore.giveGift(
+    spouseState.value.npcId,
+    itemId,
+    giftMultiplier,
+    quality,
+  );
+  if (result) {
+    const itemName = getItemById(itemId)?.name ?? itemId;
+    const name = spouseDef.value?.name;
+    if (result.gain > 0) {
+      addLog(
+        `送给${name}${itemName}，${name}觉得${result.reaction}。(+${result.gain}好感)`,
+      );
+    } else if (result.gain < 0) {
+      addLog(
+        `送给${name}${itemName}，${name}${result.reaction}这个……(${result.gain}好感)`,
+      );
     } else {
-      addLog('铜钱或维护材料不足。')
+      addLog(`送给${name}${itemName}，${name}觉得${result.reaction}。`);
+    }
+    showSpouseGiftModal.value = false;
+    const heartEvent = npcStore.checkHeartEvent(spouseState.value.npcId);
+    if (heartEvent) triggerHeartEvent(heartEvent);
+  }
+};
+
+const qualityTextClass = (q: Quality): string => {
+  if (q === "fine") return "text-quality-fine";
+  if (q === "excellent") return "text-quality-excellent";
+  if (q === "supreme") return "text-quality-supreme";
+  return "";
+};
+
+const CHILD_STAGE_NAMES: Record<ChildStage, string> = {
+  baby: "婴儿",
+  toddler: "幼儿",
+  child: "孩童",
+  teen: "少年",
+};
+
+const PREGNANCY_STAGE_LABELS: Record<PregnancyStage, string> = {
+  early: "初期（需要营养）",
+  mid: "中期（需要陪伴）",
+  late: "后期（需要休息）",
+  ready: "待产期（准备迎接）",
+};
+
+const STAGE_TIPS: Record<PregnancyStage, string> = {
+  early: "孕初期需要注意营养，送些食物或补品效果最好。",
+  mid: "孕中期需要更多陪伴，多聊天可以大幅提升安产率。",
+  late: "孕后期要注意休息，让配偶好好休养。",
+  ready: "即将临盆，请选择接生方式并做好最后的准备。",
+};
+
+const MEDICAL_LABELS: Record<string, string> = {
+  normal: "普通接生",
+  advanced: "高级接生",
+  luxury: "豪华接生",
+};
+
+const AGEABLE_ITEMS = [
+  "watermelon_wine",
+  "osmanthus_wine",
+  "peach_wine",
+  "jujube_wine",
+  "corn_wine",
+  "rice_vinegar",
+];
+
+// === 日历 ===
+
+const SEASONS: Season[] = ["spring", "summer", "autumn", "winter"];
+const calendarSeason = ref<Season>(gameStore.season);
+const selectedCalendarDay = ref<number | null>(null);
+
+const calendarDays = computed(() => {
+  const s = calendarSeason.value;
+  const entries = [];
+  for (let d = 1; d <= 28; d++) {
+    const festivals = SEASON_EVENTS.filter(
+      (e) => e.season === s && e.day === d,
+    ).map((e) => ({ name: e.name, description: e.description }));
+    const birthdays = NPCS.filter(
+      (npc) => npc.birthday?.season === s && npc.birthday?.day === d,
+    ).map((npc) => ({ npcName: npc.name }));
+    entries.push({
+      day: d,
+      festivals,
+      birthdays,
+      isToday: s === gameStore.season && d === gameStore.day,
+    });
+  }
+  return entries;
+});
+
+const selectedDayEntry = computed(() => {
+  if (selectedCalendarDay.value === null) return null;
+  return calendarDays.value[selectedCalendarDay.value - 1] ?? null;
+});
+
+const handleSelectSeason = (s: Season) => {
+  calendarSeason.value = s;
+  selectedCalendarDay.value = null;
+};
+
+const handleSelectDay = (entry: {
+  day: number;
+  festivals: { name: string }[];
+  birthdays: { npcName: string }[];
+}) => {
+  if (entry.festivals.length > 0 || entry.birthdays.length > 0) {
+    selectedCalendarDay.value =
+      selectedCalendarDay.value === entry.day ? null : entry.day;
+  }
+};
+
+const currentBenefit = computed(() => {
+  switch (homeStore.farmhouseLevel) {
+    case 0:
+      return "简陋的茅屋。";
+    case 1:
+      return "厨房升级，烹饪恢复+20%。";
+    case 2:
+      return "宅院扩建，每晚额外恢复10%体力。";
+    case 3:
+      return "地下酒窖开放，可陈酿美酒提升品质。";
+    default:
+      return "";
+  }
+});
+
+const canUpgradeFarmhouse = computed(() => {
+  const upgrade = homeStore.nextUpgrade;
+  if (!upgrade) return false;
+  if (playerStore.money < upgrade.cost) return false;
+  return upgrade.materialCost.every(
+    (mat) => getCombinedItemCount(mat.itemId) >= mat.quantity,
+  );
+});
+
+const canMaintainManor = computed(() => {
+  const cost = homeStore.manorMaintenanceCost;
+  if (playerStore.money < cost.money) return false;
+  return cost.materials.every(
+    (mat) => getCombinedItemCount(mat.itemId) >= mat.quantity,
+  );
+});
+
+const handleMaintainManor = () => {
+  if (homeStore.maintainManor()) {
+    addLog(
+      `完成庄园维护，未来${homeStore.manorMaintenanceCost.days}天睡眠恢复额外+5%。`,
+    );
+  } else {
+    addLog("铜钱或维护材料不足。");
+  }
+};
+
+const ageableInInventory = computed(() => {
+  return inventoryStore.items.filter((inv) =>
+    AGEABLE_ITEMS.includes(inv.itemId),
+  );
+});
+
+const getItemName = (itemId: string): string => {
+  return getItemById(itemId)?.name ?? itemId;
+};
+
+const getChildName = (childId: number): string => {
+  return npcStore.children.find((c) => c.id === childId)?.name ?? "孩子";
+};
+
+// === 操作处理 ===
+
+const handleUpgradeFromModal = () => {
+  const upgrade = homeStore.nextUpgrade;
+  if (!upgrade) return;
+  if (homeStore.upgradeFarmhouse()) {
+    addLog(`农舍升级为「${upgrade.name}」！${upgrade.description}`);
+    showUpgradeModal.value = false;
+  } else {
+    addLog("铜钱或材料不足，无法升级。");
+  }
+};
+
+const handleInteractChild = (childId: number) => {
+  const result = npcStore.interactWithChild(childId);
+  if (result) {
+    addLog(result.message);
+    if (result.item) {
+      inventoryStore.addItem(result.item);
+      const itemDef = getItemById(result.item);
+      addLog(`获得了${itemDef?.name ?? result.item}！`);
     }
   }
+};
 
-  const ageableInInventory = computed(() => {    return inventoryStore.items.filter(inv => AGEABLE_ITEMS.includes(inv.itemId))
-  })
+const handleReleaseChild = () => {
+  if (releaseConfirmChildId.value === null) return;
+  const result = npcStore.releaseChild(releaseConfirmChildId.value);
+  addLog(result.message);
+  releaseConfirmChildId.value = null;
+};
 
-  const getItemName = (itemId: string): string => {
-    return getItemById(itemId)?.name ?? itemId
+const showChildProposalDialog = () => {
+  showChildProposal();
+};
+
+const handlePregnancyCare = (
+  action: "gift" | "companion" | "supplement" | "rest",
+) => {
+  const result = npcStore.performPregnancyCare(action);
+  addLog(result.message);
+  if (result.careGain > 0) addLog(`安产率 +${result.careGain}%`);
+};
+
+const handleChooseMedical = (plan: "normal" | "advanced" | "luxury") => {
+  const result = npcStore.chooseMedicalPlan(plan);
+  addLog(result.message);
+};
+
+const handleStartAgingFromModal = (itemId: string, quality: Quality) => {
+  if (homeStore.startAging(itemId, quality)) {
+    const name = getItemName(itemId);
+    addLog(`将${name}放入酒窖陈酿。`);
+    const tr = gameStore.advanceTime(ACTION_TIME_COSTS.aging);
+    if (tr.message) addLog(tr.message);
+    if (tr.passedOut) handleEndDay();
+  } else {
+    addLog("无法放入酒窖（已满或物品不可陈酿）。");
   }
-
-  const getChildName = (childId: number): string => {
-    return npcStore.children.find(c => c.id === childId)?.name ?? '孩子'
+  // 酒窖满或无剩余可陈酿物品时关闭弹窗
+  if (
+    homeStore.cellarSlots.length >= homeStore.cellarMaxSlots ||
+    ageableInInventory.value.length === 0
+  ) {
+    showAgingModal.value = false;
   }
+};
 
-  // === 操作处理 ===
-
-  const handleUpgradeFromModal = () => {
-    const upgrade = homeStore.nextUpgrade
-    if (!upgrade) return
-    if (homeStore.upgradeFarmhouse()) {
-      addLog(`农舍升级为「${upgrade.name}」！${upgrade.description}`)
-      showUpgradeModal.value = false
-    } else {
-      addLog('铜钱或材料不足，无法升级。')
+const handleRemoveAging = (index: number) => {
+  // 取出前先记录剩余天数
+  const slotBeforeRemove = homeStore.cellarSlots[index];
+  const remainingDays = slotBeforeRemove?.daysAging ?? 0;
+  const result = homeStore.removeAging(index);
+  if (result) {
+    inventoryStore.addItem(result.itemId, 1, result.quality);
+    const name = getItemName(result.itemId);
+    const totalDays = result.upgradeCount * 7 + remainingDays;
+    let msg = `从酒窖取出了${name}`;
+    if (result.addedValue > 0) {
+      msg += `（陈酿${totalDays}天，增值+${result.addedValue}文）`;
+    }
+    addLog(msg + "。");
+    // 满1年点亮图鉴
+    if (result.upgradeCount >= 16) {
+      const achievementStore = useAchievementStore();
+      achievementStore.discoverItem("aged_" + result.itemId);
+      addLog(`点亮了${name}陈酿图鉴！`);
     }
   }
+  removeAgingConfirmIdx.value = null;
+};
 
-  const handleInteractChild = (childId: number) => {
-    const result = npcStore.interactWithChild(childId)
-    if (result) {
-      addLog(result.message)
-      if (result.item) {
-        inventoryStore.addItem(result.item)
-        const itemDef = getItemById(result.item)
-        addLog(`获得了${itemDef?.name ?? result.item}！`)
-      }
-    }
+const canUpgradeCellar = computed(() => {
+  const upgrade = homeStore.nextCellarUpgrade;
+  if (!upgrade) return false;
+  if (playerStore.money < upgrade.cost) return false;
+  return upgrade.materialCost.every(
+    (mat) => getCombinedItemCount(mat.itemId) >= mat.quantity,
+  );
+});
+
+const handleUpgradeCellar = () => {
+  const upgrade = homeStore.nextCellarUpgrade;
+  if (!upgrade) return;
+  if (homeStore.upgradeCellar()) {
+    addLog(
+      `酒窖升级为「${upgrade.name}」！每次增值${upgrade.valuePerCycle}文，最大容量${upgrade.maxSlots}个。`,
+    );
+    showCellarUpgradeModal.value = false;
+  } else {
+    addLog("铜钱或材料不足，无法升级酒窖。");
   }
-
-  const handleReleaseChild = () => {
-    if (releaseConfirmChildId.value === null) return
-    const result = npcStore.releaseChild(releaseConfirmChildId.value)
-    addLog(result.message)
-    releaseConfirmChildId.value = null
-  }
-
-  const showChildProposalDialog = () => {
-    showChildProposal()
-  }
-
-  const handlePregnancyCare = (action: 'gift' | 'companion' | 'supplement' | 'rest') => {
-    const result = npcStore.performPregnancyCare(action)
-    addLog(result.message)
-    if (result.careGain > 0) addLog(`安产率 +${result.careGain}%`)
-  }
-
-  const handleChooseMedical = (plan: 'normal' | 'advanced' | 'luxury') => {
-    const result = npcStore.chooseMedicalPlan(plan)
-    addLog(result.message)
-  }
-
-  const handleStartAgingFromModal = (itemId: string, quality: Quality) => {
-    if (homeStore.startAging(itemId, quality)) {
-      const name = getItemName(itemId)
-      addLog(`将${name}放入酒窖陈酿。`)
-      const tr = gameStore.advanceTime(ACTION_TIME_COSTS.aging)
-      if (tr.message) addLog(tr.message)
-      if (tr.passedOut) handleEndDay()
-    } else {
-      addLog('无法放入酒窖（已满或物品不可陈酿）。')
-    }
-    // 酒窖满或无剩余可陈酿物品时关闭弹窗
-    if (homeStore.cellarSlots.length >= homeStore.cellarMaxSlots || ageableInInventory.value.length === 0) {
-      showAgingModal.value = false
-    }
-  }
-
-  const handleRemoveAging = (index: number) => {
-    // 取出前先记录剩余天数
-    const slotBeforeRemove = homeStore.cellarSlots[index]
-    const remainingDays = slotBeforeRemove?.daysAging ?? 0
-    const result = homeStore.removeAging(index)
-    if (result) {
-      inventoryStore.addItem(result.itemId, 1, result.quality)
-      const name = getItemName(result.itemId)
-      const totalDays = result.upgradeCount * 7 + remainingDays
-      let msg = `从酒窖取出了${name}`
-      if (result.addedValue > 0) {
-        msg += `（陈酿${totalDays}天，增值+${result.addedValue}文）`
-      }
-      addLog(msg + '。')
-      // 满1年点亮图鉴
-      if (result.upgradeCount >= 16) {
-        const achievementStore = useAchievementStore()
-        achievementStore.discoverItem('aged_' + result.itemId)
-        addLog(`点亮了${name}陈酿图鉴！`)
-      }
-    }
-    removeAgingConfirmIdx.value = null
-  }
-
-  const canUpgradeCellar = computed(() => {
-    const upgrade = homeStore.nextCellarUpgrade
-    if (!upgrade) return false
-    if (playerStore.money < upgrade.cost) return false
-    return upgrade.materialCost.every(mat => getCombinedItemCount(mat.itemId) >= mat.quantity)
-  })
-
-  const handleUpgradeCellar = () => {
-    const upgrade = homeStore.nextCellarUpgrade
-    if (!upgrade) return
-    if (homeStore.upgradeCellar()) {
-      addLog(`酒窖升级为「${upgrade.name}」！每次增值${upgrade.valuePerCycle}文，最大容量${upgrade.maxSlots}个。`)
-      showCellarUpgradeModal.value = false
-    } else {
-      addLog('铜钱或材料不足，无法升级酒窖。')
-    }
-  }
+};
 </script>
