@@ -557,6 +557,9 @@
         </div>
       </div>
       <div class="rift-combat-stage" :class="`art-${ascensionStore.lastArtId}`">
+        <div class="skill-fx-layer" aria-hidden="true">
+          <span v-for="i in 10" :key="i"></span>
+        </div>
         <div class="combat-card player-card">
           <div class="card-aura"></div>
           <img
@@ -640,13 +643,8 @@
         >
           <b>{{ art.icon }} {{ art.name }}</b>
           <span>{{ art.element }}</span>
-          <small>{{
-            selectedRift.weakness === art.id
-              ? "首领弱点"
-              : ascensionStore.activeRiftAffix.favor === art.id
-                ? "词缀顺应"
-                : "可切换流派"
-          }}</small>
+          <small>{{ artTag(art.id) }}</small>
+          <em>{{ artHint(art.id) }}</em>
         </button>
       </div>
       <div class="battle-log-panel">
@@ -1490,6 +1488,33 @@ const selectedRift = computed(() => {
   );
   return weakMatch || CHAOS_RIFTS[0]!;
 });
+const artTag = (id: string) => {
+  if (selectedRift.value.weakness === id) return "首领弱点";
+  if (ascensionStore.activeRiftAffix.favor === id) return "词缀顺应";
+  return (
+    (
+      {
+        void_tide_heart: "回命减伤",
+        fallen_star_core: "破盾重击",
+        demon_lamp: "净化侵蚀",
+        law_eye: "暴击洞察",
+      } as Record<string, string>
+    )[id] || "可切换流派"
+  );
+};
+const artHint = (id: string) =>
+  (
+    ({
+      starfall_sword: "连斩",
+      purple_thunder_seal: "破防",
+      solar_flame: "灼魂",
+      cloud_body: "护体",
+      void_tide_heart: "回血",
+      fallen_star_core: "碎盾",
+      demon_lamp: "净魔",
+      law_eye: "破律",
+    }) as Record<string, string>
+  )[id] || "仙术";
 const immortalTab = computed(() => String(route.query.tab || "home"));
 const isTab = (...keys: string[]) => keys.includes(immortalTab.value);
 const triggerRealmBreakthrough = () => {
@@ -2902,6 +2927,267 @@ const returnToWorld = () => {
   font-size: 10px;
   line-height: 1.45;
 }
+
+.skill-fx-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: screen;
+}
+.skill-fx-layer span {
+  position: absolute;
+  left: calc((var(--i, 1) * 9%) - 4%);
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #ffe28a;
+  box-shadow: 0 0 12px currentColor;
+  color: #ffe28a;
+  opacity: 0;
+  animation: skillParticle 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 1) * 0.11s);
+}
+.skill-fx-layer span:nth-child(1) {
+  --i: 1;
+}
+.skill-fx-layer span:nth-child(2) {
+  --i: 2;
+}
+.skill-fx-layer span:nth-child(3) {
+  --i: 3;
+}
+.skill-fx-layer span:nth-child(4) {
+  --i: 4;
+}
+.skill-fx-layer span:nth-child(5) {
+  --i: 5;
+}
+.skill-fx-layer span:nth-child(6) {
+  --i: 6;
+}
+.skill-fx-layer span:nth-child(7) {
+  --i: 7;
+}
+.skill-fx-layer span:nth-child(8) {
+  --i: 8;
+}
+.skill-fx-layer span:nth-child(9) {
+  --i: 9;
+}
+.skill-fx-layer span:nth-child(10) {
+  --i: 10;
+}
+.art-starfall_sword .skill-fx-layer span {
+  color: #bfe7ff;
+  background: #bfe7ff;
+  animation-name: starSlashParticle;
+}
+.art-purple_thunder_seal .skill-fx-layer span {
+  color: #d8b4fe;
+  background: #d8b4fe;
+  animation-name: thunderParticle;
+}
+.art-solar_flame .skill-fx-layer span {
+  color: #ffbe58;
+  background: #ffbe58;
+  animation-name: flameParticle;
+}
+.art-cloud_body .skill-fx-layer span {
+  color: #9defff;
+  background: #9defff;
+  animation-name: cloudParticle;
+}
+.art-void_tide_heart .skill-fx-layer span {
+  color: #67e8f9;
+  background: #67e8f9;
+  animation-name: tideParticle;
+}
+.art-fallen_star_core .skill-fx-layer span {
+  color: #fb923c;
+  background: #fb923c;
+  animation-name: meteorParticle;
+}
+.art-demon_lamp .skill-fx-layer span {
+  color: #f0abfc;
+  background: #f0abfc;
+  animation-name: lampParticle;
+}
+.art-law_eye .skill-fx-layer span {
+  color: #a78bfa;
+  background: #a78bfa;
+  animation-name: eyeParticle;
+}
+.art-void_tide_heart .card-aura {
+  background: radial-gradient(
+    circle,
+    rgba(103, 232, 249, 0.32),
+    transparent 60%
+  );
+}
+.art-fallen_star_core .card-aura {
+  background: radial-gradient(
+    circle,
+    rgba(251, 146, 60, 0.34),
+    transparent 60%
+  );
+}
+.art-demon_lamp .card-aura {
+  background: radial-gradient(
+    circle,
+    rgba(240, 171, 252, 0.32),
+    transparent 60%
+  );
+}
+.art-law_eye .card-aura {
+  background: radial-gradient(
+    circle,
+    rgba(167, 139, 250, 0.36),
+    transparent 60%
+  );
+}
+.battle-art-card em {
+  position: absolute;
+  right: 6px;
+  top: 5px;
+  z-index: 1;
+  padding: 1px 5px;
+  border: 1px solid rgba(255, 226, 138, 0.24);
+  border-radius: 999px;
+  color: rgba(255, 226, 138, 0.82);
+  font-size: 8px;
+  font-style: normal;
+  background: rgba(0, 0, 0, 0.28);
+}
+@keyframes skillParticle {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.6);
+  }
+  30%,
+  70% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-52px) scale(1.2);
+  }
+}
+@keyframes starSlashParticle {
+  0% {
+    opacity: 0;
+    transform: translate(-42px, 24px) rotate(-28deg) scaleX(0.5);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(12px, -8px) rotate(-28deg) scaleX(2.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(70px, -36px) rotate(-28deg) scaleX(0.9);
+  }
+}
+@keyframes thunderParticle {
+  0% {
+    opacity: 0;
+    transform: translateY(-62px) skewX(-18deg);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(6px) skewX(18deg) scaleY(3.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(50px) skewX(-8deg);
+  }
+}
+@keyframes flameParticle {
+  0% {
+    opacity: 0;
+    transform: translateY(54px) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0) scale(1.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-58px) scale(0.8);
+  }
+}
+@keyframes cloudParticle {
+  0% {
+    opacity: 0;
+    transform: translate(-32px, 18px) scale(1.8);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translate(10px, -2px) scale(3.4);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(48px, -18px) scale(2);
+  }
+}
+@keyframes tideParticle {
+  0% {
+    opacity: 0;
+    transform: translate(-60px, 22px) scaleX(1);
+  }
+  55% {
+    opacity: 0.9;
+    transform: translate(10px, 6px) scaleX(3.4);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(84px, -12px) scaleX(1.2);
+  }
+}
+@keyframes meteorParticle {
+  0% {
+    opacity: 0;
+    transform: translate(58px, -70px) scale(0.6);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-44px, 48px) scale(0.8);
+  }
+}
+@keyframes lampParticle {
+  0% {
+    opacity: 0;
+    transform: translateY(36px) scale(0.4);
+  }
+  45% {
+    opacity: 0.9;
+    transform: translateY(-6px) scale(2.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-34px) scale(0.7);
+  }
+}
+@keyframes eyeParticle {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) translateX(10px) scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(180deg) translateX(34px) scale(1.6);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(360deg) translateX(10px) scale(0.8);
+  }
+}
+
 @keyframes cardBattleSpin {
   to {
     transform: rotate(360deg);

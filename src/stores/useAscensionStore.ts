@@ -20,7 +20,14 @@ export const ASCENSION_MATERIALS = [
 ];
 
 export type ImmortalArtId =
-  "starfall_sword" | "purple_thunder_seal" | "solar_flame" | "cloud_body";
+  | "starfall_sword"
+  | "purple_thunder_seal"
+  | "solar_flame"
+  | "cloud_body"
+  | "void_tide_heart"
+  | "fallen_star_core"
+  | "demon_lamp"
+  | "law_eye";
 export type ImmortalTrialId = "star_river" | "thunder_palace" | "sun_ruins";
 export type ImmortalOfficeId = "xuntian" | "sinong" | "lianbao" | "wenming";
 export type ImmortalDutyId =
@@ -346,6 +353,42 @@ export const IMMORTAL_ARTS: Array<{
     desc: "身外浮现云篆玄光，抵御仙域反噬。",
     basePower: 95,
     effect: "玄光护体",
+  },
+  {
+    id: "void_tide_heart",
+    name: "归墟潮心",
+    icon: "🌊",
+    element: "归墟潮汐",
+    desc: "以界鲸潮核引动潮心，伤敌同时回转仙身气血。",
+    basePower: 132,
+    effect: "潮心回命",
+  },
+  {
+    id: "fallen_star_core",
+    name: "坠星傀核",
+    icon: "☄️",
+    element: "坠星重压",
+    desc: "召下坠星古傀核心重击，专克厚盾与高阶首领阶段。",
+    basePower: 168,
+    effect: "陨核破盾",
+  },
+  {
+    id: "demon_lamp",
+    name: "净魔心灯",
+    icon: "🪷",
+    element: "净魔心火",
+    desc: "点燃心灯净化魔念，削弱仙力侵蚀并稳定道心。",
+    basePower: 126,
+    effect: "灯火净念",
+  },
+  {
+    id: "law_eye",
+    name: "逆律天瞳",
+    icon: "👁️",
+    element: "逆律洞察",
+    desc: "睁开天瞳窥破法则破绽，提高暴击并撕开狂暴反噬。",
+    basePower: 146,
+    effect: "天瞳破律",
   },
 ];
 
@@ -2806,17 +2849,19 @@ export const useAscensionStore = defineStore("ascension", () => {
       IMMORTAL_ARTS.find((a) => a.id === lastArtId.value) || IMMORTAL_ARTS[0]!;
     const weakHit = art.id === rift.weakness;
     const affixHit = art.id === state.affix.favor;
+    const artQiCost: Record<ImmortalArtId, number> = {
+      starfall_sword: 20,
+      purple_thunder_seal: 22,
+      solar_flame: 18,
+      cloud_body: 14,
+      void_tide_heart: 20,
+      fallen_star_core: 24,
+      demon_lamp: 18,
+      law_eye: 21,
+    };
     const qiCost = Math.max(
       8,
-      (art.id === "purple_thunder_seal"
-        ? 22
-        : art.id === "solar_flame"
-          ? 18
-          : art.id === "starfall_sword"
-            ? 20
-            : 14) -
-        (weakHit ? 3 : 0) -
-        (affixHit ? 2 : 0),
+      artQiCost[art.id] - (weakHit ? 3 : 0) - (affixHit ? 2 : 0),
     );
     if (immortalQi.value < qiCost) {
       lastBattleText.value = `仙力不足：施展${art.name}需要仙力${qiCost}。`;
@@ -2834,10 +2879,28 @@ export const useAscensionStore = defineStore("ascension", () => {
           ? 105 + state.turns * 42
           : art.id === "starfall_sword"
             ? 120 + pkStreak.value * 18
-            : 75 + Math.floor(immortalBodyLevel.value * 14);
+            : art.id === "void_tide_heart"
+              ? 110 + Math.floor((state.maxHp - state.hp) * 0.06)
+              : art.id === "fallen_star_core"
+                ? 160 + state.phase * 70 + state.shield * 0.18
+                : art.id === "demon_lamp"
+                  ? 118 + state.turns * 25 + immortalSoulLevel.value * 16
+                  : art.id === "law_eye"
+                    ? 130 +
+                      state.phase * 45 +
+                      Math.floor(ruleFragments.value * 0.08)
+                    : 75 + Math.floor(immortalBodyLevel.value * 14);
+    const artCritBonus =
+      art.id === "law_eye" ? 14 : art.id === "fallen_star_core" ? 6 : 0;
     const critical =
-      Math.random() * 100 < immortalCritRate.value + (weakHit ? 10 : 0);
-    const weakBonus = weakHit ? 1.28 : 1;
+      Math.random() * 100 <
+      immortalCritRate.value + (weakHit ? 10 : 0) + artCritBonus;
+    const relicArtMatch =
+      (art.id === "void_tide_heart" && id === "void_tide") ||
+      (art.id === "fallen_star_core" && id === "fallen_star") ||
+      (art.id === "demon_lamp" && id === "demon_gate") ||
+      (art.id === "law_eye" && id === "law_maze");
+    const weakBonus = weakHit ? 1.28 : relicArtMatch ? 1.18 : 1;
     const affixBonus = affixHit ? state.affix.damageRate : 1;
     const rawDamage = Math.max(
       45,
@@ -2859,6 +2922,12 @@ export const useAscensionStore = defineStore("ascension", () => {
     let hp = state.hp;
     let text = `${rift.icon} ${state.dungeonRank}·${rift.bossName}【${state.phaseName}】遭到${art.name}压制：造成 ${rawDamage} 仙伤${critical ? "（暴击）" : ""}${weakHit ? "，命中首领弱点" : ""}${affixHit ? `，顺应${state.affix.name}` : ""}，仙力-${qiCost}。`;
     if (shield > 0) {
+      const shieldPierce =
+        art.id === "fallen_star_core" ? Math.floor(state.maxShield * 0.18) : 0;
+      if (shieldPierce) {
+        shield = Math.max(0, shield - shieldPierce);
+        text += ` 坠星傀核先震碎护盾${shieldPierce}。`;
+      }
       const broken = Math.min(shield, rawDamage);
       shield -= broken;
       const overflow = rawDamage - broken;
@@ -2951,9 +3020,22 @@ export const useAscensionStore = defineStore("ascension", () => {
     );
     const qiDrain =
       id === "demon_gate" && state.phase >= 1
-        ? Math.min(12, immortalQi.value)
+        ? Math.min(art.id === "demon_lamp" ? 5 : 12, immortalQi.value)
         : 0;
-    immortalHp.value = Math.max(0, immortalHp.value - received);
+    const artGuardRate =
+      art.id === "cloud_body" ? 0.86 : art.id === "void_tide_heart" ? 0.92 : 1;
+    const finalReceived = Math.floor(received * artGuardRate);
+    const tideHeal =
+      art.id === "void_tide_heart"
+        ? Math.min(
+            immortalMaxHp.value - immortalHp.value,
+            18 + Math.floor(rawDamage * 0.035),
+          )
+        : 0;
+    immortalHp.value = Math.min(
+      immortalMaxHp.value,
+      Math.max(0, immortalHp.value - finalReceived) + tideHeal,
+    );
     immortalQi.value = Math.min(
       immortalMaxQi.value,
       immortalQi.value -
@@ -2963,11 +3045,11 @@ export const useAscensionStore = defineStore("ascension", () => {
         (art.id === "cloud_body" ? 4 : 0),
     );
     if (immortalHp.value <= 0) {
-      lastBattleText.value = `⚠ ${rift.bossName}击穿你的仙身，承伤${received}，本轮镇压失败；首领仙躯与护盾进度保留。`;
+      lastBattleText.value = `⚠ ${rift.bossName}击穿你的仙身，承伤${finalReceived}，本轮镇压失败；首领仙躯与护盾进度保留。`;
       addLog(lastBattleText.value);
       return false;
     }
-    lastBattleText.value = `${text} 你承受${received}伤害${qiDrain ? `，仙力被侵蚀-${qiDrain}` : ""}，气血${immortalHp.value}/${immortalMaxHp.value}，仙力${immortalQi.value}/${immortalMaxQi.value}。首领剩余仙躯 ${Math.max(1, hp)}/${state.maxHp}${shield ? `，护盾${shield}/${state.maxShield}` : "，护盾已破"}。${fury ? ` ⚠ 已狂暴，法则反噬-${backlash}。` : ` 当前阶段：${state.phaseName}，弱点仙术：${IMMORTAL_ARTS.find((a) => a.id === rift.weakness)?.name ?? "未知"}。`}`;
+    lastBattleText.value = `${text} 你承受${finalReceived}伤害${qiDrain ? `，仙力被侵蚀-${qiDrain}` : ""}${tideHeal ? `，归墟潮心回命+${tideHeal}` : ""}，气血${immortalHp.value}/${immortalMaxHp.value}，仙力${immortalQi.value}/${immortalMaxQi.value}。首领剩余仙躯 ${Math.max(1, hp)}/${state.maxHp}${shield ? `，护盾${shield}/${state.maxShield}` : "，护盾已破"}。${fury ? ` ⚠ 已狂暴，法则反噬-${backlash}。` : ` 当前阶段：${state.phaseName}，弱点仙术：${IMMORTAL_ARTS.find((a) => a.id === rift.weakness)?.name ?? "未知"}。`}`;
     addLog(lastBattleText.value);
     return false;
   };
