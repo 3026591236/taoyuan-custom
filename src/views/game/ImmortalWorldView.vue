@@ -2274,9 +2274,9 @@ const returnToWorld = () => {
     inset 0 0 26px rgba(116, 203, 255, 0.09);
 }
 .gate-back {
-  top: 18px;
-  width: 166px;
-  height: 166px;
+  top: 20px;
+  width: 285px;
+  height: 285px;
   background: radial-gradient(
     circle,
     rgba(255, 226, 138, 0.12),
@@ -2284,9 +2284,9 @@ const returnToWorld = () => {
   );
 }
 .gate-front {
-  top: 44px;
-  width: 126px;
-  height: 126px;
+  top: 58px;
+  width: 220px;
+  height: 220px;
   border-style: dashed;
   border-color: rgba(140, 226, 255, 0.42);
   animation: celestialSpin 16s linear infinite;
@@ -2297,24 +2297,24 @@ const returnToWorld = () => {
   border: 1px solid rgba(255, 255, 255, 0.22);
 }
 .orbit-a {
-  top: 49px;
-  width: 172px;
-  height: 76px;
+  top: 112px;
+  width: 338px;
+  height: 124px;
   transform: rotate(-18deg);
   animation: celestialSpin 14s linear infinite;
 }
 .orbit-b {
-  top: 70px;
-  width: 154px;
-  height: 62px;
+  top: 150px;
+  width: 306px;
+  height: 108px;
   transform: rotate(20deg);
   border-color: rgba(255, 226, 138, 0.34);
   animation: celestialSpin 12s linear infinite reverse;
 }
 .orbit-c {
-  top: 92px;
-  width: 120px;
-  height: 48px;
+  top: 190px;
+  width: 250px;
+  height: 86px;
   transform: rotate(-8deg);
   border-color: rgba(126, 232, 255, 0.28);
 }
@@ -2354,8 +2354,8 @@ const returnToWorld = () => {
 .portrait-cloud {
   position: absolute;
   z-index: 11;
-  bottom: 18px;
-  height: 22px;
+  bottom: 22px;
+  height: 26px;
   border-radius: 999px;
   background: linear-gradient(
     90deg,
@@ -2382,7 +2382,7 @@ const returnToWorld = () => {
 .portrait-nameplate {
   position: absolute;
   z-index: 12;
-  bottom: -14px;
+  bottom: -18px;
   padding: 3px 12px;
   border: 1px solid rgba(255, 226, 138, 0.48);
   border-radius: 999px;
@@ -3137,7 +3137,7 @@ const returnToWorld = () => {
 
 .realm-particles {
   position: absolute;
-  inset: 0;
+  inset: -52px -58px -40px;
   z-index: 8;
   pointer-events: none;
   overflow: visible;
@@ -3145,8 +3145,8 @@ const returnToWorld = () => {
 }
 .realm-particles span {
   position: absolute;
-  left: calc(var(--i, 1) * 8%);
-  top: 72%;
+  left: calc(var(--i, 1) * 7.4%);
+  top: 76%;
   width: 4px;
   height: 4px;
   border-radius: 999px;
@@ -3325,10 +3325,10 @@ const returnToWorld = () => {
 
 .realm-foreground-aura {
   position: absolute;
-  inset: 5% 8% 7%;
+  inset: -8% -14% -10%;
   z-index: 9;
   pointer-events: none;
-  border-radius: 48% 48% 16% 16%;
+  border-radius: 34px;
   background:
     radial-gradient(
       circle at 50% 18%,
@@ -4013,7 +4013,7 @@ const returnToWorld = () => {
   gap: 0;
   min-height: 0;
   padding: 24px 20px 18px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid rgba(255, 226, 138, 0.32);
   border-radius: 12px;
   background:
@@ -4051,11 +4051,12 @@ const returnToWorld = () => {
 }
 .hero-avatar.immortal-portrait-stage {
   z-index: 1;
-  width: 336px;
-  height: 430px;
-  max-width: min(88vw, 360px);
+  width: 430px;
+  height: 540px;
+  max-width: min(92vw, 430px);
   align-self: center;
-  border-radius: 156px 156px 22px 22px;
+  border-radius: 30px;
+  overflow: visible;
   border-color: rgba(255, 230, 151, 0.62);
   box-shadow:
     0 0 52px rgba(255, 221, 129, 0.2),
@@ -4063,8 +4064,12 @@ const returnToWorld = () => {
     inset 0 0 34px rgba(132, 223, 255, 0.16);
 }
 .immortal-artwork {
-  border-radius: 128px 128px 15px 15px;
-  object-position: center 39%;
+  inset: -18px 6px 10px;
+  width: calc(100% - 12px);
+  height: calc(100% + 8px);
+  border-radius: 24px;
+  object-fit: contain;
+  object-position: center bottom;
 }
 .immortal-profile {
   position: relative;
@@ -4219,8 +4224,8 @@ const returnToWorld = () => {
     padding: 14px;
   }
   .hero-avatar.immortal-portrait-stage {
-    width: 175px;
-    height: 285px;
+    width: min(84vw, 330px);
+    height: 430px;
   }
   .character-combat-deck {
     grid-template-columns: 98px 1fr;
@@ -4269,8 +4274,8 @@ const returnToWorld = () => {
     align-items: center;
   }
   .hero-avatar.immortal-portrait-stage {
-    width: 178px;
-    height: 264px;
+    width: min(88vw, 320px);
+    height: 410px;
     justify-self: center;
   }
   .immortal-profile {
@@ -4312,8 +4317,8 @@ const returnToWorld = () => {
     padding: 17px 13px;
   }
   .hero-avatar.immortal-portrait-stage {
-    width: 218px;
-    height: 300px;
+    width: min(88vw, 340px);
+    height: 430px;
   }
   .character-combat-deck {
     grid-template-columns: 102px 1fr;
@@ -4339,8 +4344,8 @@ const returnToWorld = () => {
 }
 @media (max-width: 420px) {
   .hero-avatar.immortal-portrait-stage {
-    width: 188px;
-    height: 270px;
+    width: min(90vw, 310px);
+    height: 390px;
   }
   .immortal-profile > p.text-xl {
     font-size: 22px;
