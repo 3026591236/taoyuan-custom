@@ -58,12 +58,14 @@
         </div>
         <div class="realm-foreground-aura" aria-hidden="true"></div>
         <div class="realm-sigil">{{ realmVisual.sigil }}</div>
-        <img
-          class="immortal-artwork"
-          src="/assets/immortal/immortal-sovereign-anime.png"
-          alt="二次元仙界角色立绘"
-          draggable="false"
-        />
+        <div class="immortal-artwork-motion" aria-hidden="true">
+          <img
+            class="immortal-artwork"
+            src="/assets/immortal/immortal-sovereign-anime.png"
+            alt="二次元仙界角色立绘"
+            draggable="false"
+          />
+        </div>
         <div class="portrait-cloud cloud-left"></div>
         <div class="portrait-cloud cloud-mid"></div>
         <div class="portrait-cloud cloud-right"></div>
@@ -5214,4 +5216,33 @@ rgba(255,255,255,.1);border-radius:.75rem;background:rgba(0,0,0,.18);font-size:.
 span{padding:.22rem .48rem;border:1px solid
 rgba(255,255,255,.1);border-radius:999px;font-size:.62rem;color:var(--muted)}.affix-list
 span.active{border-color:rgba(167,139,250,.75);color:var(--accent);box-shadow:0
-0 12px rgba(167,139,250,.18)}
+0 12px rgba(167,139,250,.18)} /* V2.9.8
+动态仙身：立绘独立悬浮，光效与舞台不参与裁切 */
+.hero-avatar.immortal-portrait-stage { isolation: isolate; }
+.immortal-artwork-motion { position: absolute; z-index: 7; inset: -30px -16px
+-12px; display: flex; align-items: flex-end; justify-content: center;
+pointer-events: none; transform-origin: 50% 84%; animation:
+immortalPortraitFloat 5.8s ease-in-out infinite; will-change: transform, filter;
+} .immortal-artwork-motion::before { content: ""; position: absolute; z-index:
+-1; left: 50%; bottom: 7%; width: 68%; height: 34%; border-radius: 50%;
+transform: translateX(-50%) scale(0.9); background: radial-gradient(ellipse,
+rgba(161, 231, 255, 0.34), rgba(255, 223, 130, 0.16) 35%, transparent 72%);
+filter: blur(9px); opacity: 0.72; animation: immortalAuraPulse 5.8s ease-in-out
+infinite; } .immortal-artwork-motion .immortal-artwork { position: relative;
+inset: auto; display: block; width: 100%; height: 100%; max-width: none;
+max-height: none; object-fit: contain; object-position: center bottom;
+border-radius: 0; animation: immortalRobeBreath 5.8s ease-in-out infinite;
+will-change: transform, filter; } @keyframes immortalPortraitFloat { 0%, 100% {
+transform: translate3d(0, 0, 0) rotate(-0.25deg); filter: drop-shadow(0 16px
+20px rgba(0, 0, 0, 0.28)); } 25% { transform: translate3d(-3px, -9px, 0)
+rotate(0.45deg); } 50% { transform: translate3d(1px, -15px, 0) rotate(-0.1deg);
+filter: drop-shadow(0 24px 26px rgba(72, 196, 255, 0.26)); } 75% { transform:
+translate3d(4px, -7px, 0) rotate(-0.48deg); } } @keyframes immortalRobeBreath {
+0%, 100% { transform: scale(0.992); filter: saturate(1.08) brightness(1); } 50%
+{ transform: scale(1.018); filter: saturate(1.18) brightness(1.08); } }
+@keyframes immortalAuraPulse { 0%, 100% { transform: translateX(-50%)
+scale(0.86); opacity: 0.48; } 50% { transform: translateX(-50%) scale(1.16);
+opacity: 0.98; } } @media (max-width: 700px) { .immortal-artwork-motion { inset:
+-20px -12px -8px; } } @media (prefers-reduced-motion: reduce) {
+.immortal-artwork-motion, .immortal-artwork-motion::before,
+.immortal-artwork-motion .immortal-artwork { animation: none; } }
