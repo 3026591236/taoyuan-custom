@@ -56,6 +56,7 @@
         <div class="realm-particles" aria-hidden="true">
           <span v-for="i in 12" :key="i"></span>
         </div>
+        <div class="realm-foreground-aura" aria-hidden="true"></div>
         <div class="realm-sigil">{{ realmVisual.sigil }}</div>
         <img
           class="immortal-artwork"
@@ -2319,8 +2320,8 @@ const returnToWorld = () => {
 }
 .portrait-star {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border-radius: 999px;
   background: #fff7bf;
   box-shadow: 0 0 10px #ffe28a;
@@ -2343,8 +2344,8 @@ const returnToWorld = () => {
   inset: 4px;
   width: calc(100% - 8px);
   height: calc(100% - 8px);
-  object-fit: cover;
-  object-position: center 42%;
+  object-fit: contain;
+  object-position: center bottom;
   border-radius: 20px;
   filter: saturate(1.1) contrast(1.04)
     drop-shadow(0 0 16px rgba(126, 232, 255, 0.25))
@@ -2352,7 +2353,7 @@ const returnToWorld = () => {
 }
 .portrait-cloud {
   position: absolute;
-  z-index: 7;
+  z-index: 11;
   bottom: 18px;
   height: 22px;
   border-radius: 999px;
@@ -2380,7 +2381,7 @@ const returnToWorld = () => {
 }
 .portrait-nameplate {
   position: absolute;
-  z-index: 9;
+  z-index: 12;
   bottom: -14px;
   padding: 3px 12px;
   border: 1px solid rgba(255, 226, 138, 0.48);
@@ -3014,7 +3015,9 @@ const returnToWorld = () => {
   height: 5px;
   border-radius: 999px;
   background: #ffe28a;
-  box-shadow: 0 0 12px currentColor;
+  box-shadow:
+    0 0 14px currentColor,
+    0 0 28px currentColor;
   color: #ffe28a;
   opacity: 0;
   animation: skillParticle 2.4s ease-in-out infinite;
@@ -3135,9 +3138,9 @@ const returnToWorld = () => {
 .realm-particles {
   position: absolute;
   inset: 0;
-  z-index: 4;
+  z-index: 8;
   pointer-events: none;
-  overflow: hidden;
+  overflow: visible;
   mix-blend-mode: screen;
 }
 .realm-particles span {
@@ -3192,7 +3195,7 @@ const returnToWorld = () => {
 }
 .realm-sigil {
   position: absolute;
-  z-index: 6;
+  z-index: 10;
   top: 18px;
   right: 20px;
   display: grid;
@@ -3319,6 +3322,85 @@ const returnToWorld = () => {
     inset 0 0 34px rgba(255, 226, 138, 0.12),
     0 0 24px rgba(255, 226, 138, 0.18);
 }
+
+.realm-foreground-aura {
+  position: absolute;
+  inset: 5% 8% 7%;
+  z-index: 9;
+  pointer-events: none;
+  border-radius: 48% 48% 16% 16%;
+  background:
+    radial-gradient(
+      circle at 50% 18%,
+      rgba(255, 255, 255, 0.18),
+      transparent 18%
+    ),
+    conic-gradient(
+      from 0deg,
+      transparent,
+      rgba(255, 226, 138, 0.24),
+      transparent,
+      rgba(126, 232, 255, 0.22),
+      transparent
+    );
+  filter: blur(1px);
+  mix-blend-mode: screen;
+  opacity: 0.86;
+  animation: realmForegroundAura 5.6s linear infinite;
+}
+.realm-xuan-immortal .realm-foreground-aura {
+  background: conic-gradient(
+    from 45deg,
+    transparent,
+    rgba(196, 181, 253, 0.35),
+    transparent,
+    rgba(96, 165, 250, 0.18),
+    transparent
+  );
+}
+.realm-earth-immortal .realm-foreground-aura {
+  background: conic-gradient(
+    from 90deg,
+    transparent,
+    rgba(134, 239, 172, 0.28),
+    transparent,
+    rgba(251, 191, 36, 0.2),
+    transparent
+  );
+}
+.realm-sky-immortal .realm-foreground-aura {
+  background: conic-gradient(
+    from 120deg,
+    transparent,
+    rgba(125, 211, 252, 0.36),
+    transparent,
+    rgba(255, 226, 138, 0.22),
+    transparent
+  );
+}
+.realm-gold-immortal .realm-foreground-aura {
+  background: conic-gradient(
+    from 180deg,
+    transparent,
+    rgba(255, 226, 138, 0.46),
+    transparent,
+    rgba(255, 255, 255, 0.24),
+    transparent
+  );
+  opacity: 0.95;
+}
+@keyframes realmForegroundAura {
+  from {
+    transform: rotate(0deg) scale(0.98);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.04);
+  }
+  to {
+    transform: rotate(360deg) scale(0.98);
+  }
+}
+
 @keyframes realmParticleRise {
   0% {
     opacity: 0;
@@ -3969,10 +4051,11 @@ const returnToWorld = () => {
 }
 .hero-avatar.immortal-portrait-stage {
   z-index: 1;
-  width: 272px;
-  height: 350px;
+  width: 336px;
+  height: 430px;
+  max-width: min(88vw, 360px);
   align-self: center;
-  border-radius: 132px 132px 18px 18px;
+  border-radius: 156px 156px 22px 22px;
   border-color: rgba(255, 230, 151, 0.62);
   box-shadow:
     0 0 52px rgba(255, 221, 129, 0.2),

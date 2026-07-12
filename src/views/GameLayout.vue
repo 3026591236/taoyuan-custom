@@ -11,7 +11,7 @@
       {{ sleepLabel }}
     </Button>
 
-    <div v-if="nextJourneyTask" class="daily-hook-card">
+    <div v-if="nextJourneyTask && !isImmortalRoute" class="daily-hook-card">
       <div class="flex items-start justify-between gap-2">
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 mb-1">
@@ -1175,6 +1175,7 @@ import { useItemUsage, isQuickUsableItem } from '@/composables/useItemUsage'
   })
 
   const nextJourneyTask = computed(() => questStore.nextJourneyTask)
+  const isImmortalRoute = computed(() => route.name === 'immortal-world')
   const journeyTargetMap: Record<string, string> = {
     cropHarvest: 'farm',
     earthPulse: 'farm',
