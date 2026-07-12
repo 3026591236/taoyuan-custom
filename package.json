@@ -1,6 +1,6 @@
 {
-  "name": "taoyuan",
-  "title": "我从种田开始修仙",
+  "name": "wanxiang-xianxiang",
+  "title": "万象仙乡",
   "qq": "920930589",
   "tapid": "816558",
   "private": true,
@@ -64,8 +64,8 @@
     "vue-tsc": "^3.1.4"
   },
   "build": {
-    "appId": "games.wenzi.taoyuan",
-    "productName": "我从种田开始修仙",
+    "appId": "games.wenzi.wanxiangxianxiang",
+    "productName": "万象仙乡",
     "asar": false,
     "files": [
       "dist-electron/**/*",
@@ -79,7 +79,7 @@
     "win": {
       "target": "zip",
       "icon": "public/favicon.ico",
-      "artifactName": "taoyuan-${version}-win.${ext}"
+      "artifactName": "wanxiang-xianxiang-${version}-win.${ext}"
     }
   }
 }
