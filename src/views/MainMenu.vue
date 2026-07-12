@@ -447,29 +447,22 @@
             v-if="aboutTab === 'about'"
             class="flex flex-col space-y-3 text-sm"
           >
-            <p class="text-xs text-muted">游戏灵感来自 Stardew Valley</p>
+            <p class="text-xs text-muted">
+              万象经营修仙，从一亩灵田走向星河仙门。
+            </p>
             <div class="border border-accent/20 rounded-xs p-3">
               <p class="text-muted text-xs mb-1">当前版本</p>
               <p class="text-accent">v{{ pkg.version }}</p>
             </div>
             <div class="border border-accent/20 rounded-xs p-3">
-              <p class="text-muted text-xs mb-1">原作品</p>
-              <p class="text-xs">
-                原版项目署名：
-                <a
-                  href="https://github.com/setube/taoyuan"
-                  target="_blank"
-                  class="text-accent underline"
-                  >setube</a
-                >
-              </p>
-              <p class="text-muted text-[10px] mt-1">
-                基于 CC BY-NC 4.0 协议演绎
+              <p class="text-muted text-xs mb-1">游戏定位</p>
+              <p class="text-xs leading-relaxed">
+                《万象仙乡》以经营、修行、洞天建设、仙界探索和长期养成为核心，正在逐步形成自己的世界观、素材体系和玩法表达。
               </p>
             </div>
             <div class="border border-accent/20 rounded-xs p-3">
-              <p class="text-muted text-xs mb-1">二开作者</p>
-              <p class="text-xs">万象仙乡 · QQ: 3026591236</p>
+              <p class="text-muted text-xs mb-1">制作组</p>
+              <p class="text-xs">万象仙乡制作组 · QQ: 3026591236</p>
             </div>
             <div class="border border-accent/20 rounded-xs p-3">
               <p class="text-muted text-xs mb-1">QQ 交流群</p>
@@ -502,6 +495,7 @@
               </a>
             </div>
           </div>
+
           <!-- 赞助作者 -->
           <div
             v-if="aboutTab === 'author'"

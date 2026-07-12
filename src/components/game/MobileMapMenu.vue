@@ -15,13 +15,13 @@
           <X :size="14" />
         </button>
         <p class="text-accent text-sm text-center mb-3 tracking-widest">
-          {{ isImmortalMap ? "仙界地图" : "修仙地图" }}
+          {{ isImmortalMap ? "云阙仙图" : "万象仙图" }}
         </p>
 
         <template v-if="isImmortalMap">
-          <div class="map-path map-path-cultivation">── 云阙仙域 ──</div>
+          <div class="map-path map-path-cultivation">── 云阙天域 ──</div>
           <div class="map-area map-area-immortal">
-            <p class="map-area-title map-cultivation-title">仙界</p>
+            <p class="map-area-title map-cultivation-title">云阙</p>
             <div class="map-area-grid">
               <button
                 v-for="z in immortalMapZones"
@@ -44,16 +44,16 @@
                 @click="returnMortalWorld"
               >
                 <Sparkles :size="18" />
-                <span>返回下界</span>
+                <span>返回凡域</span>
               </button>
             </div>
           </div>
         </template>
 
         <template v-else>
-          <!-- 田庄 -->
+          <!-- 灵田洞天 -->
           <div class="map-area">
-            <p class="map-area-title">田庄</p>
+            <p class="map-area-title">灵田洞天</p>
             <div class="map-area-grid">
               <button
                 v-for="t in farmGroup"
@@ -71,10 +71,10 @@
 
           <div class="map-path">···</div>
 
-          <!-- 野外 -->
+          <!-- 万象人间 -->
           <div class="flex space-x-2">
             <div class="map-area flex-1">
-              <p class="map-area-title">村落</p>
+              <p class="map-area-title">万象集</p>
               <div class="map-area-grid">
                 <button
                   v-for="t in villageGroup"
@@ -93,7 +93,7 @@
               </div>
             </div>
             <div class="map-area flex-1">
-              <p class="map-area-title">野外</p>
+              <p class="map-area-title">山海野境</p>
               <div class="map-area-grid">
                 <button
                   v-for="t in wildGroup"
@@ -115,9 +115,9 @@
 
           <div class="map-path">···</div>
 
-          <!-- 工坊 -->
+          <!-- 百工器作 -->
           <div class="map-area">
-            <p class="map-area-title">工坊</p>
+            <p class="map-area-title">百工器作</p>
             <div class="map-area-grid">
               <button
                 v-for="t in craftGroup"
@@ -133,11 +133,11 @@
             </div>
           </div>
 
-          <div class="map-path map-path-cultivation">── 修仙之途 ──</div>
+          <div class="map-path map-path-cultivation">── 问道长阶 ──</div>
 
-          <!-- 修仙 -->
+          <!-- 问道 -->
           <div class="map-area map-area-cultivation">
-            <p class="map-area-title map-cultivation-title">修仙</p>
+            <p class="map-area-title map-cultivation-title">问道</p>
             <div class="map-area-grid">
               <button
                 class="map-loc"
@@ -146,7 +146,7 @@
                 @click="go('cultivation')"
               >
                 <Sparkles :size="18" />
-                <span>修行</span>
+                <span>问道</span>
               </button>
               <button
                 class="map-loc"
@@ -154,7 +154,7 @@
                 @click="goCultivationMarket"
               >
                 <Store :size="18" />
-                <span>市集</span>
+                <span>仙市</span>
               </button>
               <button
                 class="map-loc map-loc-ascension"
@@ -166,7 +166,7 @@
                 @click="goAscension"
               >
                 <Sparkles :size="18" />
-                <span>{{ ascensionStore.ascended ? "仙界" : "飞升" }}</span>
+                <span>{{ ascensionStore.ascended ? "云阙" : "飞升" }}</span>
               </button>
               <button
                 class="map-loc"
@@ -175,7 +175,7 @@
                 @click="go('alchemy')"
               >
                 <FlaskConical :size="18" />
-                <span>炼丹</span>
+                <span>丹炉</span>
               </button>
               <button
                 class="map-loc"
@@ -184,7 +184,7 @@
                 @click="go('cave')"
               >
                 <Mountain :size="18" />
-                <span>洞府</span>
+                <span>洞天</span>
               </button>
               <button
                 class="map-loc"
@@ -193,7 +193,7 @@
                 @click="go('destined-artifact')"
               >
                 <Sword :size="18" />
-                <span>法宝</span>
+                <span>本命宝</span>
               </button>
               <button
                 class="map-loc"
@@ -202,7 +202,7 @@
                 @click="go('talisman')"
               >
                 <ScrollText :size="18" />
-                <span>制符</span>
+                <span>符箓</span>
               </button>
               <button
                 class="map-loc"
@@ -211,7 +211,7 @@
                 @click="go('yuan-shen')"
               >
                 <CircleDot :size="18" />
-                <span>元神</span>
+                <span>神魂</span>
               </button>
               <button
                 class="map-loc"
@@ -220,7 +220,7 @@
                 @click="go('divine-beast')"
               >
                 <PawPrint :size="18" />
-                <span>灵兽</span>
+                <span>仙兽</span>
               </button>
               <button
                 class="map-loc"
@@ -228,7 +228,7 @@
                 @click="handleSpecial('openCombat')"
               >
                 <Flame :size="18" />
-                <span>秘境</span>
+                <span>万象秘境</span>
               </button>
               <button
                 class="map-loc"
@@ -237,7 +237,7 @@
                 @click="go('events' as PanelKey)"
               >
                 <CalendarDays :size="18" />
-                <span>活动</span>
+                <span>天时活动</span>
               </button>
               <button
                 class="map-loc"
@@ -245,7 +245,7 @@
                 @click="handleSpecial('openSect')"
               >
                 <Swords :size="18" />
-                <span>门派</span>
+                <span>道统</span>
               </button>
               <button
                 class="map-loc"
@@ -253,7 +253,7 @@
                 @click="handleSpecial('openForge')"
               >
                 <Cog :size="18" />
-                <span>炼器</span>
+                <span>器阁</span>
               </button>
               <button
                 class="map-loc"
@@ -261,7 +261,7 @@
                 @click="handleSpecial('openLeaderboard')"
               >
                 <Trophy :size="18" />
-                <span>排行</span>
+                <span>天榜</span>
               </button>
               <button
                 class="map-loc"
@@ -269,16 +269,16 @@
                 @click="go('chat' as PanelKey)"
               >
                 <MessageCircle :size="18" />
-                <span>聊天</span>
+                <span>传音</span>
               </button>
             </div>
           </div>
 
           <div class="map-path">···</div>
 
-          <!-- 随身 -->
+          <!-- 随身仙囊 -->
           <div class="map-area">
-            <p class="map-area-title">随身</p>
+            <p class="map-area-title">随身仙囊</p>
             <div class="map-area-grid">
               <button
                 v-for="t in personalGroup"
@@ -310,7 +310,7 @@
                     unclaimedMailCount > 99 ? "99+" : unclaimedMailCount
                   }}</span>
                 </div>
-                <span>系统邮件</span>
+                <span>飞书</span>
               </button>
             </div>
           </div>

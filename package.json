@@ -18,8 +18,8 @@
     "build:android": "pnpm run build && npx cap sync android",
     "build:apk": "pnpm run build:android && cd android && ./gradlew assembleRelease"
   },
-  "description": "一款文字版田园模拟经营游戏，灵感来自星露谷物语",
-  "author": "setube",
+  "description": "《万象仙乡》是一款万象经营修仙游戏，从灵田村落到星河仙门，经营洞天、修行飞升，打造自己的仙乡。",
+  "author": "万象仙乡制作组",
   "dependencies": {
     "@capacitor/android": "^8.1.0",
     "@capacitor/app": "^8.0.1",

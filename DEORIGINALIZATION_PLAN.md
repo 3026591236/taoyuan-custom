@@ -3,7 +3,7 @@
 ## A. 立即可做（低风险）
 
 - [x] 确定新游戏正式名：万象仙乡
-- [ ] 确定新作者/团队名
+- [x] 确定新作者/团队名：万象仙乡制作组
 - [ ] 新建原创世界观关键词表
 - [x] 梳理并清理主要玩家可见“桃源乡”字样（合规文档中的原版署名保留）
 - [ ] 梳理 package / app / manifest / title / meta 信息
@@ -11,7 +11,7 @@
 
 ## B. 品牌替换
 
-- [ ] `package.json` name / author / description
+- [x] `package.json` name / author / description
 - [ ] 首页标题、浏览器标题、PWA/Capacitor 名称
 - [x] Logo、首页主视觉（favicon/App icon 源图待继续生成多尺寸）
 - [ ] README 项目介绍
