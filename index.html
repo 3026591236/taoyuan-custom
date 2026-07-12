@@ -1,38 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-
   <head>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <title>万象仙乡 — 万象经营修仙</title>
     <script>
-      window.__TAOYUAN_API_BASE__ = 'http://129.204.252.190:3001'
+      window.__TAOYUAN_API_BASE__ = "http://129.204.252.190:3001";
       // native local API proxy: when the game is loaded from client-downloaded local files,
       // relative /api requests must still go to the backend server.
-      ;(function () {
-        var base = window.__TAOYUAN_API_BASE__
-        var isHttp = location.protocol === 'http:' || location.protocol === 'https:'
-        if (isHttp || !window.fetch || !base) return
-        var rawFetch = window.fetch.bind(window)
+      (function () {
+        var base = window.__TAOYUAN_API_BASE__;
+        var isHttp =
+          location.protocol === "http:" || location.protocol === "https:";
+        if (isHttp || !window.fetch || !base) return;
+        var rawFetch = window.fetch.bind(window);
         window.fetch = function (input, init) {
-          if (typeof input === 'string' && input.indexOf('/api/') === 0) return rawFetch(base + input, init)
-          if (input && typeof input === 'object' && input.url && input.url.indexOf('/api/') === 0) return rawFetch(base + input.url, input)
-          return rawFetch(input, init)
-        }
-      })()
+          if (typeof input === "string" && input.indexOf("/api/") === 0)
+            return rawFetch(base + input, init);
+          if (
+            input &&
+            typeof input === "object" &&
+            input.url &&
+            input.url.indexOf("/api/") === 0
+          )
+            return rawFetch(base + input.url, input);
+          return rawFetch(input, init);
+        };
+      })();
     </script>
-    <meta name="description" content="一款像素中国风文字田园模拟经营游戏，灵感来自星露谷物语。春耕夏种秋收冬藏，经营你的世外桃源。" />
-    <meta name="keywords" content="万象仙乡,田园修仙,文字游戏,模拟经营,仙侠经营,中国风" />
+    <meta
+      name="description"
+      content="《万象仙乡》是一款万象经营修仙游戏，从灵田村落到星河仙门，经营洞天、修行飞升，打造自己的仙乡。"
+    />
+    <meta
+      name="keywords"
+      content="万象仙乡,田园修仙,文字游戏,模拟经营,仙侠经营,中国风"
+    />
     <meta name="theme-color" content="#1a1a1a" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="万象仙乡" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="万象仙乡 — 万象经营修仙" />
-    <meta property="og:description" content="像素中国风文字田园模拟经营游戏，春耕夏种秋收冬藏，经营你的世外桃源。" />
+    <meta
+      property="og:description"
+      content="万象经营修仙游戏，从灵田村落到星河仙门，经营洞天、修行飞升，打造自己的仙乡。"
+    />
     <style>
       html,
       body {
@@ -53,7 +82,7 @@
       }
 
       #app:empty::after {
-        content: '万象仙乡加载中...';
+        content: "万象仙乡加载中...";
       }
     </style>
   </head>
@@ -63,8 +92,36 @@
     <script type="module" src="/src/main.ts"></script>
     <!-- 统计勿删 -->
     <script>
-      !function (p) { "use strict"; !function (t) { var s = window, e = document, i = p, c = "".concat("https:" === e.location.protocol ? "https://" : "http://", "sdk.51.la/js-sdk-pro.min.js"), n = e.createElement("script"), r = e.getElementsByTagName("script")[0]; n.type = "text/javascript", n.setAttribute("charset", "UTF-8"), n.async = !0, n.src = c, n.id = "LA_COLLECT", i.d = n; var o = function () { s.LA.ids.push(i) }; s.LA ? s.LA.ids && o() : (s.LA = p, s.LA.ids = [], o()), r.parentNode.insertBefore(n, r) }() }({ id: "L5qLQC2HtBt5AGKV", ck: "L5qLQC2HtBt5AGKV", autoTrack: true, hashMode: true });
+      !(function (p) {
+        "use strict";
+        !(function (t) {
+          var s = window,
+            e = document,
+            i = p,
+            c = "".concat(
+              "https:" === e.location.protocol ? "https://" : "http://",
+              "sdk.51.la/js-sdk-pro.min.js",
+            ),
+            n = e.createElement("script"),
+            r = e.getElementsByTagName("script")[0];
+          ((n.type = "text/javascript"),
+            n.setAttribute("charset", "UTF-8"),
+            (n.async = !0),
+            (n.src = c),
+            (n.id = "LA_COLLECT"),
+            (i.d = n));
+          var o = function () {
+            s.LA.ids.push(i);
+          };
+          (s.LA ? s.LA.ids && o() : ((s.LA = p), (s.LA.ids = []), o()),
+            r.parentNode.insertBefore(n, r));
+        })();
+      })({
+        id: "L5qLQC2HtBt5AGKV",
+        ck: "L5qLQC2HtBt5AGKV",
+        autoTrack: true,
+        hashMode: true,
+      });
     </script>
   </body>
-
 </html>

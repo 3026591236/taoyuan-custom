@@ -17,7 +17,9 @@
 | `src/assets/wanxiang-hero.svg` | AI 辅助原创 / 项目内 SVG 重绘 | 首页主视觉 | 使用生图模型确定“下界灵田村落 + 上界仙门 + 星河法阵 + 浮空山”方向后，以 SVG 落地 | 后续可替换为高清 16:9 主视觉图 |
 | `src/assets/home-pixel-taoyuan.svg` | 原版遗留/待替换 | 历史首页像素图，当前首页已不再引用 | 文件名仍含 `taoyuan`，暂保留以免历史引用/回滚断裂 | 确认无引用后可迁移到 legacy 或移除 |
 | `src/assets/logo.png` | 原版遗留/待替换 | 历史 Logo，当前首页已不再引用 | 待审计 | 后续替换 App icon/favicon 源图后可移除 |
-| `public/favicon.ico` | 原版遗留/待替换 | 浏览器 favicon | 待替换 | 用万象仙乡徽记重新生成 ico/png |
+| `public/favicon.ico` | 原创新增 / 程序生成 | 浏览器 favicon | 基于万象仙乡徽记用脚本生成 ICO | 已替换；源脚本见 `scripts/generate-wanxiang-icons.mjs` |
+| `public/icons/wanxiang-icon-*.png`, `public/icon-192.png`, `public/icon-512.png`, `public/apple-touch-icon.png` | 原创新增 / 程序生成 | PWA / 浏览器 / iOS 主屏图标 | 基于万象仙乡徽记用脚本生成 | 保留并随品牌升级迭代 |
+| `android/app/src/main/res/mipmap-*/ic_launcher*.png` | 原创新增 / 程序生成 | Android App 图标 | 基于万象仙乡徽记用脚本生成 | 后续如接入高清 PNG，可重新生成 |
 
 ## 仙界与后续新增素材
 

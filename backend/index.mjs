@@ -638,6 +638,12 @@ const defaultConfig = {
   updateLogs: [
     {
       date: "2026-07-13",
+      title: "V3.0.3 万象仙乡应用图标",
+      content:
+        "品牌视觉补全：基于万象仙乡徽记生成浏览器 favicon、PWA 192/512 图标、iOS apple-touch-icon 与 Android 多密度 App 图标；新增 Web App manifest，并补充资产台账中的图标来源与生成脚本记录。",
+    },
+    {
+      date: "2026-07-13",
       title: "V3.0.2 万象仙乡品牌视觉",
       content:
         "原创化第二阶段继续推进：新增万象仙乡原创徽记与首页主视觉，首页从旧像素田园图升级为灵田村落、星河仙门、云阙洞天的品牌视觉；清理主要玩家可见旧名残留，并新增 ASSET_LEDGER.md 资产台账，记录品牌素材、AI 辅助原创素材、第三方授权素材与原版遗留待替换素材。",

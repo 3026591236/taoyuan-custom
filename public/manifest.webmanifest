@@ -1,0 +1,13 @@
+{
+  "name": "万象仙乡",
+  "short_name": "万象仙乡",
+  "description": "万象经营修仙游戏，从灵田村落到星河仙门，经营洞天、修行飞升，打造自己的仙乡。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#120a31",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
