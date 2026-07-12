@@ -1,5 +1,8 @@
 <template>
-  <div class="immortal-page" :class="`art-${ascensionStore.lastArtId}`">
+  <div
+    class="immortal-page"
+    :class="[`art-${ascensionStore.lastArtId}`, realmVisual.className]"
+  >
     <div class="immortal-sky" :key="ascensionStore.visualPulse">
       <span class="star s1">✦</span><span class="star s2">✧</span
       ><span class="star s3">✦</span> <span class="cloud c1">☁</span
@@ -50,6 +53,10 @@
         <div class="portrait-orbit orbit-a"></div>
         <div class="portrait-orbit orbit-b"></div>
         <div class="portrait-orbit orbit-c"></div>
+        <div class="realm-particles" aria-hidden="true">
+          <span v-for="i in 12" :key="i"></span>
+        </div>
+        <div class="realm-sigil">{{ realmVisual.sigil }}</div>
         <img
           class="immortal-artwork"
           src="/assets/immortal/immortal-sovereign-anime.png"
@@ -60,7 +67,8 @@
         <div class="portrait-cloud cloud-mid"></div>
         <div class="portrait-cloud cloud-right"></div>
         <div class="portrait-nameplate">
-          <span>{{ ascensionStore.immortalRealmInfo.icon }}</span> 仙身显化
+          <span>{{ ascensionStore.immortalRealmInfo.icon }}</span>
+          {{ realmVisual.cardTitle }}
         </div>
       </div>
       <div class="flex-1 min-w-0 immortal-profile">
@@ -80,6 +88,14 @@
           }}
           · {{ ascensionStore.immortalRealmInfo.desc }}
         </p>
+        <div class="realm-identity-card mt-2">
+          <div>
+            <span>{{ realmVisual.badge }}</span>
+            <b>{{ realmVisual.cardTitle }}</b>
+          </div>
+          <p>{{ realmVisual.battleAura }}</p>
+          <em>{{ realmVisual.effectText }}</em>
+        </div>
         <div class="character-combat-deck mt-3">
           <div class="combat-power">
             <span>仙界战力</span><b>{{ ascensionStore.immortalPower }}</b
@@ -569,9 +585,15 @@
           />
           <div class="card-shade"></div>
           <div class="card-meta">
-            <span class="text-[10px] text-muted">己方仙身</span>
+            <span class="text-[10px] text-muted"
+              >己方仙身 · {{ realmVisual.cardTitle }}</span
+            >
             <b>{{ ascensionStore.immortalTitle || "飞升仙身" }}</b>
-            <em>{{ currentArt.icon }} {{ currentArt.name }}</em>
+            <em
+              >{{ currentArt.icon }} {{ currentArt.name }}｜{{
+                realmVisual.battleAura
+              }}</em
+            >
           </div>
           <div class="card-stats">
             <span>仙战 {{ ascensionStore.immortalPower }}</span>
@@ -1477,6 +1499,54 @@ const router = useRouter();
 const route = useRoute();
 const ascensionStore = useAscensionStore();
 const officeInfo = computed(() => ascensionStore.officeInfo);
+const REALM_VISUALS = [
+  {
+    className: "realm-true-immortal",
+    sigil: "云",
+    badge: "☁️ 云门初开",
+    cardTitle: "真仙云身",
+    battleAura: "云雾环身，仙术初醒",
+    effectText: "白云流光、初阶仙环、柔和星尘",
+  },
+  {
+    className: "realm-xuan-immortal",
+    sigil: "玄",
+    badge: "🌘 玄月入体",
+    cardTitle: "玄仙月影",
+    battleAura: "玄月绕背，法则成纹",
+    effectText: "银紫月弧、玄纹扫光、暗星粒子",
+  },
+  {
+    className: "realm-earth-immortal",
+    sigil: "岳",
+    badge: "⛰️ 洞天镇岳",
+    cardTitle: "地仙洞天",
+    battleAura: "山河法相，洞天镇身",
+    effectText: "青金山纹、地脉光柱、厚土护罩",
+  },
+  {
+    className: "realm-sky-immortal",
+    sigil: "阙",
+    badge: "🌤️ 云阙奉诏",
+    cardTitle: "天仙云阙",
+    battleAura: "天门开阖，云阙诏光",
+    effectText: "天门金辉、流云轨道、诏令光束",
+  },
+  {
+    className: "realm-gold-immortal",
+    sigil: "太",
+    badge: "🌟 太乙金轮",
+    cardTitle: "太乙金仙",
+    battleAura: "功德成轮，万法朝元",
+    effectText: "金轮旋照、万星朝拱、太乙神焰",
+  },
+];
+const realmVisual = computed(
+  () =>
+    REALM_VISUALS[
+      Math.min(ascensionStore.immortalRealmStage, REALM_VISUALS.length - 1)
+    ] || REALM_VISUALS[0]!,
+);
 const currentArt = computed(
   () =>
     IMMORTAL_ARTS.find((art) => art.id === ascensionStore.lastArtId) ||
@@ -3061,6 +3131,278 @@ const returnToWorld = () => {
   font-style: normal;
   background: rgba(0, 0, 0, 0.28);
 }
+
+.realm-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: screen;
+}
+.realm-particles span {
+  position: absolute;
+  left: calc(var(--i, 1) * 8%);
+  top: 72%;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  color: #e8fbff;
+  opacity: 0;
+  box-shadow: 0 0 12px currentColor;
+  animation: realmParticleRise 3.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 1) * 0.16s);
+}
+.realm-particles span:nth-child(1) {
+  --i: 1;
+}
+.realm-particles span:nth-child(2) {
+  --i: 2;
+}
+.realm-particles span:nth-child(3) {
+  --i: 3;
+}
+.realm-particles span:nth-child(4) {
+  --i: 4;
+}
+.realm-particles span:nth-child(5) {
+  --i: 5;
+}
+.realm-particles span:nth-child(6) {
+  --i: 6;
+}
+.realm-particles span:nth-child(7) {
+  --i: 7;
+}
+.realm-particles span:nth-child(8) {
+  --i: 8;
+}
+.realm-particles span:nth-child(9) {
+  --i: 9;
+}
+.realm-particles span:nth-child(10) {
+  --i: 10;
+}
+.realm-particles span:nth-child(11) {
+  --i: 11;
+}
+.realm-particles span:nth-child(12) {
+  --i: 12;
+}
+.realm-sigil {
+  position: absolute;
+  z-index: 6;
+  top: 18px;
+  right: 20px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(255, 226, 138, 0.42);
+  border-radius: 50%;
+  color: #ffe28a;
+  background: rgba(6, 9, 28, 0.48);
+  box-shadow: 0 0 18px rgba(255, 226, 138, 0.2);
+  font-size: 16px;
+  font-weight: 700;
+}
+.realm-identity-card {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) 180px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 226, 138, 0.22);
+  border-radius: 9px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 226, 138, 0.08),
+    rgba(102, 222, 255, 0.06)
+  );
+  text-align: left;
+}
+.realm-identity-card span,
+.realm-identity-card em {
+  display: block;
+  color: rgba(235, 245, 255, 0.62);
+  font-size: 9px;
+  font-style: normal;
+}
+.realm-identity-card b {
+  display: block;
+  color: #ffe28a;
+  font-size: 13px;
+  margin-top: 2px;
+}
+.realm-identity-card p {
+  color: #bcecff;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.realm-true-immortal .immortal-portrait-stage {
+  border-color: rgba(190, 240, 255, 0.58);
+  box-shadow:
+    0 0 46px rgba(190, 240, 255, 0.2),
+    inset 0 0 34px rgba(255, 255, 255, 0.08);
+}
+.realm-xuan-immortal .immortal-portrait-stage {
+  border-color: rgba(196, 181, 253, 0.7);
+  box-shadow:
+    0 0 54px rgba(168, 85, 247, 0.28),
+    inset 0 0 38px rgba(196, 181, 253, 0.16);
+}
+.realm-earth-immortal .immortal-portrait-stage {
+  border-color: rgba(134, 239, 172, 0.68);
+  box-shadow:
+    0 0 54px rgba(34, 197, 94, 0.24),
+    inset 0 0 38px rgba(251, 191, 36, 0.12);
+}
+.realm-sky-immortal .immortal-portrait-stage {
+  border-color: rgba(125, 211, 252, 0.74);
+  box-shadow:
+    0 0 62px rgba(56, 189, 248, 0.3),
+    inset 0 0 42px rgba(255, 226, 138, 0.14);
+}
+.realm-gold-immortal .immortal-portrait-stage {
+  border-color: rgba(255, 226, 138, 0.9);
+  box-shadow:
+    0 0 78px rgba(255, 199, 68, 0.42),
+    0 0 34px rgba(255, 255, 255, 0.18),
+    inset 0 0 46px rgba(255, 226, 138, 0.2);
+}
+.realm-true-immortal .realm-particles span {
+  color: #dff8ff;
+  animation-name: realmCloudRise;
+}
+.realm-xuan-immortal .realm-particles span {
+  color: #c4b5fd;
+  animation-name: realmMoonArc;
+}
+.realm-earth-immortal .realm-particles span {
+  color: #86efac;
+  animation-name: realmMountainPulse;
+}
+.realm-sky-immortal .realm-particles span {
+  color: #7dd3fc;
+  animation-name: realmGateBeam;
+}
+.realm-gold-immortal .realm-particles span {
+  color: #ffe28a;
+  animation-name: realmGoldWheel;
+}
+.realm-xuan-immortal .portrait-orbit {
+  border-color: rgba(196, 181, 253, 0.42);
+}
+.realm-earth-immortal .portrait-orbit {
+  border-color: rgba(134, 239, 172, 0.38);
+}
+.realm-sky-immortal .portrait-orbit {
+  border-color: rgba(125, 211, 252, 0.48);
+}
+.realm-gold-immortal .portrait-orbit {
+  border-color: rgba(255, 226, 138, 0.62);
+  box-shadow: 0 0 16px rgba(255, 226, 138, 0.2);
+}
+.realm-xuan-immortal .combat-card.player-card {
+  border-color: rgba(196, 181, 253, 0.46);
+}
+.realm-earth-immortal .combat-card.player-card {
+  border-color: rgba(134, 239, 172, 0.46);
+}
+.realm-sky-immortal .combat-card.player-card {
+  border-color: rgba(125, 211, 252, 0.52);
+}
+.realm-gold-immortal .combat-card.player-card {
+  border-color: rgba(255, 226, 138, 0.7);
+  box-shadow:
+    inset 0 0 34px rgba(255, 226, 138, 0.12),
+    0 0 24px rgba(255, 226, 138, 0.18);
+}
+@keyframes realmParticleRise {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.6);
+  }
+  45% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-88px) scale(1.25);
+  }
+}
+@keyframes realmCloudRise {
+  0% {
+    opacity: 0;
+    transform: translate(-18px, 24px) scale(1.4);
+  }
+  55% {
+    opacity: 0.55;
+    transform: translate(14px, -22px) scale(3.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(40px, -72px) scale(1.6);
+  }
+}
+@keyframes realmMoonArc {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) translateX(16px);
+  }
+  50% {
+    opacity: 0.95;
+    transform: rotate(170deg) translateX(42px);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(340deg) translateX(20px);
+  }
+}
+@keyframes realmMountainPulse {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scaleX(2);
+  }
+  45% {
+    opacity: 0.75;
+    transform: translateY(-8px) scaleX(4);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-42px) scaleX(1.2);
+  }
+}
+@keyframes realmGateBeam {
+  0% {
+    opacity: 0;
+    transform: translateY(-80px) scaleY(0.5);
+  }
+  40% {
+    opacity: 0.9;
+    transform: translateY(0) scaleY(4.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(70px) scaleY(0.8);
+  }
+}
+@keyframes realmGoldWheel {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) translateX(18px) scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(180deg) translateX(48px) scale(1.7);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(360deg) translateX(20px) scale(0.8);
+  }
+}
+
 @keyframes skillParticle {
   0% {
     opacity: 0;
@@ -3243,6 +3585,9 @@ const returnToWorld = () => {
   }
   .art-card-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .realm-identity-card {
+    grid-template-columns: 1fr;
   }
 }
 
