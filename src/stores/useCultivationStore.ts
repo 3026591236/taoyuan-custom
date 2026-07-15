@@ -2974,15 +2974,15 @@ export const useCultivationStore = defineStore("cultivation", () => {
       showFloat(clear ? `心魔-${clear} 悟道+8` : "悟道+8", "success");
     } else if (pillId === "ice_soul_pill") {
       inventory.removeItem(pillId, 1);
-      const manaGain = Math.min(maxMana.value - mana.value, 90);
-      mana.value = Math.min(maxMana.value, mana.value + 90);
+      const manaGain = Math.max(0, maxMana.value - mana.value);
+      mana.value = maxMana.value;
       const clear = Math.min(28, heartDemon.value);
       heartDemon.value = Math.max(0, heartDemon.value - clear);
       const healed = recoverYuanShenInjury(1);
       addLog(
-        `服下一枚冰魄护魂丹，灵力+${manaGain}${clear ? `，心魔-${clear}` : ""}${healed ? `，元神伤势-${healed}` : ""}。`,
+        `服下一枚冰魄护魂丹，灵力完全恢复${manaGain ? `（+${manaGain}）` : ""}${clear ? `，心魔-${clear}` : ""}${healed ? `，元神伤势-${healed}` : ""}。`,
       );
-      showFloat(`灵力+${manaGain}${clear ? ` 心魔-${clear}` : ""}`, "success");
+      showFloat(`灵力已回满${clear ? ` 心魔-${clear}` : ""}`, "success");
     } else if (pillId === "good_fortune_pill") {
       inventory.removeItem(pillId, 1);
       const leveled = addYuanShenExp(900);
