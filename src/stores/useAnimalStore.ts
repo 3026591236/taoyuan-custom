@@ -1,5 +1,6 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
+import { useAchievementStore } from "./useAchievementStore";
 import type {
   AnimalBuildingType,
   AnimalType,
@@ -412,6 +413,7 @@ export const useAnimalStore = defineStore("animal", () => {
         .filter((a) => a.type === animalType)
         .sort((a, b) => b.friendship - a.friendship)[0];
       animals.value.push(createAnimal(animalType, name, 200, parent));
+      useAchievementStore().recordBreeding();
       incubating.value = null;
       return { hatched: { type: animalType, name } };
     }
@@ -488,6 +490,7 @@ export const useAnimalStore = defineStore("animal", () => {
         .filter((a) => a.type === animalType)
         .sort((a, b) => b.friendship - a.friendship)[0];
       animals.value.push(createAnimal(animalType, name, 200, parent));
+      useAchievementStore().recordBreeding();
       barnIncubating.value = null;
       return { hatched: { type: animalType, name } };
     }

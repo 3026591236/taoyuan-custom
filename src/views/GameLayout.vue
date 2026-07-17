@@ -1652,7 +1652,7 @@ const stopAccountAutoSave = () => {
   }
 };
 
-// 游戏未开始时重定向到主菜单
+// 游戏未开始时优先从刷新前的活跃槽位恢复，避免刷新 /game 后回到空内存状态。
 const isAdminImmortalPreviewRoute =
   router.currentRoute.value.name === "immortal-world" &&
   router.currentRoute.value.query.adminPreview === "1" &&
@@ -1661,7 +1661,11 @@ if (isAdminImmortalPreviewRoute) {
   gameStore.isGameStarted = true;
   ascensionStore.enterAdminPreview();
 } else if (!gameStore.isGameStarted) {
-  void router.replace("/");
+  const lastActiveSlot = Number(localStorage.getItem("taoyuan_active_slot") ?? "-1");
+  const restored = Number.isInteger(lastActiveSlot)
+    ? saveStore.loadFromSlot(lastActiveSlot)
+    : false;
+  if (!restored) void router.replace("/");
 }
 
 const {

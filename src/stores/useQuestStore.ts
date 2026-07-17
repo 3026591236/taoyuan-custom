@@ -474,8 +474,8 @@ export const useQuestStore = defineStore("quest", () => {
     {
       id: "v12_breed_3",
       type: "guide",
-      title: "灵兽培育：三次配育",
-      desc: "完成3次灵兽/动物培育，让养成线有明确阶段奖励。",
+      title: "灵兽培育：三次培育",
+      desc: "累计完成3次培育：灵兽喂食/陪练、动物孵化、灵泉鱼池繁殖或灵种育种都可计入。",
       metric: "breedingsDone",
       target: 3,
       reward: {

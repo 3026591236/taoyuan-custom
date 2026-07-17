@@ -4,6 +4,7 @@ import { addLog, showFloat } from "@/composables/useGameLog";
 import { useGameStore } from "./useGameStore";
 import { usePlayerStore } from "./usePlayerStore";
 import { useInventoryStore } from "./useInventoryStore";
+import { useAchievementStore } from "./useAchievementStore";
 import { useSkillStore } from "./useSkillStore";
 
 export type SpiritRoot =
@@ -3277,6 +3278,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
       return false;
     }
     beastBond.value += 25;
+    useAchievementStore().recordBreeding();
     addLog(
       `你喂食${data.emoji}${data.name}，消耗${feedName}×${data.feedQty}，羁绊加深。当前羁绊：${beastBond.value}`,
     );
@@ -3350,6 +3352,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const level = beastLevel.value;
     const bondGain = 18 + Math.min(30, level * 2);
     beastBond.value += bondGain;
+    useAchievementStore().recordBreeding();
     beastTrainingDailyKey.value = todayKey();
     if (beast.value === "fox") {
       const gain = 45 + level * 6;

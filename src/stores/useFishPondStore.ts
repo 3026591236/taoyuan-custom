@@ -1,5 +1,6 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
+import { useAchievementStore } from "./useAchievementStore";
 import type {
   PondLevel,
   FishPondState,
@@ -498,6 +499,7 @@ export const useFishPondStore = defineStore("fishPond", () => {
             };
             pond.value.fish.push(child);
             result.bred = childName;
+            useAchievementStore().recordBreeding();
           }
         }
         pond.value.breeding = null;
