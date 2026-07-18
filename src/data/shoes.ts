@@ -393,6 +393,22 @@ export const SHOES: ShoeDef[] = [
     sellPrice: 800,
   },
 
+  // ===== 寻珍矿工套装（水晶层怪物） =====
+  {
+    id: "prospectors_softstep_boots",
+    name: "寻珍踏隙靴",
+    description: "以晶矿软革缝制，便于沿岩缝寻找被掩埋的宝箱，正面战力很低。",
+    effects: [
+      { type: "treasure_find", value: 0.05 },
+      { type: "mining_stamina", value: 0.04 },
+    ],
+    shopPrice: null,
+    recipe: null,
+    recipeMoney: 0,
+    obtainSource: "水晶层怪物稀有掉落",
+    sellPrice: 900,
+  },
+
   // ===== 新增宝箱掉落鞋子 =====
   {
     id: "lucky_boots",
@@ -466,7 +482,10 @@ export const MONSTER_DROP_SHOES: Record<
   shallow: [],
   frost: [{ shoeId: "frost_treads", chance: 0.015 }],
   lava: [],
-  crystal: [{ shoeId: "crystal_treads", chance: 0.015 }],
+  crystal: [
+    { shoeId: "crystal_treads", chance: 0.015 },
+    { shoeId: "prospectors_softstep_boots", chance: 0.008 },
+  ],
   shadow: [{ shoeId: "shadow_striders", chance: 0.012 }],
   abyss: [{ shoeId: "void_treads", chance: 0.01 }],
 };

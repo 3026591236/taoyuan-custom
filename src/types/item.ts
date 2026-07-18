@@ -1,3 +1,5 @@
+import type { EquipmentEffect } from "./ring";
+
 /** 物品分类 */
 export type ItemCategory =
   | "seed"
@@ -84,6 +86,10 @@ export interface WeaponDef {
   shopMaterials: { itemId: string; quantity: number }[];
   /** 固定附魔（BOSS 武器） */
   fixedEnchantment: string | null;
+  /** 武器提供的通用装备效果（旧武器/旧存档可省略） */
+  effects?: EquipmentEffect[];
+  /** 获取途径描述 */
+  obtainSource?: string;
 }
 
 /** 附魔定义 */

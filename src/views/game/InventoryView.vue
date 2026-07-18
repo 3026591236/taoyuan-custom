@@ -462,7 +462,7 @@
         >
           <div class="flex items-center justify-between mb-1">
             <span class="text-xs text-accent">{{ set.name }}</span>
-            <span class="text-xs text-muted">{{ set.equippedCount }}/3</span>
+            <span class="text-xs text-muted">{{ set.equippedCount }}/{{ set.bonuses.some((b) => b.count === 4) ? 4 : 3 }}</span>
           </div>
           <div
             v-for="bonus in set.bonuses"
@@ -911,6 +911,21 @@
               >
             </div>
             <div
+              v-for="eff in activeWeaponDef.effects ?? []"
+              :key="eff.type"
+              class="flex items-center justify-between mt-0.5"
+            >
+              <span class="text-xs text-muted">{{ RING_EFFECT_NAMES[eff.type] ?? eff.type }}</span>
+              <span class="text-xs text-success">+{{ formatEffectValue(eff) }}</span>
+            </div>
+            <div
+              v-if="activeWeaponDef.obtainSource"
+              class="flex items-center justify-between mt-0.5"
+            >
+              <span class="text-xs text-muted">来源</span>
+              <span class="text-xs text-accent text-right ml-2">{{ activeWeaponDef.obtainSource }}</span>
+            </div>
+            <div
               v-if="activeWeaponEnchant"
               class="flex items-center justify-between mt-0.5"
             >
@@ -985,6 +1000,10 @@
               <span class="text-xs text-success"
                 >+{{ formatEffectValue(eff) }}</span
               >
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-xs text-muted">来源</span>
+              <span class="text-xs text-accent text-right ml-2">{{ activeRingDef.obtainSource }}</span>
             </div>
             <div class="flex items-center justify-between mt-0.5">
               <span class="text-xs text-muted">售价</span>
@@ -1084,6 +1103,10 @@
                 >{{ activeHatDef.sellPrice }}文</span
               >
             </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-xs text-muted">来源</span>
+              <span class="text-xs text-accent text-right ml-2">{{ activeHatDef.obtainSource }}</span>
+            </div>
           </div>
           <div class="flex flex-col space-y-1.5">
             <Button
@@ -1143,6 +1166,10 @@
               <span class="text-xs text-accent"
                 >{{ activeShoeDef.sellPrice }}文</span
               >
+            </div>
+            <div class="flex items-center justify-between mt-0.5">
+              <span class="text-xs text-muted">来源</span>
+              <span class="text-xs text-accent text-right ml-2">{{ activeShoeDef.obtainSource }}</span>
             </div>
           </div>
           <div class="flex flex-col space-y-1.5">

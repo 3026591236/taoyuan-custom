@@ -189,6 +189,7 @@ export const useMiningStore = defineStore("mining", () => {
           floorNum,
           isInSkullCavern.value,
           scaleFactor,
+          inventoryStore.getEquipmentBonus("treasure_find"),
         );
         // 替换 BOSS 格的怪物为弱化版
         const weakBoss = getWeakenedBoss(currentFloor.value);
@@ -215,6 +216,7 @@ export const useMiningStore = defineStore("mining", () => {
       floorNum,
       isInSkullCavern.value,
       scaleFactor,
+      inventoryStore.getEquipmentBonus("treasure_find"),
     );
     floorGrid.value = result.tiles;
     entryIndex.value = result.entryIndex;
@@ -1294,6 +1296,13 @@ export const useMiningStore = defineStore("mining", () => {
           inventoryStore.addRing(bossRingId);
           const bossRingDef = getRingById(bossRingId);
           msg += ` 获得了戒指：${bossRingDef?.name ?? bossRingId}！`;
+        }
+        if (
+          currentFloor.value === 80 &&
+          !inventoryStore.hasHat("prospectors_echo_helm")
+        ) {
+          inventoryStore.addHat("prospectors_echo_helm");
+          msg += " 获得了寻珍矿工装备：寻珍听岩盔！";
         }
         const bossHatId = BOSS_DROP_HATS[currentFloor.value];
         if (bossHatId && !inventoryStore.hasHat(bossHatId)) {

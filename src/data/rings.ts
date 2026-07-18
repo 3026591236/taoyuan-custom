@@ -197,6 +197,21 @@ export const RINGS: RingDef[] = [
     sellPrice: 1200,
   },
   {
+    id: "prospectors_lens_ring",
+    name: "寻珍测脉环",
+    description: "以月光石与黑曜石磨成的测脉环，可辨岩后空室；造价高昂。",
+    effects: [{ type: "treasure_find", value: 0.07 }],
+    recipe: [
+      { itemId: "gold_bar", quantity: 5 },
+      { itemId: "obsidian", quantity: 4 },
+      { itemId: "moonstone", quantity: 2 },
+      { itemId: "crystal_ore", quantity: 12 },
+    ],
+    recipeMoney: 6500,
+    obtainSource: "铁匠铺昂贵合成（需中深层矿材）",
+    sellPrice: 2200,
+  },
+  {
     id: "treasure_hunter_ring",
     name: "寻宝指环",
     description: "玄矿幽脉宝箱更常出现，垂钓宝箱概率提升。",

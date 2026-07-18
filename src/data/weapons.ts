@@ -398,6 +398,21 @@ export const WEAPONS: Record<string, WeaponDef> = {
     fixedEnchantment: null,
   },
 
+  // === 寻珍矿工套装（中深层宝箱） ===
+  prospectors_pick: {
+    id: "prospectors_pick",
+    name: "寻珍探脉镐",
+    type: "club",
+    attack: 27,
+    critRate: 0.06,
+    description: "老矿师校准过的探脉镐，战力克制，却能听出岩层后宝箱的空响。",
+    shopPrice: null,
+    shopMaterials: [],
+    fixedEnchantment: null,
+    effects: [{ type: "treasure_find", value: 0.06 }],
+    obtainSource: "玄矿幽脉61层后宝箱（稀有）",
+  },
+
   // === 新增宝箱掉落武器 ===
   jade_sword: {
     id: "jade_sword",
@@ -536,7 +551,13 @@ export const TREASURE_DROP_WEAPONS: Record<
   shallow: [],
   frost: [{ weaponId: "jade_sword", chance: 0.05 }],
   lava: [{ weaponId: "jade_sword", chance: 0.04 }],
-  crystal: [],
-  shadow: [{ weaponId: "ancient_blade", chance: 0.03 }],
-  abyss: [{ weaponId: "ancient_blade", chance: 0.025 }],
+  crystal: [{ weaponId: "prospectors_pick", chance: 0.025 }],
+  shadow: [
+    { weaponId: "ancient_blade", chance: 0.03 },
+    { weaponId: "prospectors_pick", chance: 0.035 },
+  ],
+  abyss: [
+    { weaponId: "ancient_blade", chance: 0.025 },
+    { weaponId: "prospectors_pick", chance: 0.04 },
+  ],
 };

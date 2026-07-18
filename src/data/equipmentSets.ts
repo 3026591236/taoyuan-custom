@@ -22,6 +22,31 @@ export interface EquipmentSetDef {
 }
 
 export const EQUIPMENT_SETS: EquipmentSetDef[] = [
+  // === 寻珍矿工：单件合计24%，四件套封顶30% ===
+  {
+    id: "prospector_set",
+    name: "寻珍矿工套装",
+    description: "舍弃正面战力，专为玄矿幽脉中寻找额外宝箱而制",
+    pieces: {
+      weapon: "prospectors_pick",
+      ring: "prospectors_lens_ring",
+      hat: "prospectors_echo_helm",
+      shoe: "prospectors_softstep_boots",
+    },
+    bonuses: [
+      {
+        count: 2,
+        effects: [{ type: "mining_stamina", value: 0.03 }],
+        description: "采玄矿体力消耗-3%",
+      },
+      {
+        count: 4,
+        effects: [{ type: "treasure_find", value: 0.06 }],
+        description: "额外宝箱生成概率+6%（全套总计30%，硬上限）",
+      },
+    ],
+  },
+
   // === 早期（万象铺可购买） ===
   {
     id: "miner_set",

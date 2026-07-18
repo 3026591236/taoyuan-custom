@@ -384,6 +384,22 @@ export const HATS: HatDef[] = [
     sellPrice: 350,
   },
 
+  // ===== 寻珍矿工套装（矿洞BOSS） =====
+  {
+    id: "prospectors_echo_helm",
+    name: "寻珍听岩盔",
+    description: "水晶之王珍藏的听岩盔，能捕捉岩层后机关与宝箱的回声。",
+    effects: [
+      { type: "treasure_find", value: 0.06 },
+      { type: "defense_bonus", value: 0.02 },
+    ],
+    shopPrice: null,
+    recipe: null,
+    recipeMoney: 0,
+    obtainSource: "玄矿幽脉80层BOSS掉落",
+    sellPrice: 1200,
+  },
+
   // ===== 新增宝箱掉落帽子 =====
   {
     id: "treasure_cap",

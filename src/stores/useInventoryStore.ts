@@ -687,9 +687,15 @@ export const useInventoryStore = defineStore("inventory", () => {
     };
   };
 
-  /** 查询某种装备效果的合计值（戒指+帽子+鞋子叠加） */
+  /** 查询某种装备效果的合计值（武器+戒指+帽子+鞋子+套装） */
   const getEquipmentBonus = (effectType: RingEffectType): number => {
     let total = 0;
+    // 武器（旧定义无 effects 时自然兼容）
+    const weapon = ownedWeapons.value[equippedWeaponIndex.value];
+    const weaponDef = weapon ? getWeaponById(weapon.defId) : undefined;
+    for (const eff of weaponDef?.effects ?? []) {
+      if (eff.type === effectType) total += eff.value;
+    }
     // 戒指（2槽位）
     const ringIndices = [equippedRingSlot1.value, equippedRingSlot2.value];
     for (const idx of ringIndices) {
@@ -732,10 +738,11 @@ export const useInventoryStore = defineStore("inventory", () => {
     for (const b of activeSetBonuses.value) {
       if (b.type === effectType) total += b.value;
     }
-    return total;
+    // treasure_find 会直接增加矿层额外宝箱生成概率，统一硬封顶30%。
+    return effectType === "treasure_find" ? Math.min(total, 0.3) : total;
   };
 
-  /** 查询某种戒指效果的合计值（代理到 getEquipmentBonus，包含帽子/鞋子加成） */
+  /** 兼容旧调用名：实际汇总所有已装备部位 */
   const getRingEffectValue = (effectType: RingEffectType): number => {
     return getEquipmentBonus(effectType);
   };

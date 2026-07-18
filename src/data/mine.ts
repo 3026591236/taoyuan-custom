@@ -831,6 +831,7 @@ export const generateFloorGrid = (
   floorNum: number,
   isSkullCavern: boolean,
   scaleFactor: number,
+  treasureFind = 0,
 ): {
   tiles: MineTile[];
   entryIndex: number;
@@ -947,16 +948,19 @@ export const generateFloorGrid = (
     placeRandom("trap", { trapDamage });
   }
 
-  // 8. 放置宝箱
-  if (dist.treasureCount) {
-    const treasureCount = randInt(dist.treasureCount[0], dist.treasureCount[1]);
-    for (let i = 0; i < treasureCount; i++) {
-      const rewards = getTreasureRewards(floorNum);
-      placeRandom("treasure", {
-        treasureItems: rewards.items,
-        treasureMoney: rewards.money,
-      });
-    }
+  // 8. 放置宝箱。treasure_find 提供至多30%的概率额外生成1个宝箱，
+  // 作用于普通层与特殊层本身的宝箱数量，而不只是箱内装备掉率。
+  const baseTreasureCount = dist.treasureCount
+    ? randInt(dist.treasureCount[0], dist.treasureCount[1])
+    : 0;
+  const cappedTreasureFind = Math.min(Math.max(treasureFind, 0), 0.3);
+  const bonusTreasureCount = Math.random() < cappedTreasureFind ? 1 : 0;
+  for (let i = 0; i < baseTreasureCount + bonusTreasureCount; i++) {
+    const rewards = getTreasureRewards(floorNum);
+    placeRandom("treasure", {
+      treasureItems: rewards.items,
+      treasureMoney: rewards.money,
+    });
   }
 
   // 9. 放置蘑菇
