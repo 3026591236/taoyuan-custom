@@ -25,6 +25,7 @@ export interface EquipmentPreset {
 }
 import { showFloat } from "@/composables/useGameLog";
 import { getItemById } from "@/data/items";
+import { MUSEUM_ITEMS } from "@/data/museum";
 import {
   getWeaponById,
   getEnchantmentById,
@@ -258,6 +259,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     itemId: string,
     quantity: number = 1,
     quality: Quality = "normal",
+    countAsObtained: boolean = true,
   ): boolean => {
     // 校验物品是否存在
     if (!getItemById(itemId)) return false;
@@ -305,6 +307,15 @@ export const useInventoryStore = defineStore("inventory", () => {
         tempItems.value.push({ itemId, quantity: batch, quality });
         remaining -= batch;
       }
+    }
+
+    const storedQuantity = Math.max(0, quantity - remaining);
+    if (
+      countAsObtained &&
+      storedQuantity > 0 &&
+      MUSEUM_ITEMS.some((museumItem) => museumItem.id === itemId)
+    ) {
+      useAchievementStore().recordMuseumItemObtained(storedQuantity);
     }
 
     if (remaining > 0) {

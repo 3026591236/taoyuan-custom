@@ -657,6 +657,7 @@ const handleForage = () => {
     gathered.push({ label: "什么也没找到……", quantity: 0 });
   }
 
+  achievementStore.recordForageAction();
   lastResults.value = gathered;
   const { leveledUp, newLevel } = skillStore.addExp("foraging", 0);
   const names = gathered

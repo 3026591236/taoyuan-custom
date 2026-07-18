@@ -218,7 +218,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
 
     // 先从储物匣移除，再加入纳戒（addItem 会溢出到临时纳戒，避免物品复制）
     removeItemFromChest(chestId, itemId, actual, quality);
-    inv.addItem(itemId, actual, quality);
+    inv.addItem(itemId, actual, quality, false);
     return true;
   };
 

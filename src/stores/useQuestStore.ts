@@ -110,6 +110,8 @@ export const useQuestStore = defineStore("quest", () => {
   const journeyClaimed = ref<string[]>([]);
   const journeyDailyKey = ref("");
   const journeyDailyBaselines = ref<Partial<Record<JourneyMetric, number>>>({});
+  const journeyDailyBaselineVersion = ref(0);
+  const JOURNEY_DAILY_BASELINE_VERSION = 2;
 
   const JOURNEY_TASKS: JourneyTaskDef[] = [
     {
@@ -215,7 +217,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "daily_mine_floor",
       type: "daily",
       title: "今日探矿",
-      desc: "玄矿幽脉最高层数推进1层，给采玄矿一个明确小目标。",
+      desc: "当日完成1次有效采玄矿或前往下层，重复挖矿也会累计。",
       metric: "mineFloor",
       target: 1,
       reward: { money: 360, attributeExp: { strength: 16, physique: 12 } },
@@ -233,7 +235,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "daily_forage_3",
       type: "daily",
       title: "今日采集",
-      desc: "在青篁秘林或野外获得3件新采集物，补充料理、炼丹和委托材料。",
+      desc: "当日在青篁秘林完成3次采集，收获重复材料也会累计。",
       metric: "forageItems",
       target: 3,
       reward: { money: 260, attributeExp: { agility: 10, perception: 16 } },
@@ -715,7 +717,7 @@ export const useQuestStore = defineStore("quest", () => {
       case "monsterKills":
         return achievementStore.stats.totalMonstersKilled;
       case "mineFloor":
-        return achievementStore.stats.highestMineFloor;
+        return achievementStore.stats.totalMiningProgress;
       case "completedCommissions":
         return completedQuestCount.value;
       case "craftedPills":
@@ -740,7 +742,7 @@ export const useQuestStore = defineStore("quest", () => {
       case "hybridsDiscovered":
         return achievementStore.stats.totalHybridsDiscovered;
       case "forageItems":
-        return achievementStore.discoveredItems.length;
+        return achievementStore.stats.totalForageActions;
       case "museumDonations":
         return useMuseumStore().donatedCount;
       case "guildGoalsCompleted":
@@ -768,8 +770,12 @@ export const useQuestStore = defineStore("quest", () => {
 
   const ensureJourneyDailyState = () => {
     const key = getJourneyDayKey();
-    if (journeyDailyKey.value !== key) {
+    if (
+      journeyDailyKey.value !== key ||
+      journeyDailyBaselineVersion.value !== JOURNEY_DAILY_BASELINE_VERSION
+    ) {
       journeyDailyKey.value = key;
+      journeyDailyBaselineVersion.value = JOURNEY_DAILY_BASELINE_VERSION;
       journeyDailyBaselines.value = {};
       JOURNEY_TASKS.filter((task) => task.type === "daily").forEach((task) => {
         journeyDailyBaselines.value[task.metric] = getJourneyRawProgress(
@@ -1385,6 +1391,7 @@ export const useQuestStore = defineStore("quest", () => {
       journeyClaimed: journeyClaimed.value,
       journeyDailyKey: journeyDailyKey.value,
       journeyDailyBaselines: journeyDailyBaselines.value,
+      journeyDailyBaselineVersion: journeyDailyBaselineVersion.value,
     };
   };
 
@@ -1410,6 +1417,19 @@ export const useQuestStore = defineStore("quest", () => {
     journeyDailyBaselines.value =
       ((data as Record<string, unknown>).journeyDailyBaselines as
         Partial<Record<JourneyMetric, number>> | undefined) ?? {};
+    const savedDailyBaselineVersion = Number(
+      (data as Record<string, unknown>).journeyDailyBaselineVersion ?? 0,
+    );
+    journeyDailyBaselineVersion.value = savedDailyBaselineVersion;
+    if (savedDailyBaselineVersion < JOURNEY_DAILY_BASELINE_VERSION) {
+      journeyDailyKey.value = getJourneyDayKey();
+      journeyDailyBaselines.value = {
+        ...journeyDailyBaselines.value,
+        forageItems: getJourneyRawProgress("forageItems"),
+        mineFloor: getJourneyRawProgress("mineFloor"),
+      };
+      journeyDailyBaselineVersion.value = JOURNEY_DAILY_BASELINE_VERSION;
+    }
     // 加载后初始化主线委托（兼容旧存档）
     initMainQuest();
   };

@@ -49,6 +49,9 @@ export const useAchievementStore = defineStore("achievement", () => {
     totalBreedingsDone: 0,
     totalHybridsDiscovered: 0,
     highestHybridTier: 0,
+    totalForageActions: 0,
+    totalMiningProgress: 0,
+    totalMuseumItemsObtained: 0,
   });
 
   const discoveredCount = computed(() => discoveredItems.value.length);
@@ -124,6 +127,18 @@ export const useAchievementStore = defineStore("achievement", () => {
     if (tier > stats.value.highestHybridTier) {
       stats.value.highestHybridTier = tier;
     }
+  };
+
+  const recordForageAction = () => {
+    stats.value.totalForageActions++;
+  };
+
+  const recordMiningProgress = () => {
+    stats.value.totalMiningProgress++;
+  };
+
+  const recordMuseumItemObtained = (quantity: number = 1) => {
+    stats.value.totalMuseumItemsObtained += Math.max(0, Math.floor(quantity));
   };
 
   // === 功业检查 ===
@@ -441,6 +456,18 @@ export const useAchievementStore = defineStore("achievement", () => {
     ) {
       stats.value.highestHybridTier = 0;
     }
+    if ((stats.value as Record<string, unknown>).totalForageActions === undefined) {
+      stats.value.totalForageActions = 0;
+    }
+    if ((stats.value as Record<string, unknown>).totalMiningProgress === undefined) {
+      stats.value.totalMiningProgress = 0;
+    }
+    if (
+      (stats.value as Record<string, unknown>).totalMuseumItemsObtained ===
+      undefined
+    ) {
+      stats.value.totalMuseumItemsObtained = 0;
+    }
     // 同步已拥有装备到图鉴（修复旧存档中装备未登记到图鉴的问题）
     const inventoryStore = useInventoryStore();
     for (const w of inventoryStore.ownedWeapons) discoverItem(w.defId);
@@ -478,6 +505,9 @@ export const useAchievementStore = defineStore("achievement", () => {
     recordBreeding,
     recordHybridDiscovered,
     recordHybridTier,
+    recordForageAction,
+    recordMiningProgress,
+    recordMuseumItemObtained,
     checkAchievements,
     perfectionPercent,
     submitToBundle,

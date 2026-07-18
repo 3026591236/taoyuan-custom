@@ -186,11 +186,11 @@ export const CULTIVATION_MANUALS: Record<
   },
   thunder: {
     name: "九霄雷诀",
-    desc: "引雷淬骨，越到渡劫越显锋芒。",
+    desc: "引雷淬骨，兼修御雷法门，越到渡劫越显锋芒。",
     maxLevel: 9,
     auraCost: 420,
     cultivationCost: 260,
-    effects: "战力、渡劫成功率提升",
+    effects: "战力提升；每层计入1.5%渡劫功法加成（功法合计上限16%，总成功率上限95%）",
   },
   void: {
     name: "太虚归元功",
@@ -1536,8 +1536,8 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const fieldBonus = Math.min(0.08, fieldTier.value * 0.015);
     const pillBonus = Math.min(0.12, foundationPillBlessing.value / 30000);
     const manualBonus = Math.min(
-      0.12,
-      manuals.value.thunder * 0.01 + manuals.value.void * 0.008,
+      0.16,
+      manuals.value.thunder * 0.015 + manuals.value.void * 0.008,
     );
     const gearBonus = daoGearTribulationBonus.value;
     const talismanBonus = talismanTribulationBonus.value;

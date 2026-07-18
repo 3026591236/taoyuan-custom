@@ -454,6 +454,7 @@ export const useMiningStore = defineStore("mining", () => {
     inventoryStore.addItem(oreId, quantity);
     sessionLoot.value.push({ itemId: oreId, quantity });
     useAchievementStore().discoverItem(oreId);
+    useAchievementStore().recordMiningProgress();
     useQuestStore().onItemObtained(oreId, quantity);
 
     // 仙缘能力：药山（shan_weng_2）玄矿幽脉15%概率采到稀有草药
@@ -1472,6 +1473,7 @@ export const useMiningStore = defineStore("mining", () => {
       // 幽骨矿窟：无上限，每10层安全点
       skullCavernFloor.value++;
       cacheSkullFloor(skullCavernFloor.value);
+      useAchievementStore().recordMiningProgress();
       if (skullCavernFloor.value > skullCavernBestFloor.value) {
         skullCavernBestFloor.value = skullCavernFloor.value;
         useAchievementStore().recordSkullCavernFloor(skullCavernFloor.value);
@@ -1492,6 +1494,7 @@ export const useMiningStore = defineStore("mining", () => {
           isInSkullCavern.value = true;
           skullCavernFloor.value = 1;
           cacheSkullFloor(1);
+          useAchievementStore().recordMiningProgress();
           _generateGrid();
           return {
             success: true,
@@ -1506,6 +1509,7 @@ export const useMiningStore = defineStore("mining", () => {
 
       currentFloor.value++;
       useAchievementStore().recordMineFloor(currentFloor.value);
+      useAchievementStore().recordMiningProgress();
 
       // 到达新的安全点时保存（只在到达更高层时更新，避免电梯返回低层后覆盖进度）
       const newFloorData = getFloor(currentFloor.value);

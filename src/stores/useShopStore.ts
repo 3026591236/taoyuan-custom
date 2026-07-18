@@ -746,7 +746,7 @@ export const useShopStore = defineStore("shop", () => {
     if (entry.quantity <= 0) {
       shippingBox.value.splice(idx, 1);
     }
-    inventoryStore.addItem(itemId, toTransfer, quality);
+    inventoryStore.addItem(itemId, toTransfer, quality, false);
     return true;
   };
 

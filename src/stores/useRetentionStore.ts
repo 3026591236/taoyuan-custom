@@ -41,7 +41,7 @@ type StreakGift = {
 };
 
 type WeeklyMetric =
-  | "dailyClaimed"
+  | "completedCommissions"
   | "monsterKills"
   | "recipesCooked"
   | "museumDonations"
@@ -283,8 +283,8 @@ const WEEKLY_TASKS: WeeklyTask[] = [
   {
     id: "weekly_daily_20",
     title: "周令·勤修二十课",
-    desc: "本周领取20个每日目标奖励。",
-    metric: "dailyClaimed",
+    desc: "本周完成20个天机榜、特殊订单或主线委托，只按实际交付完成计数。",
+    metric: "completedCommissions",
     target: 20,
     reward: {
       money: 2600,
@@ -324,7 +324,7 @@ const WEEKLY_TASKS: WeeklyTask[] = [
   {
     id: "weekly_museum_3",
     title: "周令·博物三藏",
-    desc: "本周捐赠3件藏品，让采玄矿、垂钓、采集都有收藏目标。",
+    desc: "本周获得3件藏品，重复藏品也会累计。",
     metric: "museumDonations",
     target: 3,
     reward: {
@@ -433,6 +433,8 @@ export const useRetentionStore = defineStore("retention", () => {
   const weeklyClaimed = ref<string[]>([]);
   const weeklyBaselineKey = ref("");
   const weeklyBaselines = ref<Partial<Record<WeeklyMetric, number>>>({});
+  const weeklyBaselineVersion = ref(0);
+  const WEEKLY_BASELINE_VERSION = 2;
   const worldStoryClaimed = ref<string[]>([]);
   const seasonalEventClaimed = ref<string[]>([]);
 
@@ -681,16 +683,14 @@ export const useRetentionStore = defineStore("retention", () => {
 
   const getWeeklyRawProgress = (metric: WeeklyMetric): number => {
     switch (metric) {
-      case "dailyClaimed":
-        return questStore.journeyTasks.filter(
-          (t) => t.type === "daily" && t.claimed,
-        ).length;
+      case "completedCommissions":
+        return questStore.completedQuestCount;
       case "monsterKills":
         return achievementStore.stats.totalMonstersKilled;
       case "recipesCooked":
         return achievementStore.stats.totalRecipesCooked;
       case "museumDonations":
-        return museumStore.donatedCount;
+        return achievementStore.stats.totalMuseumItemsObtained;
       case "guildContribution":
         return guildStore.contributionPoints;
       case "hanhaiTradePoints":
@@ -705,8 +705,12 @@ export const useRetentionStore = defineStore("retention", () => {
   };
 
   const ensureWeeklyState = () => {
-    if (weeklyBaselineKey.value !== weekKey.value) {
+    if (
+      weeklyBaselineKey.value !== weekKey.value ||
+      weeklyBaselineVersion.value !== WEEKLY_BASELINE_VERSION
+    ) {
       weeklyBaselineKey.value = weekKey.value;
+      weeklyBaselineVersion.value = WEEKLY_BASELINE_VERSION;
       weeklyClaimed.value = [];
       weeklyBaselines.value = {};
       WEEKLY_TASKS.forEach((task) => {
@@ -931,6 +935,7 @@ export const useRetentionStore = defineStore("retention", () => {
     weeklyClaimed: weeklyClaimed.value,
     weeklyBaselineKey: weeklyBaselineKey.value,
     weeklyBaselines: weeklyBaselines.value,
+    weeklyBaselineVersion: weeklyBaselineVersion.value,
     worldStoryClaimed: worldStoryClaimed.value,
     seasonalEventClaimed: seasonalEventClaimed.value,
   });
@@ -956,6 +961,17 @@ export const useRetentionStore = defineStore("retention", () => {
       : [];
     weeklyBaselineKey.value = data?.weeklyBaselineKey || "";
     weeklyBaselines.value = data?.weeklyBaselines || {};
+    const savedWeeklyBaselineVersion = Number(data?.weeklyBaselineVersion || 0);
+    weeklyBaselineVersion.value = savedWeeklyBaselineVersion;
+    if (savedWeeklyBaselineVersion < WEEKLY_BASELINE_VERSION) {
+      weeklyBaselineKey.value = weekKey.value;
+      weeklyBaselines.value = {
+        ...weeklyBaselines.value,
+        completedCommissions: getWeeklyRawProgress("completedCommissions"),
+        museumDonations: getWeeklyRawProgress("museumDonations"),
+      };
+      weeklyBaselineVersion.value = WEEKLY_BASELINE_VERSION;
+    }
     worldStoryClaimed.value = Array.isArray(data?.worldStoryClaimed)
       ? data.worldStoryClaimed
       : [];
