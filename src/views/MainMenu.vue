@@ -1347,7 +1347,7 @@ const handleNewGame = async () => {
   const info = saveStore.getSlots().find((s) => s.slot === slot);
   try {
     const data = raw ? parseSaveData(raw) : null;
-    await accountApi("/api/characters", {
+    const created = await accountApi("/api/characters", {
       method: "POST",
       headers: accountHeaders(),
       body: JSON.stringify({
@@ -1359,6 +1359,10 @@ const handleNewGame = async () => {
         meta: info || {},
       }),
     });
+    if (created?.character?.id)
+      localStorage.setItem("taoyuan_active_character_id", String(created.character.id));
+    if (created?.updatedAt)
+      localStorage.setItem(`taoyuan_cloud_loaded_at_${slot}`, String(created.updatedAt));
     await loadAccountCharacters();
     await loadAccountSaves();
   } catch (e: any) {

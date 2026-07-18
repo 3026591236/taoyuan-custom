@@ -45,14 +45,19 @@ const CLIENT_BUNDLE_DIR =
   path.join(SOURCE_ROOT, "client-dist");
 
 const app = express();
+app.set("trust proxy", "loopback");
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 
+const requiredDbPassword = process.env.TAOYUAN_DB_PASSWORD;
+if (!requiredDbPassword) {
+  throw new Error("TAOYUAN_DB_PASSWORD is required");
+}
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "taoyuan",
-  password: "taoyuan2026",
-  database: "taoyuan",
+  host: process.env.TAOYUAN_DB_HOST || "localhost",
+  user: process.env.TAOYUAN_DB_USER || "taoyuan",
+  password: requiredDbPassword,
+  database: process.env.TAOYUAN_DB_NAME || "taoyuan",
   waitForConnections: true,
   connectionLimit: 10,
   charset: "utf8mb4",
@@ -176,8 +181,17 @@ async function ensureSchema() {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_feedbacks_category (category),
     INDEX idx_feedbacks_status (status),
-    INDEX idx_feedbacks_created (created_at)
+    INDEX idx_feedbacks_created (created_at),
+    INDEX idx_feedbacks_ip_created (ip, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+
+  const [feedbackIpCreatedIdx] = await pool.execute(
+    "SHOW INDEX FROM feedbacks WHERE Key_name = 'idx_feedbacks_ip_created'",
+  );
+  if (!feedbackIpCreatedIdx.length)
+    await pool.execute(
+      "ALTER TABLE feedbacks ADD INDEX idx_feedbacks_ip_created (ip, created_at)",
+    );
 
   await pool.execute(`CREATE TABLE IF NOT EXISTS save_audit_events (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -647,6 +661,11 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.1.3 今日全服巡检修复",
+      date: "2026-07-18",
+      content: "收紧云存档槽位、角色归属与多端冲突保护；匿名反馈新增IP频率与每日配额；修复瀚海装备兑换和旧档迁移；拆分龙珠作物/信物及柿子作物/果树鲜果ID；同步时间禁锢丹30分钟文案，并移除数据库凭据源码默认值。",
+    },
+    {
       title: "V3.1.2 装备方案与炼丹体验",
       date: "2026-07-18",
       content:
@@ -932,7 +951,7 @@ const defaultConfig = {
       date: "2026-07-10",
       title: "V2.5.6 快捷用药与时间禁锢丹",
       content:
-        "新增游戏侧边页“快捷用药”，汇总背包中可直接使用的食物、丹药与功能道具；新增体力丹，使用后体力+100且可临时超过上限，最多额外+500；新增时间禁锢丹，使用后暂停游戏时间流逝3小时现实时间；两种新丹药接入现有背包/丹药使用体系，并在修仙市集以较高灵石价格出售。",
+        "新增游戏侧边页“快捷用药”，汇总背包中可直接使用的食物、丹药与功能道具；新增体力丹，使用后体力+100且可临时超过上限，最多额外+500；新增时间禁锢丹，使用后暂停游戏时间流逝30分钟现实时间；两种新丹药接入现有背包/丹药使用体系，并在修仙市集以较高灵石价格出售。",
     },
     {
       date: "2026-07-10",
@@ -1862,7 +1881,15 @@ app.post("/api/characters", async (req, res) => {
       dataHash: summary.dataHash,
       detail: summary,
     });
-    send(res, 200, { ok: true, character: { id, slot, name, gender } });
+    const [createdSaveRows] = await pool.execute(
+      "SELECT updated_at FROM saves WHERE user_id = ? AND slot = ? LIMIT 1",
+      [user.id, slot],
+    );
+    send(res, 200, {
+      ok: true,
+      character: { id, slot, name, gender },
+      updatedAt: createdSaveRows[0]?.updated_at || null,
+    });
   } catch (e) {
     try {
       await conn.rollback();
@@ -1948,150 +1975,84 @@ app.get("/api/saves/:slot", async (req, res) => {
 });
 
 app.put("/api/saves/:slot", async (req, res) => {
+  const conn = await pool.getConnection();
+  let transactionStarted = false;
   try {
     const user = await auth(req);
     if (!user) return send(res, 401, { error: "请先登录" });
-    const slot = Number(req.params.slot),
-      { raw, meta, data, characterId } = req.body;
+    const slot = Number(req.params.slot);
+    if (!Number.isInteger(slot) || slot < 0 || slot > 2)
+      return send(res, 400, { error: "槽位无效", code: "INVALID_SAVE_SLOT" });
+    const { raw, meta, data } = req.body || {};
     const playerName = normalizePlayerName((meta && meta.playerName) || "");
-    let saveCharacterId = characterId || null;
-    if (!saveCharacterId) {
-      const [chars] = await pool.execute(
-        "SELECT id FROM characters WHERE user_id = ? AND slot = ? LIMIT 1",
-        [user.id, slot],
-      );
-      if (chars.length) saveCharacterId = chars[0].id;
-    }
+    const hasLoadedAt = Boolean(meta && meta.lastLoadedAt);
+    const clientLoadedAt = hasLoadedAt ? new Date(meta.lastLoadedAt) : null;
+    if (hasLoadedAt && !Number.isFinite(clientLoadedAt.getTime()))
+      return send(res, 400, { error: "存档加载时间无效，请重新进入游戏。", code: "INVALID_LAST_LOADED_AT" });
     const metaJson = meta ? JSON.stringify(meta) : null;
-    const clientLoadedAt =
-      meta && meta.lastLoadedAt ? new Date(meta.lastLoadedAt) : null;
-    // data 为明文 JSON（新前端直接传），优先存入 data_json；raw 保留兼容旧版加密 blob
     const plainData = data || (raw ? safeJsonParse(raw, null) : null);
     const dataJson = plainData ? JSON.stringify(plainData) : null;
     const summary = saveSummary(raw || dataJson || "", plainData, meta || {});
-    let currentSaveRow = null;
-    const [currentRows] = await pool.execute(
-      "SELECT updated_at, character_id, player_name, raw, data_json FROM saves WHERE user_id = ? AND slot = ? LIMIT 1",
+
+    await conn.beginTransaction();
+    transactionStarted = true;
+    const [chars] = await conn.execute(
+      "SELECT id, name FROM characters WHERE user_id = ? AND slot = ? LIMIT 1 FOR UPDATE",
       [user.id, slot],
     );
-    if (currentRows.length) {
-      currentSaveRow = currentRows[0];
-      if (clientLoadedAt && Number.isFinite(clientLoadedAt.getTime())) {
-        const serverUpdatedAt = new Date(currentSaveRow.updated_at);
-        // 同账号多端同时在线时，拒绝旧页面覆盖服务器上更新的存档。
-        if (serverUpdatedAt.getTime() - clientLoadedAt.getTime() > 1500) {
-          await recordSaveAuditEvent(user, req, {
-            eventType: "save_conflict",
-            status: "conflict",
-            slot,
-            characterId: currentSaveRow.character_id || saveCharacterId,
-            playerName:
-              currentSaveRow.player_name || playerName || summary.playerName,
-            rawSize: summary.rawSize,
-            dataSize: summary.dataSize,
-            dataHash: summary.dataHash,
-            clientLoadedAt: meta.lastLoadedAt,
-            serverUpdatedAt: currentSaveRow.updated_at,
-            detail: { ...summary, reason: "stale_client_overwrite_rejected" },
-          });
-          return send(res, 409, {
-            error: "云端存档已由其他设备更新，请刷新或重新进入后再继续。",
-            conflict: true,
-            serverUpdatedAt: currentSaveRow.updated_at,
-          });
-        }
+    if (!chars.length) {
+      await conn.rollback(); transactionStarted = false;
+      return send(res, 409, { error: "当前槽位角色不存在，请返回角色列表刷新。", code: "SAVE_CHARACTER_NOT_FOUND" });
+    }
+    const saveCharacterId = chars[0].id;
+    const authoritativePlayerName = normalizePlayerName(chars[0].name) || playerName;
+    const [currentRows] = await conn.execute(
+      "SELECT updated_at, character_id, player_name, raw, data_json FROM saves WHERE user_id = ? AND slot = ? LIMIT 1 FOR UPDATE",
+      [user.id, slot],
+    );
+    const currentSaveRow = currentRows[0] || null;
+    if (currentSaveRow) {
+      if (currentSaveRow.character_id && currentSaveRow.character_id !== saveCharacterId) {
+        await conn.rollback(); transactionStarted = false;
+        return send(res, 409, { error: "角色与存档归属不一致，请联系管理员。", code: "SAVE_CHARACTER_MISMATCH" });
+      }
+      if (!hasLoadedAt) {
+        await conn.rollback(); transactionStarted = false;
+        await recordSaveAuditEvent(user, req, { eventType: "save_conflict", status: "conflict", slot, characterId: saveCharacterId, playerName: authoritativePlayerName, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, serverUpdatedAt: currentSaveRow.updated_at, detail: { ...summary, reason: "missing_last_loaded_at" } });
+        return send(res, 428, { error: "请先从云端重新加载该存档，再进行保存。", code: "LAST_LOADED_AT_REQUIRED", conflict: true, serverUpdatedAt: currentSaveRow.updated_at });
+      }
+      const serverUpdatedAt = new Date(currentSaveRow.updated_at);
+      if (serverUpdatedAt.getTime() - clientLoadedAt.getTime() > 1500) {
+        await conn.rollback(); transactionStarted = false;
+        await recordSaveAuditEvent(user, req, { eventType: "save_conflict", status: "conflict", slot, characterId: saveCharacterId, playerName: authoritativePlayerName, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, clientLoadedAt: meta.lastLoadedAt, serverUpdatedAt: currentSaveRow.updated_at, detail: { ...summary, reason: "stale_client_overwrite_rejected" } });
+        return send(res, 409, { error: "云端存档已由其他设备更新，请刷新或重新进入后再继续。", code: "SAVE_CONFLICT", conflict: true, serverUpdatedAt: currentSaveRow.updated_at });
       }
     }
-    const guardResult = await validateSaveProgression(user, req, {
-      slot,
-      summary,
-      currentSaveRow,
-      plainData,
-      meta,
-      saveCharacterId,
-      playerName,
-    });
-    if (guardResult) return send(res, 400, guardResult);
-    await pool.execute(
-      "INSERT INTO saves (user_id, character_id, slot, player_name, raw, data_json, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE character_id=COALESCE(VALUES(character_id), character_id), player_name=COALESCE(VALUES(player_name), player_name), raw=VALUES(raw), data_json=VALUES(data_json), meta_json=VALUES(meta_json)",
-      [
-        user.id,
-        saveCharacterId,
-        slot,
-        playerName || null,
-        raw || dataJson || "",
-        dataJson || raw || "",
-        metaJson,
-      ],
+    const guardResult = await validateSaveProgression(user, req, { slot, summary, currentSaveRow, plainData, meta, saveCharacterId, playerName: authoritativePlayerName });
+    if (guardResult) { await conn.rollback(); transactionStarted = false; return send(res, 400, guardResult); }
+    await conn.execute(
+      "INSERT INTO saves (user_id, character_id, slot, player_name, raw, data_json, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE character_id=VALUES(character_id), player_name=VALUES(player_name), raw=VALUES(raw), data_json=VALUES(data_json), meta_json=VALUES(meta_json)",
+      [user.id, saveCharacterId, slot, authoritativePlayerName || null, raw || dataJson || "", dataJson || raw || "", metaJson],
     );
-    // 排行榜：直接从明文 JSON 解析
+    const [savedRows] = await conn.execute("SELECT updated_at, character_id, player_name FROM saves WHERE user_id = ? AND slot = ? LIMIT 1", [user.id, slot]);
+    await conn.commit(); transactionStarted = false;
+
     try {
       if (plainData) {
-        const p =
-          plainData.player ||
-          plainData.playerStore ||
-          (plainData.stores && plainData.stores.player) ||
-          {};
-        const cu =
-          plainData.cultivation ||
-          plainData.cultivationStore ||
-          (plainData.stores && plainData.stores.cultivation) ||
-          {};
-        const g =
-          plainData.game ||
-          plainData.gameStore ||
-          (plainData.stores && plainData.stores.game) ||
-          {};
-        const playerName =
-          (meta && meta.playerName) || p.playerName || p.name || "无名";
-        const asc =
-          (plainData &&
-            (plainData.ascension ||
-              plainData.ascensionStore ||
-              (plainData.stores && plainData.stores.ascension))) ||
-          {};
-        const realmNameDisplay = realmNameFromSave(cu, asc);
-        await pool.execute(
-          "INSERT INTO leaderboard (user_id, username, player_name, realm_name, cultivation, aura, money, game_year, game_season, game_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name=VALUES(player_name), realm_name=VALUES(realm_name), cultivation=VALUES(cultivation), aura=VALUES(aura), money=VALUES(money), game_year=VALUES(game_year), game_season=VALUES(game_season), game_day=VALUES(game_day)",
-          [
-            user.id,
-            user.username,
-            playerName,
-            realmNameDisplay,
-            cu.cultivation || 0,
-            cu.aura || 0,
-            p.money || (meta && meta.money) || 0,
-            g.year || (meta && meta.year) || 1,
-            g.season || (meta && meta.season) || "春",
-            g.day || (meta && meta.day) || 1,
-          ],
-        );
+        const p = plainData.player || plainData.playerStore || (plainData.stores && plainData.stores.player) || {};
+        const cu = plainData.cultivation || plainData.cultivationStore || (plainData.stores && plainData.stores.cultivation) || {};
+        const g = plainData.game || plainData.gameStore || (plainData.stores && plainData.stores.game) || {};
+        const asc = plainData.ascension || plainData.ascensionStore || (plainData.stores && plainData.stores.ascension) || {};
+        await pool.execute("INSERT INTO leaderboard (user_id, username, player_name, realm_name, cultivation, aura, money, game_year, game_season, game_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name=VALUES(player_name), realm_name=VALUES(realm_name), cultivation=VALUES(cultivation), aura=VALUES(aura), money=VALUES(money), game_year=VALUES(game_year), game_season=VALUES(game_season), game_day=VALUES(game_day)", [user.id, user.username, authoritativePlayerName || p.playerName || p.name || "无名", realmNameFromSave(cu, asc), cu.cultivation || 0, cu.aura || 0, p.money || (meta && meta.money) || 0, g.year || (meta && meta.year) || 1, g.season || (meta && meta.season) || "春", g.day || (meta && meta.day) || 1]);
       }
-    } catch (e2) {
-      console.error("lb err", e2.message);
-    }
-    const [savedRows] = await pool.execute(
-      "SELECT updated_at, character_id, player_name FROM saves WHERE user_id = ? AND slot = ? LIMIT 1",
-      [user.id, slot],
-    );
-    await recordSaveAuditEvent(user, req, {
-      eventType: "save_write",
-      status: "ok",
-      slot,
-      characterId: savedRows[0]?.character_id || saveCharacterId,
-      playerName: savedRows[0]?.player_name || playerName || summary.playerName,
-      rawSize: summary.rawSize,
-      dataSize: summary.dataSize,
-      dataHash: summary.dataHash,
-      clientLoadedAt: meta?.lastLoadedAt || null,
-      serverUpdatedAt: savedRows[0]?.updated_at || null,
-      detail: summary,
-    });
+    } catch (e2) { console.error("lb err", e2.message); }
+    await recordSaveAuditEvent(user, req, { eventType: "save_write", status: "ok", slot, characterId: saveCharacterId, playerName: authoritativePlayerName, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, clientLoadedAt: meta?.lastLoadedAt || null, serverUpdatedAt: savedRows[0]?.updated_at || null, detail: summary });
     send(res, 200, { ok: true, updatedAt: savedRows[0]?.updated_at || null });
   } catch (e) {
+    if (transactionStarted) { try { await conn.rollback(); } catch {} }
     console.error("save err", e);
     send(res, 500, { error: "服务器错误" });
-  }
+  } finally { conn.release(); }
 });
 
 app.delete("/api/saves/:slot", async (req, res) => {
@@ -2612,10 +2573,29 @@ function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}, asc = {}) {
   );
 }
 
+// 匿名反馈采用进程内短时限流；每日配额同时查询数据库，重启不会清空日配额。
+const feedbackIpWindows = new Map();
+function feedbackClientIp(req) { return String(req.ip || req.socket?.remoteAddress || "unknown").slice(0, 80); }
+function consumeFeedbackBurst(ip, now = Date.now()) {
+  const cutoff = now - 10 * 60 * 1000;
+  const recent = (feedbackIpWindows.get(ip) || []).filter((t) => t > cutoff);
+  if (recent.length >= 3) return false;
+  recent.push(now); feedbackIpWindows.set(ip, recent); return true;
+}
+
 // --- 玩家反馈 ---
 app.post("/api/feedbacks", async (req, res) => {
   try {
     const user = await auth(req);
+    const ip = feedbackClientIp(req);
+    if (!consumeFeedbackBurst(ip))
+      return send(res, 429, { error: "提交过于频繁，请稍后再试。", code: "FEEDBACK_RATE_LIMITED" });
+    const [dailyRows] = await pool.execute(
+      "SELECT COUNT(*) AS count FROM feedbacks WHERE ip = ? AND created_at >= CURRENT_DATE() AND created_at < CURRENT_DATE() + INTERVAL 1 DAY",
+      [ip],
+    );
+    if (Number(dailyRows[0]?.count || 0) >= 10)
+      return send(res, 429, { error: "今日反馈次数已达上限，请明日再试。", code: "FEEDBACK_DAILY_LIMIT" });
     const { category, title, content } = req.body || {};
     if (!category || !title || !content)
       return send(res, 400, { error: "分类/标题/内容不能为空" });
@@ -2630,7 +2610,7 @@ app.post("/api/feedbacks", async (req, res) => {
         category,
         title.slice(0, 100),
         content.slice(0, 2000),
-        req.ip || null,
+        ip,
         (req.headers["user-agent"] || "").slice(0, 255),
       ],
     );

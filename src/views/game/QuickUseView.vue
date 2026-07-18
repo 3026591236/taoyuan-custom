@@ -19,7 +19,7 @@
     <div
       class="border border-accent/15 rounded-xs p-3 bg-accent/5 text-xs text-muted leading-relaxed"
     >
-      这里会汇总纳戒中可快速使用的丹药、食物和功能道具。体力丹可让体力临时超过上限，最多额外+500；时间禁锢丹会暂停游戏时间流逝3小时现实时间。
+      这里会汇总纳戒中可快速使用的丹药、食物和功能道具。体力丹可让体力临时超过上限，最多额外+500；时间禁锢丹会暂停游戏时间流逝30分钟现实时间。
       <span v-if="clock.isTimeFrozen.value" class="block text-success mt-1"
         >当前时间禁锢中：剩余约 {{ freezeRemainText }}</span
       >
@@ -104,7 +104,7 @@ const usageText = (itemId: string, fallback?: string) => {
   const map: Record<string, string> = {
     stamina_pill: "使用后体力+100，可临时超过体力上限；额外体力最多+500。",
     time_stasis_pill:
-      "使用后暂停游戏时间流逝3小时现实时间，适合长时间在线整理事务。",
+      "使用后暂停游戏时间流逝30分钟现实时间，适合长时间在线整理事务。",
     mana_recovery_pill: "回复灵力，灵力已满时不会浪费。",
     cultivation_boost_pill: "元婴期以下服用，增加大量修为。",
     minor_realm_pill: "元婴期以下服用，直接提升一个小境界。",

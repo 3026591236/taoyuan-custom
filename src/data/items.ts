@@ -21,7 +21,9 @@ const SEED_ITEMS: ItemDef[] = CROPS.filter(
   (crop) =>
     crop.seedId !== "ancient_seed" &&
     crop.seedId !== "hanhai_cactus_seed" &&
-    crop.seedId !== "hanhai_date_seed",
+    crop.seedId !== "hanhai_date_seed" &&
+    crop.seedId !== "seed_ice_soul_lotus" &&
+    crop.seedId !== "seed_purple_ganoderma",
 ).map((crop) => ({
   id: crop.seedId,
   name: `${crop.name}灵种`,
@@ -42,7 +44,9 @@ const SEED_ITEMS: ItemDef[] = CROPS.filter(
 }));
 
 /** 从灵植定义自动生成收获物品 */
-const CROP_ITEMS: ItemDef[] = CROPS.map((crop) => ({
+const CROP_ITEMS: ItemDef[] = CROPS.filter(
+  (crop) => crop.id !== "ice_soul_lotus" && crop.id !== "purple_ganoderma",
+).map((crop) => ({
   id: crop.id,
   name: crop.name,
   category: "crop",
@@ -224,7 +228,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "time_stasis_pill",
     name: "时间禁锢丹",
     category: "food",
-    description: "以时砂封炼的稀有丹药，使用后暂停游戏时间流逝3小时现实时间。",
+    description: "以时砂封炼的稀有丹药，使用后暂停游戏时间流逝30分钟现实时间。",
     sellPrice: 12000,
     edible: false,
   },
@@ -2779,30 +2783,6 @@ export const ITEMS: ItemDef[] = [
     sellPrice: 750,
     edible: false,
   },
-  {
-    id: "trade_turquoise_pendant",
-    name: "绿松石吊坠",
-    category: "gem",
-    description: "西域绿松石打磨而成的精致吊坠。",
-    sellPrice: 600,
-    edible: false,
-  },
-  {
-    id: "trade_silk_robe",
-    name: "丝绸长袍",
-    category: "misc",
-    description: "西域丝绸织就的华美长袍。",
-    sellPrice: 750,
-    edible: false,
-  },
-  {
-    id: "trade_desert_blade",
-    name: "沙漠弯刀",
-    category: "misc",
-    description: "西域锻造的弯刀，锋利无比。",
-    sellPrice: 2000,
-    edible: false,
-  },
   // --- 瀚海拓展料理 ---
   {
     id: "cactus_salad",
@@ -2936,10 +2916,11 @@ export const ITEMS: ItemDef[] = [
     edible: false,
   },
 
+
   // 结缘物品
   {
-    id: "dragon_pearl",
-    name: "龙珠",
+    id: "dragon_bond_pearl",
+    name: "龙缘珠",
     category: "misc",
     description: "以龙玉、月光石与棱彩碎片炼成的灵珠，是龙族至高的缘定信物。",
     sellPrice: 0,
@@ -3098,30 +3079,16 @@ export const ITEMS: ItemDef[] = [
  * 装备图鉴及历史材料别名仍可能与基础物品表共用 ID；它们不参与农产行情。
  */
 export const assertUniqueItemIds = (items: readonly ItemDef[] = ITEMS): void => {
-  const marketCategories = new Set<ItemCategory>([
-    "crop",
-    "processed",
-    "animal_product",
-  ]);
-  const categoriesById = new Map<string, Set<ItemCategory>>();
-  for (const item of items) {
-    const categories = categoriesById.get(item.id) ?? new Set<ItemCategory>();
-    categories.add(item.category);
-    categoriesById.set(item.id, categories);
-  }
-  const conflicts = [...categoriesById.entries()]
-    .filter(([, categories]) => {
-      const marketMatches = [...categories].filter((category) =>
-        marketCategories.has(category),
-      );
-      return marketMatches.length > 1;
-    })
-    .map(([id, categories]) => `${id}(${[...categories].sort().join("/")})`);
-  if (conflicts.length > 0) {
-    throw new Error(`行情跨分类重复物品ID: ${conflicts.sort().join(", ")}`);
+  const counts = new Map<string, number>();
+  for (const item of items) counts.set(item.id, (counts.get(item.id) ?? 0) + 1);
+  const duplicates = [...counts.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([id, count]) => `${id}×${count}`)
+    .sort();
+  if (duplicates.length > 0) {
+    throw new Error(`重复物品ID: ${duplicates.join(", ")}`);
   }
 };
-
 assertUniqueItemIds();
 
 /** 根据ID查找物品 */
@@ -3308,7 +3275,8 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   fox_flame_lantern: "制作（狐仙求缘信物）",
   cultivation_jade: "制作（山翁求缘信物）",
   silver_thread_ring: "制作（归女求缘信物）",
-  dragon_pearl: "制作（龙灵结缘信物）",
+  fresh_persimmon: "柿树收获 / 山洞果蝠",
+  dragon_bond_pearl: "制作（龙灵结缘信物）",
   eternal_blossom: "制作（桃夭结缘信物）",
   moon_elixir: "制作（月兔结缘信物）",
   fox_spirit_bead: "制作（狐仙结缘信物）",

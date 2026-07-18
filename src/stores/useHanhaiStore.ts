@@ -878,8 +878,16 @@ export const useHanhaiStore = defineStore("hanhai", () => {
       if (!inventoryStore.addItem("hanhai_spice", 5)) {
         tradePoints.value += exchangeDef.pointsCost;
         if (exchangeDef.weeklyLimit) {
-          weeklyExchangePurchases.value[itemId] =
-            (weeklyExchangePurchases.value[itemId] ?? 0) - 1;
+          weeklyExchangePurchases.value[itemId] = Math.max(
+            0,
+            (weeklyExchangePurchases.value[itemId] ?? 0) - 1,
+          );
+        }
+        if (exchangeDef.totalLimit) {
+          totalExchangePurchases.value[itemId] = Math.max(
+            0,
+            (totalExchangePurchases.value[itemId] ?? 0) - 1,
+          );
         }
         return { success: false, message: "纳戒已满，无法兑换。" };
       }
@@ -888,20 +896,34 @@ export const useHanhaiStore = defineStore("hanhai", () => {
       );
       return { success: true, message: "获得西域香料×5！" };
     }
-    // 普通物品加入纳戒
     const inventoryStore = useInventoryStore();
-    if (!inventoryStore.addItem(itemId, 1)) {
-      // 退还积分
+    let granted = false;
+    if (exchangeDef.equipType === "weapon") {
+      granted = inventoryStore.addWeapon(itemId, null);
+    } else if (exchangeDef.equipType === "ring") {
+      granted = inventoryStore.addRing(itemId);
+    } else if (exchangeDef.equipType === "hat") {
+      granted = inventoryStore.addHat(itemId);
+    } else if (exchangeDef.equipType === "shoe") {
+      granted = inventoryStore.addShoe(itemId);
+    } else {
+      granted = inventoryStore.addItem(itemId, 1);
+    }
+    if (!granted) {
       tradePoints.value += exchangeDef.pointsCost;
       if (exchangeDef.weeklyLimit) {
-        weeklyExchangePurchases.value[itemId] =
-          (weeklyExchangePurchases.value[itemId] ?? 0) - 1;
+        weeklyExchangePurchases.value[itemId] = Math.max(
+          0,
+          (weeklyExchangePurchases.value[itemId] ?? 0) - 1,
+        );
       }
       if (exchangeDef.totalLimit) {
-        totalExchangePurchases.value[itemId] =
-          (totalExchangePurchases.value[itemId] ?? 0) - 1;
+        totalExchangePurchases.value[itemId] = Math.max(
+          0,
+          (totalExchangePurchases.value[itemId] ?? 0) - 1,
+        );
       }
-      return { success: false, message: "纳戒已满，无法兑换。" };
+      return { success: false, message: "兑换发放失败，积分与限购次数已退还。" };
     }
     addLog(`用${exchangeDef.pointsCost}积分兑换了${exchangeDef.name}。`);
     return { success: true, message: `兑换了${exchangeDef.name}！` };
@@ -941,6 +963,15 @@ export const useHanhaiStore = defineStore("hanhai", () => {
     tradeSlots.value = data.tradeSlots ?? [];
     weeklyExchangePurchases.value = data.weeklyExchangePurchases ?? {};
     totalExchangePurchases.value = data.totalExchangePurchases ?? {};
+    const inventoryStore = useInventoryStore();
+    const ownedTradeEquipment: Array<[string, boolean]> = [
+      ["trade_desert_blade", inventoryStore.hasWeapon("trade_desert_blade")],
+      ["trade_turquoise_pendant", inventoryStore.hasRing("trade_turquoise_pendant")],
+      ["trade_silk_robe", inventoryStore.hasHat("trade_silk_robe")],
+    ];
+    for (const [itemId, owned] of ownedTradeEquipment) {
+      if (owned) totalExchangePurchases.value[itemId] = Math.max(1, totalExchangePurchases.value[itemId] ?? 0);
+    }
     caravanRuns.value = data.caravanRuns ?? [];
     escortContractsDoneKey.value = data.escortContractsDoneKey ?? "";
     escortContractsDone.value = data.escortContractsDone ?? [];

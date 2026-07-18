@@ -132,7 +132,7 @@ export const CAVE_UPGRADES: CaveUpgradeDef[] = [
       "plum_blossom",
       "apricot",
       "pomegranate",
-      "persimmon",
+      "fresh_persimmon",
       "hawthorn",
     ],
   },

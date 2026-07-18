@@ -1395,6 +1395,28 @@ export const useInventoryStore = defineStore("inventory", () => {
     if (equippedShoeIndex.value >= ownedShoes.value.length)
       equippedShoeIndex.value = -1;
 
+    // V3.1.3：旧档曾把三件通商装备误存进普通/临时纳戒。
+    // 每一件库存迁移为一件装备；若装备数组已存在则仍保留总数量，不丢件、不重复处理已迁出的库存。
+    const migrateTradeEquipment = (
+      itemId: string,
+      addOwned: () => boolean,
+    ) => {
+      let quantity = 0;
+      for (const collection of [items.value, tempItems.value]) {
+        for (let i = collection.length - 1; i >= 0; i--) {
+          const entry = collection[i]!;
+          if (entry.itemId !== itemId) continue;
+          quantity += Math.max(0, Math.trunc(entry.quantity || 0));
+          collection.splice(i, 1);
+        }
+      }
+      for (let i = 0; i < quantity; i++) addOwned();
+      return quantity;
+    };
+    migrateTradeEquipment("trade_desert_blade", () => addWeapon("trade_desert_blade", null));
+    migrateTradeEquipment("trade_turquoise_pendant", () => addRing("trade_turquoise_pendant"));
+    migrateTradeEquipment("trade_silk_robe", () => addHat("trade_silk_robe"));
+
     // 装备方案（向后兼容旧存档）
     equipmentPresets.value = (
       ((data as Record<string, unknown>).equipmentPresets as

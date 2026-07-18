@@ -385,7 +385,13 @@ export const useHiddenNpcStore = defineStore("hiddenNpc", () => {
       };
 
     const inventoryStore = useInventoryStore();
-    if (!inventoryStore.removeItem(def.bondItemId, 1)) {
+    const legacyDragonBondItem =
+      npcId === "long_ling" && def.bondItemId === "dragon_bond_pearl"
+        ? "dragon_pearl"
+        : null;
+    const consumed = inventoryStore.removeItem(def.bondItemId, 1) ||
+      Boolean(legacyDragonBondItem && inventoryStore.removeItem(legacyDragonBondItem, 1));
+    if (!consumed) {
       return { success: false, message: `需要「${def.bondItemId}」。` };
     }
 

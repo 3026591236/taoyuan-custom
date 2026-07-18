@@ -496,7 +496,9 @@ const canBond = computed(() => {
   const d = npcDef.value;
   if (!s.courting || s.bonded) return false;
   if (s.affinity < d.bondThreshold) return false;
-  if (!inventoryStore.hasItem(d.bondItemId)) return false;
+  const hasLegacyDragonPearl =
+    props.npcId === "long_ling" && inventoryStore.hasItem("dragon_pearl");
+  if (!inventoryStore.hasItem(d.bondItemId) && !hasLegacyDragonPearl) return false;
   return true;
 });
 

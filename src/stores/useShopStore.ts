@@ -138,7 +138,7 @@ export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
     itemId: "time_stasis_pill",
     name: "时间禁锢丹",
     price: 600,
-    description: "灵石兑换，暂停游戏时间流逝3小时现实时间",
+    description: "灵石兑换，暂停游戏时间流逝30分钟现实时间",
     currency: "spirit_stone",
   },
   {

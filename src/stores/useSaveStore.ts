@@ -273,7 +273,6 @@ export const useSaveStore = defineStore("save", () => {
       if (data.museum) museumStore.deserialize(data.museum);
       if (data.guild) guildStore.deserialize(data.guild);
       if (data.secretNote) secretNoteStore.deserialize(data.secretNote);
-      if (data.hanhai) hanhaiStore.deserialize(data.hanhai);
       if (data.fishPond) fishPondStore.deserialize(data.fishPond);
       ascensionStore.deserialize((data as any).ascension ?? {});
       if (data.tutorial) tutorialStore.deserialize(data.tutorial);
@@ -284,6 +283,7 @@ export const useSaveStore = defineStore("save", () => {
       if (data.longTerm) longTermStore.deserialize(data.longTerm);
       if ((data as any).floatingWelfare)
         floatingWelfareStore.deserialize((data as any).floatingWelfare);
+      if (data.hanhai) hanhaiStore.deserialize(data.hanhai);
       longTermStore.touchLoginDay();
       activeSlot.value = slot;
       return true;
