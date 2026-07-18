@@ -1,4 +1,5 @@
 import type {
+  MachineType,
   ProcessingMachineDef,
   ProcessingRecipeDef,
   SprinklerDef,
@@ -1990,7 +1991,7 @@ export const getProcessingRecipeById = (
 };
 
 export const getRecipesForMachine = (
-  machineType: string,
+  machineType: MachineType,
 ): ProcessingRecipeDef[] => {
   return PROCESSING_RECIPES.filter((r) => r.machineType === machineType);
 };

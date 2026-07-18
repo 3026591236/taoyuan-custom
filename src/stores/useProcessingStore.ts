@@ -1,6 +1,11 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
-import type { MachineType, ProcessingSlot, Quality } from "@/types";
+import type {
+  BatchProcessingSelection,
+  MachineType,
+  ProcessingSlot,
+  Quality,
+} from "@/types";
 import {
   PROCESSING_MACHINES,
   SPRINKLERS,
@@ -21,6 +26,7 @@ import { useWarehouseStore } from "./useWarehouseStore";
 import { useHiddenNpcStore } from "./useHiddenNpcStore";
 import { addLog } from "@/composables/useGameLog";
 import {
+  getCombinedItemCount,
   hasCombinedItem,
   removeCombinedItem,
   getLowestCombinedQuality,
@@ -288,18 +294,60 @@ export const useProcessingStore = defineStore("processing", () => {
     return outputs;
   };
 
-  /** 一键加工：每台空闲机器自动选择第一项材料足够的配方 */
-  const startAllAvailable = (): number => {
+  /** 按玩家明确选择的机器配方批量启动；未选择的机器类型不会加工。 */
+  const startAllSelected = (
+    selectedRecipes: BatchProcessingSelection,
+  ): number => {
     let started = 0;
+    const remainingInputs = new Map<string, number>();
+    const getRemainingInput = (itemId: string): number => {
+      const cached = remainingInputs.get(itemId);
+      if (cached !== undefined) return cached;
+      const count = getCombinedItemCount(itemId);
+      remainingInputs.set(itemId, count);
+      return count;
+    };
+
     for (let i = 0; i < machines.value.length; i++) {
       const slot = machines.value[i]!;
       if (slot.recipeId) continue;
-      const recipe = getRecipesForMachine(slot.machineType).find((r) =>
-        r.inputItemId === null || hasCombinedItem(r.inputItemId, r.inputQuantity),
-      );
-      if (recipe && startProcessing(i, recipe.id)) started++;
+      const recipeId = selectedRecipes[slot.machineType];
+      if (!recipeId) continue;
+      const recipe = getProcessingRecipeById(recipeId);
+      if (!recipe || recipe.machineType !== slot.machineType) continue;
+      if (recipe.inputItemId !== null) {
+        const remaining = getRemainingInput(recipe.inputItemId);
+        if (remaining < recipe.inputQuantity) continue;
+        remainingInputs.set(
+          recipe.inputItemId,
+          remaining - recipe.inputQuantity,
+        );
+      }
+      if (startProcessing(i, recipe.id)) {
+        started++;
+      } else if (recipe.inputItemId !== null) {
+        remainingInputs.set(
+          recipe.inputItemId,
+          getRemainingInput(recipe.inputItemId) + recipe.inputQuantity,
+        );
+      }
     }
     return started;
+  };
+
+  /** 显式智能选择：仅在玩家主动选择时，为每类机器挑选首个至少能启动一台的配方。 */
+  const getSmartRecipeSelection = (): BatchProcessingSelection => {
+    const selected: BatchProcessingSelection = {};
+    for (const slot of machines.value) {
+      if (slot.recipeId || selected[slot.machineType]) continue;
+      const recipe = getRecipesForMachine(slot.machineType).find(
+        (candidate) =>
+          candidate.inputItemId === null ||
+          hasCombinedItem(candidate.inputItemId, candidate.inputQuantity),
+      );
+      if (recipe) selected[slot.machineType] = recipe.id;
+    }
+    return selected;
   };
 
   /** 拆除机器（退回加工原料 + 已完成产物 + 机器制作材料） */
@@ -622,7 +670,8 @@ export const useProcessingStore = defineStore("processing", () => {
     startProcessing,
     collectProduct,
     collectAllProducts,
-    startAllAvailable,
+    startAllSelected,
+    getSmartRecipeSelection,
     cancelProcessing,
     removeMachine,
     getAvailableRecipes,

@@ -50,6 +50,9 @@ export interface ProcessingRecipeDef {
   description: string;
 }
 
+/** 一键加工时，玩家为每类机器明确选择的配方。 */
+export type BatchProcessingSelection = Partial<Record<MachineType, string>>;
+
 /** 运行时加工槽位 */
 export interface ProcessingSlot {
   machineType: MachineType;

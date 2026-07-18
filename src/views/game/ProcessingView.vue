@@ -56,7 +56,7 @@
       </div>
 
       <div v-if="processingStore.machines.length" class="grid grid-cols-2 gap-2 mb-2">
-        <Button class="justify-center" :icon="Play" @click="handleStartAll">一键加工</Button>
+        <Button class="justify-center" :icon="Play" @click="openBatchProcessing">一键加工</Button>
         <Button class="justify-center" :icon="Package" @click="handleCollectAll">一键收取</Button>
       </div>
 
@@ -304,6 +304,68 @@
         </div>
       </div>
     </div>
+
+    <!-- 一键加工选择弹窗 -->
+    <Transition name="panel-fade">
+      <div
+        v-if="showBatchModal"
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        @click.self="showBatchModal = false"
+      >
+        <div class="game-panel max-w-md w-full relative max-h-[80vh] overflow-y-auto">
+          <button
+            class="absolute top-2 right-2 text-muted hover:text-text"
+            @click="showBatchModal = false"
+          >
+            <X :size="14" />
+          </button>
+          <p class="text-sm text-accent mb-1">选择一键加工配方</p>
+          <p class="text-[10px] text-muted mb-3">
+            每类机器先选择一个材料足够的配方；未选择的机器不会启动。
+          </p>
+          <div class="space-y-2">
+            <div
+              v-for="group in batchMachineGroups"
+              :key="group.machineType"
+              class="border border-accent/15 rounded-xs p-2"
+            >
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs text-accent">{{ group.name }}</span>
+                <span class="text-[10px] text-muted">{{ group.idleCount }}台空闲</span>
+              </div>
+              <select
+                v-model="batchSelections[group.machineType]"
+                class="w-full bg-bg border border-accent/30 rounded-xs px-2 py-1.5 text-xs text-text"
+              >
+                <option value="">请选择配方</option>
+                <option
+                  v-for="recipe in group.recipes"
+                  :key="recipe.id"
+                  :value="recipe.id"
+                >
+                  {{ getBatchRecipeLabel(recipe) }}
+                </option>
+              </select>
+              <p v-if="group.recipes.length === 0" class="text-[10px] text-muted mt-1">
+                当前没有材料足够的配方
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <Button class="justify-center" @click="applySmartBatchSelection">智能选择</Button>
+            <Button
+              class="justify-center"
+              :class="{ '!bg-accent !text-bg': hasBatchSelection }"
+              :disabled="!hasBatchSelection"
+              :icon="Play"
+              @click="handleStartSelected"
+            >
+              开始加工
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <!-- 匠造台扩建弹窗 -->
     <Transition name="panel-fade">
@@ -584,7 +646,9 @@ import {
 } from "lucide-vue-next";
 import Button from "@/components/game/Button.vue";
 import type {
+  BatchProcessingSelection,
   MachineType,
+  ProcessingRecipeDef,
   AnimalBuildingType,
   ChestTier,
   Quality,
@@ -616,6 +680,7 @@ import {
   AUTO_PETTER,
   BOMBS,
   getProcessingRecipeById,
+  getRecipesForMachine,
 } from "@/data/processing";
 import { getItemById, getItemSource, CHEST_DEFS, CHEST_TIER_ORDER } from "@/data/items";
 import { ACTION_TIME_COSTS } from "@/data/timeConstants";
@@ -634,6 +699,58 @@ const warehouseStore = useWarehouseStore();
 
 const activeTab = ref<"process" | "craft">("process");
 const onlyAvailable = ref(false);
+const showBatchModal = ref(false);
+const batchSelections = ref<BatchProcessingSelection>({});
+
+const batchMachineGroups = computed(() => {
+  const idleTypes = new Set(
+    processingStore.machines
+      .filter((slot) => !slot.recipeId)
+      .map((slot) => slot.machineType),
+  );
+  return PROCESSING_MACHINES.filter((machine) => idleTypes.has(machine.id)).map(
+    (machine) => ({
+      machineType: machine.id,
+      name: machine.name,
+      idleCount: processingStore.machines.filter(
+        (slot) => !slot.recipeId && slot.machineType === machine.id,
+      ).length,
+      recipes: getRecipesForMachine(machine.id).filter(
+        (recipe) =>
+          recipe.inputItemId === null ||
+          hasCombinedItem(recipe.inputItemId, recipe.inputQuantity),
+      ),
+    }),
+  );
+});
+
+const hasBatchSelection = computed(() =>
+  Object.values(batchSelections.value).some(Boolean),
+);
+
+const getBatchRecipeLabel = (recipe: ProcessingRecipeDef) => {
+  if (!recipe.inputItemId) return `${recipe.name}（无需原料）`;
+  return `${recipe.name}（${getItemName(recipe.inputItemId)} ${getCombinedItemCount(recipe.inputItemId)}/${recipe.inputQuantity}）`;
+};
+
+const openBatchProcessing = () => {
+  batchSelections.value = {};
+  showBatchModal.value = true;
+};
+
+const applySmartBatchSelection = () => {
+  batchSelections.value = processingStore.getSmartRecipeSelection();
+};
+
+const handleStartSelected = () => {
+  const count = processingStore.startAllSelected(batchSelections.value);
+  addLog(
+    count > 0
+      ? `按所选配方启动了${count}台加工机器。`
+      : "所选配方材料不足，或没有对应的空闲机器。",
+  );
+  if (count > 0) showBatchModal.value = false;
+};
 
 const getFilteredRecipes = (machineType: MachineType) => {
   const recipes = processingStore.getAvailableRecipes(machineType);
@@ -1407,11 +1524,6 @@ const handleStartProcessing = (
   } else {
     addLog("原料不足或机器正在使用。");
   }
-};
-
-const handleStartAll = () => {
-  const count = processingStore.startAllAvailable();
-  addLog(count > 0 ? `一键启动了${count}台加工机器。` : "没有空闲且材料足够的机器。");
 };
 
 const handleCollectAll = () => {
