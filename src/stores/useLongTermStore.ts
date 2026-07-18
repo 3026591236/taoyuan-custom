@@ -545,6 +545,7 @@ export const useLongTermStore = defineStore("longTerm", () => {
   const adventureIndex = ref(0);
   const adventureDone = ref<string[]>([]);
   const adventureChoices = ref<Record<string, string>>({});
+  const adventureCycleKey = ref("");
   const gearAffixes = ref<Record<string, GearAffix[]>>({});
   const gearPity = ref<Record<string, number>>({});
   const affixCodex = ref<string[]>([]);
@@ -564,12 +565,8 @@ export const useLongTermStore = defineStore("longTerm", () => {
   const dayKey = computed(
     () => `${game().year}-${game().season}-${game().day}`,
   );
-  // 月度修行令按现实自然月结算，不能随游戏内快速推进的年月反复刷新。
-  const monthKeyNow = computed(() => {
-    const now = new Date();
-    const shanghai = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-    return shanghai.toISOString().slice(0, 7);
-  });
+  // 每个游戏季节视为一个修炼月，随游戏内年月稳定重置。
+  const monthKeyNow = computed(() => `${game().year}-${game().season}`);
   const daysAway = computed(() => {
     if (!lastSeenDayKey.value) return 0;
     const [, , d] = lastSeenDayKey.value.split("-");
@@ -653,10 +650,18 @@ export const useLongTermStore = defineStore("longTerm", () => {
   );
 
   function resetMonthIfNeeded() {
-    if (monthlyKey.value !== monthKeyNow.value) {
-      monthlyKey.value = monthKeyNow.value;
+    const currentKey = monthKeyNow.value;
+    if (monthlyKey.value !== currentKey) {
+      monthlyKey.value = currentKey;
       monthlyProgress.value = {};
       monthlyClaimed.value = [];
+    }
+    // 奇遇选择按同一游戏月轮换；隐藏旗标与结局图鉴作为长期进度保留。
+    if (adventureCycleKey.value !== currentKey) {
+      adventureCycleKey.value = currentKey;
+      adventureIndex.value = 0;
+      adventureDone.value = [];
+      adventureChoices.value = {};
     }
   }
   function addReward(reward: Reward) {
@@ -956,6 +961,7 @@ export const useLongTermStore = defineStore("longTerm", () => {
     adventureIndex: adventureIndex.value,
     adventureDone: adventureDone.value,
     adventureChoices: adventureChoices.value,
+    adventureCycleKey: adventureCycleKey.value,
     gearAffixes: gearAffixes.value,
     gearPity: gearPity.value,
     affixCodex: affixCodex.value,
@@ -984,6 +990,7 @@ export const useLongTermStore = defineStore("longTerm", () => {
       ? data.adventureDone
       : [];
     adventureChoices.value = data.adventureChoices || {};
+    adventureCycleKey.value = String(data.adventureCycleKey || data.monthlyKey || "");
     gearAffixes.value = data.gearAffixes || {};
     gearPity.value = data.gearPity || {};
     affixCodex.value = Array.isArray(data.affixCodex) ? data.affixCodex : [];
@@ -1015,6 +1022,7 @@ export const useLongTermStore = defineStore("longTerm", () => {
     adventureIndex,
     adventureDone,
     adventureChoices,
+    adventureCycleKey,
     gearAffixes,
     gearPity,
     affixCodex,
