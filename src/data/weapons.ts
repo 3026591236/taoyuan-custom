@@ -405,7 +405,7 @@ export const WEAPONS: Record<string, WeaponDef> = {
     type: "club",
     attack: 27,
     critRate: 0.06,
-    description: "老矿师校准过的探脉镐，战力克制，却能听出岩层后宝箱的空响。",
+    description: "老矿师校准过的探脉镐，提供额外宝箱生成率+6%；玄矿幽脉61层后的宝箱可稀有开出。",
     shopPrice: null,
     shopMaterials: [],
     fixedEnchantment: null,

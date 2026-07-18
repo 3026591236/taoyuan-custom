@@ -89,6 +89,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
+import { RECENT_KNOWLEDGE_ENTRIES } from "@/data/knowledgeBase";
 
 const router = useRouter();
 const query = ref("");
@@ -154,6 +155,10 @@ const hotQueries = [
   "突破",
   "命盘",
   "混沌裂隙",
+  "寻珍矿工",
+  "装备方案",
+  "炼丹动画",
+  "我的反馈",
 ];
 
 function scrollTo(i: number) {
@@ -161,7 +166,8 @@ function scrollTo(i: number) {
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-const sections = [
+const sections: Array<{ title: string; content: string; tips?: string[]; icon?: string }> = [
+  ...RECENT_KNOWLEDGE_ENTRIES,
   {
     title: "V3.0.7：灵兽培育任务计数修复",
     content:

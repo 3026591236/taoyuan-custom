@@ -496,7 +496,10 @@
           >
             <X :size="14" />
           </button>
-          <p class="text-sm text-accent mb-2">装备方案</p>
+          <p class="text-sm text-accent mb-1">装备方案</p>
+          <p class="text-[10px] text-muted mb-2">
+            已保存 {{ inventoryStore.equipmentPresets.length }}/{{ MAX_EQUIPMENT_PRESETS }} 套
+          </p>
           <div
             v-if="inventoryStore.equipmentPresets.length > 0"
             class="flex flex-col space-y-1.5 mb-3 max-h-60 overflow-y-auto"
@@ -569,10 +572,16 @@
           </div>
           <Button
             class="w-full justify-center"
-            :disabled="inventoryStore.equipmentPresets.length >= 5"
+            :disabled="
+              inventoryStore.equipmentPresets.length >= MAX_EQUIPMENT_PRESETS
+            "
             @click="handleCreatePreset"
           >
-            新建方案
+            {{
+              inventoryStore.equipmentPresets.length >= MAX_EQUIPMENT_PRESETS
+                ? `已达${MAX_EQUIPMENT_PRESETS}套上限`
+                : "新建方案"
+            }}
           </Button>
         </div>
       </div>
@@ -1255,7 +1264,10 @@ import {
   Zap,
 } from "lucide-vue-next";
 import Button from "@/components/game/Button.vue";
-import { useInventoryStore } from "@/stores/useInventoryStore";
+import {
+  MAX_EQUIPMENT_PRESETS,
+  useInventoryStore,
+} from "@/stores/useInventoryStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { getItemById, getItemSource } from "@/data";
 import { getRecipeById } from "@/data/recipes";

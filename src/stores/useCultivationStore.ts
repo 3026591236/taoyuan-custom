@@ -2578,7 +2578,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
         `此丹方需达到${REALMS[(recipe as any).minRealm]?.name || "更高境界"}方能炼制。`,
         "danger",
       );
-      return;
+      return false;
     }
     const inventory = useInventoryStore();
     for (const mat of recipe.materials) {

@@ -121,7 +121,7 @@
             可在背包中加入最多5个快捷物品。
           </p>
           <div v-if="inventoryStore.equipmentPresets.length" class="mb-3">
-            <p class="text-[10px] text-muted mb-1">快捷换装</p>
+            <p class="text-[10px] text-muted mb-1">快捷换装（已保存 {{ inventoryStore.equipmentPresets.length }}/{{ MAX_EQUIPMENT_PRESETS }} 套）</p>
             <div class="grid grid-cols-2 gap-1.5">
               <button
                 v-for="preset in inventoryStore.equipmentPresets"
@@ -1030,7 +1030,10 @@ import { useGameStore, SEASON_NAMES } from "@/stores/useGameStore";
 import { useHomeStore } from "@/stores/useHomeStore";
 import { useQuestStore } from "@/stores/useQuestStore";
 import { useCultivationStore } from "@/stores/useCultivationStore";
-import { useInventoryStore } from "@/stores/useInventoryStore";
+import {
+  MAX_EQUIPMENT_PRESETS,
+  useInventoryStore,
+} from "@/stores/useInventoryStore";
 import { useNpcStore } from "@/stores/useNpcStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useWarehouseStore } from "@/stores/useWarehouseStore";
@@ -2480,6 +2483,9 @@ const confirmSleep = () => {
   max-width: 340px;
   width: 100%;
   position: relative;
+  max-height: min(78vh, 620px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .quick-preset-btn {
   min-height: 34px;
@@ -2600,6 +2606,17 @@ const confirmSleep = () => {
     position: absolute;
     top: -6px;
     right: -6px;
+  }
+}
+
+@media (max-width: 640px) {
+  .quick-use-picker-mask {
+    align-items: flex-end;
+    padding: 10px;
+  }
+  .quick-use-picker {
+    max-width: none;
+    max-height: min(82vh, 620px);
   }
 }
 </style>

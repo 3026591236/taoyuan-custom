@@ -199,7 +199,7 @@ export const RINGS: RingDef[] = [
   {
     id: "prospectors_lens_ring",
     name: "寻珍测脉环",
-    description: "以月光石与黑曜石磨成的测脉环，可辨岩后空室；造价高昂。",
+    description: "测脉辨隙，额外宝箱生成率+7%；铁匠铺需金锭×5、黑曜石×4、月光石×2、水晶矿×12与6500铜钱合成。",
     effects: [{ type: "treasure_find", value: 0.07 }],
     recipe: [
       { itemId: "gold_bar", quantity: 5 },

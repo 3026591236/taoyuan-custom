@@ -397,7 +397,7 @@ export const SHOES: ShoeDef[] = [
   {
     id: "prospectors_softstep_boots",
     name: "寻珍踏隙靴",
-    description: "以晶矿软革缝制，便于沿岩缝寻找被掩埋的宝箱，正面战力很低。",
+    description: "踏隙寻箱，额外宝箱生成率+5%；玄矿幽脉水晶层（61—80层）普通怪物有0.8%概率掉落。",
     effects: [
       { type: "treasure_find", value: 0.05 },
       { type: "mining_stamina", value: 0.04 },
@@ -405,7 +405,7 @@ export const SHOES: ShoeDef[] = [
     shopPrice: null,
     recipe: null,
     recipeMoney: 0,
-    obtainSource: "水晶层怪物稀有掉落",
+    obtainSource: "玄矿幽脉水晶层（61—80层）怪物稀有掉落（0.8%）",
     sellPrice: 900,
   },
 

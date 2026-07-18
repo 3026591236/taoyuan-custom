@@ -388,7 +388,7 @@ export const HATS: HatDef[] = [
   {
     id: "prospectors_echo_helm",
     name: "寻珍听岩盔",
-    description: "水晶之王珍藏的听岩盔，能捕捉岩层后机关与宝箱的回声。",
+    description: "听岩辨箱，额外宝箱生成率+6%；击败玄矿幽脉80层BOSS水晶之王获得。",
     effects: [
       { type: "treasure_find", value: 0.06 },
       { type: "defense_bonus", value: 0.02 },

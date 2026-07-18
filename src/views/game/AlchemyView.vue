@@ -16,6 +16,25 @@
       >
     </div>
     <div v-else>
+      <Transition name="alchemy-fade">
+        <div
+          v-if="alchemyState"
+          class="alchemy-stage"
+          :class="[`phase-${alchemyState.phase}`, { reduced: reduceMotion }]"
+          role="status"
+          aria-live="polite"
+        >
+          <div class="alchemy-glow"></div>
+          <div class="alchemy-cauldron" aria-hidden="true">🏺</div>
+          <div class="alchemy-flame" aria-hidden="true">🔥</div>
+          <div class="alchemy-smoke" aria-hidden="true">☁</div>
+          <p class="text-sm text-accent">{{ alchemyState.name }} · 开炉炼制</p>
+          <p class="text-xs" :class="alchemyState.phase === 'failed' ? 'text-muted' : 'text-success'">
+            {{ alchemyPhaseText }}
+          </p>
+          <p class="text-[10px] text-muted">动画仅作表现，成功率与产出按原逻辑结算</p>
+        </div>
+      </Transition>
       <div class="border border-accent/20 rounded-xs p-3 bg-panel/30 mb-2">
         <div class="flex items-center justify-between gap-2">
           <span class="text-sm text-accent">炉火品相</span>
@@ -84,8 +103,9 @@
           <div class="grid grid-cols-2 gap-2">
             <Button
               class="justify-center"
-              @click="cultivation.craftPill(recipe.id)"
-              >炼制</Button
+              :disabled="isAlchemyAnimating"
+              @click="handleCraftPill(recipe)"
+              >{{ isAlchemyAnimating ? "炼制中" : "炼制" }}</Button
             >
             <Button
               class="justify-center"
@@ -107,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, ref } from "vue";
 import Divider from "@/components/game/Divider.vue";
 import Button from "@/components/game/Button.vue";
 import { useCultivationStore, REALMS } from "@/stores/useCultivationStore";
@@ -123,6 +143,42 @@ const realmNameByIndex = (idx: number) => REALMS[idx]?.name ?? "";
 
 const pillFilter = ref("全部");
 const pillCategories = ["全部", "修炼", "突破", "恢复", "特殊", "属性", "元神"];
+
+type AlchemyPhase = "ingredients" | "fire" | "condense" | "success" | "failed";
+const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+const alchemyState = ref<{ name: string; phase: AlchemyPhase } | null>(null);
+const isAlchemyAnimating = computed(() => alchemyState.value !== null);
+const alchemyPhaseText = computed(() => ({
+  ingredients: "药材入炉 · 灵气汇聚",
+  fire: "丹炉点火 · 灵火淬炼",
+  condense: "炉身鸣动 · 凝丹将成",
+  success: "金光绽放 · 凝丹出炉",
+  failed: "炉火渐熄 · 本次未能开炉",
+}[alchemyState.value?.phase ?? "ingredients"]));
+let alchemyRun = 0;
+const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+const handleCraftPill = async (recipe: (typeof pillRecipes)[number]) => {
+  if (isAlchemyAnimating.value) return;
+  const run = ++alchemyRun;
+  alchemyState.value = { name: recipe.name, phase: "ingredients" };
+  if (!reduceMotion) await wait(450);
+  if (run !== alchemyRun) return;
+  alchemyState.value.phase = "fire";
+  if (!reduceMotion) await wait(650);
+  if (run !== alchemyRun) return;
+  alchemyState.value.phase = "condense";
+  if (!reduceMotion) await wait(600);
+  if (run !== alchemyRun) return;
+  // 仅在动画末尾调用一次原结算；切页会取消，未调用就不会扣材料或发奖励。
+  const success = cultivation.craftPill(recipe.id) === true;
+  alchemyState.value.phase = success ? "success" : "failed";
+  await wait(reduceMotion ? 120 : 550);
+  if (run === alchemyRun) alchemyState.value = null;
+};
+onBeforeUnmount(() => {
+  alchemyRun++;
+  alchemyState.value = null;
+});
 
 const pillRecipes: Array<{
   id: PillId;
@@ -378,4 +434,22 @@ const filteredPillRecipes = computed(() =>
   color: var(--color-accent);
   font-weight: 500;
 }
+
+.alchemy-stage { position: sticky; top: 8px; z-index: 8; min-height: 132px; margin-bottom: 10px; overflow: hidden; border: 1px solid rgba(200,164,92,.35); border-radius: 6px; background: rgba(18,12,8,.94); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
+.alchemy-cauldron { font-size: 42px; z-index:2; animation: cauldron-pulse .45s ease-in-out infinite alternate; }
+.alchemy-flame { position:absolute; bottom:22px; font-size:25px; opacity:0; }
+.alchemy-glow { position:absolute; width:100px; height:100px; border-radius:50%; background:radial-gradient(circle, rgba(250,204,21,.45), transparent 68%); opacity:.15; }
+.alchemy-smoke { position:absolute; top:10px; opacity:0; color:#aaa; }
+.phase-fire .alchemy-flame, .phase-condense .alchemy-flame { opacity:1; animation: flame-flicker .28s ease-in-out infinite alternate; }
+.phase-condense .alchemy-glow, .phase-success .alchemy-glow { opacity:.8; animation: glow-bloom .6s ease-out infinite alternate; }
+.phase-success .alchemy-cauldron { filter: drop-shadow(0 0 12px #fde68a); }
+.phase-failed .alchemy-flame { opacity:0; }
+.phase-failed .alchemy-smoke { opacity:.65; animation: smoke-rise .7s ease-out both; }
+@keyframes cauldron-pulse { to { transform: translateY(-1px) rotate(.8deg); } }
+@keyframes flame-flicker { to { transform:scale(1.12) translateY(-2px); filter:brightness(1.25); } }
+@keyframes glow-bloom { to { transform:scale(1.35); opacity:1; } }
+@keyframes smoke-rise { to { transform:translateY(-10px); opacity:0; } }
+.alchemy-fade-enter-active,.alchemy-fade-leave-active { transition:opacity .18s ease; }
+.alchemy-fade-enter-from,.alchemy-fade-leave-to { opacity:0; }
+@media (prefers-reduced-motion: reduce) { .alchemy-stage *, .alchemy-stage { animation:none!important; transition:none!important; } }
 </style>

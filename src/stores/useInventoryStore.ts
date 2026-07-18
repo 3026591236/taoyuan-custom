@@ -44,6 +44,9 @@ const MAX_CAPACITY = 60;
 const MAX_STACK = 999;
 const TEMP_CAPACITY = 10;
 
+/** 已保存装备方案上限；旧档方案原样保留，不因版本升级删除。 */
+export const MAX_EQUIPMENT_PRESETS = 12;
+
 export const useInventoryStore = defineStore("inventory", () => {
   const items = ref<InventoryItem[]>([]);
   const capacity = ref(INITIAL_CAPACITY);
@@ -1052,7 +1055,7 @@ export const useInventoryStore = defineStore("inventory", () => {
 
   /** 创建空方案 */
   const createEquipmentPreset = (name: string): boolean => {
-    if (equipmentPresets.value.length >= 5) return false;
+    if (equipmentPresets.value.length >= MAX_EQUIPMENT_PRESETS) return false;
     equipmentPresets.value.push({
       id: Date.now().toString(),
       name,
@@ -1396,7 +1399,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     equipmentPresets.value = (
       ((data as Record<string, unknown>).equipmentPresets as
         EquipmentPreset[] | undefined) ?? []
-    ).slice(0, 5);
+    );
     const savedActivePresetId =
       ((data as Record<string, unknown>).activePresetId as
         string | null | undefined) ?? null;
