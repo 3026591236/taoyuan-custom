@@ -106,6 +106,8 @@ export interface EnchantmentDef {
 export interface OwnedWeapon {
   defId: string;
   enchantmentId: string | null;
+  /** 玩家锁定后不可出售；旧存档缺失时视为 false */
+  locked?: boolean;
 }
 
 /** 箱子阶梯 */

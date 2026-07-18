@@ -237,6 +237,33 @@ export const useSkillStore = defineStore("skill", () => {
     return true;
   };
 
+  /** 重置指定百艺专精；等级、经验与委托进度均保留。 */
+  const resetPerks = (
+    type: SkillType,
+  ): { success: boolean; message: string; cost: number } => {
+    const skill = getSkill(type);
+    const cost = Math.max(1, Math.ceil(skill.level / 2));
+    if (!skill.perk5 && !skill.perk10)
+      return { success: false, message: "该百艺尚未选择专精。", cost };
+    const inventory = useInventoryStore();
+    if (inventory.getItemCount("spirit_stone") < cost)
+      return {
+        success: false,
+        message: `灵石不足，重置需要灵石×${cost}。`,
+        cost,
+      };
+    // 扣费成功后再修改专精，确保重置与扣费原子化。
+    if (!inventory.removeItem("spirit_stone", cost))
+      return { success: false, message: "灵石扣除失败，请重试。", cost };
+    skill.perk5 = null;
+    skill.perk10 = null;
+    return {
+      success: true,
+      message: `已重置专精，消耗灵石×${cost}，请重新选择Lv5专精。`,
+      cost,
+    };
+  };
+
   /** 判断灵植品质（基于灵耕等级） */
   const rollCropQuality = (): "normal" | "fine" | "excellent" | "supreme" => {
     return rollCropQualityWithBonus(0);
@@ -410,6 +437,7 @@ export const useSkillStore = defineStore("skill", () => {
     getStaminaReduction,
     setPerk5,
     setPerk10,
+    resetPerks,
     rollCropQuality,
     rollCropQualityWithBonus,
     rollForageQuality,

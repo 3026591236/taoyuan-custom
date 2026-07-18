@@ -18,6 +18,8 @@ export interface EquipmentPreset {
   id: string;
   name: string;
   weaponDefId: string | null;
+  /** undefined = 旧方案，仅按武器定义匹配；null = 明确要求无附魔 */
+  weaponEnchantmentId?: string | null;
   ringSlot1DefId: string | null;
   ringSlot2DefId: string | null;
   hatDefId: string | null;
@@ -227,17 +229,39 @@ export const useInventoryStore = defineStore("inventory", () => {
   const equipWeapon = (index: number): boolean => {
     if (index < 0 || index >= ownedWeapons.value.length) return false;
     equippedWeaponIndex.value = index;
+    activePresetId.value = null;
     return true;
+  };
+
+  /** 统一切换装备锁定状态 */
+  const toggleEquipmentLock = (
+    type: "weapon" | "ring" | "hat" | "shoe",
+    index: number,
+  ): boolean => {
+    const list =
+      type === "weapon"
+        ? ownedWeapons.value
+        : type === "ring"
+          ? ownedRings.value
+          : type === "hat"
+            ? ownedHats.value
+            : ownedShoes.value;
+    const equipment = list[index];
+    if (!equipment) return false;
+    equipment.locked = !equipment.locked;
+    return equipment.locked;
   };
 
   /** 卖出武器（不能卖装备中的武器，不能卖唯一武器） */
   const sellWeapon = (index: number): { success: boolean; message: string } => {
+    if (index < 0 || index >= ownedWeapons.value.length)
+      return { success: false, message: "无效索引。" };
+    if (ownedWeapons.value[index]?.locked)
+      return { success: false, message: "该武器已锁定，请先解锁。" };
     if (ownedWeapons.value.length <= 1)
       return { success: false, message: "至少保留一把武器。" };
     if (index === equippedWeaponIndex.value)
       return { success: false, message: "不能卖出装备中的武器，请先切换。" };
-    if (index < 0 || index >= ownedWeapons.value.length)
-      return { success: false, message: "无效索引。" };
     const weapon = ownedWeapons.value[index]!;
     const price = getWeaponSellPrice(weapon.defId, weapon.enchantmentId);
     const playerStore = usePlayerStore();
@@ -649,6 +673,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     if (otherSlot.value === ringIndex) {
       otherSlot.value = targetSlot.value; // 可能是 -1
       targetSlot.value = ringIndex;
+      activePresetId.value = null;
       return true;
     }
     // 禁止两个槽位装备同defId戒指
@@ -661,6 +686,7 @@ export const useInventoryStore = defineStore("inventory", () => {
       return false;
     }
     targetSlot.value = ringIndex;
+    activePresetId.value = null;
     return true;
   };
 
@@ -673,6 +699,7 @@ export const useInventoryStore = defineStore("inventory", () => {
       if (equippedRingSlot2.value < 0) return false;
       equippedRingSlot2.value = -1;
     }
+    activePresetId.value = null;
     return true;
   };
 
@@ -680,6 +707,8 @@ export const useInventoryStore = defineStore("inventory", () => {
   const sellRing = (index: number): { success: boolean; message: string } => {
     if (index < 0 || index >= ownedRings.value.length)
       return { success: false, message: "无效索引。" };
+    if (ownedRings.value[index]?.locked)
+      return { success: false, message: "该戒指已锁定，请先解锁。" };
     const ring = ownedRings.value[index]!;
     const def = getRingById(ring.defId);
     const price = def?.sellPrice ?? 0;
@@ -882,6 +911,7 @@ export const useInventoryStore = defineStore("inventory", () => {
   const equipHat = (index: number): boolean => {
     if (index < 0 || index >= ownedHats.value.length) return false;
     equippedHatIndex.value = index;
+    activePresetId.value = null;
     return true;
   };
 
@@ -889,6 +919,7 @@ export const useInventoryStore = defineStore("inventory", () => {
   const unequipHat = (): boolean => {
     if (equippedHatIndex.value < 0) return false;
     equippedHatIndex.value = -1;
+    activePresetId.value = null;
     return true;
   };
 
@@ -896,6 +927,8 @@ export const useInventoryStore = defineStore("inventory", () => {
   const sellHat = (index: number): { success: boolean; message: string } => {
     if (index < 0 || index >= ownedHats.value.length)
       return { success: false, message: "无效索引。" };
+    if (ownedHats.value[index]?.locked)
+      return { success: false, message: "该帽子已锁定，请先解锁。" };
     const hat = ownedHats.value[index]!;
     const def = getHatById(hat.defId);
     const price = def?.sellPrice ?? 0;
@@ -958,6 +991,7 @@ export const useInventoryStore = defineStore("inventory", () => {
   const equipShoe = (index: number): boolean => {
     if (index < 0 || index >= ownedShoes.value.length) return false;
     equippedShoeIndex.value = index;
+    activePresetId.value = null;
     return true;
   };
 
@@ -965,6 +999,7 @@ export const useInventoryStore = defineStore("inventory", () => {
   const unequipShoe = (): boolean => {
     if (equippedShoeIndex.value < 0) return false;
     equippedShoeIndex.value = -1;
+    activePresetId.value = null;
     return true;
   };
 
@@ -972,6 +1007,8 @@ export const useInventoryStore = defineStore("inventory", () => {
   const sellShoe = (index: number): { success: boolean; message: string } => {
     if (index < 0 || index >= ownedShoes.value.length)
       return { success: false, message: "无效索引。" };
+    if (ownedShoes.value[index]?.locked)
+      return { success: false, message: "该鞋子已锁定，请先解锁。" };
     const shoe = ownedShoes.value[index]!;
     const def = getShoeById(shoe.defId);
     const price = def?.sellPrice ?? 0;
@@ -1025,6 +1062,7 @@ export const useInventoryStore = defineStore("inventory", () => {
       id: Date.now().toString(),
       name,
       weaponDefId: null,
+      weaponEnchantmentId: null,
       ringSlot1DefId: null,
       ringSlot2DefId: null,
       hatDefId: null,
@@ -1050,8 +1088,9 @@ export const useInventoryStore = defineStore("inventory", () => {
   const saveCurrentToPreset = (id: string) => {
     const preset = equipmentPresets.value.find((p) => p.id === id);
     if (!preset) return;
-    preset.weaponDefId =
-      ownedWeapons.value[equippedWeaponIndex.value]?.defId ?? null;
+    const currentWeapon = ownedWeapons.value[equippedWeaponIndex.value];
+    preset.weaponDefId = currentWeapon?.defId ?? null;
+    preset.weaponEnchantmentId = currentWeapon?.enchantmentId ?? null;
     preset.ringSlot1DefId =
       equippedRingSlot1.value >= 0
         ? (ownedRings.value[equippedRingSlot1.value]?.defId ?? null)
@@ -1081,8 +1120,12 @@ export const useInventoryStore = defineStore("inventory", () => {
 
     // 武器
     if (preset.weaponDefId) {
-      const idx = ownedWeapons.value.findIndex(
-        (w) => w.defId === preset.weaponDefId,
+      const hasExactEnchantment = preset.weaponEnchantmentId !== undefined;
+      let idx = ownedWeapons.value.findIndex(
+        (w) =>
+          w.defId === preset.weaponDefId &&
+          (!hasExactEnchantment ||
+            w.enchantmentId === preset.weaponEnchantmentId),
       );
       if (idx >= 0) equipWeapon(idx);
       else missing.push("武器");
@@ -1290,7 +1333,10 @@ export const useInventoryStore = defineStore("inventory", () => {
 
     // 新版武器系统
     if ((data as any).ownedWeapons) {
-      ownedWeapons.value = (data as any).ownedWeapons;
+      ownedWeapons.value = (data as any).ownedWeapons.map((w: OwnedWeapon) => ({
+        ...w,
+        locked: w.locked ?? false,
+      }));
       equippedWeaponIndex.value = (data as any).equippedWeaponIndex ?? 0;
     } else {
       // 旧存档迁移：weapon: { tier: 'copper' } → ownedWeapons
@@ -1314,8 +1360,9 @@ export const useInventoryStore = defineStore("inventory", () => {
     pendingUpgrade.value = (data as any).pendingUpgrade ?? null;
 
     // 戒指系统（向后兼容旧存档）
-    ownedRings.value =
-      ((data as Record<string, unknown>).ownedRings as OwnedRing[]) ?? [];
+    ownedRings.value = (
+      ((data as Record<string, unknown>).ownedRings as OwnedRing[]) ?? []
+    ).map((item) => ({ ...item, locked: item.locked ?? false }));
     equippedRingSlot1.value =
       ((data as Record<string, unknown>).equippedRingSlot1 as
         number | undefined) ?? -1;
@@ -1329,8 +1376,9 @@ export const useInventoryStore = defineStore("inventory", () => {
       equippedRingSlot2.value = -1;
 
     // 帽子系统（向后兼容旧存档）
-    ownedHats.value =
-      ((data as Record<string, unknown>).ownedHats as OwnedHat[]) ?? [];
+    ownedHats.value = (
+      ((data as Record<string, unknown>).ownedHats as OwnedHat[]) ?? []
+    ).map((item) => ({ ...item, locked: item.locked ?? false }));
     equippedHatIndex.value =
       ((data as Record<string, unknown>).equippedHatIndex as
         number | undefined) ?? -1;
@@ -1338,8 +1386,9 @@ export const useInventoryStore = defineStore("inventory", () => {
       equippedHatIndex.value = -1;
 
     // 鞋子系统（向后兼容旧存档）
-    ownedShoes.value =
-      ((data as Record<string, unknown>).ownedShoes as OwnedShoe[]) ?? [];
+    ownedShoes.value = (
+      ((data as Record<string, unknown>).ownedShoes as OwnedShoe[]) ?? []
+    ).map((item) => ({ ...item, locked: item.locked ?? false }));
     equippedShoeIndex.value =
       ((data as Record<string, unknown>).equippedShoeIndex as
         number | undefined) ?? -1;
@@ -1347,12 +1396,18 @@ export const useInventoryStore = defineStore("inventory", () => {
       equippedShoeIndex.value = -1;
 
     // 装备方案（向后兼容旧存档）
-    equipmentPresets.value =
+    equipmentPresets.value = (
       ((data as Record<string, unknown>).equipmentPresets as
-        EquipmentPreset[] | undefined) ?? [];
-    activePresetId.value =
+        EquipmentPreset[] | undefined) ?? []
+    ).slice(0, 5);
+    const savedActivePresetId =
       ((data as Record<string, unknown>).activePresetId as
         string | null | undefined) ?? null;
+    activePresetId.value = equipmentPresets.value.some(
+      (preset) => preset.id === savedActivePresetId,
+    )
+      ? savedActivePresetId
+      : null;
     const rawQuickItems = (data as Record<string, unknown>).quickUseItems as
       { itemId?: string; quality?: Quality }[] | undefined;
     const oldQuick = (data as Record<string, unknown>).quickUseItem as
@@ -1415,6 +1470,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     hasWeapon,
     hasWeaponExact,
     equipWeapon,
+    toggleEquipmentLock,
     sellWeapon,
     ownedRings,
     equippedRingSlot1,

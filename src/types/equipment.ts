@@ -21,6 +21,8 @@ export interface HatDef {
 /** 拥有的帽子实例 */
 export interface OwnedHat {
   defId: string;
+  /** 玩家锁定后不可出售；旧存档缺失时视为 false */
+  locked?: boolean;
 }
 
 /** 鞋子定义 */
@@ -44,4 +46,6 @@ export interface ShoeDef {
 /** 拥有的鞋子实例 */
 export interface OwnedShoe {
   defId: string;
+  /** 玩家锁定后不可出售；旧存档缺失时视为 false */
+  locked?: boolean;
 }

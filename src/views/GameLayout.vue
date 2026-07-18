@@ -120,6 +120,21 @@
           <p class="text-[10px] text-muted mb-2">
             可在背包中加入最多5个快捷物品。
           </p>
+          <div v-if="inventoryStore.equipmentPresets.length" class="mb-3">
+            <p class="text-[10px] text-muted mb-1">快捷换装</p>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button
+                v-for="preset in inventoryStore.equipmentPresets"
+                :key="preset.id"
+                class="quick-preset-btn"
+                :class="{ active: inventoryStore.activePresetId === preset.id }"
+                @click="handleQuickPreset(preset.id)"
+              >
+                <BookMarked :size="13" />
+                <span class="truncate">{{ preset.name }}</span>
+              </button>
+            </div>
+          </div>
           <div class="grid grid-cols-5 gap-1.5">
             <button
               v-for="slot in quickUseSlots"
@@ -1060,6 +1075,7 @@ import {
   Trash2,
   Gift,
   Zap,
+  BookMarked,
 } from "lucide-vue-next";
 import Button from "@/components/game/Button.vue";
 import Divider from "@/components/game/Divider.vue";
@@ -1568,6 +1584,16 @@ const openQuickUsePicker = () => {
   inventoryStore.compactQuickUseItems();
   showQuickUsePicker.value = true;
 };
+const handleQuickPreset = async (id: string) => {
+  const result = inventoryStore.applyEquipmentPreset(id);
+  addLog(result.message);
+  showFloat(result.message, result.success ? "success" : "danger");
+  if (result.success) {
+    showQuickUsePicker.value = false;
+    await autoSaveCurrent();
+  }
+};
+
 const handleQuickSlotClick = (slot: {
   item?: { itemId: string; quality: any } | null;
 }) => {
@@ -2455,6 +2481,24 @@ const confirmSleep = () => {
   width: 100%;
   position: relative;
 }
+.quick-preset-btn {
+  min-height: 34px;
+  border: 1px solid rgba(200, 164, 92, 0.28);
+  border-radius: 4px;
+  padding: 5px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--color-muted);
+  background: rgba(200, 164, 92, 0.04);
+  font-size: 11px;
+}
+.quick-preset-btn.active {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: rgba(200, 164, 92, 0.12);
+}
 .quick-use-slot {
   min-height: 56px;
   border: 1px solid rgba(200, 164, 92, 0.28);
@@ -2521,5 +2565,41 @@ const confirmSleep = () => {
 }
 .floating-welfare-card.claimed {
   opacity: 0.58;
+}
+
+@media (max-width: 640px) {
+  .quick-use-float-btn,
+  .floating-welfare-btn {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    touch-action: manipulation;
+  }
+  .quick-use-float-btn {
+    top: auto;
+    right: 12px;
+    bottom: calc(
+      calc(0.35rem * 10) + 192px + env(safe-area-inset-bottom, 0px)
+    );
+    transform: none;
+  }
+  .floating-welfare-btn {
+    right: 54px;
+    bottom: calc(
+      calc(0.35rem * 10) + 144px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+  .quick-use-float-btn > span,
+  .floating-welfare-btn > span {
+    display: none;
+  }
+  .floating-welfare-btn em {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+  }
 }
 </style>

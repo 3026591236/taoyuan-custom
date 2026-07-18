@@ -67,6 +67,8 @@ export const handlePerkSelect = (perk: SkillPerk5 | SkillPerk10) => {
   }
   addLog("习得了新专精！");
   pendingPerk.value = null;
+  // Lv5 重新选择后立即检查同一百艺的 Lv10，保证依赖链正确。
+  checkAllPerks();
 };
 
 /** 判断是否为隐藏NPC */

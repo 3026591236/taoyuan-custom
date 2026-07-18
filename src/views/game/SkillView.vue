@@ -119,6 +119,13 @@
             class="text-[10px] text-accent border border-accent/30 rounded-xs px-1"
             >MAX</span
           >
+          <button
+            v-if="skill.perk5 || skill.perk10"
+            class="btn !px-2 !py-0.5 text-[10px] ml-2"
+            @click="requestReset(skill.type)"
+          >
+            重置专精
+          </button>
         </div>
 
         <!-- 经验条 -->
@@ -174,16 +181,54 @@
         </p>
       </div>
     </div>
+
+    <div
+      v-if="resetTarget"
+      class="fixed inset-0 z-[120] bg-black/70 flex items-center justify-center p-4"
+      @click.self="resetTarget = null"
+    >
+      <div class="game-panel max-w-sm w-full">
+        <p class="text-sm text-accent mb-2">确认重置专精</p>
+        <p class="text-xs text-muted leading-relaxed mb-3">
+          仅清空{{ SKILL_NAMES[resetTarget] }}的 Lv5 / Lv10 专精，等级、经验和委托记录都会保留。费用为灵石×{{ resetCost }}。重置后将立即重新选择 Lv5 专精。
+        </p>
+        <div class="flex gap-2">
+          <button class="btn flex-1 justify-center" @click="resetTarget = null">取消</button>
+          <button class="btn flex-1 justify-center text-danger border-danger/40" @click="confirmReset">确认重置</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { type Component } from "vue";
+import { ref, computed, type Component } from "vue";
 import { Star, Wheat, TreePine, Fish, Pickaxe, Sword } from "lucide-vue-next";
 import { useSkillStore } from "@/stores/useSkillStore";
+import { addLog, showFloat } from "@/composables/useGameLog";
+import { checkAllPerks } from "@/composables/useDialogs";
 import type { SkillType, SkillPerk5, SkillPerk10 } from "@/types";
 
 const skillStore = useSkillStore();
+const resetTarget = ref<SkillType | null>(null);
+const resetCost = computed(() =>
+  resetTarget.value
+    ? Math.max(1, Math.ceil(skillStore.getSkill(resetTarget.value).level / 2))
+    : 0,
+);
+const requestReset = (type: SkillType) => {
+  resetTarget.value = type;
+};
+const confirmReset = () => {
+  if (!resetTarget.value) return;
+  const result = skillStore.resetPerks(resetTarget.value);
+  addLog(result.message);
+  showFloat(result.message, result.success ? "success" : "danger");
+  if (result.success) {
+    resetTarget.value = null;
+    checkAllPerks();
+  }
+};
 
 const SKILL_ICONS: Record<SkillType, Component> = {
   farming: Wheat,

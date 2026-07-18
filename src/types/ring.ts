@@ -54,4 +54,6 @@ export interface RingDef {
 /** 拥有的戒指实例（存储用） */
 export interface OwnedRing {
   defId: string;
+  /** 玩家锁定后不可出售；旧存档缺失时视为 false */
+  locked?: boolean;
 }

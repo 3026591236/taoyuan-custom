@@ -211,13 +211,16 @@
             "
             @click="activeWeaponIdx = idx"
           >
-            <span
-              class="text-xs"
+            <span class="flex items-center gap-1 min-w-0">
+              <Lock v-if="weapon.locked" :size="11" class="text-accent shrink-0" />
+              <span
+              class="text-xs truncate"
               :class="
                 idx === inventoryStore.equippedWeaponIndex ? 'text-accent' : ''
               "
             >
               {{ getWeaponDisplayName(weapon.defId, weapon.enchantmentId) }}
+              </span>
             </span>
             <span
               v-if="idx === inventoryStore.equippedWeaponIndex"
@@ -265,7 +268,8 @@
               "
               @click="activeHatIdx = idx"
             >
-              <div class="min-w-0">
+              <div class="min-w-0 relative">
+                <Lock v-if="hat.locked" :size="11" class="inline mr-1 text-accent" />
                 <span
                   class="text-xs"
                   :class="
@@ -327,7 +331,8 @@
               "
               @click="activeShoeIdx = idx"
             >
-              <div class="min-w-0">
+              <div class="min-w-0 relative">
+                <Lock v-if="shoe.locked" :size="11" class="inline mr-1 text-accent" />
                 <span
                   class="text-xs"
                   :class="
@@ -402,7 +407,8 @@
               "
               @click="activeRingIdx = idx"
             >
-              <div class="min-w-0">
+              <div class="min-w-0 relative">
+                <Lock v-if="ring.locked" :size="11" class="inline mr-1 text-accent" />
                 <span
                   class="text-xs"
                   :class="isRingEquipped(idx) ? 'text-accent' : ''"
@@ -950,9 +956,18 @@
               装备
             </Button>
             <Button
+              class="w-full justify-center"
+              :icon="activeWeaponLocked ? LockOpen : Lock"
+              :icon-size="12"
+              @click="handleToggleEquipmentLock('weapon', activeWeaponIdx)"
+            >
+              {{ activeWeaponLocked ? "解锁" : "锁定" }}
+            </Button>
+            <Button
               v-if="
                 activeWeaponIdx !== inventoryStore.equippedWeaponIndex &&
-                inventoryStore.ownedWeapons.length > 1
+                inventoryStore.ownedWeapons.length > 1 &&
+                !activeWeaponLocked
               "
               class="w-full justify-center text-danger border-danger/40"
               @click="handleSellWeapon"
@@ -1056,7 +1071,16 @@
               </Button>
             </div>
             <Button
+              class="w-full justify-center"
+              :icon="activeRingLocked ? LockOpen : Lock"
+              :icon-size="12"
+              @click="handleToggleEquipmentLock('ring', activeRingIdx)"
+            >
+              {{ activeRingLocked ? "解锁" : "锁定" }}
+            </Button>
+            <Button
               class="w-full justify-center text-danger border-danger/40"
+              :disabled="activeRingLocked"
               @click="handleSellRing"
             >
               卖出 · {{ activeRingDef.sellPrice }}文
@@ -1120,7 +1144,16 @@
               }}
             </Button>
             <Button
+              class="w-full justify-center"
+              :icon="activeHatLocked ? LockOpen : Lock"
+              :icon-size="12"
+              @click="handleToggleEquipmentLock('hat', activeHatIdx)"
+            >
+              {{ activeHatLocked ? "解锁" : "锁定" }}
+            </Button>
+            <Button
               class="w-full justify-center text-danger border-danger/40"
+              :disabled="activeHatLocked"
               @click="handleSellHat"
             >
               卖出 · {{ activeHatDef.sellPrice }}文
@@ -1184,7 +1217,16 @@
               }}
             </Button>
             <Button
+              class="w-full justify-center"
+              :icon="activeShoeLocked ? LockOpen : Lock"
+              :icon-size="12"
+              @click="handleToggleEquipmentLock('shoe', activeShoeIdx)"
+            >
+              {{ activeShoeLocked ? "解锁" : "锁定" }}
+            </Button>
+            <Button
               class="w-full justify-center text-danger border-danger/40"
+              :disabled="activeShoeLocked"
               @click="handleSellShoe"
             >
               卖出 · {{ activeShoeDef.sellPrice }}文
@@ -1489,6 +1531,15 @@ const formatEffectValue = (eff: {
   return `${eff.value}`;
 };
 
+const handleToggleEquipmentLock = (
+  type: "weapon" | "ring" | "hat" | "shoe",
+  index: number | null,
+) => {
+  if (index === null) return;
+  const locked = inventoryStore.toggleEquipmentLock(type, index);
+  addLog(locked ? "装备已锁定，无法出售。" : "装备已解锁。");
+};
+
 // === 武器弹窗 ===
 
 const activeWeaponIdx = ref<number | null>(null);
@@ -1499,6 +1550,12 @@ const activeWeaponDef = computed(() => {
   if (!weapon) return null;
   return getWeaponById(weapon.defId) ?? null;
 });
+
+const activeWeaponLocked = computed(() =>
+  activeWeaponIdx.value === null
+    ? false
+    : Boolean(inventoryStore.ownedWeapons[activeWeaponIdx.value]?.locked),
+);
 
 const activeWeaponName = computed(() => {
   if (activeWeaponIdx.value === null) return "";
@@ -1531,7 +1588,7 @@ const handleSellWeapon = () => {
   if (activeWeaponIdx.value === null) return;
   const result = inventoryStore.sellWeapon(activeWeaponIdx.value);
   addLog(result.message);
-  activeWeaponIdx.value = null;
+  if (result.success) activeWeaponIdx.value = null;
 };
 
 // === 戒指弹窗 ===
@@ -1544,6 +1601,12 @@ const activeRingDef = computed(() => {
   if (!ring) return null;
   return getRingById(ring.defId) ?? null;
 });
+
+const activeRingLocked = computed(() =>
+  activeRingIdx.value === null
+    ? false
+    : Boolean(inventoryStore.ownedRings[activeRingIdx.value]?.locked),
+);
 
 const handleEquipRingFromPopup = (slot: 0 | 1) => {
   if (activeRingIdx.value === null) return;
@@ -1563,7 +1626,7 @@ const handleSellRing = () => {
   if (activeRingIdx.value === null) return;
   const result = inventoryStore.sellRing(activeRingIdx.value);
   addLog(result.message);
-  activeRingIdx.value = null;
+  if (result.success) activeRingIdx.value = null;
 };
 
 // === 帽子辅助 ===
@@ -1594,6 +1657,12 @@ const activeHatDef = computed(() => {
   return getHatById(hat.defId) ?? null;
 });
 
+const activeHatLocked = computed(() =>
+  activeHatIdx.value === null
+    ? false
+    : Boolean(inventoryStore.ownedHats[activeHatIdx.value]?.locked),
+);
+
 const handleToggleHatFromPopup = () => {
   if (activeHatIdx.value === null) return;
   handleToggleHat(activeHatIdx.value);
@@ -1603,7 +1672,7 @@ const handleSellHat = () => {
   if (activeHatIdx.value === null) return;
   const result = inventoryStore.sellHat(activeHatIdx.value);
   addLog(result.message);
-  activeHatIdx.value = null;
+  if (result.success) activeHatIdx.value = null;
 };
 
 // === 鞋子辅助 ===
@@ -1634,6 +1703,12 @@ const activeShoeDef = computed(() => {
   return getShoeById(shoe.defId) ?? null;
 });
 
+const activeShoeLocked = computed(() =>
+  activeShoeIdx.value === null
+    ? false
+    : Boolean(inventoryStore.ownedShoes[activeShoeIdx.value]?.locked),
+);
+
 const handleToggleShoeFromPopup = () => {
   if (activeShoeIdx.value === null) return;
   handleToggleShoe(activeShoeIdx.value);
@@ -1643,7 +1718,7 @@ const handleSellShoe = () => {
   if (activeShoeIdx.value === null) return;
   const result = inventoryStore.sellShoe(activeShoeIdx.value);
   addLog(result.message);
-  activeShoeIdx.value = null;
+  if (result.success) activeShoeIdx.value = null;
 };
 
 // === 临时纳戒 ===
