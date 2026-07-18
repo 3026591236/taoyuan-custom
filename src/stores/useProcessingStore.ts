@@ -647,6 +647,8 @@ export const useProcessingStore = defineStore("processing", () => {
   };
 
   const deserialize = (data: ReturnType<typeof serialize>) => {
+    // 机器槽位保存 recipeId；历史 brew_osmanthus 槽位来源明确，可直接沿用新配方输出 ID，
+    // 不改写槽位即可正常完成/收取，也不会误碰无法判断来源的库存。
     machines.value = data.machines ?? [];
     workshopLevel.value = (data as any).workshopLevel ?? 0;
     collapsedGroups.value = new Set((data as any).collapsedGroups ?? []);

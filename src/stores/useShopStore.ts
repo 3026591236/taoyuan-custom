@@ -971,7 +971,6 @@ export const useShopStore = defineStore("shop", () => {
     travelingStock: travelingStock.value,
     shippingBox: shippingBox.value,
     shippedItems: shippedItems.value,
-    marketItemIdSchemaVersion: 2,
     shippingHistory: shippingHistory.value,
     // 保留字段形状兼容旧存档；价格不再持久累加。
     marketAuctions: {},
@@ -981,17 +980,9 @@ export const useShopStore = defineStore("shop", () => {
   const deserialize = (data: any) => {
     travelingStockKey.value = data?.travelingStockKey ?? "";
     travelingStock.value = data?.travelingStock ?? [];
-    const isLegacyItemIdSchema = data?.marketItemIdSchemaVersion !== 2;
-    shippingBox.value = (data?.shippingBox ?? []).map((entry: any) =>
-      isLegacyItemIdSchema && entry?.itemId === "osmanthus_tea"
-        ? { ...entry, itemId: "brewed_osmanthus_tea" }
-        : entry,
-    );
-    shippedItems.value = (data?.shippedItems ?? []).map((itemId: string) =>
-      isLegacyItemIdSchema && itemId === "osmanthus_tea"
-        ? "brewed_osmanthus_tea"
-        : itemId,
-    );
+    // 出货箱与历史出货条目同样没有来源信息；保留旧 ID，避免把真实作物误记为加工品。
+    shippingBox.value = data?.shippingBox ?? [];
+    shippedItems.value = data?.shippedItems ?? [];
     shippingHistory.value = data?.shippingHistory ?? {};
     // 旧版竞价次数曾跨日永久累加；读档时不继承历史涨价，按当前游戏日重新定价。
     marketAuctions.value = {};
