@@ -465,8 +465,36 @@
 
         <!-- ===== 反馈 ===== -->
         <template v-if="activeTab === 'feedback'">
-          <div class="max-h-[40vh] overflow-y-auto flex flex-col space-y-3">
-            <div class="border border-accent/20 rounded-xs p-3 mr-1">
+          <div class="max-h-[55vh] overflow-y-auto flex flex-col space-y-3">
+            <div class="grid grid-cols-2 gap-1 mr-1">
+              <button
+                class="py-1.5 border rounded-xs text-xs transition-colors"
+                :class="
+                  feedbackPanel === 'submit'
+                    ? 'border-accent bg-accent/20 text-accent'
+                    : 'border-accent/20 text-muted'
+                "
+                @click="feedbackPanel = 'submit'"
+              >
+                提交反馈
+              </button>
+              <button
+                class="py-1.5 border rounded-xs text-xs transition-colors"
+                :class="
+                  feedbackPanel === 'mine'
+                    ? 'border-accent bg-accent/20 text-accent'
+                    : 'border-accent/20 text-muted'
+                "
+                @click="openMyFeedbacks"
+              >
+                我的反馈
+              </button>
+            </div>
+
+            <div
+              v-if="feedbackPanel === 'submit'"
+              class="border border-accent/20 rounded-xs p-3 mr-1"
+            >
               <p class="text-xs text-muted mb-2">提交反馈</p>
               <div class="flex space-x-2 mb-3">
                 <button
@@ -530,6 +558,96 @@
                 >
                   {{ feedbackMsg }}
                 </p>
+              </div>
+            </div>
+
+            <div
+              v-else
+              class="border border-accent/20 rounded-xs p-3 mr-1 text-left"
+            >
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <div>
+                  <p class="text-xs text-muted">我的反馈</p>
+                  <p class="text-[10px] text-muted/60 mt-0.5">
+                    仅显示当前登录账号最近 50 条
+                  </p>
+                </div>
+                <Button
+                  class="py-1 px-2 text-[10px]"
+                  :disabled="myFeedbacksBusy"
+                  @click="loadMyFeedbacks"
+                >
+                  {{ myFeedbacksBusy ? "刷新中..." : "刷新" }}
+                </Button>
+              </div>
+              <p
+                v-if="!accountToken()"
+                class="text-xs text-muted py-4 text-center"
+              >
+                请先登录账号后查看反馈记录。
+              </p>
+              <p
+                v-else-if="myFeedbacksError"
+                class="text-xs text-danger py-3 text-center"
+              >
+                {{ myFeedbacksError }}
+              </p>
+              <p
+                v-else-if="myFeedbacksBusy && !myFeedbacks.length"
+                class="text-xs text-muted py-4 text-center"
+              >
+                正在加载...
+              </p>
+              <p
+                v-else-if="!myFeedbacks.length"
+                class="text-xs text-muted py-4 text-center"
+              >
+                还没有提交过反馈。
+              </p>
+              <div v-else class="space-y-2">
+                <details
+                  v-for="item in myFeedbacks"
+                  :key="item.id"
+                  class="border border-accent/15 rounded-xs p-2"
+                >
+                  <summary class="cursor-pointer list-none">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="text-xs text-text truncate">
+                          {{ item.title }}
+                        </p>
+                        <p class="text-[10px] text-muted mt-0.5">
+                          {{ feedbackCategoryLabel(item.category) }} ·
+                          {{ formatFeedbackTime(item.createdAt) }}
+                        </p>
+                      </div>
+                      <span
+                        class="shrink-0 px-1.5 py-0.5 rounded-xs text-[10px]"
+                        :class="feedbackStatusClass(item.status)"
+                        >{{ feedbackStatusLabel(item.status) }}</span
+                      >
+                    </div>
+                    <p
+                      class="text-[10px] text-muted/70 mt-1 line-clamp-2 whitespace-pre-wrap"
+                    >
+                      {{ item.content }}
+                    </p>
+                  </summary>
+                  <div class="mt-2 pt-2 border-t border-accent/10">
+                    <p class="text-xs whitespace-pre-wrap break-words">
+                      {{ item.content }}
+                    </p>
+                    <div
+                      v-if="item.adminReply"
+                      class="mt-2 p-2 bg-accent/10 rounded-xs"
+                    >
+                      <p class="text-[10px] text-accent mb-1">处理回复</p>
+                      <p class="text-xs whitespace-pre-wrap">
+                        {{ item.adminReply }}
+                      </p>
+                    </div>
+                  </div>
+                </details>
               </div>
             </div>
           </div>
@@ -696,6 +814,19 @@ const feedbackContent = ref("");
 const feedbackBusy = ref(false);
 const feedbackMsg = ref("");
 const feedbackOk = ref(false);
+const feedbackPanel = ref<"submit" | "mine">("submit");
+type MyFeedback = {
+  id: number | string;
+  category: string;
+  title: string;
+  content: string;
+  status: string;
+  adminReply?: string | null;
+  createdAt: string;
+};
+const myFeedbacks = ref<MyFeedback[]>([]);
+const myFeedbacksBusy = ref(false);
+const myFeedbacksError = ref("");
 const accountToken = () =>
   localStorage.getItem("taoyuan_account_token") ||
   localStorage.getItem("taoyuan_token") ||
@@ -707,6 +838,62 @@ const playerName = () => {
   } catch {
     return "";
   }
+};
+
+const feedbackCategoryLabel = (category: string) =>
+  category === "feature"
+    ? "功能建议"
+    : category === "bug"
+      ? "BUG反馈"
+      : "意见提交";
+const feedbackStatusLabel = (status: string) =>
+  status === "resolved"
+    ? "已解决"
+    : status === "closed"
+      ? "已关闭"
+      : status === "read" || status === "reviewed" || status === "processing"
+        ? "已查看"
+        : "待查看";
+const feedbackStatusClass = (status: string) =>
+  status === "resolved"
+    ? "bg-success/15 text-success"
+    : status === "closed"
+      ? "bg-muted/15 text-muted"
+      : status === "read" || status === "reviewed" || status === "processing"
+        ? "bg-accent/15 text-accent"
+        : "bg-yellow-400/15 text-yellow-400";
+const formatFeedbackTime = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value || "未知时间"
+    : date.toLocaleString();
+};
+const loadMyFeedbacks = async () => {
+  const t = accountToken();
+  if (!t) {
+    myFeedbacks.value = [];
+    myFeedbacksError.value = "";
+    return;
+  }
+  myFeedbacksBusy.value = true;
+  myFeedbacksError.value = "";
+  try {
+    const res = await fetch("/api/feedbacks?limit=50", {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "加载失败");
+    myFeedbacks.value = Array.isArray(data.feedbacks) ? data.feedbacks : [];
+  } catch (error) {
+    myFeedbacksError.value =
+      error instanceof Error ? error.message : "加载失败，请稍后重试。";
+  } finally {
+    myFeedbacksBusy.value = false;
+  }
+};
+const openMyFeedbacks = () => {
+  feedbackPanel.value = "mine";
+  void loadMyFeedbacks();
 };
 
 const submitFeedback = async () => {
@@ -735,6 +922,7 @@ const submitFeedback = async () => {
       feedbackTitle.value = "";
       feedbackContent.value = "";
       feedbackCategory.value = "feature";
+      void loadMyFeedbacks();
     } else {
       const d = await res.json().catch(() => ({}));
       feedbackOk.value = false;

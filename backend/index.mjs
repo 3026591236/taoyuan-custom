@@ -647,9 +647,16 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.1.1 我的反馈与补偿补发",
+      date: "2026-07-18",
+      content:
+        "反馈入口新增“我的反馈”列表，可查看本人提交内容以及待查看、已查看、已解决或已关闭状态；管理员打开反馈列表后，待查看项目会更新为已查看。补发此前筛选遗漏的未禁用管理员 V3.1.0 综合更新补偿。",
+    },
+    {
       title: "V3.0.9 综合体验与周期修复",
       date: "2026-07-18",
-      content: "修复瀚海禁地商路与灵兽派遣不推进；签到连续天数日期解析；月度修行令改按现实自然月；奇遇进度保持长期存档不随游戏周期清空；下调符箓战力上限并让本命法宝保持主成长地位；云靴前期改用可稳定获取的云灵丝；物品来源提示覆盖纳戒与加工材料；百工坊新增一键加工/收取；灵牧苑沿用并强化喂食全部；百艺补充宗门与道统说明。"
+      content:
+        "修复瀚海禁地商路与灵兽派遣不推进；签到连续天数日期解析；月度修行令改按现实自然月；奇遇进度保持长期存档不随游戏周期清空；下调符箓战力上限并让本命法宝保持主成长地位；云靴前期改用可稳定获取的云灵丝；物品来源提示覆盖纳戒与加工材料；百工坊新增一键加工/收取；灵牧苑沿用并强化喂食全部；百艺补充宗门与道统说明。",
     },
     {
       date: "2026-07-17",
@@ -2628,6 +2635,38 @@ app.post("/api/feedbacks", async (req, res) => {
   }
 });
 
+// --- 玩家查看自己的反馈（必须按登录账号过滤，禁止传入任意 userId） ---
+app.get("/api/feedbacks", async (req, res) => {
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录账号" });
+    const limit = Math.max(1, Math.min(Number(req.query.limit) || 50, 100));
+    const [rows] = await pool.execute(
+      `SELECT id, category, title, content, status, created_at
+       FROM feedbacks
+       WHERE user_id = ?
+       ORDER BY created_at DESC, id DESC
+       LIMIT ${limit}`,
+      [user.id],
+    );
+    send(res, 200, {
+      feedbacks: rows.map((row) => ({
+        id: row.id,
+        category: row.category,
+        title: row.title,
+        content: row.content,
+        status: row.status,
+        adminReply: null,
+        createdAt: row.created_at,
+        updatedAt: null,
+      })),
+    });
+  } catch (e) {
+    console.error("feedback list err", e);
+    send(res, 500, { error: "服务器错误" });
+  }
+});
+
 // --- 管理员查看反馈 ---
 app.get("/api/admin/feedbacks", async (req, res) => {
   try {
@@ -2650,6 +2689,20 @@ app.get("/api/admin/feedbacks", async (req, res) => {
       `SELECT f.* FROM feedbacks f ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY f.id DESC LIMIT ${limit}`,
       params,
     );
+    const pendingIds = rows
+      .filter((row) => row.status === "pending")
+      .map((row) => Number(row.id))
+      .filter(Number.isSafeInteger);
+    if (pendingIds.length) {
+      const placeholders = pendingIds.map(() => "?").join(",");
+      await pool.execute(
+        `UPDATE feedbacks SET status = 'read' WHERE status = 'pending' AND id IN (${placeholders})`,
+        pendingIds,
+      );
+      for (const row of rows) {
+        if (pendingIds.includes(Number(row.id))) row.status = "read";
+      }
+    }
     send(res, 200, { feedbacks: rows });
   } catch (e) {
     console.error("admin feedbacks err", e);
