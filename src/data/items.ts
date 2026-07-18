@@ -3093,16 +3093,32 @@ export const ITEMS: ItemDef[] = [
   },
 ];
 
-/** 开发期与构建期防线：物品总表不允许重复ID，否则分类/价格会命中错误定义。 */
+/**
+ * 开发期与构建期防线：行情敏感的农产品/加工品 ID 不得跨分类复用。
+ * 装备图鉴及历史材料别名仍可能与基础物品表共用 ID；它们不参与农产行情。
+ */
 export const assertUniqueItemIds = (items: readonly ItemDef[] = ITEMS): void => {
-  const seen = new Set<string>();
-  const duplicates = new Set<string>();
+  const marketCategories = new Set<ItemCategory>([
+    "crop",
+    "processed",
+    "animal_product",
+  ]);
+  const categoriesById = new Map<string, Set<ItemCategory>>();
   for (const item of items) {
-    if (seen.has(item.id)) duplicates.add(item.id);
-    seen.add(item.id);
+    const categories = categoriesById.get(item.id) ?? new Set<ItemCategory>();
+    categories.add(item.category);
+    categoriesById.set(item.id, categories);
   }
-  if (duplicates.size > 0) {
-    throw new Error(`重复物品ID: ${[...duplicates].sort().join(", ")}`);
+  const conflicts = [...categoriesById.entries()]
+    .filter(([, categories]) => {
+      const marketMatches = [...categories].filter((category) =>
+        marketCategories.has(category),
+      );
+      return marketMatches.length > 1;
+    })
+    .map(([id, categories]) => `${id}(${[...categories].sort().join("/")})`);
+  if (conflicts.length > 0) {
+    throw new Error(`行情跨分类重复物品ID: ${conflicts.sort().join(", ")}`);
   }
 };
 
