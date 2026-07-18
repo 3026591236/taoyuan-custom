@@ -235,9 +235,27 @@ export const useShopStore = defineStore("shop", () => {
 
   // === 万物铺 (陈伯) ===
 
-  /** 当前季节可购买的灵种 */
+  /** 修仙线关键灵植种子：避免因季节切换从万物铺消失，导致宗门订单/炼丹链断供 */
+  const ALWAYS_AVAILABLE_SPIRIT_SEED_IDS = new Set([
+    'seed_spirit_rice',
+    'seed_dew_grass',
+    'seed_vermilion_fruit',
+    'seed_ice_soul_lotus',
+    'seed_purple_ganoderma'
+  ]);
+
+  /** 当前可购买的灵种 */
   const availableSeeds = computed(() => {
-    return getCropsBySeason(gameStore.season)
+    const crops = getCropsBySeason(gameStore.season);
+    const bySeedId = new Map(crops.map((crop) => [crop.seedId, crop]));
+    for (const season of ['spring', 'summer', 'autumn', 'winter'] as const) {
+      for (const crop of getCropsBySeason(season)) {
+        if (ALWAYS_AVAILABLE_SPIRIT_SEED_IDS.has(crop.seedId)) {
+          bySeedId.set(crop.seedId, crop);
+        }
+      }
+    }
+    return Array.from(bySeedId.values())
       .filter((crop) => crop.seedPrice > 0)
       .map((crop) => ({
         seedId: crop.seedId,

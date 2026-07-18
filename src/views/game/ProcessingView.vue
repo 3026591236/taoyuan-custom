@@ -55,6 +55,11 @@
         </button>
       </div>
 
+      <div v-if="processingStore.machines.length" class="grid grid-cols-2 gap-2 mb-2">
+        <Button class="justify-center" :icon="Play" @click="handleStartAll">一键加工</Button>
+        <Button class="justify-center" :icon="Package" @click="handleCollectAll">一键收取</Button>
+      </div>
+
       <!-- 只显示可加工 -->
       <label
         class="flex items-center space-x-1 mb-2 cursor-pointer select-none"
@@ -194,7 +199,7 @@
                         ({{ getItemName(recipe.inputItemId) }}
                         {{ getCombinedItemCount(recipe.inputItemId) }}/{{
                           recipe.inputQuantity
-                        }})
+                        }} · 来源：{{ getItemSource(recipe.inputItemId) }})
                       </span>
                     </Button>
                   </div>
@@ -572,6 +577,7 @@ import {
   Hammer,
   Trash2,
   Package,
+  Play,
   Boxes,
   X,
   ArrowUpCircle,
@@ -611,7 +617,7 @@ import {
   BOMBS,
   getProcessingRecipeById,
 } from "@/data/processing";
-import { getItemById, CHEST_DEFS, CHEST_TIER_ORDER } from "@/data/items";
+import { getItemById, getItemSource, CHEST_DEFS, CHEST_TIER_ORDER } from "@/data/items";
 import { ACTION_TIME_COSTS } from "@/data/timeConstants";
 import { sfxClick } from "@/composables/useAudio";
 import { addLog } from "@/composables/useGameLog";
@@ -1401,6 +1407,16 @@ const handleStartProcessing = (
   } else {
     addLog("原料不足或机器正在使用。");
   }
+};
+
+const handleStartAll = () => {
+  const count = processingStore.startAllAvailable();
+  addLog(count > 0 ? `一键启动了${count}台加工机器。` : "没有空闲且材料足够的机器。");
+};
+
+const handleCollectAll = () => {
+  const outputs = processingStore.collectAllProducts();
+  addLog(outputs.length > 0 ? `一键收取了${outputs.length}份加工产物。` : "没有可收取的加工产物。");
 };
 
 const handleCollect = (slotIndex: number) => {

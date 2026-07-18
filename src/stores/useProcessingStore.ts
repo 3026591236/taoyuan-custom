@@ -278,6 +278,30 @@ export const useProcessingStore = defineStore("processing", () => {
     return recipe.outputItemId;
   };
 
+  /** 一键收取所有已完成产物 */
+  const collectAllProducts = (): string[] => {
+    const outputs: string[] = [];
+    for (let i = 0; i < machines.value.length; i++) {
+      const output = collectProduct(i);
+      if (output) outputs.push(output);
+    }
+    return outputs;
+  };
+
+  /** 一键加工：每台空闲机器自动选择第一项材料足够的配方 */
+  const startAllAvailable = (): number => {
+    let started = 0;
+    for (let i = 0; i < machines.value.length; i++) {
+      const slot = machines.value[i]!;
+      if (slot.recipeId) continue;
+      const recipe = getRecipesForMachine(slot.machineType).find((r) =>
+        r.inputItemId === null || hasCombinedItem(r.inputItemId, r.inputQuantity),
+      );
+      if (recipe && startProcessing(i, recipe.id)) started++;
+    }
+    return started;
+  };
+
   /** 拆除机器（退回加工原料 + 已完成产物 + 机器制作材料） */
   const removeMachine = (slotIndex: number): boolean => {
     const slot = machines.value[slotIndex];
@@ -597,6 +621,8 @@ export const useProcessingStore = defineStore("processing", () => {
     craftBomb,
     startProcessing,
     collectProduct,
+    collectAllProducts,
+    startAllAvailable,
     cancelProcessing,
     removeMachine,
     getAvailableRecipes,

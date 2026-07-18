@@ -564,9 +564,12 @@ export const useLongTermStore = defineStore("longTerm", () => {
   const dayKey = computed(
     () => `${game().year}-${game().season}-${game().day}`,
   );
-  const monthKeyNow = computed(
-    () => `${game().year}-${Math.ceil(game().day / 28)}`,
-  );
+  // 月度修行令按现实自然月结算，不能随游戏内快速推进的年月反复刷新。
+  const monthKeyNow = computed(() => {
+    const now = new Date();
+    const shanghai = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    return shanghai.toISOString().slice(0, 7);
+  });
   const daysAway = computed(() => {
     if (!lastSeenDayKey.value) return 0;
     const [, , d] = lastSeenDayKey.value.split("-");

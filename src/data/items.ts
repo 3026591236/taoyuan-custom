@@ -3307,7 +3307,7 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   demon_core: "秘境首领、凶兽挑战、登仙塔精英",
   jade_slip: "古修遗府、宗门委派、秘境抉择",
   spirit_ink: "制符/宗门委派；灵砂与妖兽材料调制",
-  cloud_silk: "冥蛛/风暴鹰掉落；高阶织造订单",
+  cloud_silk: "万物铺少量供应；冥蛛/风暴鹰掉落；高阶织造订单",
 };
 
 /** 获取物品来源描述 */

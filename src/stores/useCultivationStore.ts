@@ -67,8 +67,8 @@ export const DAO_GEAR: DaoGearDef[] = [
     slot: "boots",
     name: "云靴",
     desc: "踏云追风的修仙靴履，提升身法与秘境周旋能力。",
-    material: { itemId: "storm_feather", name: "风羽", quantity: 1 },
-    spiritStoneCost: 14,
+    material: { itemId: "cloud_silk", name: "云灵丝", quantity: 1 },
+    spiritStoneCost: 10,
     powerPerLevel: 320,
     tribulationPerLevel: 0.008,
     maxLevel: 9,
@@ -1298,7 +1298,8 @@ export const useCultivationStore = defineStore("cultivation", () => {
         (sum, t) => sum + (talismans.value[t.id] || 0) * t.power,
         0,
       ) * talismanEffectMultiplier.value;
-    return Math.floor(Math.min(18000, raw));
+    // 符阵是消耗品辅助，不应压过本命法宝/道器主成长线。
+    return Math.floor(Math.min(6000, raw * 0.45));
   });
   const talismanTribulationBonus = computed(() => {
     const raw =

@@ -637,6 +637,11 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.0.9 综合体验与周期修复",
+      date: "2026-07-18",
+      content: "修复瀚海禁地商路与灵兽派遣不推进；签到连续天数日期解析；月度修行令改按现实自然月；奇遇进度保持长期存档不随游戏周期清空；下调符箓战力上限并让本命法宝保持主成长地位；云靴前期改用可稳定获取的云灵丝；物品来源提示覆盖纳戒与加工材料；百工坊新增一键加工/收取；灵牧苑沿用并强化喂食全部；百艺补充宗门与道统说明。"
+    },
+    {
       date: "2026-07-17",
       title: "V3.0.8 刷新恢复当前存档修复",
       content:
@@ -2132,10 +2137,10 @@ function addDaysKey(key, days) {
 }
 async function getCheckinStreak(userId, today) {
   const [rows] = await pool.execute(
-    "SELECT check_date FROM checkins WHERE user_id = ? ORDER BY check_date DESC LIMIT 60",
+    "SELECT DATE_FORMAT(check_date, '%Y-%m-%d') AS check_date FROM checkins WHERE user_id = ? ORDER BY check_date DESC LIMIT 60",
     [userId],
   );
-  const set = new Set(rows.map((r) => localDateKey(0, new Date(r.check_date))));
+  const set = new Set(rows.map((r) => String(r.check_date).slice(0, 10)));
   let cursor = today;
   let streak = 0;
   while (set.has(cursor)) {

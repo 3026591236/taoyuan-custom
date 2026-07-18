@@ -20,6 +20,7 @@ import { useQuestStore } from "@/stores/useQuestStore";
 import { useFishingStore } from "@/stores/useFishingStore";
 import { useBreedingStore } from "@/stores/useBreedingStore";
 import { useHanhaiStore } from "@/stores/useHanhaiStore";
+import { useCultivationStore } from "@/stores/useCultivationStore";
 import { useFishPondStore } from "@/stores/useFishPondStore";
 import { useTutorialStore } from "@/stores/useTutorialStore";
 import { useHiddenNpcStore } from "@/stores/useHiddenNpcStore";
@@ -775,7 +776,11 @@ export const handleEndDay = () => {
   // 通商售货结算
   if (hanhaiStore.unlocked) {
     hanhaiStore.dailyTradeUpdate();
+    for (const message of hanhaiStore.dailyCaravanUpdate()) addLog(message);
   }
+  // 灵兽委托与商队一样按游戏日推进；旧流程漏调导致仙鹤等派出后永不归来。
+  const beastExpeditionMessage = useCultivationStore().dailyBeastExpeditionUpdate();
+  if (beastExpeditionMessage) addLog(beastExpeditionMessage);
   const museumStore = useMuseumStore();
   const museumIncome = museumStore.dailyMuseumUpdate(
     `${gameStore.year}-${gameStore.season}-${gameStore.day}`,

@@ -4,6 +4,10 @@
       <Star :size="14" class="inline" />
       百艺
     </h3>
+    <div class="border border-water/20 rounded-xs p-3 mb-3 bg-water/5">
+      <p class="text-xs text-water mb-1">百艺、宗门与道统</p>
+      <p class="text-[10px] text-muted leading-relaxed">百艺提升日常生产效率与品质；加入宗门后，宗门百艺会按流派强化战斗、炼丹或符阵，并随职位开放日课、宝库和委派。飞升后的道统是更长期的传承路线，会进一步改变修炼、战斗与资源收益，可在「道统」及仙界界面查看当前传承效果。</p>
+    </div>
     <div class="border border-accent/20 rounded-xs p-3 mb-3 bg-accent/5">
       <div class="flex items-center justify-between mb-2">
         <p class="text-xs text-accent">生活职业委托</p>
