@@ -1291,15 +1291,27 @@ export const useInventoryStore = defineStore("inventory", () => {
       equipmentPresets: equipmentPresets.value,
       activePresetId: activePresetId.value,
       quickUseItems: quickUseItems.value,
+      itemIdSchemaVersion: 2,
     };
   };
 
   const deserialize = (data: ReturnType<typeof serialize>) => {
-    items.value = (data.items ?? []).filter((i) => getItemById(i.itemId));
+    const isLegacyItemIdSchema = (data as any).itemIdSchemaVersion !== 2;
+    const migrateLegacyOsmanthusTea = (item: InventoryItem): InventoryItem => {
+      // 旧版加工桂花茶与育种作物共用 osmanthus_tea，旧存档无法再还原来源。
+      // 首次迁移统一按加工茶饮保留，之后依靠版本标记避免误改新版育种作物。
+      if (isLegacyItemIdSchema && item.itemId === "osmanthus_tea") {
+        return { ...item, itemId: "brewed_osmanthus_tea" };
+      }
+      return item;
+    };
+    items.value = (data.items ?? [])
+      .map(migrateLegacyOsmanthusTea)
+      .filter((i) => getItemById(i.itemId));
     capacity.value = data.capacity ?? INITIAL_CAPACITY;
-    tempItems.value = ((data as any).tempItems ?? []).filter(
-      (i: InventoryItem) => getItemById(i.itemId),
-    );
+    tempItems.value = ((data as any).tempItems ?? [])
+      .map(migrateLegacyOsmanthusTea)
+      .filter((i: InventoryItem) => getItemById(i.itemId));
     tools.value = data.tools ?? [
       { type: "wateringCan", tier: "basic", masteryLevel: 0 },
       { type: "hoe", tier: "basic", masteryLevel: 0 },

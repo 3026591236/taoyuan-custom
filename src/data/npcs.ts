@@ -59,7 +59,7 @@ export const NPCS: NpcDef[] = [
       "rabbit_foot",
       "hanhai_silk",
       "osmanthus_honey",
-      "osmanthus_tea",
+      "brewed_osmanthus_tea",
     ],
     hatedItems: ["iron_ore", "firewood"],
     dialogues: {

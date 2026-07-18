@@ -210,12 +210,12 @@ export const useShopStore = defineStore("shop", () => {
   /** 当前选中的商铺（null=万象市集总览） */
   const currentShopId = ref<string | null>(null);
   type PlayerAuctionId =
-    "spirit_bone_lot" | "cloud_silk_lot" | "artifact_core_lot";
-  const marketAuctions = ref<Record<PlayerAuctionId, number>>({
-    spirit_bone_lot: 0,
-    cloud_silk_lot: 0,
-    artifact_core_lot: 0,
-  });
+    | "spirit_bone_lot"
+    | "cloud_silk_lot"
+    | "artifact_core_lot"
+    | "herb_bundle_lot"
+    | "pill_bundle_lot";
+  const marketAuctions = ref<Partial<Record<PlayerAuctionId, number>>>({});
   const marketAuctionClaimed = ref<string[]>([]);
 
   // === 折扣系统 ===
@@ -837,90 +837,118 @@ export const useShopStore = defineStore("shop", () => {
     }));
   });
 
+  type AuctionCurrency = "spirit_stone";
   const PLAYER_MARKET_AUCTIONS: {
     id: PlayerAuctionId;
     name: string;
     desc: string;
-    itemId: string;
-    itemName: string;
     baseBid: number;
     step: number;
-    maxBid: number;
+    currency: AuctionCurrency;
     reward: { itemId: string; name: string; quantity: number }[];
   }[] = [
     {
       id: "spirit_bone_lot",
-      name: "玩家拍卖·灵骨整箱",
-      desc: "镇魔与仙盟玩家寄售的灵骨，适合宗门工程与后期维护。",
-      itemId: "spirit_bone",
-      itemName: "灵骨",
-      baseBid: 6000,
-      step: 2200,
-      maxBid: 5,
+      name: "仙市拍卖·灵骨整箱",
+      desc: "镇魔修士寄售的灵骨，适合宗门工程与后期维护。",
+      baseBid: 22,
+      step: 3,
+      currency: "spirit_stone",
       reward: [{ itemId: "spirit_bone", name: "灵骨", quantity: 4 }],
     },
     {
       id: "cloud_silk_lot",
-      name: "玩家拍卖·云纹丝卷",
-      desc: "商路玩家压箱的云纹丝，常用于护具、商路和宗门补给。",
-      itemId: "cloud_silk",
-      itemName: "云纹丝",
-      baseBid: 9000,
-      step: 3200,
-      maxBid: 5,
+      name: "仙市拍卖·云纹丝卷",
+      desc: "商路修士压箱的云纹丝，常用于护具与宗门补给。",
+      baseBid: 30,
+      step: 4,
+      currency: "spirit_stone",
       reward: [{ itemId: "cloud_silk", name: "云纹丝", quantity: 3 }],
     },
     {
       id: "artifact_core_lot",
-      name: "玩家拍卖·残器核心",
-      desc: "高阶炼器玩家拆解出的法宝碎片与雷精组合包。",
-      itemId: "artifact_shard",
-      itemName: "法宝碎片",
-      baseBid: 14000,
-      step: 5200,
-      maxBid: 4,
+      name: "仙市拍卖·残器核心",
+      desc: "高阶炼器修士拆解出的法宝碎片与雷精组合包。",
+      baseBid: 46,
+      step: 6,
+      currency: "spirit_stone",
       reward: [
         { itemId: "artifact_shard", name: "法宝碎片", quantity: 3 },
         { itemId: "thunder_essence", name: "雷精", quantity: 1 },
       ],
     },
+    {
+      id: "herb_bundle_lot",
+      name: "仙市拍卖·百草小匣",
+      desc: "少量常用炼丹药材，适合补齐日常丹方。",
+      baseBid: 6,
+      step: 1,
+      currency: "spirit_stone",
+      reward: [
+        { itemId: "chishao", name: "赤芍", quantity: 4 },
+        { itemId: "chenxiang", name: "沉香", quantity: 3 },
+      ],
+    },
+    {
+      id: "pill_bundle_lot",
+      name: "仙市拍卖·回灵丹匣",
+      desc: "适合日常修炼补给的少量丹药。",
+      baseBid: 10,
+      step: 2,
+      currency: "spirit_stone",
+      reward: [{ itemId: "mana_recovery_pill", name: "回灵丹", quantity: 3 }],
+    },
   ];
 
-  const marketAuctionCards = computed(() =>
-    PLAYER_MARKET_AUCTIONS.map((a) => {
-      const bids = marketAuctions.value[a.id] ?? 0;
-      const key = `${gameStore.year}-${gameStore.season}-${gameStore.day}:${a.id}`;
+  const auctionDayNumber = computed(
+    () => (gameStore.year - 1) * 112 + gameStore.seasonIndex * 28 + gameStore.day,
+  );
+  const auctionDayKey = computed(
+    () => `${gameStore.year}-${gameStore.season}-${gameStore.day}`,
+  );
+  const marketAuctionCards = computed(() => {
+    const start = auctionDayNumber.value % PLAYER_MARKET_AUCTIONS.length;
+    return [0, 1, 2].map((offset) => {
+      const auction = PLAYER_MARKET_AUCTIONS[(start + offset * 2) % PLAYER_MARKET_AUCTIONS.length]!;
+      const seed = auctionDayNumber.value * 131 + auction.id.length * 17;
+      const variation = ((seed % 17) - 8) / 100;
+      const key = `${auctionDayKey.value}:${auction.id}`;
       return {
-        ...a,
-        bids,
-        price: a.baseBid + bids * a.step,
-        capped: bids >= a.maxBid,
+        ...auction,
+        price: Math.max(1, Math.round(auction.baseBid * (1 + variation))),
+        currencyLabel: "灵石",
         claimed: marketAuctionClaimed.value.includes(key),
       };
-    }),
-  );
+    });
+  });
 
   const bidMarketAuction = (
     id: PlayerAuctionId,
   ): { success: boolean; message: string } => {
-    const auction = marketAuctionCards.value.find((a) => a.id === id);
-    if (!auction) return { success: false, message: "拍卖不存在。" };
+    const auction = marketAuctionCards.value.find((entry) => entry.id === id);
+    if (!auction) return { success: false, message: "该拍品今日未上架。" };
     if (auction.claimed)
       return { success: false, message: "今天已经拿下这组拍品。" };
-    if (auction.capped)
-      return { success: false, message: "本轮竞价已到最高价，等待明日刷新。" };
-    if (!playerStore.spendMoney(auction.price))
-      return { success: false, message: `铜钱不足，需要${auction.price}文。` };
-    auction.reward.forEach((item) =>
-      inventoryStore.addItem(item.itemId, item.quantity),
-    );
-    marketAuctions.value[id] = (marketAuctions.value[id] ?? 0) + 1;
-    marketAuctionClaimed.value.push(
-      `${gameStore.year}-${gameStore.season}-${gameStore.day}:${id}`,
-    );
+    if (inventoryStore.getItemCount("spirit_stone") < auction.price)
+      return { success: false, message: `灵石不足，需要${auction.price}枚。` };
+    if (!inventoryStore.removeItem("spirit_stone", auction.price))
+      return { success: false, message: `灵石不足，需要${auction.price}枚。` };
+
+    const added: { itemId: string; quantity: number }[] = [];
+    for (const item of auction.reward) {
+      if (!inventoryStore.addItem(item.itemId, item.quantity)) {
+        for (const rollback of added) {
+          inventoryStore.removeItem(rollback.itemId, rollback.quantity);
+        }
+        inventoryStore.addItem("spirit_stone", auction.price);
+        return { success: false, message: "纳戒空间不足，竞拍未成交。" };
+      }
+      added.push({ itemId: item.itemId, quantity: item.quantity });
+    }
+    marketAuctionClaimed.value.push(`${auctionDayKey.value}:${id}`);
     return {
       success: true,
-      message: `拍下「${auction.name}」：${auction.reward.map((i) => `${i.name}×${i.quantity}`).join("、")}。`,
+      message: `拍下「${auction.name}」：${auction.reward.map((item) => `${item.name}×${item.quantity}`).join("、")}。`,
     };
   };
 
@@ -943,25 +971,35 @@ export const useShopStore = defineStore("shop", () => {
     travelingStock: travelingStock.value,
     shippingBox: shippingBox.value,
     shippedItems: shippedItems.value,
+    marketItemIdSchemaVersion: 2,
     shippingHistory: shippingHistory.value,
-    marketAuctions: marketAuctions.value,
+    // 保留字段形状兼容旧存档；价格不再持久累加。
+    marketAuctions: {},
     marketAuctionClaimed: marketAuctionClaimed.value,
   });
 
   const deserialize = (data: any) => {
     travelingStockKey.value = data?.travelingStockKey ?? "";
     travelingStock.value = data?.travelingStock ?? [];
-    shippingBox.value = data?.shippingBox ?? [];
-    shippedItems.value = data?.shippedItems ?? [];
+    const isLegacyItemIdSchema = data?.marketItemIdSchemaVersion !== 2;
+    shippingBox.value = (data?.shippingBox ?? []).map((entry: any) =>
+      isLegacyItemIdSchema && entry?.itemId === "osmanthus_tea"
+        ? { ...entry, itemId: "brewed_osmanthus_tea" }
+        : entry,
+    );
+    shippedItems.value = (data?.shippedItems ?? []).map((itemId: string) =>
+      isLegacyItemIdSchema && itemId === "osmanthus_tea"
+        ? "brewed_osmanthus_tea"
+        : itemId,
+    );
     shippingHistory.value = data?.shippingHistory ?? {};
-    marketAuctions.value = {
-      spirit_bone_lot: 0,
-      cloud_silk_lot: 0,
-      artifact_core_lot: 0,
-      ...(data?.marketAuctions ?? {}),
-    };
+    // 旧版竞价次数曾跨日永久累加；读档时不继承历史涨价，按当前游戏日重新定价。
+    marketAuctions.value = {};
+    const currentDayPrefix = `${auctionDayKey.value}:`;
     marketAuctionClaimed.value = Array.isArray(data?.marketAuctionClaimed)
-      ? data.marketAuctionClaimed
+      ? data.marketAuctionClaimed.filter((key: unknown) =>
+          typeof key === "string" && key.startsWith(currentDayPrefix),
+        )
       : [];
     currentShopId.value = null;
   };

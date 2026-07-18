@@ -1460,10 +1460,10 @@ export const PROCESSING_RECIPES: ProcessingRecipeDef[] = [
     name: "桂花茶",
     inputItemId: "osmanthus",
     inputQuantity: 2,
-    outputItemId: "osmanthus_tea",
+    outputItemId: "brewed_osmanthus_tea",
     outputQuantity: 1,
     processingDays: 1,
-    description: "馥郁芬芳的桂花茶。",
+    description: "馥郁芬芳的加工桂花茶，与育种灵植桂花茶使用独立物品编号。",
   },
   {
     id: "brew_ginseng",

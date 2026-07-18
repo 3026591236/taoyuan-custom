@@ -166,7 +166,7 @@
             <div class="flex items-center justify-between mb-1">
               <p class="text-xs text-accent">玩家市场 · 拍卖雏形</p>
               <span class="text-[10px] text-muted"
-                >每日限拍，铜钱沉淀与高阶材料流通</span
+                >按游戏日轮换，全部使用灵石结算</span
               >
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -186,14 +186,14 @@
                 </p>
                 <div class="flex items-center justify-between mt-2">
                   <span class="text-[10px] text-warning"
-                    >当前价 {{ lot.price }}文</span
+                    >当前价 {{ lot.price }}{{ lot.currencyLabel }}</span
                   >
                   <button
                     class="mini-btn"
-                    :disabled="lot.claimed || lot.capped"
+                    :disabled="lot.claimed"
                     @click.stop="handleBidAuction(lot.id)"
                   >
-                    {{ lot.claimed ? "已拍下" : lot.capped ? "封顶" : "竞拍" }}
+                    {{ lot.claimed ? "已拍下" : "竞拍" }}
                   </button>
                 </div>
               </div>

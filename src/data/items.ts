@@ -2063,10 +2063,10 @@ const TEA_DRINK_ITEMS: ItemDef[] = [
     healthRestore: 10,
   },
   {
-    id: "osmanthus_tea",
-    name: "桂花茶",
+    id: "brewed_osmanthus_tea",
+    name: "桂花茶（茶饮）",
     category: "processed",
-    description: "馥郁芬芳的桂花茶。",
+    description: "馥郁芬芳的加工桂花茶，与同名育种灵植分开计价。",
     sellPrice: 780,
     edible: true,
     staminaRestore: 30,
@@ -3092,6 +3092,21 @@ export const ITEMS: ItemDef[] = [
     healthRestore: 40,
   },
 ];
+
+/** 开发期与构建期防线：物品总表不允许重复ID，否则分类/价格会命中错误定义。 */
+export const assertUniqueItemIds = (items: readonly ItemDef[] = ITEMS): void => {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const item of items) {
+    if (seen.has(item.id)) duplicates.add(item.id);
+    seen.add(item.id);
+  }
+  if (duplicates.size > 0) {
+    throw new Error(`重复物品ID: ${[...duplicates].sort().join(", ")}`);
+  }
+};
+
+assertUniqueItemIds();
 
 /** 根据ID查找物品 */
 export const getItemById = (id: string): ItemDef | undefined => {
