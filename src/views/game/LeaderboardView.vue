@@ -44,6 +44,11 @@
               >{{ entry.playerName }}</span
             >
             <span
+              v-if="entry.daoTitle"
+              class="dao-title text-[10px] shrink-0"
+              >「{{ entry.daoTitle }}」</span
+            >
+            <span
               v-if="idx < 10"
               class="rank-effect-tag text-[10px]"
               :class="rankTagClass(idx)"
@@ -284,6 +289,11 @@ onMounted(loadLeaderboard);
 .rank-row-top10::before {
   animation-delay: 1s;
   opacity: 0.65;
+}
+
+.dao-title {
+  color: #d8b4fe;
+  white-space: nowrap;
 }
 
 .rank-name {

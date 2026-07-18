@@ -57,8 +57,19 @@ const createAttributes = (): Record<AttributeKey, AttributeState> => ({
   perception: { level: ATTRIBUTE_BASE_LEVEL, exp: 0 },
 });
 
+/** 道号最多 8 个 Unicode 字符；控制/格式字符不进入存档。 */
+export const normalizeDaoTitle = (value: unknown): string =>
+  Array.from(
+    String(value ?? "")
+      .replace(/[\p{Cc}\p{Cf}]/gu, "")
+      .trim(),
+  )
+    .slice(0, 8)
+    .join("");
+
 export const usePlayerStore = defineStore("player", () => {
   const playerName = ref("未命名");
+  const daoTitle = ref("");
   const gender = ref<Gender>("male");
   /** 旧存档加载后需要设置身份（不持久化） */
   const needsIdentitySetup = ref(false);
@@ -353,6 +364,7 @@ export const usePlayerStore = defineStore("player", () => {
   const serialize = () => {
     return {
       playerName: playerName.value,
+      daoTitle: normalizeDaoTitle(daoTitle.value),
       gender: gender.value,
       money: money.value,
       stamina: stamina.value,
@@ -369,6 +381,8 @@ export const usePlayerStore = defineStore("player", () => {
   const deserialize = (data: ReturnType<typeof serialize>) => {
     const hasIdentity = (data as any).playerName != null;
     playerName.value = (data as any).playerName ?? "未命名";
+    // 旧档没有 daoTitle 时保持为空；异常新档也在进入状态前清洗。
+    daoTitle.value = normalizeDaoTitle((data as any).daoTitle);
     gender.value = (data as any).gender ?? "male";
     needsIdentitySetup.value = !hasIdentity;
     money.value = data.money;
@@ -411,6 +425,7 @@ export const usePlayerStore = defineStore("player", () => {
 
   return {
     playerName,
+    daoTitle,
     gender,
     needsIdentitySetup,
     honorific,

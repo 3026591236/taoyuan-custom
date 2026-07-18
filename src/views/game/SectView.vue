@@ -93,6 +93,44 @@
         </div>
       </div>
 
+      <div
+        v-if="canManageDaoTitle"
+        class="border border-accent/20 rounded-xs p-3 space-y-2"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs text-accent">宗门授予道号</p>
+          <span class="text-[10px] text-muted">亲传弟子及以上</span>
+        </div>
+        <p class="text-[10px] text-muted leading-relaxed">
+          可授予或修改自己的道号；留空后保存即可清除。系统会自动去除首尾空白和控制字符，最多保留 8 个 Unicode 字符。
+        </p>
+        <div class="flex gap-2">
+          <input
+            v-model="daoTitleInput"
+            class="flex-1 min-w-0 border border-accent/25 bg-bg rounded-xs px-2 py-1 text-xs"
+            type="text"
+            maxlength="16"
+            inputmode="text"
+            autocomplete="off"
+            placeholder="例如：青玄真人"
+            @keydown.enter="saveDaoTitle"
+          />
+          <button class="btn justify-center text-xs" @click="saveDaoTitle">
+            {{ playerStore.daoTitle ? "修改道号" : "授予道号" }}
+          </button>
+          <button
+            v-if="playerStore.daoTitle"
+            class="btn justify-center text-xs"
+            @click="clearDaoTitle"
+          >
+            清除
+          </button>
+        </div>
+        <p v-if="playerStore.daoTitle" class="text-[10px] text-success">
+          当前道号：「{{ playerStore.daoTitle }}」
+        </p>
+      </div>
+
       <div class="border border-accent/20 rounded-xs p-3 space-y-2">
         <div class="flex items-center justify-between">
           <p class="text-xs text-accent">宗门公共建设</p>
@@ -429,18 +467,62 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import Divider from "@/components/game/Divider.vue";
 import { useCultivationStore } from "@/stores/useCultivationStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
 import { useGameStore } from "@/stores/useGameStore";
 import { useLongTermStore } from "@/stores/useLongTermStore";
+import {
+  normalizeDaoTitle,
+  usePlayerStore,
+} from "@/stores/usePlayerStore";
 import { addLog, showFloat } from "@/composables/useGameLog";
 
 const cultivationStore = useCultivationStore();
 const inventoryStore = useInventoryStore();
 const gameStore = useGameStore();
 const longTerm = useLongTermStore();
+const playerStore = usePlayerStore();
+const daoTitleInput = ref(playerStore.daoTitle);
+const canManageDaoTitle = computed(
+  () => !!cultivationStore.sect && (cultivationStore.sectRank || 0) >= 2,
+);
+
+watch(
+  () => playerStore.daoTitle,
+  (value) => {
+    daoTitleInput.value = value;
+  },
+);
+
+const saveDaoTitle = () => {
+  if (!canManageDaoTitle.value) {
+    showFloat("需加入宗门并晋升亲传弟子后才能授予道号", "danger");
+    return;
+  }
+  const raw = daoTitleInput.value;
+  const normalized = normalizeDaoTitle(raw);
+  const rawWithoutControls = String(raw ?? "").replace(/[\p{Cc}\p{Cf}]/gu, "").trim();
+  const wasTooLong = Array.from(rawWithoutControls).length > 8;
+  playerStore.daoTitle = normalized;
+  daoTitleInput.value = normalized;
+  if (!normalized) {
+    addLog("已清除道号。");
+    showFloat("道号已清除", "success");
+    return;
+  }
+  addLog(`宗门授予道号「${normalized}」。`);
+  showFloat(
+    wasTooLong ? `道号已截为 8 个字符：「${normalized}」` : `道号已设为「${normalized}」`,
+    wasTooLong ? "accent" : "success",
+  );
+};
+
+const clearDaoTitle = () => {
+  daoTitleInput.value = "";
+  saveDaoTitle();
+};
 
 type SectId = "sword" | "alchemy" | "talisman";
 

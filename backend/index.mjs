@@ -27,6 +27,16 @@ function safeJsonParse(val, fallback = null) {
   }
 }
 
+function normalizeDaoTitle(value) {
+  return Array.from(
+    String(value ?? "")
+      .replace(/[\p{Cc}\p{Cf}]/gu, "")
+      .trim(),
+  )
+    .slice(0, 8)
+    .join("");
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE_ROOT =
   process.env.TAOYUAN_SOURCE_ROOT || path.resolve(__dirname, "..");
@@ -2715,6 +2725,8 @@ app.get("/api/leaderboard", async (req, res) => {
         username: r.username,
         playerName:
           p.playerName || p.name || meta.playerName || r.player_name || "无名",
+        // data_json 属于客户端输入，返回排行榜前必须在服务端再次清洗。
+        daoTitle: normalizeDaoTitle(p.daoTitle),
         realmName: realmNameFromSave(cu, asc) || r.cached_realm_name || "凡人",
         realmIndex: realmIdx,
         rebirthCount: Number(cu.rebirthCount || 0) || 0,
