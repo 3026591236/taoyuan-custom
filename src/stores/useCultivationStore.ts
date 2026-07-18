@@ -186,11 +186,11 @@ export const CULTIVATION_MANUALS: Record<
   },
   thunder: {
     name: "九霄雷诀",
-    desc: "引雷淬骨，兼修御雷法门，越到渡劫越显锋芒。",
+    desc: "引雷淬骨，越到渡劫越显锋芒。",
     maxLevel: 9,
     auraCost: 420,
     cultivationCost: 260,
-    effects: "战力提升；每层计入1.5%渡劫功法加成（功法合计上限16%，总成功率上限95%）",
+    effects: "战力提升；每层渡劫成功率+1.5%（九层共+13.5%，总成功率仍封顶95%）",
   },
   void: {
     name: "太虚归元功",
@@ -1535,8 +1535,9 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const yuanShenBonusRate = Math.min(0.16, yuanShenLevel.value * 0.012);
     const fieldBonus = Math.min(0.08, fieldTier.value * 0.015);
     const pillBonus = Math.min(0.12, foundationPillBlessing.value / 30000);
+    // 九霄雷诀每层明确提供1.5%渡劫加成；太虚仍提供较温和的稳定性。
     const manualBonus = Math.min(
-      0.16,
+      0.18,
       manuals.value.thunder * 0.015 + manuals.value.void * 0.008,
     );
     const gearBonus = daoGearTribulationBonus.value;

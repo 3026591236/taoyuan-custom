@@ -441,7 +441,7 @@ const MISC_ITEMS: ItemDef[] = [
     id: "thunder_scripture",
     name: "九霄雷诀",
     category: "misc",
-    description: "引雷淬体的进阶功法秘籍，每层计入1.5%渡劫功法加成；功法加成合计上限16%，总成功率上限95%。",
+    description: "引雷淬体的进阶功法秘籍，每层额外提升1.5%渡劫成功率；功法加成合计上限16%，总成功率上限95%。",
     sellPrice: 3200,
     edible: false,
   },

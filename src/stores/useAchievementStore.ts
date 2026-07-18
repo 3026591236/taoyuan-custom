@@ -4,6 +4,7 @@ import type { AchievementDef, AchievementCondition } from "@/types";
 import { ACHIEVEMENTS, COMMUNITY_BUNDLES } from "@/data/achievements";
 import { ITEMS } from "@/data/items";
 import { HYBRID_DEFS } from "@/data/breeding";
+import { MUSEUM_ITEMS } from "@/data/museum";
 import { usePlayerStore } from "./usePlayerStore";
 import { useInventoryStore } from "./useInventoryStore";
 import { useSkillStore } from "./useSkillStore";
@@ -50,7 +51,7 @@ export const useAchievementStore = defineStore("achievement", () => {
     totalHybridsDiscovered: 0,
     highestHybridTier: 0,
     totalForageActions: 0,
-    totalMiningProgress: 0,
+    totalMiningActions: 0,
     totalMuseumItemsObtained: 0,
   });
 
@@ -101,6 +102,21 @@ export const useAchievementStore = defineStore("achievement", () => {
     }
   };
 
+  const recordForageAction = () => {
+    stats.value.totalForageActions++;
+  };
+
+  const recordMiningAction = () => {
+    stats.value.totalMiningActions++;
+  };
+
+  const museumItemIds = new Set(MUSEUM_ITEMS.map((item) => item.id));
+  const recordItemObtained = (itemId: string, quantity = 1) => {
+    if (museumItemIds.has(itemId)) {
+      stats.value.totalMuseumItemsObtained += Math.max(1, quantity);
+    }
+  };
+
   const recordRecipeCooked = () => {
     stats.value.totalRecipesCooked++;
   };
@@ -127,18 +143,6 @@ export const useAchievementStore = defineStore("achievement", () => {
     if (tier > stats.value.highestHybridTier) {
       stats.value.highestHybridTier = tier;
     }
-  };
-
-  const recordForageAction = () => {
-    stats.value.totalForageActions++;
-  };
-
-  const recordMiningProgress = () => {
-    stats.value.totalMiningProgress++;
-  };
-
-  const recordMuseumItemObtained = (quantity: number = 1) => {
-    stats.value.totalMuseumItemsObtained += Math.max(0, Math.floor(quantity));
   };
 
   // === 功业检查 ===
@@ -430,6 +434,13 @@ export const useAchievementStore = defineStore("achievement", () => {
       highestMineFloor: 0,
       totalRecipesCooked: 0,
       skullCavernBestFloor: 0,
+      totalMonstersKilled: 0,
+      totalBreedingsDone: 0,
+      totalHybridsDiscovered: 0,
+      highestHybridTier: 0,
+      totalForageActions: 0,
+      totalMiningActions: 0,
+      totalMuseumItemsObtained: 0,
     };
     // 兼容旧存档：补充缺失字段
     if (stats.value.skullCavernBestFloor === undefined) {
@@ -456,17 +467,17 @@ export const useAchievementStore = defineStore("achievement", () => {
     ) {
       stats.value.highestHybridTier = 0;
     }
-    if ((stats.value as Record<string, unknown>).totalForageActions === undefined) {
+    if (stats.value.totalForageActions === undefined) {
       stats.value.totalForageActions = 0;
     }
-    if ((stats.value as Record<string, unknown>).totalMiningProgress === undefined) {
-      stats.value.totalMiningProgress = 0;
+    if (stats.value.totalMiningActions === undefined) {
+      stats.value.totalMiningActions = 0;
     }
-    if (
-      (stats.value as Record<string, unknown>).totalMuseumItemsObtained ===
-      undefined
-    ) {
-      stats.value.totalMuseumItemsObtained = 0;
+    if (stats.value.totalMuseumItemsObtained === undefined) {
+      // 无法从旧存档区分历史重复获得，至少以已发现藏品数作为兼容起点。
+      stats.value.totalMuseumItemsObtained = discoveredItems.value.filter((id) =>
+        museumItemIds.has(id),
+      ).length;
     }
     // 同步已拥有装备到图鉴（修复旧存档中装备未登记到图鉴的问题）
     const inventoryStore = useInventoryStore();
@@ -499,15 +510,15 @@ export const useAchievementStore = defineStore("achievement", () => {
     recordFishCaught,
     recordMoneyEarned,
     recordMineFloor,
+    recordForageAction,
+    recordMiningAction,
+    recordItemObtained,
     recordRecipeCooked,
     recordSkullCavernFloor,
     recordMonsterKill,
     recordBreeding,
     recordHybridDiscovered,
     recordHybridTier,
-    recordForageAction,
-    recordMiningProgress,
-    recordMuseumItemObtained,
     checkAchievements,
     perfectionPercent,
     submitToBundle,

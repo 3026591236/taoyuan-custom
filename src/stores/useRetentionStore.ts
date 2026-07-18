@@ -283,7 +283,7 @@ const WEEKLY_TASKS: WeeklyTask[] = [
   {
     id: "weekly_daily_20",
     title: "周令·勤修二十课",
-    desc: "本周完成20个天机榜、特殊订单或主线委托，只按实际交付完成计数。",
+    desc: "本周完成20个乡里或特殊委托，只计实际提交完成的委托。",
     metric: "completedCommissions",
     target: 20,
     reward: {
@@ -324,7 +324,7 @@ const WEEKLY_TASKS: WeeklyTask[] = [
   {
     id: "weekly_museum_3",
     title: "周令·博物三藏",
-    desc: "本周获得3件藏品，重复藏品也会累计。",
+    desc: "本周获得3件藏品，重复藏品也计数。",
     metric: "museumDonations",
     target: 3,
     reward: {
@@ -433,8 +433,6 @@ export const useRetentionStore = defineStore("retention", () => {
   const weeklyClaimed = ref<string[]>([]);
   const weeklyBaselineKey = ref("");
   const weeklyBaselines = ref<Partial<Record<WeeklyMetric, number>>>({});
-  const weeklyBaselineVersion = ref(0);
-  const WEEKLY_BASELINE_VERSION = 2;
   const worldStoryClaimed = ref<string[]>([]);
   const seasonalEventClaimed = ref<string[]>([]);
 
@@ -705,12 +703,8 @@ export const useRetentionStore = defineStore("retention", () => {
   };
 
   const ensureWeeklyState = () => {
-    if (
-      weeklyBaselineKey.value !== weekKey.value ||
-      weeklyBaselineVersion.value !== WEEKLY_BASELINE_VERSION
-    ) {
+    if (weeklyBaselineKey.value !== weekKey.value) {
       weeklyBaselineKey.value = weekKey.value;
-      weeklyBaselineVersion.value = WEEKLY_BASELINE_VERSION;
       weeklyClaimed.value = [];
       weeklyBaselines.value = {};
       WEEKLY_TASKS.forEach((task) => {
@@ -935,7 +929,6 @@ export const useRetentionStore = defineStore("retention", () => {
     weeklyClaimed: weeklyClaimed.value,
     weeklyBaselineKey: weeklyBaselineKey.value,
     weeklyBaselines: weeklyBaselines.value,
-    weeklyBaselineVersion: weeklyBaselineVersion.value,
     worldStoryClaimed: worldStoryClaimed.value,
     seasonalEventClaimed: seasonalEventClaimed.value,
   });
@@ -961,16 +954,17 @@ export const useRetentionStore = defineStore("retention", () => {
       : [];
     weeklyBaselineKey.value = data?.weeklyBaselineKey || "";
     weeklyBaselines.value = data?.weeklyBaselines || {};
-    const savedWeeklyBaselineVersion = Number(data?.weeklyBaselineVersion || 0);
-    weeklyBaselineVersion.value = savedWeeklyBaselineVersion;
-    if (savedWeeklyBaselineVersion < WEEKLY_BASELINE_VERSION) {
-      weeklyBaselineKey.value = weekKey.value;
-      weeklyBaselines.value = {
-        ...weeklyBaselines.value,
-        completedCommissions: getWeeklyRawProgress("completedCommissions"),
-        museumDonations: getWeeklyRawProgress("museumDonations"),
-      };
-      weeklyBaselineVersion.value = WEEKLY_BASELINE_VERSION;
+    // V3.1迁移：旧周基线“dailyClaimed”不可转换为完成委托数，新指标从读档时开始计。
+    if (weeklyBaselineKey.value === weekKey.value) {
+      const legacyBaselines = weeklyBaselines.value as Record<string, number>;
+      if (weeklyBaselines.value.completedCommissions === undefined) {
+        weeklyBaselines.value.completedCommissions = questStore.completedQuestCount;
+      }
+      if (weeklyBaselines.value.museumDonations === undefined) {
+        weeklyBaselines.value.museumDonations =
+          achievementStore.stats.totalMuseumItemsObtained;
+      }
+      delete legacyBaselines.dailyClaimed;
     }
     worldStoryClaimed.value = Array.isArray(data?.worldStoryClaimed)
       ? data.worldStoryClaimed

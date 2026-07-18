@@ -27,7 +27,6 @@ export interface EquipmentPreset {
 }
 import { showFloat } from "@/composables/useGameLog";
 import { getItemById } from "@/data/items";
-import { MUSEUM_ITEMS } from "@/data/museum";
 import {
   getWeaponById,
   getEnchantmentById,
@@ -283,13 +282,15 @@ export const useInventoryStore = defineStore("inventory", () => {
     itemId: string,
     quantity: number = 1,
     quality: Quality = "normal",
-    countAsObtained: boolean = true,
+    recordObtained = true,
   ): boolean => {
     // 校验物品是否存在
     if (!getItemById(itemId)) return false;
     // 自动注册到图鉴
-    useAchievementStore().discoverItem(itemId);
-    let remaining = quantity;
+    const achievementStore = useAchievementStore();
+    achievementStore.discoverItem(itemId);
+    const requestedQuantity = Math.max(0, quantity);
+    let remaining = requestedQuantity;
 
     // 先填充已有的同类栈
     for (const slot of items.value) {
@@ -333,15 +334,6 @@ export const useInventoryStore = defineStore("inventory", () => {
       }
     }
 
-    const storedQuantity = Math.max(0, quantity - remaining);
-    if (
-      countAsObtained &&
-      storedQuantity > 0 &&
-      MUSEUM_ITEMS.some((museumItem) => museumItem.id === itemId)
-    ) {
-      useAchievementStore().recordMuseumItemObtained(storedQuantity);
-    }
-
     if (remaining > 0) {
       const name = getItemById(itemId)?.name ?? itemId;
       showFloat(`纳戒已满！${name}×${remaining}丢失了`, "danger");
@@ -353,6 +345,9 @@ export const useInventoryStore = defineStore("inventory", () => {
       }
     }
 
+    const addedQuantity = requestedQuantity - remaining;
+    if (recordObtained && addedQuantity > 0)
+      achievementStore.recordItemObtained(itemId, addedQuantity);
     return remaining <= 0;
   };
 
