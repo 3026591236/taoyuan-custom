@@ -62,8 +62,8 @@ import router from "@/router";
 const NPC_NAME_MAP: Record<string, string> = {
   chen_bo: "顾百川",
   liu_niang: "陆清和",
-  a_shi: "阿石",
-  qiu_yue: "秋月",
+  a_shi: "裴砚川",
+  qiu_yue: "沈听澜",
   lin_lao: "林老",
   xiao_man: "小满",
   chun_lan: "春兰",

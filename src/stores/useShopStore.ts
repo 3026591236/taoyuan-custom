@@ -393,7 +393,7 @@ export const useShopStore = defineStore("shop", () => {
     },
   ]);
 
-  // === 渔具铺 (秋月) ===
+  // === 星澜河务所 (沈听澜) ===
 
   /** 可购买的鱼饵（shopPrice != null） */
   const shopBaits = computed(() =>
@@ -415,7 +415,7 @@ export const useShopStore = defineStore("shop", () => {
     })),
   );
 
-  /** 渔具铺其他商品 */
+  /** 星澜河务所其他商品 */
   const fishingShopItems = computed<ShopItemEntry[]>(() => [
     {
       itemId: "crab_pot",
@@ -1005,7 +1005,7 @@ export const useShopStore = defineStore("shop", () => {
     buySeed,
     // 铁匠铺
     blacksmithItems,
-    // 渔具铺
+    // 星澜河务所
     shopBaits,
     shopTackles,
     fishingShopItems,

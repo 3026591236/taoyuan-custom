@@ -449,10 +449,10 @@ const advanceRound = () => {
 };
 
 const finishContest = () => {
-  // 每个NPC有不同实力：秋月是高手，顾百川经验丰富，小满运气型
+  // 参赛者能力不同：沈听澜熟悉鱼汛，顾百川经验稳健，小满临场发挥
   const npcProfiles: { name: string; perfectRate: number; goodRate: number }[] =
     [
-      { name: "秋月", perfectRate: 0.55, goodRate: 0.9 },
+      { name: "沈听澜", perfectRate: 0.55, goodRate: 0.9 },
       { name: "顾百川", perfectRate: 0.45, goodRate: 0.85 },
       { name: "小满", perfectRate: 0.35, goodRate: 0.8 },
     ];

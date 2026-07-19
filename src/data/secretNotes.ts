@@ -13,7 +13,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 2,
     type: "treasure",
-    title: "矿工的遗书",
+    title: "旧矿班撤离单",
     content:
       "我把毕生积蓄藏在玄矿幽脉第20层的一个隐秘角落……如果你能找到这封信，这些钱就归你了。",
     usable: true,
@@ -47,9 +47,9 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 6,
     type: "tip",
-    title: "垂钓心得",
+    title: "沈听澜的鱼汛边注",
     content:
-      "满月的夜晚，水中的鱼儿格外活跃。如果你想钓到稀有的鱼，不妨在月圆之夜试试。",
+      "月相会影响部分鱼群活动，但水温、流速和产卵期同样重要。沈听澜在旧说旁补了一句：稀有不等于应当捕走，遇到标记鱼或抱卵鱼应立即放流并记录水段。",
     usable: false,
   },
   {
@@ -63,9 +63,9 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 8,
     type: "story",
-    title: "万象乡志·下",
+    title: "万象乡志·河矿公约",
     content:
-      "隐士去世后，集民们世代守护着这片土地。他们定下规矩：不许砍伐桃花林，不许污染溪水。万象仙乡就这样安静地度过了百年时光。",
+      "早期集民曾因滥伐护岸林、密网截鱼与无序开矿付出代价。后来公议形成河矿公约：护岸林分区轮护，产卵期设置禁捕段，矿道必须登记返程牌与闭井信号。规矩并非先人遗训，而是一次次事故后共同修订的结果。",
     usable: false,
   },
   {

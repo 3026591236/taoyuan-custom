@@ -698,9 +698,9 @@
           </div>
         </template>
 
-        <!-- ====== 渔具铺 ====== -->
+        <!-- ====== 星澜河务所 ====== -->
         <template v-else-if="shopStore.currentShopId === 'yugupu'">
-          <ShopHeader name="渔具铺" npc="秋月" />
+          <ShopHeader name="星澜河务所" npc="沈听澜" />
 
           <!-- 鱼饵 -->
           <h4 class="text-accent text-sm mb-2">

@@ -161,7 +161,7 @@ interface Boat {
 
 const boats = ref<Boat[]>([
   { name: "你", progress: 0 },
-  { name: "阿石队", progress: 0 },
+  { name: "地脉勘验队", progress: 0 },
   { name: "小满队", progress: 0 },
 ]);
 

@@ -33,7 +33,7 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 15,
       buff: { type: "fishing", value: 1, description: "垂钓百艺+1（当天）" },
     },
-    unlockSource: "秋月好感「相识」",
+    unlockSource: "沈听澜好感「相识」",
     description: "鲜香可口的红烧鲤鱼。",
   },
   {
@@ -78,7 +78,7 @@ export const RECIPES: RecipeDef[] = [
         description: "采玄矿体力消耗-20%（当天）",
       },
     },
-    unlockSource: "阿石好感「相识」",
+    unlockSource: "裴砚川好感「相识」",
     description: "实打实的矿工饭。",
   },
   {
@@ -432,8 +432,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 20,
       buff: { type: "fishing", value: 2, description: "垂钓百艺+2（当天）" },
     },
-    unlockSource: "秋月好感「相知」",
-    description: "秋月独创的枫叶烤鱼法。",
+    unlockSource: "沈听澜好感「相知」",
+    description: "沈听澜巡汛时使用的薄叶烤鱼法，少烟、快熟，便于辨认鱼肉鲜度。",
   },
   {
     id: "herbal_pill",
@@ -478,8 +478,8 @@ export const RECIPES: RecipeDef[] = [
         description: "采玄矿体力消耗-30%（当天）",
       },
     },
-    unlockSource: "阿石好感「相知」",
-    description: "阿石在玄矿幽脉深处发明的炖菜。",
+    unlockSource: "裴砚川好感「相知」",
+    description: "裴砚川按下矿时长配比的耐放炖菜，便于控制补给与返程体力。",
   },
   {
     id: "wild_berry_jam",
@@ -521,7 +521,7 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "autumn_moon_feast",
-    name: "秋月宴",
+    name: "归汛河鲜席",
     ingredients: [
       { itemId: "mandarin_fish", quantity: 1 },
       { itemId: "river_crab", quantity: 1 },
@@ -532,8 +532,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 30,
       buff: { type: "luck", value: 20, description: "幸运+20%（当天）" },
     },
-    unlockSource: "秋月好感「挚友」",
-    description: "秋月为挚友备的秋夜佳宴。",
+    unlockSource: "沈听澜好感「挚友」",
+    description: "沈听澜按当季合规渔获搭配的归汛河鲜席，不取幼鱼与抱卵鱼。",
   },
   {
     id: "longevity_soup",
@@ -576,8 +576,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 50,
       buff: { type: "defense", value: 25, description: "受到伤害-25%（当天）" },
     },
-    unlockSource: "阿石好感「挚友」",
-    description: "阿石独创的锻造师能量餐。",
+    unlockSource: "裴砚川好感「挚友」",
+    description: "裴砚川为长时勘验准备的高热量矿班餐，分量按工时而非食欲计算。",
   },
   {
     id: "spirit_fruit_wine",
@@ -630,8 +630,8 @@ export const RECIPES: RecipeDef[] = [
         description: "采玄矿体力消耗-35%（当天）",
       },
     },
-    unlockSource: "与阿石结婚后",
-    description: "阿石婚后教你的熔岩铁锅料理。",
+    unlockSource: "与裴砚川结婚后",
+    description: "裴砚川改良的余热铁锅料理，利用停炉余温完成慢炖，避免额外耗炭。",
   },
   {
     id: "moonlight_sashimi",
@@ -645,8 +645,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 20,
       buff: { type: "fishing", value: 3, description: "垂钓百艺+3（当天）" },
     },
-    unlockSource: "与秋月结婚后",
-    description: "秋月婚后分享的月下刺身。",
+    unlockSource: "与沈听澜结婚后",
+    description: "沈听澜整理的夜汛鲜切法，强调低温处理与可追溯水段。",
   },
   {
     id: "tea_banquet",
@@ -1915,7 +1915,7 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 25,
       buff: { type: "fishing", value: 2, description: "垂钓百艺+2（当天）" },
     },
-    unlockSource: "秋月好感「知己」",
+    unlockSource: "沈听澜好感「知己」",
     description: "精心摆盘的双色烟熏鱼，鲜香四溢。",
   },
   {

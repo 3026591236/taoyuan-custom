@@ -51,9 +51,9 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: "yugupu",
-    name: "渔具铺",
-    description: "秋月的渔具小店，出售鱼饵和浮漂。",
-    npcName: "秋月",
+    name: "星澜河务所",
+    description: "沈听澜管理的巡汛与垂钓补给点，提供水情告示、合规鱼饵、浮漂和基础渔具。",
+    npcName: "沈听澜",
     closedDays: ["mon", "tue"],
     openHour: 6,
     closeHour: 17,

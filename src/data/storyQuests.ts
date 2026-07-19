@@ -49,7 +49,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 1,
     order: 3,
     title: "溪边垂钓",
-    description: "秋月是村里最会垂钓的姑娘，她邀你去溪边试试身手。",
+    description: "沈听澜邀请你参加星澜河基础巡汛：先学会辨认水段与鱼情，再累计钓到5条合规渔获。",
     npcId: "qiu_yue",
     objectives: [{ type: "catchFish", label: "累计钓到5条鱼", target: 5 }],
     moneyReward: 300,
@@ -61,7 +61,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 1,
     order: 4,
     title: "初探玄矿幽脉",
-    description: "阿石说玄矿幽脉里有好东西，但也有危险。先探到第5层试试。",
+    description: "裴砚川要求新入矿者先熟悉返程标、落石声与警戒线。到达玄矿幽脉第5层后安全返回。",
     npcId: "a_shi",
     objectives: [
       { type: "reachMineFloor", label: "玄矿幽脉到达第5层", target: 5 },
@@ -183,7 +183,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 2,
     order: 2,
     title: "玄矿幽脉深处",
-    description: "阿石说玄矿幽脉20层以下有铁矿脉，深入探索一下吧。",
+    description: "裴砚川在20层附近标出稳定铁矿带，同时提醒你记录支护和气流变化。安全抵达第20层。",
     npcId: "a_shi",
     objectives: [
       { type: "reachMineFloor", label: "玄矿幽脉到达第20层", target: 20 },
@@ -312,7 +312,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 3,
     order: 1,
     title: "深渊挑战",
-    description: "阿石说玄矿幽脉40层以下有金矿脉，但怪物也更凶猛了。",
+    description: "裴砚川的勘验图显示40层后矿压与生物活动同时增强。带足补给，抵达第40层并保留返程余力。",
     npcId: "a_shi",
     objectives: [
       { type: "reachMineFloor", label: "玄矿幽脉到达第40层", target: 40 },
@@ -391,7 +391,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 3,
     order: 7,
     title: "渔王初成",
-    description: "秋月说你的钓术已经相当不错了，继续精进！",
+    description: "沈听澜认为熟练不只看数量，也看是否能迅速放回不合规渔获。累计钓到100条鱼，完善个人鱼汛记录。",
     npcId: "qiu_yue",
     objectives: [{ type: "catchFish", label: "累计钓到80条鱼", target: 80 }],
     moneyReward: 1500,
@@ -442,7 +442,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 4,
     order: 1,
     title: "深渊征服者",
-    description: "阿石说玄矿幽脉最深处隐藏着强大的boss，到达第80层吧。",
+    description: "裴砚川确认80层附近存在高灵压活动区。抵达前完成装备与退场准备，不要把未知区域当成寻宝捷径。",
     npcId: "a_shi",
     objectives: [
       { type: "reachMineFloor", label: "玄矿幽脉到达第80层", target: 80 },
@@ -578,7 +578,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 5,
     order: 1,
     title: "玄矿幽脉之底",
-    description: "阿石说玄矿幽脉最底层沉睡着古老的秘密，到达第120层揭开谜底。",
+    description: "裴砚川准备复核120层的旧封井记录。抵达目标层，为玄矿幽脉总图补上最深段的实测数据。",
     npcId: "a_shi",
     objectives: [
       { type: "reachMineFloor", label: "玄矿幽脉到达第120层", target: 120 },
@@ -591,7 +591,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 5,
     order: 2,
     title: "骷髅深渊",
-    description: "阿石说玄矿幽脉尽头通往幽骨矿窟，那里有更珍贵的矿石。",
+    description: "裴砚川发现玄矿幽脉尽头与幽骨矿窟存在气流联系。进入前先确认新区域的支护、矿压与撤离路线。",
     npcId: "a_shi",
     objectives: [
       { type: "reachSkullFloor", label: "幽骨矿窟到达第50层", target: 50 },
