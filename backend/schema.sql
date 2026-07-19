@@ -1,4 +1,4 @@
--- 桃源乡后端 MySQL 完整表结构
+-- 万象仙乡后端 MySQL 完整表结构（taoyuan 库名暂保留旧档兼容）
 -- 所有数据相关的内容都放数据库
 CREATE DATABASE IF NOT EXISTS taoyuan DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE taoyuan;

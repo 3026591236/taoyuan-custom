@@ -8,15 +8,15 @@
 - [x] 确定新作者/团队名：万象仙乡制作组
 - [ ] 新建原创世界观关键词表
 - [x] 梳理并清理主要玩家可见“桃源乡”字样（合规文档中的原版署名保留）
-- [ ] 梳理 package / app / manifest / title / meta 信息
+- [x] 梳理 package / app / manifest / title / meta 信息
 - [x] 建立资产台账：原版、第三方、后续生成、后续原创（见 ASSET_LEDGER.md）
 
 ## B. 品牌替换
 
 - [x] `package.json` name / author / description
-- [ ] 首页标题、浏览器标题、PWA/Capacitor 名称
+- [x] 首页标题、浏览器标题、PWA/Capacitor 名称
 - [x] Logo、首页主视觉（favicon/App icon 源图待继续生成多尺寸）
-- [ ] README 项目介绍
+- [x] README 项目介绍
 - [ ] 后台/接口版本信息中的项目名
 
 ## C. 文案替换
@@ -31,11 +31,11 @@
 
 ## D. 素材替换
 
-- [ ] 原版 logo / 首页图 / icon
+- [x] 原版 logo / 首页图 / icon（V3.1.4 移除未引用历史文件，现行品牌素材待继续权属审计）
 - [ ] 旧像素素材
 - [ ] Kenney 素材：决定保留并署名，或替换为原创素材
-- [ ] zpix 字体：确认授权或替换字体
-- [ ] 支付/二维码等图片：确认是否仍需要
+- [x] zpix 字体：V3.1.4 停用并移除，改用系统中文字体栈
+- [x] 支付/二维码等图片：V3.1.4 移除本地文件和前台赞助展示
 
 ## E. 代码重构审计
 

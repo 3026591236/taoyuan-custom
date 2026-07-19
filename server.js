@@ -11,18 +11,18 @@ const DATA_DIR = process.env.DATA_DIR || '/data'
 const DB_FILE = path.join(DATA_DIR, 'db.json')
 
 const defaultConfig = {
-  siteName: '桃源乡',
-  announcement: '欢迎来到桃源乡自主更新版。',
+  siteName: '万象仙乡',
+  announcement: '欢迎来到万象仙乡。灵田起步，万象问道。',
   registrationEnabled: true,
   maintenanceMode: false,
   announcementIntervalHours: 24,
   aboutQqText: '718630139',
   aboutQqUrl: 'https://qm.qq.com/q/2BVaTTwDkI',
-  aboutGithubUrl: 'https://github.com/setube/taoyuan',
+  aboutGithubUrl: 'https://github.com/3026591236/taoyuan-custom',
   aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '',
   sponsorWechatImageUrl: '',
-  sponsorAfdianUrl: 'https://afdian.com/a/setube',
+  sponsorAfdianUrl: '',
   updateLogs: [
     { date: '2026-07-03', title: '修仙 V0.3：洞府与灵兽', content: '🏠 洞府系统：开辟洞府(8000文+200灵气)，4级扩建(石洞/灵穴/洞府/仙府)，3种设施安置(丹房/灵圃/静室)；🐾 灵兽系统：引灵寻兽(30灵力)，随机遇到灵狐🦊/仙鹤🦢/青鸾🦚，喂食增羁绊；🧘 修行优化：打坐产出灵气，突破消耗降低，修行消耗体力。' },
     { date: '2026-07-03', title: '角色界面修仙数据+轮廓', content: '角色信息区新增SVG古风人物轮廓，启蒙修仙后显示境界光环动画；新增修仙属性面板(修为/灵力/灵气/灵田/炼丹炉/法宝)；修为满时可直接点击突破。' },
@@ -393,7 +393,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req)
       db.config = {
         ...mergedConfig(db),
-        siteName: String(body.siteName ?? db.config?.siteName ?? '桃源乡').slice(0, 30),
+        siteName: String(body.siteName ?? db.config?.siteName ?? '万象仙乡').slice(0, 30),
         announcement: String(body.announcement ?? db.config?.announcement ?? '').slice(0, 1000),
         announcementIntervalHours: Math.max(0, Math.min(720, Number(body.announcementIntervalHours ?? db.config?.announcementIntervalHours ?? 24) || 24)),
         aboutQqText: String(body.aboutQqText ?? db.config?.aboutQqText ?? defaultConfig.aboutQqText).slice(0, 80),

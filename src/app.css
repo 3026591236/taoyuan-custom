@@ -2,14 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* zpix 像素字体（支持中英文） */
-@font-face {
-  font-family: 'zpix';
-  src: url('@/assets/fonts/zpix.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
+/* 原创化阶段：使用系统字体栈，避免分发来源/商业授权未核验的字体文件。 */
 
 :root {
   /* 主题色（RGB 数值，配合 Tailwind 透明度修饰符） */
@@ -31,7 +24,7 @@
   --color-quality-supreme: #ffd700;
 
   /* 字体 */
-  --font-game: 'zpix', monospace;
+  --font-game: 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
 
   /* 间距基准 4px */
   --spacing-1: 4px;

@@ -479,9 +479,9 @@
             v-if="activeTab === 'about'"
             class="border border-accent/20 rounded-xs p-3 space-y-3"
           >
-            <h2 class="text-accent">关于游戏 / 赞助作者</h2>
+            <h2 class="text-accent">关于游戏</h2>
             <p class="text-xs text-muted">
-              这些内容会显示在首页“关于游戏”和“赞助作者”弹窗里。二维码图片地址留空时使用内置默认图片。
+              这些内容会显示在首页“关于游戏”弹窗里；版权来源由发行版本固定展示，避免后台误改署名与许可信息。
             </p>
             <label class="block text-sm">QQ 群显示文字</label>
             <input
@@ -528,26 +528,8 @@
             <p class="text-[10px] text-muted">
               下载链接留空时，首页不会显示对应平台按钮。
             </p>
-            <label class="block text-sm">支付宝赞助二维码图片地址</label>
-            <input
-              v-model="config.sponsorAlipayImageUrl"
-              class="input"
-              placeholder="留空使用默认图片，或填写 https://..."
-            />
-            <label class="block text-sm">微信赞助二维码图片地址</label>
-            <input
-              v-model="config.sponsorWechatImageUrl"
-              class="input"
-              placeholder="留空使用默认图片，或填写 https://..."
-            />
-            <label class="block text-sm">爱发电地址</label>
-            <input
-              v-model="config.sponsorAfdianUrl"
-              class="input"
-              placeholder="https://afdian.com/a/..."
-            />
             <button class="btn w-full justify-center" @click="saveConfig">
-              保存关于/赞助配置
+              保存关于配置
             </button>
           </div>
 

@@ -28,7 +28,7 @@ export default {
         'quality-supreme': '#ffd700'
       },
       fontFamily: {
-        game: ['zpix', 'monospace']
+        game: ['Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', 'system-ui', 'sans-serif']
       },
       spacing: {
         30: '7.5rem',

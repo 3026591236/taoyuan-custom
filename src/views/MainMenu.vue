@@ -439,7 +439,7 @@
               :icon="UserRound"
               @click="aboutTab = 'author'"
             >
-              赞助作者
+              版权来源
             </Button>
           </div>
           <!-- 关于 -->
@@ -496,53 +496,45 @@
             </div>
           </div>
 
-          <!-- 赞助作者 -->
+          <!-- 版权与来源 -->
           <div
             v-if="aboutTab === 'author'"
-            class="flex flex-col space-y-3 text-sm"
+            class="flex flex-col space-y-3 text-sm text-left"
           >
-            <p class="text-xs text-muted">
-              如果你喜欢这款游戏，可以请作者喝杯奶茶、吃顿
-              KFC，你的支持是作者继续更新的最大动力！
+            <p class="text-xs text-muted leading-relaxed">
+              当前版本仍处于原创化改造阶段，保留原版作品的署名与非商业许可说明；新增系统、服务端能力与原创素材由万象仙乡制作组持续开发和登记。
             </p>
-            <div class="flex space-x-3">
-              <div class="flex-1 border border-accent/20 rounded-xs p-3">
-                <p class="text-muted text-xs mb-2">支付宝</p>
-                <img
-                  :src="sponsorAlipayImageUrl"
-                  alt="支付宝"
-                  class="mx-auto"
-                  style="
-                    width: 120px;
-                    height: 120px;
-                    image-rendering: pixelated;
-                  "
-                />
-              </div>
-              <div class="flex-1 border border-accent/20 rounded-xs p-3">
-                <p class="text-muted text-xs mb-2">微信</p>
-                <img
-                  :src="sponsorWechatImageUrl"
-                  alt="微信"
-                  class="mx-auto"
-                  style="
-                    width: 120px;
-                    height: 120px;
-                    image-rendering: pixelated;
-                  "
-                />
-              </div>
-            </div>
             <div class="border border-accent/20 rounded-xs p-3">
-              <p class="text-muted text-xs mb-1">爱发电</p>
+              <p class="text-muted text-xs mb-1">原版作品</p>
               <a
-                :href="sponsorAfdianUrl"
+                href="https://github.com/setube/taoyuan"
                 target="_blank"
+                rel="noreferrer"
                 class="text-accent underline break-all"
               >
-                {{ sponsorAfdianUrl }}
+                《桃源乡》· setube/taoyuan
               </a>
             </div>
+            <div class="border border-accent/20 rounded-xs p-3">
+              <p class="text-muted text-xs mb-1">当前许可状态</p>
+              <p class="text-xs leading-relaxed">
+                CC BY-NC 4.0：须保留署名、注明修改，未经原作者书面授权不得商业使用。
+              </p>
+            </div>
+            <div class="border border-accent/20 rounded-xs p-3">
+              <p class="text-muted text-xs mb-1">本项目仓库</p>
+              <a
+                href="https://github.com/3026591236/taoyuan-custom"
+                target="_blank"
+                rel="noreferrer"
+                class="text-accent underline break-all"
+              >
+                3026591236/taoyuan-custom
+              </a>
+            </div>
+            <p class="text-[10px] text-muted leading-relaxed">
+              详细来源、素材许可和原创化进度见仓库 CREDITS.md、ASSET_LEDGER.md 与 ORIGINALIZATION_PROGRESS.md。
+            </p>
           </div>
         </div>
       </div>
@@ -856,8 +848,6 @@ import { useQuestStore } from "@/stores/useQuestStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
 import { FARM_MAP_DEFS } from "@/data/farmMaps";
 import _pkg from "../../package.json";
-import alipayImg from "@/assets/alipay.png";
-import wechatImg from "@/assets/wechat.png";
 import wanxiangHero from "@/assets/wanxiang-hero.svg";
 import { useAudio } from "@/composables/useAudio";
 import { showFloat, addLog } from "@/composables/useGameLog";
@@ -928,17 +918,6 @@ const aboutTapTapUrl = computed(
   () =>
     serverConfig.value?.aboutTapTapUrl ||
     `https://www.taptap.cn/app/${(pkg as any).tapid}`,
-);
-const sponsorAlipayImageUrl = computed(
-  () => serverConfig.value?.sponsorAlipayImageUrl || alipayImg,
-);
-const sponsorWechatImageUrl = computed(
-  () => serverConfig.value?.sponsorWechatImageUrl || wechatImg,
-);
-const sponsorAfdianUrl = computed(
-  () =>
-    serverConfig.value?.sponsorAfdianUrl ||
-    `https://afdian.com/a/${pkg.author}`,
 );
 const iosDownloadUrl = computed(() =>
   String(serverConfig.value?.iosDownloadUrl || "").trim(),

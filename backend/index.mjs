@@ -594,13 +594,13 @@ const defaultConfig = {
   announcementIntervalHours: 24,
   aboutQqText: "718630139",
   aboutQqUrl: "https://qm.qq.com/q/2BVaTTwDkI",
-  aboutGithubUrl: "https://github.com/setube/taoyuan",
+  aboutGithubUrl: "https://github.com/3026591236/taoyuan-custom",
   aboutTapTapUrl: "https://www.taptap.cn/app/383510",
   iosDownloadUrl: "",
   androidDownloadUrl: "",
   sponsorAlipayImageUrl: "",
   sponsorWechatImageUrl: "",
-  sponsorAfdianUrl: "https://afdian.com/a/setube",
+  sponsorAfdianUrl: "",
   floatingWelfare: {
     enabled: true,
     buttonText: "福利",
@@ -660,6 +660,11 @@ const defaultConfig = {
     ],
   },
   updateLogs: [
+    {
+      title: "V3.1.4 原创化第一阶段",
+      date: "2026-07-19",
+      content: "启动按模块原创化改造：停用并移除授权链未核验的 zpix 字体，改用系统中文字体栈；移除未使用的旧 Logo、旧首页图与本地赞助二维码；首页关于页新增固定的原版来源、CC BY-NC 4.0 状态和本项目仓库说明；Android 公开标题及备用服务默认品牌统一为万象仙乡；新增原创化进度、来源留证和第三方声明文档。兼容性存档键、数据库名及部署路径暂时保留，避免影响旧档。",
+    },
     {
       title: "V3.1.3 今日全服巡检修复",
       date: "2026-07-18",

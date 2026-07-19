@@ -38,7 +38,7 @@
 当前项目还包含/使用以下第三方资源或开源依赖，需分别遵守其许可：
 
 - Kenney roguelike / dungeon 相关素材：见 `public/assets/kenney/**/License.txt` 与 `src/assets/kenney/**/LICENSE-*`
-- zpix 字体：`src/assets/fonts/zpix.woff2`，需确认并保留其授权说明
+- zpix 字体：V3.1.4 起已停用并移除，不再随发行物分发；界面改用系统中文字体栈
 - lucide-vue-next 图标：ISC License
 - Vue / Vite / Pinia / Capacitor / Express / MySQL2 等前后端依赖：遵守各自开源协议
 - GPT Image 生成的仙界立绘/仙界视觉素材：作为本项目新增素材管理，但仍应记录生成来源与用途
@@ -59,7 +59,7 @@
 
 3. **素材去原版化**
    - 替换或重做原版素材、图标、Logo、首页插画、旧 UI 视觉
-   - 对 Kenney、zpix 等第三方资源建立明确清单：保留则保留授权，替换则移除
+   - 对第三方资源建立明确清单：Kenney 继续保留 CC0 证据；zpix 已于 V3.1.4 移除
 
 4. **代码结构去原版化**
    - 对核心模块进行审计：store、views、数据表、存档结构、战斗/种田/采集/NPC/任务等
@@ -72,7 +72,7 @@
 
 ## 建议阶段
 
-### Phase 1：合规整理（当前阶段）
+### Phase 1：合规整理（已持续推进）
 
 - 新增本文件
 - README 标注当前仍为原版衍生定制版
