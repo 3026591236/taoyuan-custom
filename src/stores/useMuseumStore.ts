@@ -30,7 +30,7 @@ export const useMuseumStore = defineStore("museum", () => {
   }[] = [
     {
       id: "farm_memory",
-      name: "桃源农事展",
+      name: "仙乡农事展",
       desc: "展示农具、灵植与万象集旧物，每日收入+8%。",
       fameNeed: 0,
       incomeRate: 1.08,

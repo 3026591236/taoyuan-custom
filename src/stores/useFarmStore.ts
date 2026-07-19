@@ -366,7 +366,7 @@ export const useFarmStore = defineStore("farm", () => {
     return true;
   };
 
-  /** 桃源灵田洞天：季初给所有已耕但无肥料的地块施加肥料（按种植等级升级） */
+  /** 万象灵田洞天：季初给所有已耕但无肥料的地块施加肥料（按种植等级升级） */
   const applyFertileSoil = (
     farmingLevel: number,
   ): { count: number; fertilizerName: string } => {

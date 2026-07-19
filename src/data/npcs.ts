@@ -469,7 +469,7 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["copper_ore", "firewood"],
     dialogues: {
       stranger: [
-        "在下丹青，游学至此，被这桃源胜景留住了脚步。",
+        "在下丹青，游学至此，被这仙乡胜景留住了脚步。",
         "{title}也是喜欢读书之人么？",
       ],
       acquaintance: [

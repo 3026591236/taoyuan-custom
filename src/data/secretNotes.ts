@@ -30,9 +30,9 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 4,
     type: "story",
-    title: "桃源志·上",
+    title: "万象乡志·上",
     content:
-      '百年前，一位隐士发现了这片与世隔绝的山谷。谷中桃花遍野，溪水潺潺，宛如世外桃源。他便在此建村定居，取名"万象仙乡"。',
+      '百年前，一位隐士发现了这片与世隔绝的山谷。谷中桃花遍野，溪水潺潺，宛如遗世仙乡。他便在此建村定居，取名"万象仙乡"。',
     usable: false,
   },
   {
@@ -63,7 +63,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 8,
     type: "story",
-    title: "桃源志·下",
+    title: "万象乡志·下",
     content:
       "隐士去世后，集民们世代守护着这片土地。他们定下规矩：不许砍伐桃花林，不许污染溪水。万象仙乡就这样安静地度过了百年时光。",
     usable: false,
@@ -202,7 +202,7 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 25,
     type: "story",
-    title: "桃源秘事",
+    title: "仙乡秘事",
     content:
       "万象仙乡的地底深处，据说封印着远古的力量。建村隐士之所以选择此地，并非偶然——他是这股力量的守护者。如今守护者已去，力量渐渐苏醒……这或许就是玄矿幽脉中怪物越来越多的原因。",
     usable: false,

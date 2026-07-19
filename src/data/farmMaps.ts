@@ -10,7 +10,7 @@ export interface FarmMapDef {
 export const FARM_MAP_DEFS: FarmMapDef[] = [
   {
     type: "standard",
-    name: "桃源灵田洞天",
+    name: "万象灵田洞天",
     description: "广阔的平原，最适合大规模种植。",
     bonus: "初始6×6，可扩至10×10，换季自动施肥（随种植等级升级），15%额外收获",
   },

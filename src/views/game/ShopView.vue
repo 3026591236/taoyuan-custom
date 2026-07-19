@@ -50,7 +50,7 @@
         <template v-if="!shopStore.currentShopId">
           <h3 class="text-accent text-sm mb-3">
             <Store :size="14" class="inline" />
-            桃源万象市集
+            万象云集
           </h3>
           <p class="text-muted text-xs mb-3">点击商铺进入选购。</p>
 

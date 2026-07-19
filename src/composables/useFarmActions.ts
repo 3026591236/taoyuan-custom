@@ -261,7 +261,7 @@ export const handlePlotClick = (plotId: number) => {
         genetics &&
         !intensiveDouble &&
         Math.random() < (genetics.yield / 100) * 0.3;
-      // 桃源灵田洞天：15% 概率额外收获
+      // 万象灵田洞天：15% 概率额外收获
       const standardDouble =
         !intensiveDouble &&
         !yieldDouble &&
@@ -291,7 +291,7 @@ export const handlePlotClick = (plotId: number) => {
       let msg = `收获了${cropDef?.name ?? cropId}${qtyLabel}${qualityLabel}！`;
       if (intensiveDouble) msg += " 精耕细作，双倍丰收！";
       if (yieldDouble) msg += " 育种产量加成，双倍丰收！";
-      if (standardDouble) msg += " 桃源沃土，额外丰收！";
+      if (standardDouble) msg += " 万象沃土，额外丰收！";
       if (attributeUps.length > 0) msg += ` ${attributeUps.join("，")}！`;
       // 育种甜度加成：额外铜钱
       if (genetics && genetics.sweetness > 0 && cropDef) {

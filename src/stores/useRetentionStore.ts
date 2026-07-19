@@ -123,7 +123,7 @@ const ACTIVITY_BOXES: ActivityBox[] = [
   {
     score: 100,
     title: "满勤仙缘",
-    desc: "今日桃源事毕，给长期成长一份重奖。",
+    desc: "今日仙乡诸事已毕，给长期成长一份重奖。",
     reward: {
       money: 2880,
       aura: 620,
@@ -212,7 +212,7 @@ const SEVEN_DAY_GIFTS: SevenDayGift[] = [
   },
   {
     day: 7,
-    title: "第7日：桃源仙缘",
+    title: "第7日：万象仙缘",
     desc: "七日留存大奖，给新玩家一个明确阶段终点。",
     reward: {
       money: 6888,

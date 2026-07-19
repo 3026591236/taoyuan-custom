@@ -89,7 +89,7 @@
               <p class="text-accent truncate">{{ character.name }}</p>
               <p class="text-muted truncate">
                 槽位 {{ character.slot + 1 }} ·
-                {{ character.meta?.playerName || "桃源旅人" }}
+                {{ character.meta?.playerName || "仙乡旅人" }}
               </p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">

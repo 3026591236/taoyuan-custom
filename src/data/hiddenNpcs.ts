@@ -130,7 +130,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
       ],
       eternal: [
         "「沧澜之名，只告诉过你一人。」",
-        "「天地之间，唯你与吾，便是桃源。」",
+        "「天地之间，唯你与吾，便是归处。」",
       ],
     },
     interactionType: "meditation",
@@ -200,7 +200,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
     gender: "female",
     title: "桃林花灵",
     origin:
-      '诞生于万象仙乡最古老桃树的花精，以落瓣为衣，以晨露为饮。据说万象仙乡之所以叫"桃源"，便因她在此守护。',
+      '诞生于万象仙乡最古老桃树的花精，以落瓣为衣，以晨露为饮。据说万象仙乡的桃花终年不谢，便因她在此守护。',
     personality: "活泼灵动、天真烂漫",
     discoverySteps: [
       {
@@ -757,7 +757,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
             text: "玄矿幽脉深处，你发现了一本泛黄的古册，封面写着「清虚修炼手札」。",
           },
           {
-            text: "翻开第一页：「入山五百年，丹成九转。桃源之下，地脉灵气最盛处，吾将闭关于此。」",
+            text: "翻开第一页：「入山五百年，丹成九转。仙乡地脉灵气最盛处，吾将闭关于此。」",
           },
         ],
         logMessage: "【仙缘】玄矿幽脉深处发现一本古老的修炼手札……",
@@ -1034,7 +1034,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
             text: "「我叫锦归。归字是归乡的归。」她轻轻笑了，「或许……这里就是我的归处。」",
           },
         ],
-        logMessage: "【仙缘】织梦归女锦归不再执着于回家的路，选择留在桃源。",
+        logMessage: "【仙缘】织梦归女锦归不再执着于回家的路，选择留在仙乡。",
       },
     ],
     resonantOfferings: ["silk", "wool", "moonstone"],

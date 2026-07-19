@@ -113,7 +113,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "rich_20000",
-    name: "桃源首富",
+    name: "仙乡巨贾",
     description: "累计获得20000文。",
     condition: { type: "moneyEarned", amount: 20000 },
     reward: { money: 2000 },
@@ -174,7 +174,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "friend_all_friendly",
-    name: "桃源之友",
+    name: "仙乡知交",
     description: "与所有集民成为朋友。",
     condition: { type: "npcAllFriendly" },
     reward: { money: 1000, items: [{ itemId: "jade_ring", quantity: 1 }] },

@@ -528,7 +528,7 @@ export const useQuestStore = defineStore("quest", () => {
     {
       id: "v12_commission_10",
       type: "guide",
-      title: "桃源声望：十次委托",
+      title: "仙乡声望：十次委托",
       desc: "累计完成10个委托，推动NPC、订单、生产和市场循环。",
       metric: "completedCommissions",
       target: 10,

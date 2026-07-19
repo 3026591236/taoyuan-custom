@@ -250,7 +250,7 @@ export interface ShopSchedule {
 export const SHOP_SCHEDULES: ShopSchedule[] = [
   {
     tabKey: "shop",
-    name: "桃源万象市集",
+    name: "万象云集",
     closedDays: [],
     openHour: 6,
     closeHour: 24,

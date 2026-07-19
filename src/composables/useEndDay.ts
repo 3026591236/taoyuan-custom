@@ -1175,13 +1175,13 @@ export const handleEndDay = () => {
     }
     farmStore.fruitTreeSeasonUpdate(oldSeason === "winter");
 
-    // 桃源灵田洞天：换季自动施肥（按种植等级升级）
+    // 万象灵田洞天：换季自动施肥（按种植等级升级）
     if (gameStore.farmMapType === "standard") {
       const { count: fertCount, fertilizerName } = farmStore.applyFertileSoil(
         skillStore.getSkill("farming").level,
       );
       if (fertCount > 0) {
-        addLog(`桃源沃土滋养大地，${fertCount}块耕地获得了${fertilizerName}。`);
+        addLog(`万象沃土滋养大地，${fertCount}块耕地获得了${fertilizerName}。`);
       }
     }
 

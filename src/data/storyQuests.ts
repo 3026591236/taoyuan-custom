@@ -2,17 +2,17 @@ import type { MainQuestDef } from "@/types";
 
 /** 章节标题 */
 export const CHAPTER_TITLES: Record<number, string> = {
-  1: "初入桃源",
+  1: "初入仙乡",
   2: "扎根大地",
   3: "名扬四乡",
   4: "风云际会",
-  5: "桃源之主",
+  5: "仙乡之主",
 };
 
 /** 50个主线委托定义，分5章每章10个 */
 export const STORY_QUESTS: MainQuestDef[] = [
   // ============================================================
-  // 第1章「初入桃源」— 新手引导
+  // 第1章「初入仙乡」— 新手引导
   // ============================================================
   {
     id: "main_1_1",
@@ -145,7 +145,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_1_10",
     chapter: 1,
     order: 10,
-    title: "扎根桃源",
+    title: "扎根仙乡",
     description:
       "要在万象仙乡真正站稳脚跟，灵耕百艺必须过硬。把灵耕练到3级吧。",
     npcId: "liu_cunzhang",
@@ -571,7 +571,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
   },
 
   // ============================================================
-  // 第5章「桃源之主」— 后期/终章
+  // 第5章「仙乡之主」— 后期/终章
   // ============================================================
   {
     id: "main_5_1",
@@ -652,7 +652,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_5_7",
     chapter: 5,
     order: 7,
-    title: "桃源之友",
+    title: "仙乡知交",
     description: "柳村长希望你能和村里每一个人都成为朋友。",
     npcId: "liu_cunzhang",
     objectives: [
@@ -694,7 +694,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_5_10",
     chapter: 5,
     order: 10,
-    title: "桃源之主",
+    title: "仙乡之主",
     description:
       "你已经成为万象仙乡真正的主人。所有百艺满级，财富冠绝乡里。这是最终的挑战。",
     npcId: "liu_cunzhang",

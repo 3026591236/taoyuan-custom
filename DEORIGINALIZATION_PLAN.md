@@ -6,7 +6,7 @@
 
 - [x] 确定新游戏正式名：万象仙乡
 - [x] 确定新作者/团队名：万象仙乡制作组
-- [ ] 新建原创世界观关键词表
+- [x] 新建原创世界观关键词表（见 `WORLD_LORE_AND_TERMINOLOGY.md`）
 - [x] 梳理并清理主要玩家可见“桃源乡”字样（合规文档中的原版署名保留）
 - [x] 梳理 package / app / manifest / title / meta 信息
 - [x] 建立资产台账：原版、第三方、后续生成、后续原创（见 ASSET_LEDGER.md）

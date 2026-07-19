@@ -241,7 +241,7 @@
                   v-model="config.floatingWelfare.title"
                   class="input"
                   maxlength="30"
-                  placeholder="桃源福利"
+                  placeholder="仙乡福缘"
                 />
               </div>
             </div>

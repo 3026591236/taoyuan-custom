@@ -258,7 +258,7 @@
           <div class="flex items-start justify-between gap-2">
             <div>
               <p class="text-accent text-lg">
-                {{ floatingWelfare.title || "桃源福利" }}
+                {{ floatingWelfare.title || "仙乡福缘" }}
               </p>
               <p class="text-xs text-muted leading-relaxed mt-1">
                 {{ floatingWelfare.desc || "点击领取当前可用福利。" }}
@@ -1139,7 +1139,7 @@ const serverConfig = ref<any>({
   floatingWelfare: {
     enabled: false,
     buttonText: "福利",
-    title: "桃源福利",
+    title: "仙乡福缘",
     desc: "",
     gifts: [],
   },
