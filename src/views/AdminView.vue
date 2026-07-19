@@ -495,12 +495,6 @@
               class="input"
               placeholder="https://qm.qq.com/..."
             />
-            <label class="block text-sm">GitHub 仓库地址</label>
-            <input
-              v-model="config.aboutGithubUrl"
-              class="input"
-              placeholder="https://github.com/..."
-            />
             <label class="block text-sm">TapTap 地址</label>
             <input
               v-model="config.aboutTapTapUrl"

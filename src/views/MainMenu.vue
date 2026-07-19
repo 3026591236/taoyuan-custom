@@ -475,16 +475,6 @@
               </a>
             </div>
             <div class="border border-accent/20 rounded-xs p-3">
-              <p class="text-muted text-xs mb-1">GitHub 仓库</p>
-              <a
-                :href="aboutGithubUrl"
-                target="_blank"
-                class="text-accent underline break-all"
-              >
-                {{ aboutGithubUrl }}
-              </a>
-            </div>
-            <div class="border border-accent/20 rounded-xs p-3">
               <p class="text-muted text-xs mb-1">TapTap</p>
               <a
                 :href="aboutTapTapUrl"
@@ -520,17 +510,6 @@
               <p class="text-xs leading-relaxed">
                 CC BY-NC 4.0：须保留署名、注明修改，未经原作者书面授权不得商业使用。
               </p>
-            </div>
-            <div class="border border-accent/20 rounded-xs p-3">
-              <p class="text-muted text-xs mb-1">本项目仓库</p>
-              <a
-                href="https://github.com/3026591236/taoyuan-custom"
-                target="_blank"
-                rel="noreferrer"
-                class="text-accent underline break-all"
-              >
-                3026591236/taoyuan-custom
-              </a>
             </div>
             <p class="text-[10px] text-muted leading-relaxed">
               详细来源、素材许可和原创化进度见仓库 CREDITS.md、ASSET_LEDGER.md 与 ORIGINALIZATION_PROGRESS.md。
@@ -908,11 +887,6 @@ const aboutQqText = computed(
 );
 const aboutQqUrl = computed(
   () => serverConfig.value?.aboutQqUrl || "https://qm.qq.com/q/2BVaTTwDkI",
-);
-const aboutGithubUrl = computed(
-  () =>
-    serverConfig.value?.aboutGithubUrl ||
-    `https://github.com/${pkg.author}/${pkg.name}`,
 );
 const aboutTapTapUrl = computed(
   () =>

@@ -594,7 +594,7 @@ const defaultConfig = {
   announcementIntervalHours: 24,
   aboutQqText: "718630139",
   aboutQqUrl: "https://qm.qq.com/q/2BVaTTwDkI",
-  aboutGithubUrl: "https://github.com/3026591236/taoyuan-custom",
+  aboutGithubUrl: "",
   aboutTapTapUrl: "https://www.taptap.cn/app/383510",
   iosDownloadUrl: "",
   androidDownloadUrl: "",
@@ -660,6 +660,11 @@ const defaultConfig = {
     ],
   },
   updateLogs: [
+    {
+      title: "V3.1.5 关于页仓库展示调整",
+      date: "2026-07-19",
+      content: "按展示要求移除首页关于游戏与版权来源页中的本项目 GitHub 仓库信息，并撤下后台对应配置入口；原版作品来源与 CC BY-NC 4.0 合规说明继续保留。",
+    },
     {
       title: "V3.1.4 原创化第一阶段",
       date: "2026-07-19",

@@ -18,7 +18,7 @@ const defaultConfig = {
   announcementIntervalHours: 24,
   aboutQqText: '718630139',
   aboutQqUrl: 'https://qm.qq.com/q/2BVaTTwDkI',
-  aboutGithubUrl: 'https://github.com/3026591236/taoyuan-custom',
+  aboutGithubUrl: '',
   aboutTapTapUrl: 'https://www.taptap.cn/app/383510',
   sponsorAlipayImageUrl: '',
   sponsorWechatImageUrl: '',
