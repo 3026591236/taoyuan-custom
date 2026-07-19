@@ -280,6 +280,25 @@ export const useInventoryStore = defineStore("inventory", () => {
     };
   };
 
+  /** 判断纳戒与临时纳戒能否完整容纳指定物品，计算过程不修改状态。 */
+  const canAcceptItem = (
+    itemId: string,
+    quantity: number = 1,
+    quality: Quality = "normal",
+  ): boolean => {
+    if (!getItemById(itemId)) return false;
+    let remaining = Math.max(0, quantity);
+    for (const slot of [...items.value, ...tempItems.value]) {
+      if (slot.itemId === itemId && slot.quality === quality) {
+        remaining -= Math.max(0, MAX_STACK - slot.quantity);
+        if (remaining <= 0) return true;
+      }
+    }
+    const freeSlots =
+      capacity.value - items.value.length + (TEMP_CAPACITY - tempItems.value.length);
+    return remaining <= Math.max(0, freeSlots) * MAX_STACK;
+  };
+
   /** 添加物品到纳戒 */
   const addItem = (
     itemId: string,
@@ -1465,6 +1484,7 @@ export const useInventoryStore = defineStore("inventory", () => {
     tempItems,
     isTempFull,
     isAllFull,
+    canAcceptItem,
     addItem,
     removeItem,
     getItemCount,

@@ -48,6 +48,10 @@ export interface ProcessingRecipeDef {
   /** 加工天数 */
   processingDays: number;
   description: string;
+  /** 百工作序，仅用于配置与界面说明，不写入存档 */
+  processStage?: "prepare" | "transform" | "mature" | "finish" | "recover";
+  /** 该工序在供给链中的职责说明 */
+  supplyRole?: string;
 }
 
 /** 一键加工时，玩家为每类机器明确选择的配方。 */

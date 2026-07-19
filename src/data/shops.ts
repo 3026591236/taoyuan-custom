@@ -18,8 +18,8 @@ export interface ShopDef {
 export const SHOPS: ShopDef[] = [
   {
     id: "wanwupu",
-    name: "万象行",
-    description: "顾百川经营的万象行，出售灵种和日用品。",
+    name: "万象行·田契柜",
+    description: "顾百川主持的田契与集仓窗口，按四时供应灵种、基础生产资料并标注作物去向。",
     npcName: "顾百川",
     closedDays: ["wed"],
     openHour: 8,
@@ -29,8 +29,8 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: "tiejiangpu",
-    name: "铁匠铺",
-    description: "孙铁匠的铁匠铺，出售矿石和金属制品。",
+    name: "地火百工炉",
+    description: "孙铁匠主持的百工炉房，核验矿材、锻制金属并承接工具工序。",
     npcName: "孙铁匠",
     closedDays: ["sun"],
     openHour: 7,
@@ -40,8 +40,8 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: "biaoju",
-    name: "镖局",
-    description: "云飞开设的镖局，出售武器和战斗用品。",
+    name: "山门行旅署",
+    description: "云飞主持的行旅整备点，提供护具、通行物资与野外风险告示。",
     npcName: "云飞",
     closedDays: [],
     openHour: 10,
@@ -52,7 +52,7 @@ export const SHOPS: ShopDef[] = [
   {
     id: "yugupu",
     name: "星澜河务所",
-    description: "沈听澜管理的巡汛与垂钓补给点，提供水情告示、合规鱼饵、浮漂和基础渔具。",
+    description: "沈听澜管理的河务补给点，发布水情、巡汛安排并提供合规渔具。",
     npcName: "沈听澜",
     closedDays: ["mon", "tue"],
     openHour: 6,
@@ -62,8 +62,8 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: "yaopu",
-    name: "药铺",
-    description: "林老的药铺，出售肥料和草药。",
+    name: "百草调养局",
+    description: "林老主持的草药与土壤调养窗口，供应肥培、药材和牧养照护物资。",
     npcName: "林老",
     closedDays: [],
     openHour: 8,
@@ -73,8 +73,8 @@ export const SHOPS: ShopDef[] = [
   },
   {
     id: "chouduanzhuang",
-    name: "绸缎庄",
-    description: "素素的绸缎庄，出售布匹和精美礼品。",
+    name: "云梭织作局",
+    description: "素素主持的织作与礼仪工坊，供应布材、合香用品和往来信物。",
     npcName: "素素",
     closedDays: ["sat", "sun"],
     openHour: 9,

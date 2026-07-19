@@ -1,6 +1,7 @@
 import type { QuestTemplateDef, QuestInstance, QuestType } from "@/types/quest";
 import type { Season } from "@/types/game";
 import { getNpcById } from "./npcs";
+import { getItemById } from "./items";
 
 export const QUEST_TEMPLATES: QuestTemplateDef[] = [
   {
@@ -9,7 +10,7 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
       // 常见灵植 — 混合季节
       {
         itemId: "cabbage",
-        name: "青菜",
+        name: "春畦青",
         minQty: 2,
         maxQty: 5,
         seasons: ["spring"],
@@ -17,7 +18,7 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
       },
       {
         itemId: "radish",
-        name: "萝卜",
+        name: "脆心萝",
         minQty: 2,
         maxQty: 4,
         seasons: ["spring"],
@@ -33,7 +34,7 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
       },
       {
         itemId: "rice",
-        name: "稻米",
+        name: "星澜粳",
         minQty: 2,
         maxQty: 5,
         seasons: ["summer"],
@@ -41,7 +42,7 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
       },
       {
         itemId: "watermelon",
-        name: "西瓜",
+        name: "澄沙瓜",
         minQty: 1,
         maxQty: 3,
         seasons: ["summer"],
@@ -57,7 +58,7 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
       },
       {
         itemId: "pumpkin",
-        name: "南瓜",
+        name: "金仓瓜",
         minQty: 1,
         maxQty: 3,
         seasons: ["autumn"],
@@ -73,7 +74,7 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
       },
       {
         itemId: "winter_wheat",
-        name: "冬小麦",
+        name: "伏雪麦",
         minQty: 2,
         maxQty: 5,
         seasons: ["winter"],
@@ -81,7 +82,7 @@ export const QUEST_TEMPLATES: QuestTemplateDef[] = [
       },
       {
         itemId: "garlic",
-        name: "大蒜",
+        name: "护畦蒜",
         minQty: 2,
         maxQty: 4,
         seasons: ["winter"],
@@ -328,7 +329,7 @@ interface SpecialOrderTemplate {
 const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
   // === 第1梯度 (第7天): 简单, 7天时限, 数量少, 奖励适中 ===
   {
-    name: "铜矿采购",
+    name: "闭井支护铜材复核",
     targetItemId: "copper_ore",
     targetItemName: "铜矿",
     quantity: 15,
@@ -338,9 +339,10 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: [],
     npcId: "a_shi",
     tier: 1,
+    description: "裴砚川需核对旧支护件的铜材损耗，征集矿料仅作工序复验，不进入食案。",
   },
   {
-    name: "鲜鱼征集",
+    name: "河务鱼群取样",
     targetItemId: "crucian",
     targetItemName: "鲫鱼",
     quantity: 8,
@@ -350,11 +352,12 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: [],
     npcId: "qiu_yue",
     tier: 1,
+    description: "沈听澜按公共水域取样册征集常见鱼获，用于记录鱼龄与放流窗口。",
   },
   {
-    name: "乡志春蔬样本",
+    name: "春畦青物候供样",
     targetItemId: "cabbage",
-    targetItemName: "青菜",
+    targetItemName: "春畦青",
     quantity: 10,
     days: 7,
     moneyReward: 500,
@@ -362,9 +365,10 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ["spring"],
     npcId: "liu_niang",
     tier: 1,
+    description: "陆清和为乡志司校录春季叶色、含水与耐放记录，征集一批春畦青作同日供样。",
   },
   {
-    name: "集仓货架修缮",
+    name: "集仓木架复核",
     targetItemId: "wood",
     targetItemName: "木材",
     quantity: 30,
@@ -374,10 +378,11 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: [],
     npcId: "chen_bo",
     tier: 1,
+    description: "顾百川按集仓周转册检修承重木架，需要足量木材更换受潮构件。",
   },
   // === 第2梯度 (第14天): 普通, 7天时限, 数量中等, 奖励较好 ===
   {
-    name: "铁矿备料",
+    name: "支护铁材备验",
     targetItemId: "iron_ore",
     targetItemName: "铁矿",
     quantity: 15,
@@ -387,9 +392,10 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: [],
     npcId: "a_shi",
     tier: 2,
+    description: "裴砚川为支护件留样复核征集铁矿，交付批次将单独记录矿层来源。",
   },
   {
-    name: "珍鱼征集令",
+    name: "夏汛鱼群复核",
     targetItemId: "catfish",
     targetItemName: "鲶鱼",
     quantity: 5,
@@ -399,11 +405,12 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ["summer"],
     npcId: "qiu_yue",
     tier: 2,
+    description: "沈听澜需要夏汛代表鱼样校验水温与鱼群活动记录，禁止超量捕捞。",
   },
   {
-    name: "集仓冬麦轮换",
+    name: "伏雪麦冬储轮换",
     targetItemId: "winter_wheat",
-    targetItemName: "冬小麦",
+    targetItemName: "伏雪麦",
     quantity: 15,
     days: 7,
     moneyReward: 1200,
@@ -411,9 +418,10 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ["winter"],
     npcId: "chen_bo",
     tier: 2,
+    description: "万象行准备轮换冬储主粮，征集伏雪麦核对含水、仓耗与出入库记录。",
   },
   {
-    name: "药材收集",
+    name: "百草炮制供样",
     targetItemId: "herb",
     targetItemName: "草药",
     quantity: 15,
@@ -423,12 +431,13 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ["spring", "summer", "autumn"],
     npcId: "lin_lao",
     tier: 2,
+    description: "百草调养局需要同批草药复核阴干与研制损耗，交付后用于调养册校准。",
   },
   // === 第3梯度 (第21天): 困难, 7天时限, 数量大, 奖励丰厚 ===
   {
-    name: "秋田产量校录",
+    name: "金仓瓜丰歉校录",
     targetItemId: "pumpkin",
-    targetItemName: "南瓜",
+    targetItemName: "金仓瓜",
     quantity: 10,
     days: 7,
     moneyReward: 2000,
@@ -436,11 +445,12 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ["autumn"],
     npcId: "liu_niang",
     tier: 3,
+    description: "陆清和按田契地块校录金仓瓜的单株产量、耐储时长与秋藏去向。",
   },
   {
-    name: "西瓜大丰收",
+    name: "澄沙瓜醒曲供样",
     targetItemId: "watermelon",
-    targetItemName: "西瓜",
+    targetItemName: "澄沙瓜",
     quantity: 10,
     days: 7,
     moneyReward: 2200,
@@ -448,6 +458,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ["summer"],
     npcId: "xiao_man",
     tier: 3,
+    description: "百工作序准备校验果酿醒曲批次，需要同熟度澄沙瓜作为对照原料。",
   },
   {
     name: "深层金矿",
@@ -490,9 +501,9 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 4,
   },
   {
-    name: "丰歉卷南瓜样本",
+    name: "金仓瓜秋藏总样",
     targetItemId: "pumpkin",
-    targetItemName: "南瓜",
+    targetItemName: "金仓瓜",
     quantity: 20,
     days: 7,
     moneyReward: 4500,
@@ -503,6 +514,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ["autumn"],
     npcId: "liu_niang",
     tier: 4,
+    description: "乡志司汇编秋藏丰歉卷，需要大批金仓瓜核对分级、仓储与酱制损耗。",
   },
   {
     name: "渔王挑战",
@@ -517,9 +529,9 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 4,
   },
   {
-    name: "冬储周转总单",
+    name: "伏雪麦冬储总单",
     targetItemId: "winter_wheat",
-    targetItemName: "冬小麦",
+    targetItemName: "伏雪麦",
     quantity: 30,
     days: 7,
     moneyReward: 3500,
@@ -530,6 +542,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     seasons: ["winter"],
     npcId: "chen_bo",
     tier: 4,
+    description: "顾百川汇总岁末集仓周转，需要伏雪麦完成口粮仓的整批换仓。",
   },
 
   // === 内容纵深 V1.3：宗门灵植订单，把灵田经营、修仙、秘境材料串起来 ===
@@ -763,6 +776,8 @@ export const generateSpecialOrder = (
   if (valid.length === 0) return null;
 
   const template = valid[Math.floor(Math.random() * valid.length)]!;
+  const currentTargetName =
+    getItemById(template.targetItemId)?.name ?? template.targetItemName;
   const npcDef = getNpcById(template.npcId);
   const npcName = npcDef?.name ?? template.npcId;
   const tierLabel = TIER_LABELS[clampedTier - 1];
@@ -777,14 +792,14 @@ export const generateSpecialOrder = (
     orderTag: template.orderTag,
     description:
       template.description ??
-      `${npcName}急需${template.quantity}个${template.targetItemName}。`,
+      `${npcName}按职责单征集${template.quantity}个${currentTargetName}。`,
     targetItemId: template.targetItemId,
-    targetItemName: template.targetItemName,
+    targetItemName: currentTargetName,
     targetQuantity: template.quantity,
     collectedQuantity: 0,
     targets: template.targets?.map((t) => ({
       itemId: t.itemId,
-      name: t.name,
+      name: getItemById(t.itemId)?.name ?? t.name,
       quantity: t.quantity,
       collectedQuantity: 0,
     })),
@@ -834,10 +849,17 @@ export const generateQuest = (
 
   questCounter++;
   const verb = QUEST_TYPE_VERBS[template.type];
+  const currentTargetName = getItemById(target.itemId)?.name ?? target.name;
+  const dutyLead: Partial<Record<QuestType, string>> = {
+    delivery: "集仓与乡志值务需要",
+    fishing: "河务取样册需要",
+    mining: "百工勘验单需要",
+    gathering: "公共备料册需要",
+  };
   const description =
     template.type === "delivery"
-      ? `${npcName}需要${quantity}个${target.name}，请${verb}${npcName}。`
-      : `${npcName}委托：${verb}${quantity}个${target.name}。`;
+      ? `${npcName}发布集仓订单：${dutyLead[template.type] ?? "当值工作需要"}${quantity}个${currentTargetName}，请${verb}${npcName}。`
+      : `${npcName}发布职责订单：${dutyLead[template.type] ?? "当值工作需要"}${verb}${quantity}个${currentTargetName}。`;
 
   return {
     id: `quest_${Date.now()}_${questCounter}`,
@@ -846,7 +868,7 @@ export const generateQuest = (
     npcName,
     description,
     targetItemId: target.itemId,
-    targetItemName: target.name,
+    targetItemName: currentTargetName,
     targetQuantity: quantity,
     collectedQuantity: 0,
     moneyReward,

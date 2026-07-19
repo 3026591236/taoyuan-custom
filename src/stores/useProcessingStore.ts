@@ -246,30 +246,48 @@ export const useProcessingStore = defineStore("processing", () => {
     const warehouseStore = useWarehouseStore();
     const voidOutput = warehouseStore.getVoidOutputChest();
     const outputQuality = slot.inputQuality ?? "normal";
-    if (
-      !voidOutput ||
-      !warehouseStore.addItemToChest(
+    const canUseOutputChest =
+      !!voidOutput &&
+      warehouseStore.canAcceptItemInChest(
         voidOutput.id,
         recipe.outputItemId,
         recipe.outputQuantity,
         outputQuality,
-      )
-    ) {
-      inventoryStore.addItem(
-        recipe.outputItemId,
-        recipe.outputQuantity,
-        outputQuality,
       );
+    const canUseInventory = inventoryStore.canAcceptItem(
+      recipe.outputItemId,
+      recipe.outputQuantity,
+      outputQuality,
+    );
+    if (!canUseOutputChest && !canUseInventory) {
+      addLog("产物暂存失败：成品箱与纳戒均无足够空间，机器将保留完成状态。");
+      return null;
+    }
+    const stored = canUseOutputChest
+      ? warehouseStore.addItemToChest(
+          voidOutput!.id,
+          recipe.outputItemId,
+          recipe.outputQuantity,
+          outputQuality,
+        )
+      : inventoryStore.addItem(
+          recipe.outputItemId,
+          recipe.outputQuantity,
+          outputQuality,
+        );
+    if (!stored) {
+      addLog("产物归集未完成，机器将保留完成状态，请整理储物空间后重试。");
+      return null;
     }
 
-    // 灵种制造机额外触发育种灵种生成
+    // 留种风选台额外触发育种灵种生成
     if (slot.machineType === "seed_maker" && slot.inputItemId) {
       const breedingStore = useBreedingStore();
       const farmingLevel = skillStore.farmingLevel;
       if (
         breedingStore.trySeedMakerGeneticSeed(slot.inputItemId, farmingLevel)
       ) {
-        addLog("灵种制造机额外产出了一颗育种灵种！");
+        addLog("留种风选台额外产出了一颗育种灵种！");
       }
     }
 
@@ -464,20 +482,45 @@ export const useProcessingStore = defineStore("processing", () => {
           if (recipe.inputItemId === null || machineDef?.autoCollect) {
             // 自动收取：无需原料的机器（蜂箱/蚯蚓箱）或标记了 autoCollect 的机器（熔炉）
             const outputQuality = slot.inputQuality ?? "normal";
-            if (
-              !voidOutput ||
-              !warehouseStore.addItemToChest(
+            const canStore =
+              (!!voidOutput &&
+                warehouseStore.canAcceptItemInChest(
+                  voidOutput.id,
+                  recipe.outputItemId,
+                  recipe.outputQuantity,
+                  outputQuality,
+                )) ||
+              inventoryStore.canAcceptItem(
+                recipe.outputItemId,
+                recipe.outputQuantity,
+                outputQuality,
+              );
+            if (!canStore) {
+              addLog("自动归集暂停：成品箱与纳戒均无足够空间，机器保留完成状态。");
+              continue;
+            }
+            const stored =
+              !!voidOutput &&
+              warehouseStore.canAcceptItemInChest(
                 voidOutput.id,
                 recipe.outputItemId,
                 recipe.outputQuantity,
                 outputQuality,
               )
-            ) {
-              inventoryStore.addItem(
-                recipe.outputItemId,
-                recipe.outputQuantity,
-                outputQuality,
-              );
+                ? warehouseStore.addItemToChest(
+                    voidOutput.id,
+                    recipe.outputItemId,
+                    recipe.outputQuantity,
+                    outputQuality,
+                  )
+                : inventoryStore.addItem(
+                    recipe.outputItemId,
+                    recipe.outputQuantity,
+                    outputQuality,
+                  );
+            if (!stored) {
+              addLog("自动归集未完成，机器保留完成状态，请整理储物空间后重试。");
+              continue;
             }
             collected.push(recipe.name);
             // 无需原料的机器自动重启，有原料的机器回到空闲
@@ -499,24 +542,49 @@ export const useProcessingStore = defineStore("processing", () => {
             if (voidInput && recipe.inputItemId) {
               // 自动收取当前产物
               const outputQuality = slot.inputQuality ?? "normal";
-              if (
-                !voidOutput ||
-                !warehouseStore.addItemToChest(
+              const canStore =
+                (!!voidOutput &&
+                  warehouseStore.canAcceptItemInChest(
+                    voidOutput.id,
+                    recipe.outputItemId,
+                    recipe.outputQuantity,
+                    outputQuality,
+                  )) ||
+                inventoryStore.canAcceptItem(
+                  recipe.outputItemId,
+                  recipe.outputQuantity,
+                  outputQuality,
+                );
+              if (!canStore) {
+                addLog("自动归集暂停：成品箱与纳戒均无足够空间，机器保留完成状态。");
+                continue;
+              }
+              const stored =
+                !!voidOutput &&
+                warehouseStore.canAcceptItemInChest(
                   voidOutput.id,
                   recipe.outputItemId,
                   recipe.outputQuantity,
                   outputQuality,
                 )
-              ) {
-                inventoryStore.addItem(
-                  recipe.outputItemId,
-                  recipe.outputQuantity,
-                  outputQuality,
-                );
+                  ? warehouseStore.addItemToChest(
+                      voidOutput.id,
+                      recipe.outputItemId,
+                      recipe.outputQuantity,
+                      outputQuality,
+                    )
+                  : inventoryStore.addItem(
+                      recipe.outputItemId,
+                      recipe.outputQuantity,
+                      outputQuality,
+                    );
+              if (!stored) {
+                addLog("自动归集未完成，机器保留完成状态，请整理储物空间后重试。");
+                continue;
               }
               collected.push(recipe.name);
 
-              // 灵种制造机额外触发育种灵种生成
+              // 留种风选台额外触发育种灵种生成
               if (slot.machineType === "seed_maker" && slot.inputItemId) {
                 const breedingStore = useBreedingStore();
                 const farmingLevel = skillStore.farmingLevel;
@@ -526,7 +594,7 @@ export const useProcessingStore = defineStore("processing", () => {
                     farmingLevel,
                   )
                 ) {
-                  addLog("灵种制造机额外产出了一颗育种灵种！");
+                  addLog("留种风选台额外产出了一颗育种灵种！");
                 }
               }
 

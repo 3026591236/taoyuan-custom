@@ -741,7 +741,7 @@ export const handleEndDay = () => {
       case "chun_lan":
         if (Math.random() < 0.25 + bonusChance2) {
           inventoryStore.addItem("green_tea_drink");
-          addLog(`${zhijiName}送来了一壶好茶。`);
+          addLog(`${zhijiName}送来一份附焙火批签的茶样。`);
         }
         break;
       case "xue_qin":
@@ -763,7 +763,7 @@ export const handleEndDay = () => {
           const wines = ["peach_wine", "jujube_wine", "corn_wine"];
           const w = wines[Math.floor(Math.random() * wines.length)]!;
           inventoryStore.addItem(w);
-          addLog(`${zhijiName}送来了一壶${getItemById(w)?.name ?? "酒"}。`);
+          addLog(`${zhijiName}送来一份附曲候记录的${getItemById(w)?.name ?? "酒样"}。`);
         }
         break;
     }

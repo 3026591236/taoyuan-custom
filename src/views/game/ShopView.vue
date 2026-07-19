@@ -251,7 +251,7 @@
 
         <!-- ====== 万象行 ====== -->
         <template v-else-if="shopStore.currentShopId === 'wanwupu'">
-          <ShopHeader name="万象行" npc="顾百川" />
+          <ShopHeader name="万象行·田契柜" npc="顾百川" />
 
           <!-- 当季灵种 -->
           <h4 class="text-accent text-sm mb-2 mt-3">
@@ -289,6 +289,9 @@
                     seed.regrowth ? ` · 每${seed.regrowthDays}天再收` : ""
                   }}
                   → 售{{ seed.sellPrice }}文
+                </p>
+                <p class="text-muted text-[10px] mt-0.5">
+                  {{ seed.economyRole }} · {{ seed.uses.join(" / ") }}
                 </p>
               </div>
               <span class="text-xs text-accent whitespace-nowrap"
@@ -519,7 +522,7 @@
 
         <!-- ====== 铁匠铺 ====== -->
         <template v-else-if="shopStore.currentShopId === 'tiejiangpu'">
-          <ShopHeader name="铁匠铺" npc="孙铁匠" />
+          <ShopHeader name="地火百工炉" npc="孙铁匠" />
 
           <div class="flex flex-col space-y-2">
             <div
@@ -664,7 +667,7 @@
 
         <!-- ====== 镖局 ====== -->
         <template v-else-if="shopStore.currentShopId === 'biaoju'">
-          <ShopHeader name="镖局" npc="云飞" />
+          <ShopHeader name="山门行旅署" npc="云飞" />
 
           <!-- 武器 -->
           <h4 class="text-accent text-sm mb-2">
@@ -807,7 +810,7 @@
 
         <!-- ====== 药铺 ====== -->
         <template v-else-if="shopStore.currentShopId === 'yaopu'">
-          <ShopHeader name="药铺" npc="林老" />
+          <ShopHeader name="百草调养局" npc="林老" />
 
           <!-- 肥料 -->
           <h4 class="text-accent text-sm mb-2">
@@ -933,7 +936,7 @@
 
         <!-- ====== 绸缎庄 ====== -->
         <template v-else-if="shopStore.currentShopId === 'chouduanzhuang'">
-          <ShopHeader name="绸缎庄" npc="素素" />
+          <ShopHeader name="云梭织作局" npc="素素" />
 
           <div class="flex flex-col space-y-2">
             <div
@@ -1615,7 +1618,7 @@ const achievementStore = useAchievementStore();
 const tutorialHint = computed(() => {
   if (!tutorialStore.enabled || gameStore.year > 1) return null;
   if (achievementStore.stats.totalCropsHarvested === 0)
-    return "万象行出售各种灵种，购买后去灵田种植。上方可以切换「买入」和「卖出」。";
+    return "万象行·田契柜按四时供应灵种，并标注鲜供、藏制、油料与食案去向。上方可以切换「买入」和「卖出」。";
   return null;
 });
 

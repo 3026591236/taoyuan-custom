@@ -4,22 +4,22 @@ import type { RecipeDef } from "@/types";
 export const RECIPES: RecipeDef[] = [
   {
     id: "stir_fried_cabbage",
-    name: "炒青菜",
+    name: "春畦清炒",
     ingredients: [{ itemId: "cabbage", quantity: 2 }],
     effect: { staminaRestore: 15, healthRestore: 5 },
-    unlockSource: "初始自带",
-    description: "简单朴素的家常菜。",
+    unlockSource: "万象食案·基础页",
+    description: "春畦青旺火清炒，保留脆嫩水气，是鲜供田契的入门食案。",
   },
   {
     id: "radish_soup",
-    name: "萝卜汤",
+    name: "脆心萝汤",
     ingredients: [
       { itemId: "radish", quantity: 2 },
       { itemId: "firewood", quantity: 1 },
     ],
     effect: { staminaRestore: 25, healthRestore: 10 },
     unlockSource: "顾百川好感「相识」",
-    description: "热腾腾的萝卜汤，暖身又暖心。",
+    description: "脆心萝慢煨成清甜热汤，适合作为集仓轮值后的暖食。",
   },
   {
     id: "braised_carp",
@@ -38,18 +38,18 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "herbal_porridge",
-    name: "药膳粥",
+    name: "星澜百草粥",
     ingredients: [
       { itemId: "herb", quantity: 2 },
       { itemId: "rice", quantity: 1 },
     ],
     effect: { staminaRestore: 40, healthRestore: 20 },
-    unlockSource: "林老好感「相识」",
-    description: "调理身体的药膳粥。",
+    unlockSource: "百草调养局·食养页",
+    description: "星澜粳与时令草药同熬，供巡田与劳作后调养气力。",
   },
   {
     id: "osmanthus_cake",
-    name: "桂花糕",
+    name: "闻潮桂糕",
     ingredients: [
       { itemId: "osmanthus", quantity: 3 },
       { itemId: "rice", quantity: 2 },
@@ -59,12 +59,12 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 5,
       buff: { type: "giftBonus", value: 2, description: "送礼好感×2（当天）" },
     },
-    unlockSource: "陆清和好感「相识」",
-    description: "精致的桂花糕，送礼极佳。",
+    unlockSource: "乡志司四时食录",
+    description: "闻潮桂窨入星澜粳粉蒸制，香气清雅，常作乡志供样与礼膳。",
   },
   {
     id: "miner_lunch",
-    name: "矿工便当",
+    name: "勘验行囊饭",
     ingredients: [
       { itemId: "potato", quantity: 2 },
       { itemId: "sweet_potato", quantity: 1 },
@@ -79,7 +79,7 @@ export const RECIPES: RecipeDef[] = [
       },
     },
     unlockSource: "裴砚川好感「相识」",
-    description: "实打实的矿工饭。",
+    description: "为地脉勘验队备下的根蔬行囊饭，耐放也便于分食。",
   },
   {
     id: "spicy_hotpot",
@@ -127,7 +127,7 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "ginger_soup",
-    name: "姜汤",
+    name: "暖脉姜汤",
     ingredients: [
       { itemId: "ginger", quantity: 2 },
       { itemId: "firewood", quantity: 1 },
@@ -137,20 +137,20 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 10,
       buff: { type: "speed", value: 15, description: "行动速度+15%（当天）" },
     },
-    unlockSource: "初始自带",
-    description: "驱寒暖胃的姜汤。",
+    unlockSource: "万象食案·基础页",
+    description: "暖脉姜煨成辛香热饮，适合寒雨与冬储值守时驱寒。",
   },
   {
     id: "jujube_cake",
-    name: "红枣糕",
+    name: "赤纹枣糕",
     ingredients: [
       { itemId: "jujube", quantity: 3 },
       { itemId: "rice", quantity: 1 },
     ],
     effect: { staminaRestore: 35, healthRestore: 15 },
-    unlockSource: "烹饪等级2",
+    unlockSource: "万象食案·进阶页",
     requiredSkill: { type: "farming", level: 2 },
-    description: "香甜软糯的红枣糕。",
+    description: "赤纹枣与星澜粳蒸成软糕，便携耐放，适合集仓轮值。",
   },
   {
     id: "peach_blossom_cake",
@@ -182,10 +182,11 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "miner_iron_pot",
-    name: "矿工铁锅饭",
+    name: "勘验热锅饭",
     ingredients: [
       { itemId: "rice", quantity: 2 },
-      { itemId: "copper_ore", quantity: 1 },
+      { itemId: "egg", quantity: 1 },
+      { itemId: "radish", quantity: 1 },
       { itemId: "firewood", quantity: 1 },
     ],
     effect: {
@@ -197,9 +198,9 @@ export const RECIPES: RecipeDef[] = [
         description: "采玄矿体力消耗-25%（当天）",
       },
     },
-    unlockSource: "采玄矿等级4",
+    unlockSource: "地脉勘验队归井膳",
     requiredSkill: { type: "mining", level: 4 },
-    description: "矿工们的铁锅大杂烩。",
+    description: "星澜粳、蛋品与耐储根菜焖成热锅饭，供勘验队归井后恢复气力。",
   },
   {
     id: "bamboo_shoot_stir_fry",
@@ -238,14 +239,14 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "sesame_paste",
-    name: "芝麻糊",
+    name: "乌金芝糊",
     ingredients: [
       { itemId: "sesame", quantity: 3 },
       { itemId: "rice", quantity: 1 },
     ],
     effect: { staminaRestore: 30, healthRestore: 10 },
-    unlockSource: "初始自带",
-    description: "浓郁香滑的芝麻糊。",
+    unlockSource: "百工作序·初制册",
+    description: "乌金芝与星澜粳细磨成糊，香浓温润，是油料田契的日常食案。",
   },
   {
     id: "ginseng_soup",
@@ -326,11 +327,11 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "congee",
-    name: "白粥",
+    name: "星澜清粥",
     ingredients: [{ itemId: "rice", quantity: 2 }],
     effect: { staminaRestore: 15, healthRestore: 5 },
-    unlockSource: "初始自带",
-    description: "清淡养胃的白粥。",
+    unlockSource: "万象食案·基础页",
+    description: "星澜粳慢熬成清粥，是食案中最稳妥的主粮底味。",
   },
   {
     id: "rice_ball",
@@ -358,15 +359,15 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "vegetable_soup",
-    name: "田园蔬菜汤",
+    name: "春畦双蔬汤",
     ingredients: [
       { itemId: "cabbage", quantity: 1 },
       { itemId: "radish", quantity: 1 },
       { itemId: "firewood", quantity: 1 },
     ],
     effect: { staminaRestore: 25, healthRestore: 10 },
-    unlockSource: "初始自带",
-    description: "新鲜蔬菜熬制的清汤。",
+    unlockSource: "万象食案·基础页",
+    description: "春畦青与脆心萝同煨，汇成清爽鲜供汤食。",
   },
   {
     id: "chive_egg_stir_fry",
@@ -394,7 +395,7 @@ export const RECIPES: RecipeDef[] = [
   // ==================== NPC 好感食谱 — 相识 (1 新) ====================
   {
     id: "sweet_osmanthus_tea",
-    name: "桂花甜茶",
+    name: "闻潮蜜饮",
     ingredients: [
       { itemId: "osmanthus", quantity: 1 },
       { itemId: "honey", quantity: 1 },
@@ -405,7 +406,7 @@ export const RECIPES: RecipeDef[] = [
       buff: { type: "luck", value: 10, description: "幸运+10%（当天）" },
     },
     unlockSource: "小满好感「相识」",
-    description: "芬芳甜蜜的桂花甜茶。",
+    description: "闻潮桂与花蜜温冲，记录花期香气，也适合作为百工歇息饮。",
   },
 
   // ==================== NPC 好感食谱 — 相知 (6) ====================
@@ -500,7 +501,7 @@ export const RECIPES: RecipeDef[] = [
   // ==================== NPC 好感食谱 — 挚友 (6) ====================
   {
     id: "farmers_feast",
-    name: "农家盛宴",
+    name: "田契合席",
     ingredients: [
       { itemId: "rice", quantity: 2 },
       { itemId: "cabbage", quantity: 2 },
@@ -517,7 +518,7 @@ export const RECIPES: RecipeDef[] = [
       },
     },
     unlockSource: "顾百川好感「挚友」",
-    description: "顾百川为集仓劳作日准备的丰盛合席。",
+    description: "将主粮、鲜蔬与蛋品按田契配成合席，供集仓劳作日共同用餐。",
   },
   {
     id: "autumn_moon_feast",
@@ -807,7 +808,7 @@ export const RECIPES: RecipeDef[] = [
   // ==================== 灵耕百艺食谱 (3 新) ====================
   {
     id: "pumpkin_pie",
-    name: "南瓜饼",
+    name: "金仓瓜饼",
     ingredients: [
       { itemId: "pumpkin", quantity: 2 },
       { itemId: "rice", quantity: 1 },
@@ -821,13 +822,13 @@ export const RECIPES: RecipeDef[] = [
         description: "灵耕体力消耗-15%（当天）",
       },
     },
-    unlockSource: "灵耕等级6",
+    unlockSource: "万象食案·秋藏页",
     requiredSkill: { type: "farming", level: 6 },
-    description: "金黄松软的南瓜饼。",
+    description: "金仓瓜压泥拌入谷粉烙制，耐储、顶饱，是秋藏线的代表食案。",
   },
   {
     id: "golden_fried_rice",
-    name: "黄金炒饭",
+    name: "星澜金穗饭",
     ingredients: [
       { itemId: "rice", quantity: 2 },
       { itemId: "egg", quantity: 2 },
@@ -842,9 +843,9 @@ export const RECIPES: RecipeDef[] = [
         description: "灵耕体力消耗-20%（当天）",
       },
     },
-    unlockSource: "灵耕等级7",
+    unlockSource: "万象食案·主粮页",
     requiredSkill: { type: "farming", level: 7 },
-    description: "粒粒金黄的炒饭。",
+    description: "星澜粳、蛋品与玉米同炒，粒粒分明，适合田间轮班补给。",
   },
   {
     id: "supreme_farm_feast",
@@ -956,16 +957,16 @@ export const RECIPES: RecipeDef[] = [
   // ==================== 采玄矿百艺食谱 (5 新) ====================
   {
     id: "stone_soup",
-    name: "矿石汤",
+    name: "石灶根蔬汤",
     ingredients: [
-      { itemId: "copper_ore", quantity: 2 },
       { itemId: "radish", quantity: 1 },
+      { itemId: "potato", quantity: 1 },
       { itemId: "firewood", quantity: 1 },
     ],
     effect: { staminaRestore: 25, healthRestore: 20 },
-    unlockSource: "采玄矿等级3",
+    unlockSource: "地脉勘验队基础膳",
     requiredSkill: { type: "mining", level: 3 },
-    description: "玄矿幽脉中就地取材的汤。",
+    description: "以矿区石灶慢煨脆心萝与薯粮，名称来自灶具，不再把矿石当作食材。",
   },
   {
     id: "crystal_jelly",
@@ -1006,10 +1007,11 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "gold_dumpling",
-    name: "金矿饺",
+    name: "金穗蒸饺",
     ingredients: [
-      { itemId: "gold_ore", quantity: 1 },
       { itemId: "winter_wheat", quantity: 2 },
+      { itemId: "corn", quantity: 1 },
+      { itemId: "egg", quantity: 1 },
     ],
     effect: {
       staminaRestore: 55,
@@ -1020,9 +1022,9 @@ export const RECIPES: RecipeDef[] = [
         description: "采玄矿体力消耗-30%（当天）",
       },
     },
-    unlockSource: "采玄矿等级7",
+    unlockSource: "地脉勘验队进阶膳",
     requiredSkill: { type: "mining", level: 7 },
-    description: "金粉入馅的矿工饺子。",
+    description: "伏雪麦皮包入金黄玉米与蛋品，形似金穗，供深层勘验前整备。",
   },
   {
     id: "void_essence_soup",
@@ -1199,7 +1201,7 @@ export const RECIPES: RecipeDef[] = [
   // ==================== 季节节日食谱 (4) ====================
   {
     id: "spring_roll",
-    name: "春卷",
+    name: "春畦卷",
     ingredients: [
       { itemId: "cabbage", quantity: 2 },
       { itemId: "bamboo_shoot", quantity: 1 },
@@ -1210,8 +1212,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 15,
       buff: { type: "speed", value: 15, description: "行动速度+15%（当天）" },
     },
-    unlockSource: "春耕祭奖励",
-    description: "春耕祭传统的春卷。",
+    unlockSource: "春耕祭食案奖励",
+    description: "春畦青、春笋与乌金初榨卷成薄卷，呈现春季鲜供与油料协作。",
   },
   {
     id: "lotus_lantern_cake",
@@ -1231,7 +1233,7 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "harvest_feast",
-    name: "丰收盛宴",
+    name: "秋藏合席",
     ingredients: [
       { itemId: "pumpkin", quantity: 1 },
       { itemId: "sweet_potato", quantity: 1 },
@@ -1247,12 +1249,12 @@ export const RECIPES: RecipeDef[] = [
         description: "灵耕体力消耗-20%（当天）",
       },
     },
-    unlockSource: "丰收宴奖励",
-    description: "丰收宴上的传统大菜。",
+    unlockSource: "丰收宴食案奖励",
+    description: "金仓瓜、薯粮与玉米合制成席，用来核对秋藏作物的丰歉记录。",
   },
   {
     id: "new_year_dumpling",
-    name: "年夜饺",
+    name: "伏雪岁饺",
     ingredients: [
       { itemId: "winter_wheat", quantity: 3 },
       { itemId: "napa_cabbage", quantity: 2 },
@@ -1263,8 +1265,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 30,
       buff: { type: "luck", value: 20, description: "幸运+20%（当天）" },
     },
-    unlockSource: "除夕守岁奖励",
-    description: "除夕夜包的幸运饺子。",
+    unlockSource: "除夕守岁食案奖励",
+    description: "伏雪麦包入抱霜白与暖脉姜，是冬储轮换后共享的守岁主食。",
   },
 
   // ==================== 新增节日食谱 (10) ====================
@@ -1487,11 +1489,11 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "miners_glory",
-    name: "矿工荣光",
+    name: "归井庆功饭",
     ingredients: [
-      { itemId: "gold_ore", quantity: 1 },
-      { itemId: "egg", quantity: 2 },
       { itemId: "rice", quantity: 1 },
+      { itemId: "egg", quantity: 2 },
+      { itemId: "pumpkin", quantity: 1 },
     ],
     effect: {
       staminaRestore: 50,
@@ -1503,7 +1505,7 @@ export const RECIPES: RecipeDef[] = [
       },
     },
     unlockSource: "功业：到达玄矿幽脉30层",
-    description: "矿工荣耀的象征。",
+    description: "星澜粳、蛋品与金仓瓜同焖，为安全归井的勘验队共享庆功。",
   },
   {
     id: "chef_special",
@@ -1849,15 +1851,15 @@ export const RECIPES: RecipeDef[] = [
 
   {
     id: "vinegar_cabbage",
-    name: "醋溜白菜",
+    name: "星澜醋炒春畦青",
     ingredients: [
       { itemId: "rice_vinegar", quantity: 1 },
       { itemId: "cabbage", quantity: 2 },
     ],
     effect: { staminaRestore: 30, healthRestore: 10 },
-    unlockSource: "烹饪等级3",
+    unlockSource: "百工作序·藏制册",
     requiredSkill: { type: "farming", level: 3 },
-    description: "酸爽开胃的家常菜，米醋的妙用。",
+    description: "星澜谷醋提亮春畦青的脆嫩，连接主粮酿造与鲜供食案。",
   },
   {
     id: "cheese_baked_rice",
@@ -1937,16 +1939,16 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "pickled_veggie_fried_rice",
-    name: "腌菜炒饭",
+    name: "四时藏菜炒饭",
     ingredients: [
       { itemId: "pickled_cabbage", quantity: 1 },
       { itemId: "rice", quantity: 2 },
       { itemId: "egg", quantity: 1 },
     ],
     effect: { staminaRestore: 35, healthRestore: 15 },
-    unlockSource: "烹饪等级3",
+    unlockSource: "百工作序·藏制册",
     requiredSkill: { type: "farming", level: 3 },
-    description: "腌白菜的咸香与蛋炒饭完美结合。",
+    description: "春畦脆藏切细，与星澜粳和蛋品同炒，把藏制余味化为轮值热饭。",
   },
   {
     id: "pickled_chili_fish",
@@ -1996,7 +1998,7 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "tea_oil_fried_egg",
-    name: "茶油煎蛋",
+    name: "回岚清油煎蛋",
     ingredients: [
       { itemId: "tea_oil", quantity: 1 },
       { itemId: "egg", quantity: 2 },
@@ -2006,9 +2008,9 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 15,
       buff: { type: "speed", value: 1, description: "旅行加速+1（当天）" },
     },
-    unlockSource: "烹饪等级4",
+    unlockSource: "百工作序·油料册",
     requiredSkill: { type: "farming", level: 4 },
-    description: "山茶油煎出的金黄蛋饼，清香扑鼻。",
+    description: "回岚清油煎出金边蛋品，清香不腻，适合行旅前快速补给。",
   },
   {
     id: "truffle_oil_risotto",
@@ -2203,7 +2205,7 @@ export const RECIPES: RecipeDef[] = [
   },
   {
     id: "jujube_wine_stew",
-    name: "红枣酒炖梨",
+    name: "赤纹温酿枣羹",
     ingredients: [
       { itemId: "jujube_wine", quantity: 1 },
       { itemId: "jujube", quantity: 2 },
@@ -2214,7 +2216,7 @@ export const RECIPES: RecipeDef[] = [
       buff: { type: "stamina", value: 20, description: "体力消耗-20%（当天）" },
     },
     unlockSource: "红豆好感「知己」",
-    description: "红枣酒炖煮的甜品，补气养血。",
+    description: "赤纹温酿与赤纹枣慢煨成羹，暖润醇厚，是寒季集仓的压轴甜食。",
   },
   {
     id: "osmanthus_wine_chicken",

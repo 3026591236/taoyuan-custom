@@ -56,6 +56,12 @@ export interface CropDef {
   maxHarvests?: number;
   /** 是否可形成巨型作物 */
   giantCropEligible?: boolean;
+  /** 公开经济定位，仅用于配置与界面说明，不写入存档 */
+  economyRole?: string;
+  /** 从田间到交易的供给环节，仅用于说明 */
+  supplyStage?: "staple" | "fresh" | "preserve" | "craft" | "ritual";
+  /** 推荐去向，仅用于引导，不改变旧有配方或价格 */
+  uses?: string[];
 }
 
 /** 灵田尺寸 */

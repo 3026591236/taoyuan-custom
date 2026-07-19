@@ -97,6 +97,7 @@
               <span class="text-[10px] text-muted"
                 >×{{ group.slots.length }}</span
               >
+              <span class="text-[10px] text-muted hidden sm:inline">{{ group.description }}</span>
               <span
                 v-if="group.slots.some((s) => s.slot.ready)"
                 class="text-[10px] text-success"
@@ -200,6 +201,9 @@
                         {{ getCombinedItemCount(recipe.inputItemId) }}/{{
                           recipe.inputQuantity
                         }} · 来源：{{ getItemSource(recipe.inputItemId) }})
+                      </span>
+                      <span v-if="recipe.supplyRole" class="block text-[10px] text-muted">
+                        {{ recipe.supplyRole }}
                       </span>
                     </Button>
                   </div>
@@ -805,6 +809,7 @@ const getSeedMakerQualityRecipes = (machineType: MachineType) => {
 interface MachineGroup {
   machineType: MachineType;
   name: string;
+  description: string;
   slots: {
     slot: (typeof processingStore.machines)[number];
     originalIndex: number;
@@ -824,6 +829,8 @@ const machineGroups = computed((): MachineGroup[] => {
       group = {
         machineType: slot.machineType,
         name: getMachineName(slot.machineType),
+        description:
+          PROCESSING_MACHINES.find((m) => m.id === slot.machineType)?.description ?? "",
         slots: [],
       };
       groupMap.set(slot.machineType, group);

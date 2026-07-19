@@ -158,7 +158,7 @@
           <PackageOpen :size="32" class="text-muted/30" />
           <p class="text-xs text-muted">灵种箱为空</p>
           <p class="text-xs text-muted/60">
-            通过灵种制造机收取产物时有概率获得育种灵种
+            通过留种风选台收取产物时有概率获得育种灵种
           </p>
         </div>
         <div
@@ -218,7 +218,7 @@
               <span class="text-accent">30%+种植等级×3%</span>
               概率获得育种灵种
             </li>
-            <li>· 灵种制造机加工灵植也有概率产出育种灵种</li>
+            <li>· 留种风选台加工灵植也有概率产出育种灵种</li>
             <li>
               · 育种灵种拥有独立遗传属性（甜度/产量/抗性），与物品品质无关
             </li>

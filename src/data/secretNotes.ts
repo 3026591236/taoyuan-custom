@@ -120,8 +120,8 @@ export const SECRET_NOTES: SecretNoteDef[] = [
   {
     id: 15,
     type: "npc",
-    title: "厨娘的愿望",
-    content: "王大婶一直想做出最完美的米饭。她说，好的大米是一切美食的根基。",
+    title: "食案的三锅米",
+    content: "王大婶在万象食案留了三锅星泉稻对照样。她说，同名稻米也要按产地、含水和吸水分别下锅，公共供餐不能靠一句“老经验”。",
     usable: false,
   },
   {

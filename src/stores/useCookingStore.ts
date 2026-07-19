@@ -135,6 +135,15 @@ export const useCookingStore = defineStore("cooking", () => {
       if (idx < minQualityIndex) minQualityIndex = idx;
     }
     const resultQuality = QUALITY_ORDER[minQualityIndex]!;
+    const outputItemId = `food_${recipe.id}`;
+
+    // 原子性预检：容量不足时不消耗任何材料。
+    if (!inventoryStore.canAcceptItem(outputItemId, maxPossible, resultQuality)) {
+      return {
+        success: false,
+        message: "纳戒与临时纳戒空间不足，材料未消耗。",
+      };
+    }
 
     // 批量消耗材料
     for (const ing of recipe.ingredients) {
@@ -142,7 +151,12 @@ export const useCookingStore = defineStore("cooking", () => {
     }
 
     // 添加食物到纳戒
-    inventoryStore.addItem(`food_${recipe.id}`, maxPossible, resultQuality);
+    if (!inventoryStore.addItem(outputItemId, maxPossible, resultQuality)) {
+      return {
+        success: false,
+        message: "成品归集失败，请整理纳戒后重试。",
+      };
+    }
     for (let i = 0; i < maxPossible; i++) {
       useAchievementStore().recordRecipeCooked();
     }

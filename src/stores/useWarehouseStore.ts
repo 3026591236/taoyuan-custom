@@ -80,6 +80,26 @@ export const useWarehouseStore = defineStore("warehouse", () => {
 
   // ---- 物品操作 ----
 
+  /** 判断指定储物匣能否完整容纳物品，计算过程不修改状态。 */
+  const canAcceptItemInChest = (
+    chestId: string,
+    itemId: string,
+    quantity: number = 1,
+    quality: Quality = "normal",
+  ): boolean => {
+    const chest = chests.value.find((c) => c.id === chestId);
+    if (!chest) return false;
+    let remaining = Math.max(0, quantity);
+    for (const slot of chest.items) {
+      if (slot.itemId === itemId && slot.quality === quality) {
+        remaining -= Math.max(0, MAX_STACK - slot.quantity);
+        if (remaining <= 0) return true;
+      }
+    }
+    const freeSlots = CHEST_DEFS[chest.tier].capacity - chest.items.length;
+    return remaining <= Math.max(0, freeSlots) * MAX_STACK;
+  };
+
   /** 直接往储物匣加物品（内部/自动路由用） */
   const addItemToChest = (
     chestId: string,
@@ -426,6 +446,7 @@ export const useWarehouseStore = defineStore("warehouse", () => {
     getChest,
     getChestCapacity,
     isChestFull,
+    canAcceptItemInChest,
     addItemToChest,
     removeItemFromChest,
     getChestItemCount,

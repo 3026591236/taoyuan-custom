@@ -62,16 +62,16 @@ export const getLivingTip = (day: number, year: number): string => {
   return LIVING_TIPS[index]!;
 };
 
-/** 王大婶 - 食谱推荐台词模板 */
+/** 王大婶 - 万象食案工序推荐台词模板 */
 export const getRecipeTipMessage = (
   recipeName: string,
   ingredientNames: string[],
 ): string => {
-  return `今天教你做${recipeName}，需要${ingredientNames.join("、")}。`;
+  return `今天校录万象食案的${recipeName}，备料为${ingredientNames.join("、")}。先核批次，再看火候。`;
 };
 
-/** 王大婶 - 无可推荐食谱时的通用台词 */
-export const NO_RECIPE_TIP = "好好学做饭，以后日子还长着呢。";
+/** 王大婶 - 无可校录食案时的通用台词 */
+export const NO_RECIPE_TIP = "今日没有新增食案，先把已学料理的份量与火候做稳。";
 
 /** 有每日提示功能的NPC ID列表 */
 export const TIP_NPC_IDS = [
@@ -88,6 +88,6 @@ export type TipNpcId = (typeof TIP_NPC_IDS)[number];
 export const TIP_NPC_LABELS: Record<TipNpcId, string> = {
   li_yu: "天气预报",
   zhou_xiucai: "今日运势",
-  wang_dashen: "食谱推荐",
+  wang_dashen: "食案校录",
   liu_cunzhang: "生活提示",
 };

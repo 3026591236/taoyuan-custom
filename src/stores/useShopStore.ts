@@ -266,6 +266,9 @@ export const useShopStore = defineStore("shop", () => {
         regrowth: crop.regrowth ?? false,
         regrowthDays: crop.regrowthDays,
         season: crop.season,
+        description: crop.description,
+        economyRole: crop.economyRole ?? "时令田作",
+        uses: crop.uses ?? [],
       }));
   });
 

@@ -27,15 +27,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 灵耕
   {
     id: "farmer_50",
-    name: "辛勤农夫",
-    description: "累计收获50次灵植。",
+    name: "四时入册",
+    description: "累计收获50次灵植，形成稳定田亩记录。",
     condition: { type: "cropHarvest", count: 50 },
     reward: { money: 300 },
   },
   {
     id: "farmer_200",
-    name: "丰收之王",
-    description: "累计收获200次灵植。",
+    name: "丰歉可据",
+    description: "累计收获200次灵植，乡志已有丰歉依据。",
     condition: { type: "cropHarvest", count: 200 },
     reward: {
       money: 1000,
@@ -106,14 +106,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 金钱
   {
     id: "rich_5000",
-    name: "小康之家",
+    name: "收支有据",
     description: "累计获得5000文。",
     condition: { type: "moneyEarned", amount: 5000 },
     reward: { money: 500 },
   },
   {
     id: "rich_20000",
-    name: "仙乡巨贾",
+    name: "货殖有序",
     description: "累计获得20000文。",
     condition: { type: "moneyEarned", amount: 20000 },
     reward: { money: 2000 },
@@ -121,14 +121,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 烹饪
   {
     id: "chef_10",
-    name: "厨艺初成",
+    name: "万象食案入门",
     description: "累计烹饪10道菜。",
     condition: { type: "recipesCooked", count: 10 },
     reward: { money: 300 },
   },
   {
     id: "chef_50",
-    name: "美食大师",
+    name: "食案校录师",
     description: "累计烹饪50道菜。",
     condition: { type: "recipesCooked", count: 50 },
     reward: { money: 1000 },
@@ -152,15 +152,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 委托
   {
     id: "quest_10",
-    name: "乡里热心人",
-    description: "累计完成10个委托委托。",
+    name: "集民协作",
+    description: "累计完成10个职责订单。",
     condition: { type: "questsCompleted", count: 10 },
     reward: { money: 500 },
   },
   {
     id: "quest_40",
-    name: "有求必应",
-    description: "累计完成40个委托委托。",
+    name: "百务有应",
+    description: "累计完成40个职责订单。",
     condition: { type: "questsCompleted", count: 40 },
     reward: { money: 2500 },
   },
@@ -229,22 +229,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 出货
   {
     id: "shipper_10",
-    name: "初入商途",
+    name: "集仓识货",
     description: "出货10种不同物品。",
     condition: { type: "shippedCount", count: 10 },
     reward: { money: 300 },
   },
   {
     id: "shipper_30",
-    name: "物流达人",
+    name: "云集调度",
     description: "出货30种不同物品。",
     condition: { type: "shippedCount", count: 30 },
     reward: { money: 1000 },
   },
   {
     id: "full_shipment",
-    name: "出货全鉴",
-    description: "出货所有可出货物品。",
+    name: "万象货谱",
+    description: "出货所有可出货物品，完成万象货谱。",
     condition: { type: "fullShipment" },
     reward: { money: 5000 },
   },
@@ -266,14 +266,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 更高金钱
   {
     id: "rich_50000",
-    name: "富甲一方",
+    name: "集仓充盈",
     description: "累计获得50000文。",
     condition: { type: "moneyEarned", amount: 50000 },
     reward: { money: 3000 },
   },
   {
     id: "rich_200000",
-    name: "陶朱之富",
+    name: "四时大成",
     description: "累计获得200000文。",
     condition: { type: "moneyEarned", amount: 200000 },
     reward: { money: 10000 },
@@ -281,7 +281,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 更多灵耕 & 垂钓
   {
     id: "farmer_500",
-    name: "田园大亨",
+    name: "四时田契主",
     description: "累计收获500次灵植。",
     condition: { type: "cropHarvest", count: 500 },
     reward: { money: 2000 },
@@ -293,7 +293,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     condition: { type: "fishCaught", count: 200 },
     reward: { money: 2000 },
   },
-  // 全百艺 & 全祠堂
+  // 全百艺 & 全乡志共建册
   {
     id: "all_skills",
     name: "全能大师",
@@ -303,8 +303,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "all_bundles",
-    name: "乡情圆满",
-    description: "完成所有祠堂委托。",
+    name: "乡志共建圆满",
+    description: "完成所有乡志共建册。",
     condition: { type: "allBundlesComplete" },
     reward: { money: 5000 },
   },
@@ -318,15 +318,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "chef_100",
-    name: "御厨",
+    name: "万象食案主理",
     description: "累计烹饪100道菜。",
     condition: { type: "recipesCooked", count: 100 },
     reward: { money: 2000 },
   },
   {
     id: "quest_80",
-    name: "百事通",
-    description: "累计完成80个委托委托。",
+    name: "乡务通达",
+    description: "累计完成80个职责订单。",
     condition: { type: "questsCompleted", count: 80 },
     reward: { money: 3000 },
   },
@@ -387,21 +387,21 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 灵耕
   {
     id: "farmer_10",
-    name: "新手耕耘",
-    description: "累计收获10次灵植。",
+    name: "初领田契",
+    description: "累计收获10次灵植，完成第一轮田契记录。",
     condition: { type: "cropHarvest", count: 10 },
     reward: { money: 100 },
   },
   {
     id: "farmer_100",
-    name: "精耕细作",
+    name: "百畦有序",
     description: "累计收获100次灵植。",
     condition: { type: "cropHarvest", count: 100 },
     reward: { money: 500 },
   },
   {
     id: "farmer_1000",
-    name: "田园传奇",
+    name: "万畦成谱",
     description: "累计收获1000次灵植。",
     condition: { type: "cropHarvest", count: 1000 },
     reward: { money: 5000, items: [{ itemId: "iridium_ore", quantity: 5 }] },
@@ -436,35 +436,35 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 金钱
   {
     id: "rich_1000",
-    name: "初有积蓄",
+    name: "行用初稳",
     description: "累计获得1000文。",
     condition: { type: "moneyEarned", amount: 1000 },
     reward: { money: 100 },
   },
   {
     id: "rich_10000",
-    name: "锦衣玉食",
+    name: "周转从容",
     description: "累计获得10000文。",
     condition: { type: "moneyEarned", amount: 10000 },
     reward: { money: 1000 },
   },
   {
     id: "rich_100000",
-    name: "家财万贯",
+    name: "云集丰实",
     description: "累计获得100000文。",
     condition: { type: "moneyEarned", amount: 100000 },
     reward: { money: 5000 },
   },
   {
     id: "rich_500000",
-    name: "富可敌国",
+    name: "百业共济",
     description: "累计获得500000文。",
     condition: { type: "moneyEarned", amount: 500000 },
     reward: { money: 15000 },
   },
   {
     id: "rich_1000000",
-    name: "金山银海",
+    name: "万象通融",
     description: "累计获得1000000文。",
     condition: { type: "moneyEarned", amount: 1000000 },
     reward: {
@@ -476,21 +476,21 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 烹饪
   {
     id: "chef_5",
-    name: "初学厨艺",
+    name: "食案初页",
     description: "累计烹饪5道菜。",
     condition: { type: "recipesCooked", count: 5 },
     reward: { money: 100 },
   },
   {
     id: "chef_25",
-    name: "灶前好手",
+    name: "四时掌案",
     description: "累计烹饪25道菜。",
     condition: { type: "recipesCooked", count: 25 },
     reward: { money: 500 },
   },
   {
     id: "chef_75",
-    name: "食神传人",
+    name: "百味成册",
     description: "累计烹饪75道菜。",
     condition: { type: "recipesCooked", count: 75 },
     reward: { money: 1500 },
@@ -499,29 +499,29 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 委托
   {
     id: "quest_5",
-    name: "助人为乐",
-    description: "累计完成5个委托委托。",
+    name: "初守契单",
+    description: "累计完成5个职责订单。",
     condition: { type: "questsCompleted", count: 5 },
     reward: { money: 200 },
   },
   {
     id: "quest_20",
-    name: "信使达人",
-    description: "累计完成20个委托委托。",
+    name: "契单守信",
+    description: "累计完成20个职责订单。",
     condition: { type: "questsCompleted", count: 20 },
     reward: { money: 1000 },
   },
   {
     id: "quest_60",
-    name: "使命必达",
-    description: "累计完成60个委托委托。",
+    name: "联单无误",
+    description: "累计完成60个职责订单。",
     condition: { type: "questsCompleted", count: 60 },
     reward: { money: 2000 },
   },
   {
     id: "quest_100",
-    name: "万事通达",
-    description: "累计完成100个委托委托。",
+    name: "万象共办",
+    description: "累计完成100个职责订单。",
     condition: { type: "questsCompleted", count: 100 },
     reward: { money: 5000, items: [{ itemId: "dragon_jade", quantity: 1 }] },
   },
@@ -559,21 +559,21 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // 出货
   {
     id: "shipper_5",
-    name: "初尝贸易",
+    name: "初入集仓",
     description: "出货5种不同物品。",
     condition: { type: "shippedCount", count: 5 },
     reward: { money: 100 },
   },
   {
     id: "shipper_20",
-    name: "商路通达",
+    name: "周转有序",
     description: "出货20种不同物品。",
     condition: { type: "shippedCount", count: 20 },
     reward: { money: 500 },
   },
   {
     id: "shipper_50",
-    name: "贸易大亨",
+    name: "万象通货",
     description: "出货50种不同物品。",
     condition: { type: "shippedCount", count: 50 },
     reward: { money: 2000 },
@@ -1002,12 +1002,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
 ];
 
-/** 祠堂委托板 */
+/** 乡志共建册 */
 export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   {
     id: "spring_bundle",
-    name: "春耕之礼",
-    description: "春季物产合集。",
+    name: "春汛田契册",
+    description: "提交春季田作样本，补全萌发、鲜供与茶芽记录。",
     requiredItems: [
       { itemId: "cabbage", quantity: 5 },
       { itemId: "radish", quantity: 5 },
@@ -1022,8 +1022,8 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   },
   {
     id: "summer_bundle",
-    name: "盛夏之礼",
-    description: "夏季物产合集。",
+    name: "星泉水田册",
+    description: "提交夏季水田与鲜果样本，核对灌溉和河务协作。",
     requiredItems: [
       { itemId: "watermelon", quantity: 3 },
       { itemId: "rice", quantity: 5 },
@@ -1038,8 +1038,8 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   },
   {
     id: "autumn_bundle",
-    name: "金秋之礼",
-    description: "秋季物产合集。",
+    name: "秋藏工序册",
+    description: "提交秋季耐储作物，记录分级、藏制与丰歉。",
     requiredItems: [
       { itemId: "pumpkin", quantity: 3 },
       { itemId: "osmanthus", quantity: 2 },
@@ -1054,8 +1054,8 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   },
   {
     id: "winter_bundle",
-    name: "严冬之礼",
-    description: "冬季物产合集。",
+    name: "冬储周转册",
+    description: "提交寒季田作与调味作物，完成冬储轮换记录。",
     requiredItems: [
       { itemId: "winter_bamboo_shoot", quantity: 5 },
       { itemId: "winter_wheat", quantity: 3 },
@@ -1066,8 +1066,8 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   },
   {
     id: "artisan_bundle",
-    name: "匠心之礼",
-    description: "各种加工品合集。",
+    name: "百工作序册",
+    description: "提交酿、藏、蜂、油等加工成品，核验工序闭环。",
     requiredItems: [
       { itemId: "watermelon_wine", quantity: 1 },
       { itemId: "pickled_cabbage", quantity: 1 },
@@ -1079,8 +1079,8 @@ export const COMMUNITY_BUNDLES: CommunityBundleDef[] = [
   },
   {
     id: "friendship_bundle",
-    name: "乡情之礼",
-    description: "与所有集民建立友善关系。",
+    name: "集民互助册",
+    description: "提交往来花材，记录集民之间的协作与照应。",
     requiredItems: [
       { itemId: "wintersweet", quantity: 2 },
       { itemId: "chrysanthemum", quantity: 2 },
