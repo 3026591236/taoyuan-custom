@@ -1002,7 +1002,7 @@ const tutorialHint = computed(() => {
   const barnBuilt =
     animalStore.buildings.find((b) => b.type === "barn")?.built ?? false;
   if (!coopBuilt && !barnBuilt)
-    return "先去商铺的万物铺建造灵禽舍或灵牧苑，然后就可以购买和饲养动物了。";
+    return "先去商铺的万象行建造灵禽舍或灵牧苑，然后就可以购买和饲养动物了。";
   if (
     animalStore.animals.length > 0 &&
     animalStore.animals.every((a) => !a.wasPetted)

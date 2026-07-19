@@ -249,9 +249,9 @@
           </div>
         </template>
 
-        <!-- ====== 万物铺 ====== -->
+        <!-- ====== 万象行 ====== -->
         <template v-else-if="shopStore.currentShopId === 'wanwupu'">
-          <ShopHeader name="万物铺" npc="陈伯" />
+          <ShopHeader name="万象行" npc="顾百川" />
 
           <!-- 当季灵种 -->
           <h4 class="text-accent text-sm mb-2 mt-3">
@@ -1615,7 +1615,7 @@ const achievementStore = useAchievementStore();
 const tutorialHint = computed(() => {
   if (!tutorialStore.enabled || gameStore.year > 1) return null;
   if (achievementStore.stats.totalCropsHarvested === 0)
-    return "万物铺出售各种灵种，购买后去灵田种植。上方可以切换「买入」和「卖出」。";
+    return "万象行出售各种灵种，购买后去灵田种植。上方可以切换「买入」和「卖出」。";
   return null;
 });
 
@@ -2019,7 +2019,7 @@ const handleBuyFromTraveler = (
   }
 };
 
-// === 万物铺 ===
+// === 万象行 ===
 
 const bagPrice = computed(() => {
   const level = (inventoryStore.capacity - 24) / 4;

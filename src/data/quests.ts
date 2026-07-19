@@ -352,7 +352,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 1,
   },
   {
-    name: "蔬菜采购",
+    name: "乡志春蔬样本",
     targetItemId: "cabbage",
     targetItemName: "青菜",
     quantity: 10,
@@ -364,7 +364,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 1,
   },
   {
-    name: "木材备料",
+    name: "集仓货架修缮",
     targetItemId: "wood",
     targetItemName: "木材",
     quantity: 30,
@@ -401,7 +401,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 2,
   },
   {
-    name: "冬储备战",
+    name: "集仓冬麦轮换",
     targetItemId: "winter_wheat",
     targetItemName: "冬小麦",
     quantity: 15,
@@ -426,7 +426,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
   },
   // === 第3梯度 (第21天): 困难, 7天时限, 数量大, 奖励丰厚 ===
   {
-    name: "丰收计划",
+    name: "秋田产量校录",
     targetItemId: "pumpkin",
     targetItemName: "南瓜",
     quantity: 10,
@@ -490,7 +490,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 4,
   },
   {
-    name: "丰年盛宴",
+    name: "丰歉卷南瓜样本",
     targetItemId: "pumpkin",
     targetItemName: "南瓜",
     quantity: 20,
@@ -517,7 +517,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 4,
   },
   {
-    name: "冬日大囤货",
+    name: "冬储周转总单",
     targetItemId: "winter_wheat",
     targetItemName: "冬小麦",
     quantity: 30,
@@ -680,7 +680,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
       "百工堂扩建炉台，急需玄铁稳固炉基；适合消耗中后期矿物库存，换取灵石与法宝碎片。",
   },
   {
-    name: "法衣云材征集",
+    name: "乡志护卷云材",
     targetItemId: "cloud_silk",
     targetItemName: "云纹丝",
     quantity: 8,
@@ -695,7 +695,7 @@ const SPECIAL_ORDER_TEMPLATES: SpecialOrderTemplate[] = [
     tier: 3,
     orderTag: "高阶资源",
     description:
-      "织造坊准备给宗门赶制法衣，征集云纹丝；交付后可换取灵石与凤羽。",
+      "陆清和修复一批受潮的水文与地契卷册，征集云纹丝制作耐灵蚀护卷；交付后可换取灵石与凤羽。",
   },
   {
     name: "镇塔器修复令",

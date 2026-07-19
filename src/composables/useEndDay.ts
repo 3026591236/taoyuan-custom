@@ -60,8 +60,8 @@ import type { MorningEffect } from "@/data/farmEvents";
 import router from "@/router";
 
 const NPC_NAME_MAP: Record<string, string> = {
-  chen_bo: "陈伯",
-  liu_niang: "柳娘",
+  chen_bo: "顾百川",
+  liu_niang: "陆清和",
   a_shi: "阿石",
   qiu_yue: "秋月",
   lin_lao: "林老",
@@ -89,7 +89,7 @@ const NPC_NAME_MAP: Record<string, string> = {
   shi_tou: "石头",
   hui_niang: "慧娘",
   lao_lu: "老陆",
-  liu_cunzhang: "柳村长",
+  liu_cunzhang: "陆镇岳",
   qian_niang: "钱娘",
   he_zhanggui: "何掌柜",
   qin_dashu: "秦大叔",
@@ -727,7 +727,7 @@ export const handleEndDay = () => {
           for (const s of npcStore.npcStates) {
             if (s.npcId !== zhiji.npcId) s.friendship += 5;
           }
-          addLog(`${zhijiName}在村里替你说了好话。(全村+5好感)`);
+          addLog(`${zhijiName}把你近期完成的公共事务补进乡志校记。(全集民+5好感)`);
         }
         break;
       case "qiu_yue":

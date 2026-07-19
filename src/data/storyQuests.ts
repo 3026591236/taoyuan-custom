@@ -18,9 +18,9 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_1_1",
     chapter: 1,
     order: 1,
-    title: "新的开始",
+    title: "地契第一行",
     description:
-      "柳村长说，想在万象仙乡立足，先从种地开始吧。试着收获5次灵植。",
+      "陆镇岳将新地契交给你：万象集只认亲手经营出的根基。先完成5次灵植收获，让这片灵田重新进入公议簿。",
     npcId: "liu_cunzhang",
     objectives: [{ type: "harvestCrops", label: "累计收获5次灵植", target: 5 }],
     moneyReward: 300,
@@ -30,13 +30,13 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_1_2",
     chapter: 1,
     order: 2,
-    title: "远亲不如近邻",
-    description: "陈伯是村里万物铺的老板，多和他打打交道吧。",
+    title: "万象行立账",
+    description: "顾百川愿意为新经营者单独开一页往来账。先与他成为相识，了解万象行如何周转灵种与日用物资。",
     npcId: "chen_bo",
     objectives: [
       {
         type: "npcFriendship",
-        label: "与陈伯成为相识",
+        label: "与顾百川成为相识",
         npcId: "chen_bo",
         friendshipLevel: "acquaintance",
       },
@@ -84,8 +84,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_1_6",
     chapter: 1,
     order: 6,
-    title: "广结善缘",
-    description: "柳村长希望你多认识村里的人，同时也帮集民们办办事。",
+    title: "公议簿初记",
+    description: "陆镇岳把三件待办写进公议簿：真正的落脚不靠一句欢迎，而靠你是否愿意回应集民的实际难处。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeQuests", label: "累计完成3个委托", target: 3 },
@@ -134,8 +134,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_1_9",
     chapter: 1,
     order: 9,
-    title: "初露锋芒",
-    description: "柳村长对你的表现很满意。继续努力，让积蓄再多一些吧。",
+    title: "自立账目",
+    description: "陆镇岳提醒你，善意要由稳定经营支撑。累计获得5000文，证明灵田已经具备独立周转的能力。",
     npcId: "liu_cunzhang",
     objectives: [{ type: "earnMoney", label: "累计获得5000文", target: 5000 }],
     moneyReward: 800,
@@ -170,7 +170,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 2,
     order: 1,
     title: "丰收之路",
-    description: "柳娘说你的灵田越来越像样了，继续加油收获更多灵植吧。",
+    description: "陆清和正在补绘灵田轮作图。累计完成50次收获，让她记录下土质、季节与产量如何彼此回应。",
     npcId: "liu_niang",
     objectives: [
       { type: "harvestCrops", label: "累计收获50次灵植", target: 50 },
@@ -207,9 +207,9 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_2_4",
     chapter: 2,
     order: 4,
-    title: "乡情初绽",
+    title: "公仓补缺",
     description:
-      "柳村长说村里祠堂有一块委托板，去图鉴中的「祠堂」看看，完成一个委托为村子做点贡献。",
+      "陆镇岳将旧祠堂的储物间改作公共物资点。完成1个祠堂委托，把集民共同需要的物资真正补进公仓。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeBundles", label: "完成1个祠堂委托", target: 1 },
@@ -267,8 +267,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_2_8",
     chapter: 2,
     order: 8,
-    title: "村里的委托",
-    description: "柳村长说你帮了不少集民的忙，继续做下去吧。",
+    title: "十件回音",
+    description: "陆镇岳说公议簿上的每一件完成记录，背后都是一户人家的回音。累计完成10个委托。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeQuests", label: "累计完成10个委托", target: 10 },
@@ -281,7 +281,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 2,
     order: 9,
     title: "四季物产",
-    description: "陈伯说万象仙乡物产丰富，多发现一些不同的物品吧。",
+    description: "顾百川要为万象行重编货目。发现30种不同物品，帮助他区分本地常产、季节货与稀缺物资。",
     npcId: "chen_bo",
     objectives: [
       { type: "discoverItems", label: "发现30种不同物品", target: 30 },
@@ -325,8 +325,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_3_2",
     chapter: 3,
     order: 2,
-    title: "百事通",
-    description: "柳村长说你已经成了村里的大忙人，继续帮助集民们吧。",
+    title: "公议常席",
+    description: "陆镇岳为你在公议堂留了一席。累计完成25个委托，证明你能听见不同集民的需要，也能把承诺落到实处。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeQuests", label: "累计完成25个委托", target: 25 },
@@ -362,8 +362,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_3_5",
     chapter: 3,
     order: 5,
-    title: "人缘好",
-    description: "柳村长希望你能和村里所有人都混个脸熟。",
+    title: "一集之信",
+    description: "陆镇岳认为秩序不能只靠章程，还要靠人与人之间可被验证的信任。与所有集民成为相识。",
     npcId: "liu_cunzhang",
     objectives: [
       {
@@ -424,7 +424,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 3,
     order: 10,
     title: "声名远播",
-    description: "你的名声已经传到了邻村。继续积累财富，成为万象仙乡的骄傲。",
+    description: "外来商队开始主动询问你的货期。陆镇岳建议先稳住40000文累计收益，让名声建立在持续履约之上。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "earnMoney", label: "累计获得40000文", target: 40000 },
@@ -468,9 +468,9 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_4_3",
     chapter: 4,
     order: 3,
-    title: "乡情圆满",
+    title: "四簿合验",
     description:
-      "柳村长希望你能为村子完成更多祠堂委托。前往图鉴中的「祠堂」查看并提交所需物品。",
+      "陆镇岳准备核验水渠、集仓、医馆与百工四类公用记录。完成4个祠堂委托，让四项公共供给都能正常运转。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeBundles", label: "完成4个祠堂委托", target: 4 },
@@ -483,7 +483,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 4,
     order: 4,
     title: "百年好合",
-    description: "柳村长笑着说，是时候成个家了吧？",
+    description: "陆镇岳说明万象集尊重每个人对伴侣与生活的选择。若你已找到愿意共同经营岁月的人，便完成一场由双方确认的婚礼。",
     npcId: "liu_cunzhang",
     objectives: [{ type: "married", label: "与心仪之人结婚" }],
     moneyReward: 2000,
@@ -547,7 +547,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 4,
     order: 9,
     title: "丰收大亨",
-    description: "柳娘说你的灵田是万象仙乡产量最高的，继续保持。",
+    description: "陆清和将你的灵田列为乡志中的长期样本。累计收获300次灵植，为后来者留下完整的丰歉与轮作记录。",
     npcId: "liu_niang",
     objectives: [
       { type: "harvestCrops", label: "累计收获300次灵植", target: 300 },
@@ -560,7 +560,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 4,
     order: 10,
     title: "富甲一方",
-    description: "你的财富已经名闻乡里。柳村长说你是万象仙乡的骄傲。",
+    description: "你的经营规模已足以影响万象集的物价与用工。陆镇岳要求你先建立100000文的稳定底盘，再参与更大的公共决策。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "earnMoney", label: "累计获得100000文", target: 100000 },
@@ -642,7 +642,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 5,
     order: 6,
     title: "天伦之乐",
-    description: "柳村长笑着说，成家之后也该添个孩子了。",
+    description: "陆镇岳把家族新成员登记为独立的人，而不是家业的附属。若你与伴侣都已准备好，迎接第一个孩子。",
     npcId: "liu_cunzhang",
     objectives: [{ type: "hasChild", label: "迎来第一个孩子" }],
     moneyReward: 3000,
@@ -653,7 +653,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     chapter: 5,
     order: 7,
     title: "仙乡知交",
-    description: "柳村长希望你能和村里每一个人都成为朋友。",
+    description: "陆镇岳邀请你参与年度共识会。与所有集民达到相知，理解他们各自的选择，而不只是完成他们的委托。",
     npcId: "liu_cunzhang",
     objectives: [
       {
@@ -680,9 +680,9 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_5_9",
     chapter: 5,
     order: 9,
-    title: "祠堂圆满",
+    title: "公仓全录",
     description:
-      "柳村长说祠堂委托板上的所有委托都靠你了。前往图鉴中的「祠堂」完成剩余委托。",
+      "陆镇岳准备封存本年度公仓总录。完成全部6个祠堂委托，让每一类公共物资都有来源、有去向、有交代。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "completeBundles", label: "完成全部6个祠堂委托", target: 6 },
@@ -696,7 +696,7 @@ export const STORY_QUESTS: MainQuestDef[] = [
     order: 10,
     title: "仙乡之主",
     description:
-      "你已经成为万象仙乡真正的主人。所有百艺满级，财富冠绝乡里。这是最终的挑战。",
+      "陆镇岳将最终公议交给你：财富与百艺不是统治他人的凭据，而是承担更大责任的能力。完成经营与百艺的最终检验。",
     npcId: "liu_cunzhang",
     objectives: [
       { type: "earnMoney", label: "累计获得300000文", target: 300000 },

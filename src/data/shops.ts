@@ -18,9 +18,9 @@ export interface ShopDef {
 export const SHOPS: ShopDef[] = [
   {
     id: "wanwupu",
-    name: "万物铺",
-    description: "陈伯经营的杂货铺，出售灵种和日用品。",
-    npcName: "陈伯",
+    name: "万象行",
+    description: "顾百川经营的万象行，出售灵种和日用品。",
+    npcName: "顾百川",
     closedDays: ["wed"],
     openHour: 8,
     closeHour: 20,

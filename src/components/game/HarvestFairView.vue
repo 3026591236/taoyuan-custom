@@ -306,7 +306,7 @@ const handleSubmit = () => {
   // 生成NPC分数（600-1200范围）
   const npcs: Participant[] = [
     { name: "秋月", score: Math.round(600 + Math.random() * 600) },
-    { name: "陈伯", score: Math.round(600 + Math.random() * 600) },
+    { name: "顾百川", score: Math.round(600 + Math.random() * 600) },
     { name: "小满", score: Math.round(600 + Math.random() * 600) },
   ];
 

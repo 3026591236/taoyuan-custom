@@ -1327,7 +1327,7 @@ const handleNewGame = async () => {
   const tutorialStore = useTutorialStore();
   if (tutorialStore.enabled) {
     addLog(
-      "柳村长说：「欢迎来到万象仙乡！背包里有白菜种子，去灵田开垦土地、播种吧。」",
+      "陆镇岳说：「欢迎来到万象仙乡！背包里有白菜种子，去灵田开垦土地、播种吧。」",
     );
     tutorialStore.markTipShown("tip_welcome");
   }

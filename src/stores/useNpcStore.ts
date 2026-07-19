@@ -83,9 +83,9 @@ const VILLAGE_REQUESTS: {
 }[] = [
   {
     id: "village_feast",
-    title: "村宴备席",
-    desc: "村里准备节令小宴，需要灵米撑场面。",
-    npcHint: "陈伯会记得你帮村里备席。",
+    title: "集宴公仓备席",
+    desc: "万象集准备节令共席，需要蕴灵稻补足公仓份额。",
+    npcHint: "顾百川会把物资来源、用途和结余完整记入公开账册。",
     itemId: "spirit_rice",
     itemName: "蕴灵稻",
     quantity: 2,
@@ -129,9 +129,9 @@ const NPC_LETTERS: {
 }[] = [
   {
     id: "chen_spring",
-    title: "陈伯来信·春耕托付",
-    from: "陈伯",
-    desc: "陈伯请你捐些蕴灵稻给村社粮仓，村里会记下这份人情。",
+    title: "顾百川来信·春筹周转",
+    from: "顾百川",
+    desc: "顾百川附来一页集仓缺口表，请你补一批蕴灵稻作为启耕期间的周转粮；交付与去向都会记入公账。",
     itemId: "spirit_rice",
     itemName: "蕴灵稻",
     quantity: 2,
@@ -140,9 +140,9 @@ const NPC_LETTERS: {
   },
   {
     id: "liu_market",
-    title: "柳娘来信·市集布置",
-    from: "柳娘",
-    desc: "柳娘想把市集布置得热闹些，需要云纹丝作彩缎。",
+    title: "陆清和来信·河图护卷",
+    from: "陆清和",
+    desc: "陆清和正在修复星澜河历年水位图，需要一匹云纹丝制作耐潮护卷，并会在卷尾记录材料来源。",
     itemId: "cloud_silk",
     itemName: "云纹丝",
     quantity: 1,

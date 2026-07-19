@@ -82,7 +82,7 @@
               <div class="border border-accent/20 rounded-xs p-3 mr-1 mb-2">
                 <p class="text-xs text-muted mb-2">新手提示</p>
                 <p class="text-[10px] text-muted/50 mb-2">
-                  柳村长的晨间建议和面板引导文字
+                  陆镇岳的晨间建议和面板引导文字
                 </p>
                 <div class="flex items-center justify-center space-x-2">
                   <Button

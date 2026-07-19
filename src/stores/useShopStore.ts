@@ -233,9 +233,9 @@ export const useShopStore = defineStore("shop", () => {
     );
   };
 
-  // === 万物铺 (陈伯) ===
+  // === 万象行 (顾百川) ===
 
-  /** 修仙线关键灵植种子：避免因季节切换从万物铺消失，导致宗门订单/炼丹链断供 */
+  /** 修仙线关键灵植种子：避免因季节切换从万象行消失，导致宗门订单/炼丹链断供 */
   const ALWAYS_AVAILABLE_SPIRIT_SEED_IDS = new Set([
     'seed_spirit_rice',
     'seed_dew_grass',
@@ -1000,7 +1000,7 @@ export const useShopStore = defineStore("shop", () => {
     currentShopId,
     // 折扣
     applyDiscount,
-    // 万物铺
+    // 万象行
     availableSeeds,
     buySeed,
     // 铁匠铺

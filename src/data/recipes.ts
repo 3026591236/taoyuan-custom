@@ -18,7 +18,7 @@ export const RECIPES: RecipeDef[] = [
       { itemId: "firewood", quantity: 1 },
     ],
     effect: { staminaRestore: 25, healthRestore: 10 },
-    unlockSource: "陈伯好感「相识」",
+    unlockSource: "顾百川好感「相识」",
     description: "热腾腾的萝卜汤，暖身又暖心。",
   },
   {
@@ -59,7 +59,7 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 5,
       buff: { type: "giftBonus", value: 2, description: "送礼好感×2（当天）" },
     },
-    unlockSource: "柳娘好感「相识」",
+    unlockSource: "陆清和好感「相识」",
     description: "精致的桂花糕，送礼极佳。",
   },
   {
@@ -417,8 +417,8 @@ export const RECIPES: RecipeDef[] = [
       { itemId: "firewood", quantity: 2 },
     ],
     effect: { staminaRestore: 40, healthRestore: 25 },
-    unlockSource: "陈伯好感「相知」",
-    description: "陈伯秘传的萝卜炖肉，入味三分。",
+    unlockSource: "顾百川好感「相知」",
+    description: "顾百川按行商旧法慢炖的萝卜肉汤，耐放又暖胃。",
   },
   {
     id: "maple_grilled_fish",
@@ -458,8 +458,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 15,
       buff: { type: "giftBonus", value: 2, description: "送礼好感×2（当天）" },
     },
-    unlockSource: "柳娘好感「相知」",
-    description: "柳娘精心制作的绣囊糕。",
+    unlockSource: "陆清和好感「相知」",
+    description: "陆清和校志时常备的桂香方糕，便于分食与保存。",
   },
   {
     id: "deep_mine_stew",
@@ -516,8 +516,8 @@ export const RECIPES: RecipeDef[] = [
         description: "灵耕体力消耗-25%（当天）",
       },
     },
-    unlockSource: "陈伯好感「挚友」",
-    description: "陈伯压箱底的农家大菜。",
+    unlockSource: "顾百川好感「挚友」",
+    description: "顾百川为集仓劳作日准备的丰盛合席。",
   },
   {
     id: "autumn_moon_feast",
@@ -560,8 +560,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 20,
       buff: { type: "giftBonus", value: 3, description: "送礼好感×3（当天）" },
     },
-    unlockSource: "柳娘好感「挚友」",
-    description: "柳娘专为有情人做的鸳鸯酥。",
+    unlockSource: "陆清和好感「挚友」",
+    description: "陆清和以两页乡志纹样压出的双卷酥。",
   },
   {
     id: "forgemasters_meal",
@@ -610,8 +610,8 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 25,
       buff: { type: "giftBonus", value: 3, description: "送礼好感×3（当天）" },
     },
-    unlockSource: "与柳娘结婚后",
-    description: "柳娘婚后传授的凤凰糕秘方。",
+    unlockSource: "与陆清和结婚后",
+    description: "陆清和珍藏的合卷糕方，寓意共同续写家业。",
   },
   {
     id: "molten_hotpot",
@@ -1663,7 +1663,7 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 15,
       buff: { type: "speed", value: 15, description: "行动速度+15%（当天）" },
     },
-    unlockSource: "陈伯好感「挚友」",
+    unlockSource: "顾百川好感「挚友」",
     description: "丝滑醇香的驼奶茶。",
   },
   {
@@ -1976,7 +1976,7 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 10,
       buff: { type: "giftBonus", value: 3, description: "送礼好感×3（当天）" },
     },
-    unlockSource: "柳娘好感「知己」",
+    unlockSource: "陆清和好感「知己」",
     description: "桂花蜜制成的精致糕点，送礼上佳。",
   },
   {
@@ -2229,7 +2229,7 @@ export const RECIPES: RecipeDef[] = [
       healthRestore: 30,
       buff: { type: "giftBonus", value: 2, description: "送礼好感×2（当天）" },
     },
-    unlockSource: "柳娘好感「相熟」",
+    unlockSource: "陆清和好感「相熟」",
     description: "桂花酒的幽香渗入鸡肉，雅致非凡。",
   },
   {

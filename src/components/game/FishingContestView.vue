@@ -449,11 +449,11 @@ const advanceRound = () => {
 };
 
 const finishContest = () => {
-  // 每个NPC有不同实力：秋月是高手，陈伯经验丰富，小满运气型
+  // 每个NPC有不同实力：秋月是高手，顾百川经验丰富，小满运气型
   const npcProfiles: { name: string; perfectRate: number; goodRate: number }[] =
     [
       { name: "秋月", perfectRate: 0.55, goodRate: 0.9 },
-      { name: "陈伯", perfectRate: 0.45, goodRate: 0.85 },
+      { name: "顾百川", perfectRate: 0.45, goodRate: 0.85 },
       { name: "小满", perfectRate: 0.35, goodRate: 0.8 },
     ];
   const npcScores = npcProfiles.map(({ name, perfectRate, goodRate }) => {

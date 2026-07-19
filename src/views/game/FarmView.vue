@@ -1986,7 +1986,7 @@ const isWanwupuOpen = computed(() => {
 
 const wanwupuClosedReason = computed(() => {
   return (
-    "万物铺" +
+    "万象行" +
     getShopClosedReason(
       wanwupu,
       gameStore.day,

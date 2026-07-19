@@ -7,10 +7,10 @@ export const NPCS: NpcDef[] = [
   // ============================================================
   {
     id: "chen_bo",
-    name: "陈伯",
+    name: "顾百川",
     gender: "male",
-    role: "万物铺老板",
-    personality: "热心豪爽",
+    role: "万象行主",
+    personality: "精明宽厚",
     birthday: { season: "spring", day: 8 },
     lovedItems: ["tea", "osmanthus", "ginseng"],
     likedItems: [
@@ -27,29 +27,29 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["copper_ore", "quartz"],
     dialogues: {
       stranger: [
-        "客官，初来乍到吧？老朽陈伯，万物铺就是我开的。",
-        "{title}，有什么需要的尽管来，童叟无欺。",
+        "第一次来万象行？我叫顾百川。灵种、农具和日常补给，都可以先在这里问价。",
+        "买卖讲明账，做人留余地。{title}缺什么，直说便是。",
       ],
       acquaintance: [
-        "哈哈，{title}又来了！今天想买点什么？",
-        "最近进了些好货，你来看看。",
+        "{title}来得正好，我刚把今日货单理完，有几样东西适合你的灵田。",
+        "万象集不大，物资却牵着百家生计。进货和出货，都不能只看眼前。",
       ],
       friendly: [
-        "{player}跟你先人年轻时一个样，能吃苦。",
-        "有些好东西，我只留给{title}你。",
+        "{player}做事稳，我愿意把集仓的周转门道讲给你听。",
+        "这批货我替{title}留到了傍晚。不是赊账，是信你不会误了时辰。",
       ],
       bestFriend: [
-        "{player}，你就像我自己的孩子一样。",
-        "这铺子，将来说不定就交给你了……开个玩笑。",
+        "我守万象行半辈子，见过许多来去的人。{player}是少数肯把根扎下来的。",
+        "以后若要办一件关系全集的大事，先来找我。人脉、车队和旧账，我都能替你理清。",
       ],
     },
   },
   {
     id: "liu_niang",
-    name: "柳娘",
+    name: "陆清和",
     gender: "female",
-    role: "村长的女儿",
-    personality: "温柔聪慧",
+    role: "乡志司书",
+    personality: "温静敏锐",
     birthday: { season: "summer", day: 14 },
     lovedItems: ["chrysanthemum", "osmanthus", "peacock_feather"],
     likedItems: [
@@ -64,20 +64,20 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["iron_ore", "firewood"],
     dialogues: {
       stranger: [
-        "你好，你是新来的灵田洞天主人吧？我是柳娘。",
-        "万象仙乡很美的，{title}你会喜欢这里。",
+        "你就是万象灵田洞天的新主人？我是陆清和，平日整理乡志、水文和旧地契。",
+        "若你在旧田界、河道或集民称谓上遇到疑问，可以来乡志房找我。",
       ],
       acquaintance: [
-        "今天天气不错，{title}也出来走走？",
-        "我在读一本古诗集，要不要一起看看？",
+        "我在重绘星澜河水脉图。{title}若去过上游，回来时讲给我听吧。",
+        "旧纸上的一句旁注，有时比整本族谱更接近真相。整理乡志就是这样。",
       ],
       friendly: [
-        "有{title}在，村子热闹了不少呢。",
-        "我做了些桂花糕，{player}尝一块吧。",
+        "有{title}在，乡志里终于不只有旧事，也开始有值得记下的新篇。",
+        "我替{player}留了一册空白行记。以后走过的地方，我们一起补全。",
       ],
       bestFriend: [
-        "和{title}聊天总是很开心……",
-        "这朵花送给你，是我在山上找到的。",
+        "我曾以为记录者只能站在故事之外。认识{player}后，我才知道自己也可以成为其中一页。",
+        "若有一天乡志散佚，我仍能记得你如何让这片土地重新有了回应。",
       ],
     },
     marriageable: true,
@@ -87,14 +87,14 @@ export const NPCS: NpcDef[] = [
       "liu_niang_heart_8",
     ],
     datingDialogues: [
-      "今天想和{player}一起去溪边散步呢。",
-      "{title}，我给你绣了个香囊，随身带着吧。",
-      "能和{player}在一起的每一天，都像诗里写的那样美好。",
+      "今日星澜河水势平稳，想和{player}沿旧堤走一程。",
+      "{title}，这枚书签压着我们第一次共同校订的乡志页，我想送给你。",
+      "与你一起记录日常后，寻常的风雨和灯火也都有了意义。",
     ],
     zhijiDialogues: [
-      "和{player}一起读诗的午后，是我最珍贵的时光。",
-      "有些话只想说给知己听……{title}，谢谢你一直在。",
-      "红颜知己，一世难求。遇见{player}是我的福气。",
+      "有些旧事只能写进乡志，有些心事只愿说给{player}听。",
+      "{title}若远行，我会替你留一页空白，等你回来亲自写完。",
+      "知己不是永远意见相同，而是愿意一起把事情看清。",
     ],
     zhijiHeartEventIds: ["liu_niang_zhiji_7", "liu_niang_zhiji_9"],
   },
@@ -894,12 +894,12 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["wild_mushroom", "pine_cone"],
     dialogues: {
       stranger: [
-        "新来的？万物铺的事找陈伯，零碎活儿找我就行。",
+        "新来的？万象行的大账顾百川亲自核，小单和到货登记找我。",
         "我是吴婶，在铺子里帮工的。",
       ],
       acquaintance: [
         "{title}，今天的白菜新鲜着呢，买点？",
-        "陈伯心太软，老是赊账，我可不惯着。",
+        "顾百川肯给守信的人周转期，我负责把期限和凭据盯紧。人情归人情，账不能糊涂。",
       ],
       friendly: [
         "{player}的生意不错啊！偷偷告诉你，下批货我给你留点好的。",
@@ -996,7 +996,7 @@ export const NPCS: NpcDef[] = [
     id: "a_hua",
     name: "阿花",
     gender: "female",
-    role: "陈伯的孙女",
+    role: "万象行账房学徒",
     personality: "天真烂漫",
     birthday: { season: "spring", day: 1 },
     lovedItems: ["watermelon", "wild_berry"],
@@ -1004,7 +1004,7 @@ export const NPCS: NpcDef[] = [
     hatedItems: ["herb", "ginseng"],
     dialogues: {
       stranger: [
-        "你是谁呀？我叫阿花！爷爷说不能跟陌生人说话……啊我说了！",
+        "你是新开地契的人吗？我叫阿花，在万象行学认货签和算盘！",
         "{title}你种的什么呀？好看不好看？",
       ],
       acquaintance: [
@@ -1124,30 +1124,30 @@ export const NPCS: NpcDef[] = [
   },
   {
     id: "liu_cunzhang",
-    name: "柳村长",
+    name: "陆镇岳",
     gender: "male",
-    role: "村长",
-    personality: "威严公正",
+    role: "万象集执事",
+    personality: "沉稳守诺",
     birthday: { season: "summer", day: 5 },
     lovedItems: ["tea", "ginseng"],
     likedItems: ["herb", "osmanthus", "bamboo", "rabbit_foot"],
     hatedItems: ["pickled_cabbage", "firewood"],
     dialogues: {
       stranger: [
-        "你就是接手那片灵田洞天的年轻人？我是柳村长。希望你能不辱祖辈留下的基业。",
-        "万象仙乡的规矩，不可不守。",
+        "你就是接掌万象灵田洞天的人？我叫陆镇岳，负责万象集公议、地契和水渠调度。",
+        "这里没有白得的基业。先把田照料好，再慢慢认识这片土地的规矩。",
       ],
       acquaintance: [
-        "{title}最近干得不错，集民们都说你勤快。",
-        "柳娘跟我提过你几次……嗯。",
+        "{title}最近做事有章法，集民提起你时，已经不再只说‘新来的’。",
+        "清和把你补绘的田界记进乡志了。能让记录落到实处，是好事。",
       ],
       friendly: [
-        "{player}，你为村子做的事，老夫都看在眼里。",
-        "当年你先人也是这般有魄力。",
+        "{player}替万象集补上的，不只是几件委托，也是大家彼此信任的缺口。",
+        "公议最难的不是定规矩，而是让规矩经得起旱季、丰年和人情。你可以多来旁听。",
       ],
       bestFriend: [
-        "{player}是万象仙乡之福。",
-        "老夫年事已高，这村子的未来，{title}要多担待了。",
+        "我守的是秩序，{player}带来的却是变化。二者能并行，万象集才有未来。",
+        "往后若地脉再起异动，我愿把全集的调度交给{title}共同决断。",
       ],
     },
   },
