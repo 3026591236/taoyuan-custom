@@ -989,9 +989,15 @@ export const handleEndDay = () => {
   // 蟹笼收获
   const fishingStore = useFishingStore();
   const crabPotHarvest = fishingStore.collectCrabPots();
-  if (crabPotHarvest.length > 0) {
-    const names = crabPotHarvest.map((c) => c.name).join("、");
+  if (crabPotHarvest.collected.length > 0) {
+    const names = crabPotHarvest.collected.map((c) => c.name).join("、");
     addLog(`蟹笼捕获了${names}。`);
+  }
+  if (crabPotHarvest.blocked > 0) {
+    addLog(
+      crabPotHarvest.message ??
+        `纳戒容量不足，还有${crabPotHarvest.blocked}只蟹笼未收获。`,
+    );
   }
 
   // 洞穴产出

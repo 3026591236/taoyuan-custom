@@ -867,7 +867,8 @@ const handleStartFishing = () => {
     return;
   }
   const result = fishingStore.startFishing();
-  if (result.success) {
+  // 垃圾即使因容量不足未收取，也已经完成本次抛竿动作，照常消耗时间。
+  if (result.success || result.junk) {
     sfxClick();
     const tr = gameStore.advanceTime(fishTime.value);
     if (tr.message) addLog(tr.message);
@@ -876,7 +877,7 @@ const handleStartFishing = () => {
       return;
     }
     if (result.junk) {
-      // 垃圾直接入包，不进入小游戏
+      // 垃圾直接结算，不进入小游戏。
       lastResult.value = result.message;
     } else {
       miniGameParams.value = fishingStore.calculateMiniGameParams();
@@ -1047,11 +1048,18 @@ const handlePan = () => {
     }
   }
 
-  inventoryStore.addItem(itemId, qty);
-  achievementStore.discoverItem(itemId);
-  skillStore.addExp("mining", 5);
-  panResult.value = `淘到了${name}！(-${cost}体力)`;
-  addLog(`淘金获得了${name}。(-${cost}体力)`);
+  if (
+    inventoryStore.canAcceptItem(itemId, qty) &&
+    inventoryStore.addItem(itemId, qty)
+  ) {
+    // addItem 已负责发现图鉴和记录获得。
+    skillStore.addExp("mining", 5);
+    panResult.value = `淘到了${name}！(-${cost}体力)`;
+    addLog(`淘金获得了${name}。(-${cost}体力)`);
+  } else {
+    panResult.value = `淘到了${name}，但未能装入纳戒。(-${cost}体力)`;
+    addLog(`淘到了${name}，但纳戒容量不足，未能装入纳戒。(-${cost}体力)`);
+  }
 
   const tr = gameStore.advanceTime(panTime.value);
   if (tr.message) addLog(tr.message);

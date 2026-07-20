@@ -30,65 +30,18 @@ import { useCookingStore } from "./useCookingStore";
 import { useWalletStore } from "./useWalletStore";
 import { useSecretNoteStore } from "./useSecretNoteStore";
 import { useHiddenNpcStore } from "./useHiddenNpcStore";
+import {
+  FISHING_JUNK,
+  planCrabPotLoot,
+  planTreasureChest,
+  simulateInventoryBatch,
+  weightedPick,
+} from "@/domain/fishingDomain";
 
 const STAMINA_COST = 4;
 const MAX_CRAB_POTS = 12;
 const MAX_CRAB_POTS_PER_LOCATION = 3;
-
-/** 蟹笼产物池 */
-const CRAB_POT_LOOT: {
-  itemId: string;
-  weight: number;
-  locationOverride?: FishingLocation;
-  replaces?: string;
-}[] = [
-  { itemId: "snail", weight: 20 },
-  { itemId: "freshwater_shrimp", weight: 25 },
-  { itemId: "crab", weight: 20 },
-  { itemId: "lobster", weight: 10 },
-  { itemId: "trash", weight: 10 },
-  { itemId: "driftwood", weight: 10 },
-  { itemId: "broken_cd", weight: 5 },
-  { itemId: "soggy_newspaper", weight: 8 },
-  {
-    itemId: "cave_shrimp",
-    weight: 25,
-    locationOverride: "mine",
-    replaces: "freshwater_shrimp",
-  },
-  {
-    itemId: "swamp_crab",
-    weight: 20,
-    locationOverride: "swamp",
-    replaces: "crab",
-  },
-];
-
-/** 垂钓垃圾池 */
-const FISHING_JUNK = ["trash", "driftwood", "broken_cd", "soggy_newspaper"];
-
-/** 宝箱奖品池 */
-const TREASURE_POOL: {
-  itemId: string | null;
-  weight: number;
-  minQty: number;
-  maxQty: number;
-  money?: number;
-}[] = [
-  { itemId: "copper_ore", weight: 30, minQty: 1, maxQty: 3 },
-  { itemId: "iron_ore", weight: 20, minQty: 1, maxQty: 3 },
-  { itemId: "gold_ore", weight: 10, minQty: 1, maxQty: 2 },
-  { itemId: "crystal_ore", weight: 5, minQty: 1, maxQty: 1 },
-  { itemId: "jade", weight: 3, minQty: 1, maxQty: 1 },
-  { itemId: "quartz", weight: 5, minQty: 1, maxQty: 1 },
-  { itemId: "wood", weight: 15, minQty: 3, maxQty: 5 },
-  { itemId: "firewood", weight: 10, minQty: 2, maxQty: 4 },
-  { itemId: "standard_bait", weight: 10, minQty: 2, maxQty: 3 },
-  { itemId: "wild_berry", weight: 8, minQty: 1, maxQty: 2 },
-  { itemId: "herb", weight: 8, minQty: 1, maxQty: 2 },
-  { itemId: "ginseng", weight: 3, minQty: 1, maxQty: 1 },
-  { itemId: null, weight: 10, minQty: 50, maxQty: 200 },
-];
+const TEMP_INVENTORY_CAPACITY = 10;
 
 export const useFishingStore = defineStore("fishing", () => {
   const gameStore = useGameStore();
@@ -166,7 +119,15 @@ export const useFishingStore = defineStore("fishing", () => {
       return { success: false, message: "需要铁制或更好的鱼竿才能装备浮漂。" };
     if (!inventoryStore.removeItem(type, 1))
       return { success: false, message: "纳戒中没有该浮漂。" };
-    if (equippedTackle.value) unequipTackle();
+    if (equippedTackle.value) {
+      // 先扣除新浮漂，再检查旧浮漂回收容量；这样满纳戒中被扣除的物品也能腾出位置。
+      unequipTackle();
+      if (equippedTackle.value) {
+        // 回收失败时把新浮漂原样退回，旧装备保持不变。
+        inventoryStore.addItem(type, 1);
+        return { success: false, message: "未能收回当前浮漂，装备未更换。" };
+      }
+    }
     equippedTackle.value = type;
     tackleDurability.value = def.maxDurability;
     return {
@@ -175,12 +136,19 @@ export const useFishingStore = defineStore("fishing", () => {
     };
   };
 
-  /** 卸下浮漂 */
+  /** 卸下浮漂；有剩余耐久时必须先确保纳戒可接收。 */
   const unequipTackle = (): string => {
     if (!equippedTackle.value) return "没有装备浮漂。";
-    const def = getTackleById(equippedTackle.value);
-    if (tackleDurability.value > 0) {
-      inventoryStore.addItem(equippedTackle.value, 1);
+    const tackle = equippedTackle.value;
+    const def = getTackleById(tackle);
+    if (
+      tackleDurability.value > 0 &&
+      !inventoryStore.canAcceptItem(tackle, 1)
+    ) {
+      return `纳戒容量不足，${def?.name ?? "浮漂"}仍保持装备。`;
+    }
+    if (tackleDurability.value > 0 && !inventoryStore.addItem(tackle, 1)) {
+      return `未能收回${def?.name ?? "浮漂"}，仍保持装备。`;
     }
     equippedTackle.value = null;
     tackleDurability.value = 0;
@@ -235,7 +203,16 @@ export const useFishingStore = defineStore("fishing", () => {
       return { success: false, message: "当前季节和天气没有可钓的鱼。" };
     }
 
-    // 消耗鱼饵（从纳戒扣除1个，用完才取消装备）
+    // 先确认至少有一条当前条件下具备正权重的鱼；失败不消耗饵和浮漂。
+    if (!pickRandomFish(fishPool, baitDef, () => 0)) {
+      playerStore.restoreStamina(staminaCost);
+      return {
+        success: false,
+        message: "当前鱼池没有符合垂钓条件的鱼。",
+      };
+    }
+
+    // 确认可进行本次垂钓后，才消耗鱼饵与浮漂耐久。
     activeBaitDef.value = baitDef ?? null;
     if (equippedBait.value) {
       inventoryStore.removeItem(equippedBait.value, 1);
@@ -244,7 +221,6 @@ export const useFishingStore = defineStore("fishing", () => {
       }
     }
 
-    // 浮漂耐久-1
     activeTackleDef.value = tackleDef ?? null;
     if (equippedTackle.value && tackleDef) {
       tackleDurability.value--;
@@ -260,8 +236,17 @@ export const useFishingStore = defineStore("fishing", () => {
       const junkId =
         FISHING_JUNK[Math.floor(Math.random() * FISHING_JUNK.length)]!;
       const junkName = getItemById(junkId)?.name ?? junkId;
-      inventoryStore.addItem(junkId);
       currentFish.value = null;
+      if (
+        !inventoryStore.canAcceptItem(junkId, 1) ||
+        !inventoryStore.addItem(junkId, 1)
+      ) {
+        return {
+          success: false,
+          junk: true,
+          message: `钓上了${junkName}，但纳戒容量不足，未能收取。(-${staminaCost}体力)`,
+        };
+      }
       skillStore.addExp("fishing", 3);
       return {
         success: true,
@@ -270,8 +255,13 @@ export const useFishingStore = defineStore("fishing", () => {
       };
     }
 
-    // 随机选一条鱼
-    const fish = pickRandomFish(fishPool);
+    // 随机顺序保持原语义：先垃圾判定，再按鱼权重选择。
+    const fish = pickRandomFish(fishPool, baitDef);
+    if (!fish) {
+      // 前置正权重检查已通过，正常情况下不会到达；防御性恢复会话状态。
+      endFishing();
+      return { success: false, message: "当前鱼池没有符合垂钓条件的鱼。" };
+    }
     currentFish.value = fish;
     lastTreasure.value = null;
     lastPerfect.value = false;
@@ -378,7 +368,11 @@ export const useFishingStore = defineStore("fishing", () => {
   };
 
   /** 根据难度、垂钓等级和鱼竿等级加权随机选鱼 */
-  const pickRandomFish = (pool?: FishDef[]): FishDef => {
+  const pickRandomFish = (
+    pool?: FishDef[],
+    baitDef: BaitDef | null = activeBaitDef.value,
+    random: () => number = Math.random,
+  ): FishDef | null => {
     const fishPool = pool ?? availableFish.value;
     const cookingStore = useCookingStore();
     const fishingBuff =
@@ -394,8 +388,8 @@ export const useFishingStore = defineStore("fishing", () => {
     const rodTier = inventoryStore.getTool("fishingRod")?.tier ?? "basic";
     const hasAngler = skillStore.getSkill("fishing").perk10 === "angler";
     // 定向鱼饵权重倍率
-    const hardMult = activeBaitDef.value?.hardWeightMult ?? 1;
-    const legendaryMult = activeBaitDef.value?.legendaryWeightMult ?? 1;
+    const hardMult = baitDef?.hardWeightMult ?? 1;
+    const legendaryMult = baitDef?.legendaryWeightMult ?? 1;
     // 仙缘：龙瞳（long_ling_3）传说鱼捕获率+20%，鱼引结缘提升稀有鱼概率
     const hiddenNpcStore = useHiddenNpcStore();
     const legendaryBoost =
@@ -426,13 +420,13 @@ export const useFishingStore = defineStore("fishing", () => {
       if (f.difficulty === "normal") return 2;
       return 0.5;
     });
-    const total = weights.reduce((a, b) => a + b, 0);
-    let roll = Math.random() * total;
-    for (let i = 0; i < fishPool.length; i++) {
-      roll -= weights[i]!;
-      if (roll <= 0) return fishPool[i]!;
-    }
-    return fishPool[0]!;
+    return weightedPick(
+      fishPool.map((fish, index) => ({
+        value: fish,
+        weight: weights[index] ?? 0,
+      })),
+      random,
+    );
   };
 
   /** 完成垂钓（小游戏结束后调用） */
@@ -538,13 +532,28 @@ export const useFishingStore = defineStore("fishing", () => {
       description: currentFish.value.description,
     };
 
-    const added = inventoryStore.addItem(
-      currentFish.value.id,
-      catchQty,
-      quality,
-    );
+    if (
+      !inventoryStore.canAcceptItem(currentFish.value.id, catchQty, quality) ||
+      !inventoryStore.addItem(currentFish.value.id, catchQty, quality)
+    ) {
+      const message = `钓上了${currentFish.value.name}，但纳戒容量不足，未能收取！`;
+      lastPerfect.value = false;
+      endFishing();
+      return {
+        message,
+        fishName: caughtFish.name,
+        fishId: caughtFish.id,
+        difficulty: caughtFish.difficulty,
+        sellPrice: caughtFish.sellPrice,
+        description: caughtFish.description,
+        quality,
+        quantity: catchQty,
+        success: false,
+      };
+    }
+
+    // addItem 已负责发现图鉴和记录物品获得；这里只推进鱼获专属进度。
     const achievementStore = useAchievementStore();
-    achievementStore.discoverItem(currentFish.value.id);
     achievementStore.recordFishCaught();
     useQuestStore().onItemObtained(currentFish.value.id, catchQty);
 
@@ -571,18 +580,14 @@ export const useFishingStore = defineStore("fishing", () => {
     );
 
     const ratingTag = rating === "perfect" ? " [完美!]" : "";
-    let message = "";
-    if (!added) {
-      message = `钓上了${currentFish.value.name}，但纳戒已满，鱼丢失了！`;
-    } else {
-      message =
-        catchQty > 1
-          ? `成功钓上了${catchQty}条${currentFish.value.name}！${ratingTag}`
-          : `成功钓上了${currentFish.value.name}！${ratingTag}`;
-    }
+    let message =
+      catchQty > 1
+        ? `成功钓上了${catchQty}条${currentFish.value.name}！${ratingTag}`
+        : `成功钓上了${currentFish.value.name}！${ratingTag}`;
 
-    // 宝箱
-    const treasure = rollTreasureChest();
+    // 宝箱先纯规划，再整批容量预检；不足时物品和钱都不发。
+    const treasureResult = rollTreasureChest();
+    const treasure = treasureResult.treasure;
     if (treasure) {
       lastTreasure.value = treasure;
       const treasureNames = treasure.items
@@ -593,6 +598,9 @@ export const useFishingStore = defineStore("fishing", () => {
       } else {
         message += ` 宝箱：${treasureNames}！`;
       }
+    } else if (treasureResult.blocked) {
+      lastTreasure.value = null;
+      message += " 宝箱中的物品无法全部装入纳戒，宝箱暂未带走，错过了其中的钱物。";
     }
 
     lastPerfect.value = rating === "perfect";
@@ -610,11 +618,14 @@ export const useFishingStore = defineStore("fishing", () => {
     };
   };
 
-  /** 垂钓宝箱 */
+  /** 垂钓宝箱：规划与发放分离，容量不足时整箱不发。 */
   const rollTreasureChest = (): {
-    items: { itemId: string; name: string; quantity: number }[];
-    money: number;
-  } | null => {
+    treasure: {
+      items: { itemId: string; name: string; quantity: number }[];
+      money: number;
+    } | null;
+    blocked: boolean;
+  } => {
     const cookingStore = useCookingStore();
     const luckBuff = cookingStore.activeBuff?.type === "luck" ? 0.05 : 0;
     const ringTreasureFind = inventoryStore.getRingEffectValue("treasure_find");
@@ -625,40 +636,33 @@ export const useFishingStore = defineStore("fishing", () => {
       luckBuff +
       ringTreasureFind +
       ringLuck * 0.3;
-    if (Math.random() >= chance) return null;
+    const planned = planTreasureChest(chance);
+    if (!planned) return { treasure: null, blocked: false };
 
-    // 随机1-2个奖品
-    const numPrizes = Math.random() < 0.3 ? 2 : 1;
-    const items: { itemId: string; name: string; quantity: number }[] = [];
-    let money = 0;
+    const capacity = simulateInventoryBatch(
+      {
+        main: inventoryStore.items,
+        temporary: inventoryStore.tempItems,
+        mainCapacity: inventoryStore.capacity,
+        temporaryCapacity: TEMP_INVENTORY_CAPACITY,
+      },
+      planned.items,
+    );
+    if (!capacity.accepted) return { treasure: null, blocked: true };
 
-    for (let i = 0; i < numPrizes; i++) {
-      const totalWeight = TREASURE_POOL.reduce((a, b) => a + b.weight, 0);
-      let roll = Math.random() * totalWeight;
-      for (const prize of TREASURE_POOL) {
-        roll -= prize.weight;
-        if (roll <= 0) {
-          const qty =
-            prize.minQty +
-            Math.floor(Math.random() * (prize.maxQty - prize.minQty + 1));
-          if (prize.itemId) {
-            inventoryStore.addItem(prize.itemId, qty);
-            const itemDef = getItemById(prize.itemId);
-            items.push({
-              itemId: prize.itemId,
-              name: itemDef?.name ?? prize.itemId,
-              quantity: qty,
-            });
-          } else {
-            money += qty;
-            playerStore.earnMoney(qty);
-          }
-          break;
-        }
-      }
+    const items = planned.items.map((item) => ({
+      ...item,
+      name: getItemById(item.itemId)?.name ?? item.itemId,
+    }));
+    for (const item of planned.items) {
+      inventoryStore.addItem(item.itemId, item.quantity);
     }
+    if (planned.money > 0) playerStore.earnMoney(planned.money);
 
-    return items.length > 0 || money > 0 ? { items, money } : null;
+    return {
+      treasure: { items, money: planned.money },
+      blocked: false,
+    };
   };
 
   const endFishing = () => {
@@ -692,14 +696,19 @@ export const useFishingStore = defineStore("fishing", () => {
     return { success: true, message: "蟹笼已放置。" };
   };
 
-  /** 回收蟹笼 */
+  /** 回收蟹笼；容量不足时保留原笼。 */
   const removeCrabPot = (
     location: FishingLocation,
   ): { success: boolean; message: string } => {
     const idx = crabPots.value.findIndex((p) => p.location === location);
     if (idx === -1) return { success: false, message: "该地点没有蟹笼。" };
+    if (!inventoryStore.canAcceptItem("crab_pot", 1)) {
+      return { success: false, message: "纳戒容量不足，蟹笼仍留在原处。" };
+    }
+    if (!inventoryStore.addItem("crab_pot", 1)) {
+      return { success: false, message: "未能收回蟹笼，蟹笼仍留在原处。" };
+    }
     crabPots.value.splice(idx, 1);
-    inventoryStore.addItem("crab_pot", 1);
     return { success: true, message: "蟹笼已回收。" };
   };
 
@@ -754,61 +763,50 @@ export const useFishingStore = defineStore("fishing", () => {
   });
 
   /** 每日收获蟹笼 (由 useEndDay 调用) */
-  const collectCrabPots = (): { itemId: string; name: string }[] => {
+  const collectCrabPots = (): {
+    collected: { itemId: string; name: string }[];
+    blocked: number;
+    message?: string;
+  } => {
     const isLuremaster = skillStore.getSkill("fishing").perk10 === "luremaster";
     const isMariner = skillStore.getSkill("fishing").perk10 === "mariner";
     const collected: { itemId: string; name: string }[] = [];
+    let blocked = 0;
 
     for (const pot of crabPots.value) {
       if (!pot.hasBait && !isLuremaster) continue;
 
-      // 构建该地点的产物池
-      let pool = CRAB_POT_LOOT.filter(
-        (l) => !l.locationOverride || l.locationOverride === pot.location,
-      );
-      // 地点替换
-      const overrides = pool.filter((l) => l.locationOverride === pot.location);
-      if (overrides.length > 0) {
-        const replaceIds = new Set(
-          overrides.map((o) => o.replaces).filter(Boolean),
-        );
-        pool = pool.filter(
-          (l) =>
-            !replaceIds.has(l.itemId) || l.locationOverride === pot.location,
-        );
-      }
-      // 水手专精：排除垃圾
-      if (isMariner) {
-        const junkSet = new Set(FISHING_JUNK);
-        pool = pool.filter((l) => !junkSet.has(l.itemId));
+      const lootId = planCrabPotLoot(pot.location, isMariner);
+      if (!lootId) continue;
+      if (
+        !inventoryStore.canAcceptItem(lootId, 1) ||
+        !inventoryStore.addItem(lootId, 1)
+      ) {
+        blocked++;
+        continue;
       }
 
-      const totalWeight = pool.reduce((a, b) => a + b.weight, 0);
-      let roll = Math.random() * totalWeight;
-      for (const loot of pool) {
-        roll -= loot.weight;
-        if (roll <= 0) {
-          inventoryStore.addItem(loot.itemId, 1);
-          const itemDef = getItemById(loot.itemId);
-          collected.push({
-            itemId: loot.itemId,
-            name: itemDef?.name ?? loot.itemId,
-          });
-          // 水产也算垂钓经验
-          if (itemDef) {
-            skillStore.addExp("fishing", Math.floor(itemDef.sellPrice * 0.5));
-          }
-          const achievementStore = useAchievementStore();
-          achievementStore.discoverItem(loot.itemId);
-          break;
-        }
+      const itemDef = getItemById(lootId);
+      collected.push({
+        itemId: lootId,
+        name: itemDef?.name ?? lootId,
+      });
+      // addItem 已负责图鉴；仅成功入包后加经验并消耗饵料状态。
+      if (itemDef) {
+        skillStore.addExp("fishing", Math.floor(itemDef.sellPrice * 0.5));
       }
-
-      // 消耗饵料
+      // 诱饵师无饵可产出，成功后同样保持 false。
       pot.hasBait = false;
     }
 
-    return collected;
+    return {
+      collected,
+      blocked,
+      message:
+        blocked > 0
+          ? `纳戒容量不足，还有${blocked}只蟹笼未收获。`
+          : undefined,
+    };
   };
 
   const serialize = () => {
