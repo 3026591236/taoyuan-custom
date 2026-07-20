@@ -855,6 +855,17 @@
               <span>出货灵匣</span>
             </div>
             <p class="text-xs text-muted mb-2">放入的物品将在次日结算。</p>
+            <div class="flex flex-wrap gap-1 mb-2">
+              <button
+                v-for="option in shippingFilterOptions"
+                :key="option.value"
+                class="btn btn-xs"
+                :class="{ '!bg-accent !text-bg': shippingFilter === option.value }"
+                @click="shippingFilter = option.value"
+              >
+                {{ option.label }}
+              </button>
+            </div>
             <p
               v-if="inventoryStore.getRingEffectValue('sell_price_bonus') > 0"
               class="text-success text-xs mb-2"
@@ -1945,6 +1956,16 @@ const handleMineSurfaceOre = () => {
 // === 出货灵匣 ===
 
 const showShippingBox = ref(false);
+type ShippingFilter = "all" | "crop" | "fish" | "animal" | "processed" | "other";
+const shippingFilter = ref<ShippingFilter>("all");
+const shippingFilterOptions: Array<{ value: ShippingFilter; label: string }> = [
+  { value: "all", label: "全部" },
+  { value: "crop", label: "灵植/果实" },
+  { value: "fish", label: "鱼获" },
+  { value: "animal", label: "牧产" },
+  { value: "processed", label: "加工/料理" },
+  { value: "other", label: "其他" },
+];
 const showBatchPlant = ref(false);
 const showBatchFertilize = ref(false);
 const showBatchActions = ref(false);
@@ -2039,7 +2060,7 @@ const getItemName = (itemId: string): string =>
   getItemById(itemId)?.name ?? itemId;
 
 const shippableItems = computed(() => {
-  return inventoryStore.items
+  const items = inventoryStore.items
     .map((inv) => ({ ...inv, def: getItemById(inv.itemId) }))
     .filter(
       (item) =>
@@ -2048,6 +2069,24 @@ const shippableItems = computed(() => {
         item.def.category !== "machine" &&
         item.def.category !== "sprinkler",
     );
+  if (shippingFilter.value === "all") return items;
+  return items.filter((item) => {
+    const category = item.def!.category;
+    if (shippingFilter.value === "crop")
+      return category === "crop" || category === "fruit";
+    if (shippingFilter.value === "fish") return category === "fish";
+    if (shippingFilter.value === "animal") return category === "animal_product";
+    if (shippingFilter.value === "processed")
+      return category === "processed" || category === "food";
+    return ![
+      "crop",
+      "fruit",
+      "fish",
+      "animal_product",
+      "processed",
+      "food",
+    ].includes(category);
+  });
 });
 
 const shippingBoxTotal = computed(() => {

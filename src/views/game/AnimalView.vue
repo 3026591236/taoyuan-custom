@@ -1367,11 +1367,6 @@ const handlePetDispatch = (type: "forage" | "guard" | "treasure") => {
 const handleAnimalDispatch = (animalId: string) => {
   const result = animalStore.dispatchAnimal(animalId);
   addLog(result.message);
-  if (result.success) {
-    const tr = gameStore.advanceTime(1);
-    if (tr.message) addLog(tr.message);
-    if (tr.passedOut) handleEndDay();
-  }
 };
 
 const unpettedCount = computed(() => {

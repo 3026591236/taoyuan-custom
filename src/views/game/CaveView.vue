@@ -169,12 +169,23 @@
           <span>可领取</span><b>{{ cultivation.spiritArrayClaimDays }}天</b>
         </div>
       </div>
-      <Button
-        class="w-full justify-center"
-        :disabled="cultivation.spiritArrayClaimDays <= 0"
-        @click="cultivation.claimDailyElements"
-        >凝聚现实日元气与灵石</Button
-      >
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <Button
+          class="w-full justify-center"
+          :disabled="cultivation.spiritArrayClaimDays <= 0"
+          @click="cultivation.claimDailyElements"
+          >凝聚现实日元气与灵石</Button
+        >
+        <Button
+          class="w-full justify-center"
+          @click="cultivation.upgradeSpiritArray"
+        >
+          升级（{{ cultivation.spiritArrayUpgradeCost }}文）
+        </Button>
+      </div>
+      <p class="text-[10px] text-muted text-center">
+        每级提高现实日五行元气与灵石产量，升级不会清空待领取天数。
+      </p>
       <div class="grid grid-cols-5 gap-1">
         <div
           v-for="el in elementList"

@@ -288,14 +288,48 @@
             </button>
           </template>
 
-          <!-- 满级 -->
+          <!-- 工具品质满级后仍保留精通入口 -->
           <div
             v-else-if="!isUpgrading(selectedTool)"
-            class="border border-success/30 rounded-xs p-2"
+            class="space-y-3"
           >
-            <div class="flex items-center justify-center space-x-1">
-              <CircleCheck :size="12" class="text-success" />
-              <span class="text-xs text-success">已达到最高等级</span>
+            <div class="border border-success/30 rounded-xs p-2">
+              <div class="flex items-center justify-center space-x-1">
+                <CircleCheck :size="12" class="text-success" />
+                <span class="text-xs text-success">工具品质已达到最高等级</span>
+              </div>
+            </div>
+            <div
+              v-if="selectedToolObj"
+              class="rounded border border-muted p-3 bg-bg/40"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-sm text-accent">
+                    工具精通 Lv.{{ selectedToolObj.masteryLevel ?? 0 }}/3
+                  </p>
+                  <p class="text-xs text-muted">
+                    品质满级后仍可继续精通，永久降低体力消耗；2级起提升蓄力效率。
+                  </p>
+                </div>
+                <button
+                  v-if="getMasteryCost(selectedTool)"
+                  class="btn btn-xs"
+                  :disabled="!canUpgradeMastery(selectedTool)"
+                  @click.stop="handleUpgradeMastery(selectedTool)"
+                >
+                  精通 {{ getMasteryCost(selectedTool)?.money }}文
+                </button>
+                <span v-else class="text-xs text-success">精通已满级</span>
+              </div>
+              <p
+                v-if="getMasteryCost(selectedTool)"
+                class="mt-2 text-xs text-muted"
+              >
+                下级：{{ getMasteryCost(selectedTool)?.effect }}；材料：{{
+                  formatMasteryMaterials(selectedTool)
+                }}
+              </p>
             </div>
           </div>
         </div>

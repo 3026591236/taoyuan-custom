@@ -3416,6 +3416,9 @@ export const useCultivationStore = defineStore("cultivation", () => {
     () => 5 + spiritArrayLevel.value * 2,
   );
   const spiritArrayStoneYield = computed(() => 10 + spiritArrayLevel.value * 5);
+  const spiritArrayUpgradeCost = computed(
+    () => (spiritArrayLevel.value + 1) * 3000,
+  );
 
   const claimDailyHerbs = () => {
     if (!hasCaveSlot("herbgarden")) {
@@ -3454,6 +3457,25 @@ export const useCultivationStore = defineStore("cultivation", () => {
     }
     herbGardenLevel.value++;
     showFloat("百草园升级", "success");
+    return true;
+  };
+
+  const upgradeSpiritArray = () => {
+    if (!hasCaveSlot("spiritArray")) {
+      showFloat("请先安置聚灵阵。", "danger");
+      return false;
+    }
+    const cost = spiritArrayUpgradeCost.value;
+    const player = usePlayerStore();
+    if (!player.spendMoney(cost)) {
+      showFloat(`铜钱不足，需要${cost}文。`, "danger");
+      return false;
+    }
+    spiritArrayLevel.value++;
+    addLog(
+      `聚灵阵提升至Lv.${spiritArrayLevel.value}，现实日五行元气与灵石产量提高。`,
+    );
+    showFloat("聚灵阵升级", "success");
     return true;
   };
 
@@ -4045,6 +4067,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     herbs,
     spiritArrayLevel,
     spiritArrayLastDaily,
+    spiritArrayUpgradeCost,
     elements,
     yuanShenLevel,
     yuanShenExp,
@@ -4169,6 +4192,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     trainBeastDaily,
     claimDailyHerbs,
     upgradeHerbGarden,
+    upgradeSpiritArray,
     claimDailyElements,
     exchangeForSpiritStones,
     refineSpiritStoneToAura,
