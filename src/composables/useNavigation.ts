@@ -95,7 +95,7 @@ export const TABS: {
   { key: "fishpond", label: "灵泉鱼池", icon: Waves },
   { key: "village", label: "万象集", icon: Users },
   { key: "shop", label: "万象市集", icon: Store },
-  { key: "forage", label: "青篁秘林", icon: TreePine },
+  { key: "forage", label: "山野巡护", icon: TreePine },
   { key: "fishing", label: "灵溪垂钓", icon: Fish },
   { key: "mining", label: "玄矿幽脉", icon: Pickaxe },
   { key: "cooking", label: "灵膳房", icon: Flame },

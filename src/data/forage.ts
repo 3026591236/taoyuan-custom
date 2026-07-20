@@ -8,7 +8,30 @@ export interface ForageItemDef {
   season: ("spring" | "summer" | "autumn" | "winter")[];
   chance: number; // 出现概率 0-1
   expReward: number;
+  terrainBand?: string;
+  supplyRole?: string;
+  processingDestination?: string;
+  surveyNote?: string;
 }
+
+export type PatrolAreaId = "general" | "bamboo" | "herb" | "stream";
+
+export interface PatrolAreaDef {
+  id: PatrolAreaId;
+  name: string;
+  shortName: string;
+  description: string;
+  responsibility: string;
+  itemIds?: string[];
+}
+
+/** 巡护区只描述本次行动，不进入存档。综合巡查沿用历史资源池和概率。 */
+export const PATROL_AREAS: PatrolAreaDef[] = [
+  { id: "general", name: "综合巡查", shortName: "综合", description: "沿既有山径巡查全部资源带，出现概率与旧版采集完全一致。", responsibility: "兼顾建材、药植、食材与遗存登记" },
+  { id: "bamboo", name: "竹坞材料线", shortName: "竹坞", description: "巡查竹坞、林缘与倒木带，集中补充修造和燃料物资。", responsibility: "洞天修造、器具加工与冬储燃料", itemIds: ["bamboo", "wood", "firewood", "winter_bamboo_shoot", "pine_cone", "camphor_seed", "petrified_wood"] },
+  { id: "herb", name: "坡荫药植线", shortName: "坡荫", description: "沿背阴坡和林下腐殖层辨识药植、菌果及季候变化。", responsibility: "炼丹、灵膳与药植种源保全", itemIds: ["herb", "wintersweet", "wild_mushroom", "ginseng", "wild_berry", "mulberry", "camphor_seed"] },
+  { id: "stream", name: "溪缘遗存线", shortName: "溪缘", description: "踏查冲刷岸、旧聚落边缘与露头，登记可辨识遗存。", responsibility: "藏珍阁征集、遗存建档与环境线索复核", itemIds: ["ancient_pottery", "bamboo_scroll", "stone_axe_head", "fern_fossil", "petrified_wood"] },
+];
 
 /** 天气对采集概率的修正 */
 export const WEATHER_FORAGE_MODIFIER: Record<Weather, number> = {
@@ -145,9 +168,37 @@ export const FORAGE_ITEMS: ForageItemDef[] = [
   },
 ];
 
+const RESOURCE_LINEAGE: Record<string, Pick<ForageItemDef, "terrainBand" | "supplyRole" | "processingDestination" | "surveyNote">> = {
+  bamboo: { terrainBand: "竹坞缓坡", supplyRole: "轻型建材", processingDestination: "百匠造台、洞天修造", surveyNote: "记录竹龄与新笋密度，避开幼竹集中带。" },
+  wood: { terrainBand: "林缘倒木带", supplyRole: "通用木料", processingDestination: "百匠造台、器具修造", surveyNote: "优先取用风折木，保留仍有生机的立木。" },
+  herb: { terrainBand: "坡荫腐殖层", supplyRole: "常用药材", processingDestination: "丹炉、灵膳房", surveyNote: "辨明伴生植被并留根续生。" },
+  firewood: { terrainBand: "林下枯落带", supplyRole: "日常燃料", processingDestination: "灵膳房、冬储", surveyNote: "只收干枯枝条，兼查火险堆积。" },
+  winter_bamboo_shoot: { terrainBand: "冬季竹根带", supplyRole: "时令食材", processingDestination: "灵膳房", surveyNote: "浅掘取笋，回填土层保护竹鞭。" },
+  wintersweet: { terrainBand: "向阳石隙", supplyRole: "芳香药植", processingDestination: "丹炉、赠礼", surveyNote: "记录花期，不折主枝。" },
+  wild_mushroom: { terrainBand: "湿润朽木带", supplyRole: "菌类食材", processingDestination: "灵膳房", surveyNote: "核验菌褶与基质，未知菌株不混装。" },
+  ginseng: { terrainBand: "深坡阔叶林下", supplyRole: "珍稀药材", processingDestination: "丹炉", surveyNote: "登记叶龄和坐标，仅采成熟株。" },
+  wild_berry: { terrainBand: "林缘灌丛", supplyRole: "鲜食果源", processingDestination: "灵膳房、酿制", surveyNote: "留存部分果实供动物取食与自然更新。" },
+  pine_cone: { terrainBand: "针叶林缘", supplyRole: "种源与燃料", processingDestination: "育苗、百匠造台", surveyNote: "筛查虫蛀和种鳞完整度。" },
+  camphor_seed: { terrainBand: "樟林母树带", supplyRole: "灵种资源", processingDestination: "灵田育苗", surveyNote: "标记母树长势与落种范围。" },
+  mulberry: { terrainBand: "溪谷桑丛", supplyRole: "果食与染材", processingDestination: "灵膳房、加工", surveyNote: "观察鸟兽取食痕迹，分批采收。" },
+  ancient_pottery: { terrainBand: "溪岸冲刷层", supplyRole: "聚落遗存", processingDestination: "藏珍阁", surveyNote: "记录出土层位，不扩挖周边土层。" },
+  bamboo_scroll: { terrainBand: "旧址背水台地", supplyRole: "文字遗存", processingDestination: "藏珍阁", surveyNote: "保持干燥平放，登记残存字迹。" },
+  stone_axe_head: { terrainBand: "河阶砾石带", supplyRole: "生产遗存", processingDestination: "藏珍阁", surveyNote: "记录磨制面、石材与伴出物。" },
+  fern_fossil: { terrainBand: "溪崖页岩露头", supplyRole: "自然遗存", processingDestination: "藏珍阁", surveyNote: "沿自然裂隙取样，避免破坏整片层理。" },
+  petrified_wood: { terrainBand: "坡脚冲积层", supplyRole: "自然遗存与研究样本", processingDestination: "藏珍阁、百匠研究", surveyNote: "拍记纹理和埋藏方向后再收取松动样本。" },
+};
+
+for (const item of FORAGE_ITEMS) Object.assign(item, RESOURCE_LINEAGE[item.itemId]);
+
 /** 获取当前季节可采集物 */
 export const getForageItems = (season: string): ForageItemDef[] => {
   return FORAGE_ITEMS.filter((f) => f.season.includes(season as any));
+};
+
+export const getPatrolItems = (season: string, areaId: PatrolAreaId): ForageItemDef[] => {
+  const seasonal = getForageItems(season);
+  const area = PATROL_AREAS.find((entry) => entry.id === areaId);
+  return area?.itemIds ? seasonal.filter((item) => area.itemIds!.includes(item.itemId)) : seasonal;
 };
 
 // ===== 青篁秘林动物遭遇 =====
@@ -249,6 +300,13 @@ export const HOSTILE_ANIMALS: MonsterDef[] = [
     description: "青篁秘林之王，极其危险的猛兽。",
   },
 ];
+
+/** 固定采集与遭遇产物集合；用于行脚任务兼容旧档重算。 */
+export const FORAGE_DISCOVERY_ITEM_IDS = new Set([
+  ...FORAGE_ITEMS.map((item) => item.itemId),
+  ...FRIENDLY_ANIMALS.map((animal) => animal.productItemId),
+  ...HOSTILE_ANIMALS.flatMap((monster) => monster.drops.map((drop) => drop.itemId)),
+]);
 
 /** 青篁秘林野兽战败惩罚 */
 export const FOREST_DEFEAT_MONEY_PENALTY_RATE = 0.1;

@@ -1,13 +1,13 @@
 import type { Weather } from "@/types";
 
-/** 李渔翁 - 天气预报台词 */
+/** 李渔翁 - 次日水情与鱼汛提示 */
 export const WEATHER_TIPS: Record<Weather, string> = {
-  sunny: "明日天朗气清，适合外出活动。",
-  rainy: "明日有雨，记得带伞……不过鱼儿倒是爱咬钩。",
-  stormy: "明日雷雨交加，在家歇息为好。",
-  snowy: "明日有雪，注意保暖。河面可能会结冰。",
-  windy: "明日起风，晾晒的东西记得收好。",
-  green_rain: "老朽感觉明日……有些不寻常。",
+  sunny: "明日天晴，浅水升温较快，鱼群可能提早转入深水段。",
+  rainy: "明日有雨，支流入水会变浑。垂钓前先看水位牌与放流区。",
+  stormy: "明日雷雨强，河岸湿滑且水位可能急变，暂停临水观察。",
+  snowy: "明日有雪，近岸可能结薄冰，不要踏冰取样。",
+  windy: "明日起风，水面观察受扰，记录鱼情时注明风向和浪况。",
+  green_rain: "明日水色可能异常。老朽会加测水温与鱼群活动，先别在陌生水段下竿。",
 };
 
 /** 周秀才 - 运势台词阈值 */
@@ -86,7 +86,7 @@ export type TipNpcId = (typeof TIP_NPC_IDS)[number];
 
 /** NPC提示标签 */
 export const TIP_NPC_LABELS: Record<TipNpcId, string> = {
-  li_yu: "天气预报",
+  li_yu: "水情鱼汛",
   zhou_xiucai: "今日运势",
   wang_dashen: "食案校录",
   liu_cunzhang: "生活提示",

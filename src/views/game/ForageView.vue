@@ -2,7 +2,7 @@
   <div>
     <h3 class="text-accent text-sm mb-3">
       <TreePine :size="14" class="inline" />
-      青篁秘林采集
+      山野巡护与资源谱系
     </h3>
 
     <!-- 采集操作 -->
@@ -13,7 +13,22 @@
           >消耗 {{ forageCost }} 体力 · {{ forageTimeLabel }}</span
         >
       </div>
-      <p class="text-xs text-muted mb-2">使用斧头在青篁秘林中搜寻各类物资。</p>
+      <p class="text-xs text-muted mb-2">选择本次巡护线，使用斧头调查并收取可持续利用的资源。</p>
+      <div class="grid grid-cols-2 gap-1 mb-2">
+        <button
+          v-for="area in PATROL_AREAS"
+          :key="area.id"
+          class="border rounded-xs px-2 py-1 text-xs text-left"
+          :class="selectedPatrolArea === area.id ? 'border-accent/50 bg-accent/10 text-accent' : 'border-accent/15 text-muted'"
+          @click="selectedPatrolArea = area.id"
+        >
+          {{ area.name }}
+        </button>
+      </div>
+      <div class="border border-accent/10 rounded-xs p-2 mb-2">
+        <p class="text-xs">{{ currentPatrolArea.description }}</p>
+        <p class="text-[10px] text-muted mt-1">供给职责：{{ currentPatrolArea.responsibility }}</p>
+      </div>
       <div
         class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-1.5 cursor-pointer hover:bg-accent/5"
         @click="handleForage"
@@ -184,7 +199,7 @@
     <!-- 当季采集物 -->
     <div class="border border-accent/20 rounded-xs p-3">
       <div class="flex items-center justify-between mb-2">
-        <p class="text-sm text-accent">当季采集物</p>
+        <p class="text-sm text-accent">{{ currentPatrolArea.name }}·当季资源</p>
         <span class="text-xs text-muted"
           >{{ SEASON_NAMES[gameStore.season] }}季</span
         >
@@ -195,11 +210,13 @@
           :key="item.itemId"
           class="flex items-center justify-between border border-accent/10 rounded-xs px-3 py-1.5"
         >
-          <div>
-            <span class="text-xs">{{ item.name }}</span>
-            <span class="text-[10px] text-muted ml-2"
-              >+{{ item.expReward }}经验</span
-            >
+          <div class="min-w-0 pr-2">
+            <div>
+              <span class="text-xs">{{ item.name }}</span>
+              <span class="text-[10px] text-muted ml-2">+{{ item.expReward }}经验</span>
+            </div>
+            <p class="text-[10px] text-muted">{{ item.terrainBand }} · {{ item.supplyRole }} → {{ item.processingDestination }}</p>
+            <p class="text-[10px] text-muted/70">{{ item.surveyNote }}</p>
           </div>
           <span class="text-xs text-muted"
             >{{ Math.round(item.chance * 100) }}%</span
@@ -383,21 +400,25 @@ import { useCookingStore } from "@/stores/useCookingStore";
 import { useGameStore, SEASON_NAMES } from "@/stores/useGameStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
-import { useQuestStore } from "@/stores/useQuestStore";
 import { useSkillStore } from "@/stores/useSkillStore";
 import { useMiningStore } from "@/stores/useMiningStore";
 import { useWalletStore } from "@/stores/useWalletStore";
+import { useGuildStore } from "@/stores/useGuildStore";
 import type { Quality } from "@/types";
 import type { MonsterDef, CombatAction } from "@/types/skill";
-import { getForageItems, getItemById, getItemSource } from "@/data";
+import { getItemById, getItemSource } from "@/data";
 import {
   WEATHER_FORAGE_MODIFIER,
   FOREST_ENCOUNTER_CHANCE,
   FOREST_DEFEAT_MONEY_PENALTY_RATE,
   FOREST_DEFEAT_MONEY_PENALTY_CAP,
   rollForestEncounter,
+  getPatrolItems,
+  PATROL_AREAS,
 } from "@/data/forage";
-import type { FriendlyAnimalDef } from "@/data/forage";
+import type { FriendlyAnimalDef, PatrolAreaId } from "@/data/forage";
+import { planForageRewards } from "@/domain/forageDomain";
+import { useForageSettlement } from "@/composables/useForageSettlement";
 import { getWeaponById, getEnchantmentById } from "@/data/weapons";
 import {
   ACTION_TIME_COSTS,
@@ -417,6 +438,8 @@ const gameStore = useGameStore();
 const achievementStore = useAchievementStore();
 const cookingStore = useCookingStore();
 const walletStore = useWalletStore();
+const guildStore = useGuildStore();
+const { settle: settleForageReward, settleBatch: settleForageBatch } = useForageSettlement();
 
 interface ForageResult {
   label: string;
@@ -475,7 +498,13 @@ const selectedResultDef = computed(() => {
   return getItemById(selectedResult.value.itemId) ?? null;
 });
 
-const currentForage = computed(() => getForageItems(gameStore.season));
+const selectedPatrolArea = ref<PatrolAreaId>("general");
+const currentPatrolArea = computed(() =>
+  PATROL_AREAS.find((area) => area.id === selectedPatrolArea.value) ?? PATROL_AREAS[0]!,
+);
+const currentForage = computed(() =>
+  getPatrolItems(gameStore.season, selectedPatrolArea.value),
+);
 const foragingSkill = computed(() => skillStore.getSkill("foraging"));
 
 const forageCost = computed(() =>
@@ -566,91 +595,54 @@ const handleForage = () => {
   const herbDouble = hiddenNpcStore.isAbilityActive("yue_tu_1");
   const moonHerbChance = hiddenNpcStore.isAbilityActive("yue_tu_3");
 
-  for (const item of items) {
-    const herbalistBonus = skill.perk5 === "herbalist" ? 1.2 : 1.0;
-    const cookingBuff =
-      cookingStore.activeBuff?.type === "luck"
-        ? cookingStore.activeBuff.value / 100
-        : 0;
-    const adjustedChance = Math.min(
-      1,
-      item.chance *
-        (WEATHER_FORAGE_MODIFIER[gameStore.weather] ?? 1) *
-        herbalistBonus *
-        (1 + cookingBuff),
-    );
-    if (Math.random() < adjustedChance) {
-      const forageAllSkillsBuff =
-        cookingStore.activeBuff?.type === "all_skills"
-          ? cookingStore.activeBuff.value
-          : 0;
-      let quality = skillStore.rollForageQuality(forageAllSkillsBuff);
-      const walletBoost = walletStore.getForageQualityBoost();
-      if (walletBoost > 0) {
-        const qualityOrder: Quality[] = [
-          "normal",
-          "fine",
-          "excellent",
-          "supreme",
-        ];
-        const idx = qualityOrder.indexOf(quality);
-        const newIdx = Math.min(idx + walletBoost, qualityOrder.length - 1);
-        quality = qualityOrder[newIdx]!;
-      }
-      const qty = forestFarm && Math.random() < 0.2 ? 2 : 1;
-      // 仙缘能力：药知（yue_tu_1）草药采集双倍
-      const finalQty =
-        herbDouble && (item.itemId === "herb" || item.itemId === "ginseng")
-          ? qty * 2
-          : qty;
-      inventoryStore.addItem(item.itemId, finalQty, quality);
-      achievementStore.discoverItem(item.itemId);
-      useQuestStore().onItemObtained(item.itemId, finalQty);
-      const itemDef = getItemById(item.itemId);
-      const name = itemDef?.name ?? item.itemId;
-      gathered.push({
-        label: `获得了${finalQty > 1 ? `${name}×${finalQty}` : name}`,
-        itemId: item.itemId,
-        quantity: finalQty,
-        quality,
-      });
-      skillStore.addExp("foraging", Math.floor(item.expReward * forestXpBonus));
+  const allSkillsBuff =
+    cookingStore.activeBuff?.type === "all_skills"
+      ? cookingStore.activeBuff.value
+      : 0;
+  const rollQuality = (): Quality => {
+    let quality = skillStore.rollForageQuality(allSkillsBuff);
+    const boost = walletStore.getForageQualityBoost();
+    if (boost > 0) {
+      const order: Quality[] = ["normal", "fine", "excellent", "supreme"];
+      quality = order[Math.min(order.indexOf(quality) + boost, order.length - 1)]!;
     }
-  }
-
-  if (skill.perk10 === "forester") {
-    inventoryStore.addItem("wood");
-    gathered.push({ label: "获得了木材", itemId: "wood", quantity: 1 });
-  } else if (skill.perk5 === "lumberjack" && Math.random() < 0.25) {
-    inventoryStore.addItem("wood");
-    gathered.push({ label: "获得了木材", itemId: "wood", quantity: 1 });
-  }
-
-  if (skill.perk10 === "tracker" && items.length > 0) {
-    const randomItem = items[Math.floor(Math.random() * items.length)]!;
-    const trackerAllSkillsBuff =
-      cookingStore.activeBuff?.type === "all_skills"
-        ? cookingStore.activeBuff.value
-        : 0;
-    const quality = skillStore.rollForageQuality(trackerAllSkillsBuff);
-    inventoryStore.addItem(randomItem.itemId, 1, quality);
-    achievementStore.discoverItem(randomItem.itemId);
-    const itemDef = getItemById(randomItem.itemId);
-    const name = itemDef?.name ?? randomItem.itemId;
-    gathered.push({
-      label: `获得了${name}`,
-      itemId: randomItem.itemId,
-      quantity: 1,
-      quality,
-    });
-  }
-
-  // 仙缘能力：月华（yue_tu_3）采集8%概率获得月草
-  if (moonHerbChance && Math.random() < 0.08) {
-    inventoryStore.addItem("moon_herb", 1);
-    achievementStore.discoverItem("moon_herb");
-    gathered.push({ label: "获得了月草", itemId: "moon_herb", quantity: 1 });
-    skillStore.addExp("foraging", 15);
+    return quality;
+  };
+  const cookingLuck =
+    cookingStore.activeBuff?.type === "luck"
+      ? cookingStore.activeBuff.value / 100
+      : 0;
+  const planned = planForageRewards({
+    items,
+    chanceMultiplier:
+      (WEATHER_FORAGE_MODIFIER[gameStore.weather] ?? 1) *
+      (skill.perk5 === "herbalist" ? 1.2 : 1) *
+      (1 + cookingLuck),
+    forestFarm,
+    herbDouble,
+    forester: skill.perk10 === "forester",
+    lumberjack: skill.perk5 === "lumberjack",
+    tracker: skill.perk10 === "tracker",
+    moonHerbChance,
+    rollQuality,
+  });
+  const settlement = settleForageBatch(
+    planned.map((reward) => ({
+      ...reward,
+      forageExp: Math.floor(reward.expReward * forestXpBonus),
+    })),
+  );
+  if (!settlement.accepted) {
+    gathered.push({ label: "纳戒容量不足，本次发现的资源全部留在原处。", quantity: 0 });
+  } else {
+    for (const result of settlement.rewards) {
+      gathered.push({
+        label: `获得了${result.quantity > 1 ? `${result.name}×${result.quantity}` : result.name}`,
+        itemId: result.itemId,
+        quantity: result.quantity,
+        quality: result.quality,
+      });
+    }
   }
 
   if (gathered.length === 0) {
@@ -659,7 +651,7 @@ const handleForage = () => {
 
   achievementStore.recordForageAction();
   lastResults.value = gathered;
-  const { leveledUp, newLevel } = skillStore.addExp("foraging", 0);
+  const { leveledUp, newLevel } = settlement;
   const names = gathered
     .filter((g) => g.itemId)
     .map((g) => {
@@ -717,13 +709,19 @@ const handleFriendlyCollect = () => {
     const newIdx = Math.min(idx + walletBoost, qualityOrder.length - 1);
     quality = qualityOrder[newIdx]!;
   }
-  inventoryStore.addItem(animal.productItemId, 1, quality);
-  achievementStore.discoverItem(animal.productItemId);
-  useQuestStore().onItemObtained(animal.productItemId, 1);
-  const { leveledUp, newLevel } = skillStore.addExp(
-    "foraging",
-    animal.collectExp,
-  );
+  const settled = settleForageReward({
+    itemId: animal.productItemId,
+    quantity: 1,
+    quality,
+    forageExp: animal.collectExp,
+  });
+  if (!settled.accepted) {
+    addLog(`纳戒容量不足，未从${animal.name}处收取产物。`);
+    lastResults.value.push({ label: `纳戒容量不足，${animal.name}的产物留在原处。`, quantity: 0 });
+    encounter.value = null;
+    return;
+  }
+  const { leveledUp, newLevel } = settled;
   const itemDef = getItemById(animal.productItemId);
   const qLabel = quality !== "normal" ? `(${QUALITY_NAMES[quality]})` : "";
   lastResults.value.push({
@@ -780,6 +778,7 @@ const forestWeaponAttack = computed(() => {
 });
 
 const startForestCombat = (monster: MonsterDef) => {
+  guildStore.recordEncounter(monster.id);
   inForestCombat.value = true;
   forestCombatMonster.value = monster;
   forestCombatMonsterHp.value = monster.hp;
@@ -922,15 +921,18 @@ const handleForestVictory = () => {
   const monster = forestCombatMonster.value!;
   forestCombatLog.value.push(`你击败了${monster.name}！`);
 
-  // 掉落物
+  achievementStore.recordMonsterKill();
+  guildStore.recordKill(monster.id);
+
+  // 掉落物仅在完整入包后记入任务、图鉴与日志
   const drops: string[] = [];
+  let rejectedDrops = 0;
   const dropRateBonus = miningStore.guildBonusDropRate;
   for (const drop of monster.drops) {
     if (Math.random() < drop.chance + dropRateBonus) {
-      inventoryStore.addItem(drop.itemId);
-      achievementStore.discoverItem(drop.itemId);
-      const itemDef = getItemById(drop.itemId);
-      drops.push(itemDef?.name ?? drop.itemId);
+      const settled = settleForageReward({ itemId: drop.itemId });
+      if (settled.accepted) drops.push(settled.name);
+      else rejectedDrops++;
     }
   }
 
@@ -942,6 +944,7 @@ const handleForestVictory = () => {
 
   let msg = `在青篁秘林击败了${monster.name}！`;
   if (drops.length > 0) msg += ` 获得了${drops.join("、")}。`;
+  if (rejectedDrops > 0) msg += ` 纳戒容量不足，${rejectedDrops}份掉落未收取。`;
   msg += ` (+${monster.expReward}战斗经验)`;
   if (leveledUp) msg += ` 战斗提升到${newLevel}级！`;
   addLog(msg);
@@ -964,17 +967,12 @@ const handleForestDefeat = () => {
   );
   if (moneyLoss > 0) playerStore.spendMoney(moneyLoss);
 
-  // 清空本次采集结果
-  lastResults.value = [
-    { label: `被${monster.name}击败，采集物散落一地……`, quantity: 0 },
-  ];
-
   // HP恢复50%
   playerStore.restoreHealth(Math.floor(playerStore.getMaxHp() * 0.5));
 
   let msg = `在青篁秘林被${monster.name}击败了……`;
   if (moneyLoss > 0) msg += ` 丢失了${moneyLoss}文。`;
-  msg += " 采集物全部散落。";
+  msg += " 已入纳戒的采集物仍在。";
   addLog(msg);
 
   forestCombatAnimLock.value = true;

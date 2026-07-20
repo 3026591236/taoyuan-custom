@@ -39,6 +39,7 @@ import { RECIPES } from "@/data/recipes";
 import { CAVE_UNLOCK_EARNINGS } from "@/data/buildings";
 import { TOOL_NAMES, TIER_NAMES } from "@/data/upgrades";
 import { addLog, showFloat } from "./useGameLog";
+import { useForageSettlement } from "./useForageSettlement";
 import { getDailyMarketInfo, MARKET_CATEGORY_NAMES } from "@/data/market";
 import {
   showEvent,
@@ -1443,15 +1444,26 @@ export const handleEndDay = () => {
     if (commonForage.length > 0) {
       const count = 1 + (Math.random() < 0.4 ? 1 : 0); // 1-2个
       const gathered: string[] = [];
+      let leftBehind = 0;
+      const { settle } = useForageSettlement();
       for (let i = 0; i < count; i++) {
         const item =
           commonForage[Math.floor(Math.random() * commonForage.length)]!;
         const quality = skillStore.rollForageQuality();
-        inventoryStore.addItem(item.itemId, 1, quality);
-        skillStore.addExp("foraging", item.expReward);
-        gathered.push(getItemById(item.itemId)?.name ?? item.itemId);
+        const result = settle({
+          itemId: item.itemId,
+          quality,
+          forageExp: item.expReward,
+        });
+        if (result.accepted) gathered.push(result.name);
+        else leftBehind += 1;
       }
-      addLog(`青篁秘林间发现了${gathered.join("和")}。`);
+      if (gathered.length > 0) {
+        addLog(`青篁秘林间发现了${gathered.join("和")}。`);
+      }
+      if (leftBehind > 0) {
+        addLog(`纳戒容量不足，${leftBehind}份林中拾遗留在原处。`);
+      }
     }
   }
 

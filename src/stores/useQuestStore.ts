@@ -18,6 +18,7 @@ import {
 } from "@/data/storyQuests";
 import { getNpcById } from "@/data/npcs";
 import { getItemById } from "@/data/items";
+import { FORAGE_DISCOVERY_ITEM_IDS } from "@/data/forage";
 import { useInventoryStore } from "./useInventoryStore";
 import { usePlayerStore } from "./usePlayerStore";
 import { useNpcStore } from "./useNpcStore";
@@ -542,7 +543,7 @@ export const useQuestStore = defineStore("quest", () => {
       id: "v160_forage_25",
       type: "guide",
       title: "青篁秘林行脚：二十五件采集",
-      desc: "通过青篁秘林采集、友好动物或野外事件累计发现25种物品，把采集接入烹饪、炼丹和委托循环。",
+      desc: "通过山野巡护固定采集物、友好动物产物和野兽掉落累计发现25种物品，把采集接入烹饪、炼丹和委托循环。",
       metric: "forageItems",
       target: 25,
       reward: {
@@ -744,7 +745,9 @@ export const useQuestStore = defineStore("quest", () => {
       case "hybridsDiscovered":
         return achievementStore.stats.totalHybridsDiscovered;
       case "forageItems":
-        return achievementStore.discoveredItems.length;
+        return achievementStore.discoveredItems.filter((itemId) =>
+          FORAGE_DISCOVERY_ITEM_IDS.has(itemId),
+        ).length;
       case "forageActions":
         return achievementStore.stats.totalForageActions;
       case "museumDonations":

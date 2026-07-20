@@ -97,8 +97,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_1_7",
     chapter: 1,
     order: 7,
-    title: "木匠的考验",
-    description: "小满说他师父赵木匠急需一批木材，帮忙送去30个木材吧。",
+    title: "步道用材标记",
+    description: "小满正在更换青篁秘林受潮的踏板，需要30份木材逐件量看并标明用途。",
     npcId: "xiao_man",
     objectives: [
       {
@@ -196,8 +196,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_2_3",
     chapter: 2,
     order: 3,
-    title: "渔翁之道",
-    description: "李渔翁说，垂钓讲究心境。多钓几条鱼，领悟其中奥妙。",
+    title: "一旬鱼汛记录",
+    description: "李渔翁需要扩大鱼汛样本。累计钓到30条鱼，并把水段、时辰与鱼种一并记入观察册。",
     npcId: "li_yu",
     objectives: [{ type: "catchFish", label: "累计钓到30条鱼", target: 30 }],
     moneyReward: 800,
@@ -455,8 +455,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_4_2",
     chapter: 4,
     order: 2,
-    title: "降妖除魔",
-    description: "云飞说山里的怪物越来越多了，需要有人出手清理。",
+    title: "兽情异常处置",
+    description: "云飞确认秘林外缘的侵扰性怪物活动持续上升。按巡护标记处置150只，降低它们对样线与兽群通道的影响。",
     npcId: "yun_fei",
     objectives: [
       { type: "killMonsters", label: "累计击杀150只怪物", target: 150 },
@@ -604,8 +604,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
     id: "main_5_3",
     chapter: 5,
     order: 3,
-    title: "万魔之敌",
-    description: "云飞说你已经是万象仙乡最强的战士了，但怪物还在不断出现。",
+    title: "长期巡护清障",
+    description: "云飞正在汇总长期兽情记录。累计处置500只侵扰性怪物，维持主要巡护线与兽群迁移通道的安全。",
     npcId: "yun_fei",
     objectives: [
       { type: "killMonsters", label: "累计击杀500只怪物", target: 500 },
