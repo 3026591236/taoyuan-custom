@@ -853,13 +853,18 @@ export const useLongTermStore = defineStore("longTerm", () => {
       message: `领取${task.title}：${rewardText(task.reward)}`,
     };
   }
-  function toggleAffixLock(slot: string) {
-    const affix = gearAffixes.value[slot]?.[0];
+  function toggleAffixLock(slot: string, index = 0) {
+    const affixes = gearAffixes.value[slot] ?? [];
+    const affix = affixes[index];
     if (!affix) return { success: false, message: "暂无可锁定词条" };
-    affix.locked = !affix.locked;
+    const nextLocked = !affix.locked;
+    for (const entry of affixes) entry.locked = false;
+    affix.locked = nextLocked;
     return {
       success: true,
-      message: `${affix.name}已${affix.locked ? "锁定" : "解锁"}`,
+      message: nextLocked
+        ? `${affix.secondary ? "副词条" : "主词条"}「${affix.name}」已锁定；下次洗练将保留它并重洗另一条。`
+        : `${affix.name}已解锁。`,
     };
   }
   function rollAffix(slot: string, forceRare = false, secondary = false) {
@@ -883,22 +888,24 @@ export const useLongTermStore = defineStore("longTerm", () => {
     } as GearAffix;
   }
   function rerollGearAffix(slot: string) {
-    const current = gearAffixes.value[slot]?.[0];
-    const locked = !!current?.locked;
-    const cost = locked ? 20 : 12;
-    if (inv().getItemCount("spirit_stone") < cost)
-      return { success: false, message: `洗练需要灵石×${cost}` };
-    inv().removeItem("spirit_stone", cost);
-    if (locked && current)
+    const affixes = gearAffixes.value[slot] ?? [];
+    const current = affixes[0];
+    const secondary = affixes[1];
+    const lockedSecondary = !!secondary?.locked;
+    const cost = lockedSecondary ? 20 : 12;
+    if (current?.locked)
       return {
-        success: true,
-        message: `${current.name}已锁定，本次仅消耗灵石维持主词条。`,
+        success: false,
+        message: "主词条已锁定，请使用副词条洗练来重洗另一条。",
       };
+    if (inv().getItemCount("spirit_stone") < cost)
+      return { success: false, message: `主词条洗练需要灵石×${cost}` };
     const pity = (gearPity.value[slot] || 0) + 1;
     const forceRare = pity >= 8;
     const next = rollAffix(slot, forceRare);
     if (!next) return { success: false, message: "暂无可洗练词条" };
-    gearAffixes.value[slot] = [next];
+    inv().removeItem("spirit_stone", cost);
+    gearAffixes.value[slot] = secondary ? [next, secondary] : [next];
     if (next.rarity !== "普通") {
       gearPity.value[slot] = 0;
       if (!affixCodex.value.includes(next.name))
@@ -906,15 +913,22 @@ export const useLongTermStore = defineStore("longTerm", () => {
     } else gearPity.value[slot] = pity;
     return {
       success: true,
-      message: `洗练获得${next.rarity || "普通"}词条 ${next.name} Lv.${next.level}：${next.desc}${forceRare ? "（保底触发）" : ""}`,
+      message: `${lockedSecondary ? `保留副词条「${secondary?.name}」，` : ""}主词条洗练获得${next.rarity || "普通"}·${next.name} Lv.${next.level}：${next.desc}${forceRare ? "（保底触发）" : ""}`,
     };
   }
 
   function rerollSecondaryAffix(slot: string) {
-    const current = gearAffixes.value[slot]?.[0];
+    const affixes = gearAffixes.value[slot] ?? [];
+    const current = affixes[0];
+    const secondary = affixes[1];
     if (!current)
       return { success: false, message: "需先洗练出主词条，才能开启副词条。" };
-    const costSpirit = 18;
+    if (secondary?.locked)
+      return {
+        success: false,
+        message: "副词条已锁定，请使用主词条洗练来重洗另一条。",
+      };
+    const costSpirit = current.locked ? 24 : 18;
     const costBlueprint = current.rarity === "绝品" ? 2 : 1;
     if (inv().getItemCount("spirit_stone") < costSpirit)
       return { success: false, message: `副词条洗练需要灵石×${costSpirit}` };
@@ -923,13 +937,13 @@ export const useLongTermStore = defineStore("longTerm", () => {
         success: false,
         message: `副词条洗练需要炼器图纸×${costBlueprint}`,
       };
-    inv().removeItem("spirit_stone", costSpirit);
-    inv().removeItem("forge_blueprint", costBlueprint);
     const pityKey = `${slot}:secondary`;
     const pity = (gearPity.value[pityKey] || 0) + 1;
     const forceRare = pity >= 6;
     const next = rollAffix(slot, forceRare, true);
     if (!next) return { success: false, message: "暂无可洗练副词条" };
+    inv().removeItem("spirit_stone", costSpirit);
+    inv().removeItem("forge_blueprint", costBlueprint);
     gearAffixes.value[slot] = [current, next];
     if (next.rarity !== "普通") {
       gearPity.value[pityKey] = 0;
@@ -938,7 +952,7 @@ export const useLongTermStore = defineStore("longTerm", () => {
     } else gearPity.value[pityKey] = pity;
     return {
       success: true,
-      message: `副词条获得${next.rarity || "普通"}·${next.name} Lv.${next.level}：${next.desc}${forceRare ? "（副词条保底触发）" : ""}`,
+      message: `${current.locked ? `保留主词条「${current.name}」，` : ""}副词条获得${next.rarity || "普通"}·${next.name} Lv.${next.level}：${next.desc}${forceRare ? "（副词条保底触发）" : ""}`,
     };
   }
 

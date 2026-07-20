@@ -244,6 +244,57 @@
 
     <!-- 仙灵 Tab -->
     <div v-if="activeTab === 'spirit'">
+      <section class="border border-accent/20 rounded-xs p-2 mb-3 bg-bg/40">
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <div>
+            <p class="text-xs text-accent">仙缘指引</p>
+            <p class="text-[10px] text-muted mt-0.5">
+              只记录下一步可追寻的线索；条件会随时节、地点与行囊实时核验。
+            </p>
+          </div>
+          <span class="text-[10px] text-muted whitespace-nowrap">
+            {{ revealedHiddenNpcs.length }}/{{ hiddenNpcGuides.length }} 已显灵
+          </span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div
+            v-for="guide in hiddenNpcGuides"
+            :key="guide.npc.id"
+            class="border border-accent/10 rounded-xs p-2"
+            :class="guide.revealed ? 'opacity-60' : 'bg-accent/[0.02]'"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <p
+                class="text-xs"
+                :class="guide.revealed ? 'text-success' : 'text-accent'"
+              >
+                {{ guide.revealed ? guide.npc.name : guide.displayName }}
+              </p>
+              <span class="text-[10px] text-muted">{{ guide.phaseLabel }}</span>
+            </div>
+            <p class="text-[10px] text-muted leading-relaxed mt-1">
+              {{ guide.clue }}
+            </p>
+            <div v-if="!guide.revealed" class="space-y-1 mt-2">
+              <div
+                v-for="condition in guide.conditions"
+                :key="condition.label"
+                class="flex items-start gap-1 text-[10px]"
+                :class="condition.met ? 'text-success' : 'text-muted'"
+              >
+                <CircleCheck
+                  v-if="condition.met"
+                  :size="11"
+                  class="mt-px shrink-0"
+                />
+                <Circle v-else :size="11" class="mt-px shrink-0" />
+                <span>{{ condition.label }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 已显现的仙灵 -->
       <template v-if="revealedHiddenNpcs.length > 0">
         <div class="grid grid-cols-4 md:grid-cols-3 gap-1.5 md:gap-2">
@@ -337,14 +388,7 @@
         </div>
       </div>
 
-      <!-- 仙灵空状态 -->
-      <div
-        v-if="revealedHiddenNpcs.length === 0 && rumorHiddenNpcs.length === 0"
-        class="flex flex-col items-center justify-center py-12 text-muted"
-      >
-        <Sparkles :size="32" class="mb-2" />
-        <p class="text-xs">尚未发现任何仙灵的踪迹。</p>
-      </div>
+      <!-- 尚无已记录传闻时，指引区仍会展示可追寻的初始线索 -->
     </div>
 
     <!-- 仙灵交互弹窗 -->
@@ -944,7 +988,10 @@ import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useTutorialStore } from "@/stores/useTutorialStore";
 import { useHiddenNpcStore } from "@/stores/useHiddenNpcStore";
 import { NPCS, getNpcById, getItemById, getHeartEventById } from "@/data";
-import { getHiddenNpcById } from "@/data/hiddenNpcs";
+import { HIDDEN_NPCS, getHiddenNpcById } from "@/data/hiddenNpcs";
+import { getStoryQuestById } from "@/data/storyQuests";
+import { SEASON_NAMES, WEATHER_NAMES } from "@/stores/useGameStore";
+import type { DiscoveryCondition, DiscoveryPhase } from "@/types/hiddenNpc";
 import { ACTION_TIME_COSTS, isNpcAvailable } from "@/data/timeConstants";
 import { TIP_NPC_LABELS } from "@/data/npcTips";
 import type { TipNpcId } from "@/data/npcTips";
@@ -968,6 +1015,114 @@ const selectedHiddenNpc = ref<string | null>(null);
 
 const revealedHiddenNpcs = computed(() => hiddenNpcStore.getRevealedNpcs);
 const rumorHiddenNpcs = computed(() => hiddenNpcStore.getRumorNpcs);
+
+const DISCOVERY_PHASE_LABELS: Record<DiscoveryPhase, string> = {
+  unknown: "寻觅传闻",
+  rumor: "循迹异象",
+  glimpse: "准备相见",
+  encounter: "完成考验",
+  revealed: "已显灵",
+};
+const PANEL_LABELS: Record<string, string> = {
+  fishing: "清溪垂钓处",
+  farm: "灵田",
+  forage: "青篁秘林",
+  village: "万象集",
+  mining: "玄矿幽脉",
+};
+const SKILL_LABELS: Record<string, string> = {
+  farming: "耕作",
+  fishing: "垂钓",
+  foraging: "采集",
+  mining: "采矿",
+};
+const SPECIAL_ITEM_LABELS: Record<string, string> = {
+  jade_dragon: "翠龙鱼",
+  dragon_jade: "龙玉",
+  peach: "桃子",
+  honey: "蜂蜜",
+  ginseng: "人参",
+  herb: "药草",
+  ruby: "红宝石",
+  jade: "玉石",
+  fox_bead: "狐珠",
+  snow_lotus: "雪莲",
+  silk: "蚕丝",
+  moonstone: "月光石",
+};
+const NPC_GUIDE_NAMES: Record<string, string> = {
+  long_ling: "瀑布深处的仙缘",
+  tao_yao: "桃林花影的仙缘",
+  yue_tu: "月下药香的仙缘",
+  hu_xian: "狐纹信笺的仙缘",
+  shan_weng: "矿脉古册的仙缘",
+  gui_nv: "深夜织声的仙缘",
+};
+
+const conditionLabel = (condition: DiscoveryCondition): string => {
+  switch (condition.type) {
+    case "season":
+      return `时节：${SEASON_NAMES[condition.season]}季`;
+    case "weather":
+      return `天气：${WEATHER_NAMES[condition.weather]}`;
+    case "timeRange":
+      return `时辰：${String(condition.minHour).padStart(2, "0")}:00—${String(condition.maxHour).padStart(2, "0")}:00`;
+    case "location":
+      return `前往：${PANEL_LABELS[condition.panel] ?? condition.panel}`;
+    case "item": {
+      const itemName =
+        getItemById(condition.itemId)?.name ??
+        SPECIAL_ITEM_LABELS[condition.itemId] ??
+        condition.itemId;
+      return `行囊携带：${itemName}×${condition.quantity ?? 1}`;
+    }
+    case "skill":
+      return `${SKILL_LABELS[condition.skillType] ?? condition.skillType}等级达到 Lv.${condition.minLevel}`;
+    case "npcFriendship":
+      return `与${getNpcById(condition.npcId)?.name ?? "相关集民"}好感达到 ${condition.minFriendship}`;
+    case "questComplete":
+      return `完成主线「${getStoryQuestById(condition.questId)?.title ?? condition.questId}」`;
+    case "mineFloor":
+      return `玄矿幽脉最高到达第 ${condition.minFloor} 层`;
+    case "fishCaught":
+      return `曾钓得${SPECIAL_ITEM_LABELS[condition.fishId] ?? getItemById(condition.fishId)?.name ?? condition.fishId}`;
+    case "money":
+      return `持有铜钱达到 ${condition.minAmount.toLocaleString()}`;
+    case "yearMin":
+      return `游戏年份达到第 ${condition.year} 年`;
+    case "day":
+      return `日期：当季第 ${condition.day} 日`;
+  }
+};
+
+const hiddenNpcGuides = computed(() =>
+  HIDDEN_NPCS.map((npc) => {
+    const state = hiddenNpcStore.getHiddenNpcState(npc.id);
+    const phase = state?.discoveryPhase ?? "unknown";
+    const nextStep = npc.discoverySteps.find(
+      (step) => !state?.completedSteps.includes(step.id),
+    );
+    const lastStepId = state?.completedSteps[state.completedSteps.length - 1];
+    const lastStep = npc.discoverySteps.find((step) => step.id === lastStepId);
+    const revealed = phase === "revealed";
+    return {
+      npc,
+      revealed,
+      displayName:
+        phase === "unknown"
+          ? (NPC_GUIDE_NAMES[npc.id] ?? "未明仙缘")
+          : npc.name,
+      phaseLabel: DISCOVERY_PHASE_LABELS[phase],
+      clue: revealed
+        ? "此段仙缘已经显现，可在下方与仙灵往来。"
+        : (lastStep?.logMessage ?? "乡野万物皆可能留下仙缘，先完成下列线索。"),
+      conditions: (nextStep?.conditions ?? []).map((condition) => ({
+        label: conditionLabel(condition),
+        met: hiddenNpcStore.evaluateCondition(condition),
+      })),
+    };
+  }),
+);
 
 const hiddenHeartCount = (npcId: string): number => {
   const affinity = hiddenNpcStore.getHiddenNpcState(npcId)?.affinity ?? 0;

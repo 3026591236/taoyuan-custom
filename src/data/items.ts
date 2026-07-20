@@ -445,7 +445,8 @@ const MISC_ITEMS: ItemDef[] = [
     id: "thunder_scripture",
     name: "九霄雷诀",
     category: "misc",
-    description: "引雷淬体的进阶功法秘籍，每层额外提升1.5%渡劫成功率；功法加成合计上限16%，总成功率上限95%。",
+    description:
+      "引雷淬体的进阶功法秘籍，每层额外提升1.5%渡劫成功率；功法加成合计上限16%，总成功率上限95%。",
     sellPrice: 3200,
     edible: false,
   },
@@ -2916,7 +2917,6 @@ export const ITEMS: ItemDef[] = [
     edible: false,
   },
 
-
   // 结缘物品
   {
     id: "dragon_bond_pearl",
@@ -3078,7 +3078,9 @@ export const ITEMS: ItemDef[] = [
  * 开发期与构建期防线：行情敏感的农产品/加工品 ID 不得跨分类复用。
  * 装备图鉴及历史材料别名仍可能与基础物品表共用 ID；它们不参与农产行情。
  */
-export const assertUniqueItemIds = (items: readonly ItemDef[] = ITEMS): void => {
+export const assertUniqueItemIds = (
+  items: readonly ItemDef[] = ITEMS,
+): void => {
   const counts = new Map<string, number>();
   for (const item of items) counts.set(item.id, (counts.get(item.id) ?? 0) + 1);
   const duplicates = [...counts.entries()]
@@ -3103,7 +3105,7 @@ const CATEGORY_SOURCE: Record<ItemCategory, string> = {
   fish: "垂钓获得",
   ore: "玄矿幽脉采集",
   gem: "玄矿幽脉采集",
-  material: "采集/合成",
+  material: "青篁秘林、玄矿幽脉等地采集，或通过百工作序、配方与玩法奖励获得",
   food: "烹饪制作",
   processed: "百工作序制作",
   machine: "合成制作",
@@ -3131,6 +3133,13 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   qi_gathering_pill: "炼丹炉炼制",
   foundation_pill: "炼丹炉炼制",
   // 材料类
+  forge_blueprint:
+    "秘境战斗与高阶凶兽掉落；生活技能大师委托；登仙塔及部分运营奖励",
+  soul_crystal: "幽冥洞窟与凶兽掉落；登仙塔奖励；灵兽派遣及宗门玩法",
+  thunder_essence: "昆仑外境与雷系凶兽掉落；宗门订单、登仙塔及仙界玩法奖励",
+  dragon_jade: "玄矿幽脉深层与深渊矿层；旅行商人；公会商店及成就奖励",
+  silk: "养蚕及灵牧产出；万象行相关供应；部分委托奖励",
+  snow_lotus: "冬季高阶灵种种植；育种获得雪莲种子；部分高阶订单与活动奖励",
   wood: "砍树获得",
   bamboo: "砍竹获得",
   herb: "山间采集",

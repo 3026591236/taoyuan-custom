@@ -134,66 +134,97 @@
             class="border border-accent/10 rounded-xs p-2 text-[10px] space-y-1"
           >
             <p class="text-accent">词条洗练</p>
-            <p v-if="affixFor(gear.slot)" class="text-muted">
-              当前：<span :class="affixRarityClass(affixFor(gear.slot)?.rarity)"
-                >{{ affixFor(gear.slot)?.rarity || "普通" }}·{{
-                  affixFor(gear.slot)?.name
-                }}</span
+            <div
+              v-if="affixFor(gear.slot)"
+              class="border border-accent/10 rounded-xs p-2 space-y-1"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <p class="text-muted leading-relaxed">
+                  主词条：<span
+                    :class="affixRarityClass(affixFor(gear.slot)?.rarity)"
+                    >{{ affixFor(gear.slot)?.rarity || "普通" }}·{{
+                      affixFor(gear.slot)?.name
+                    }}</span
+                  >
+                  Lv.{{ affixFor(gear.slot)?.level }} ·
+                  {{ affixFor(gear.slot)?.desc }}
+                  <span v-if="affixFor(gear.slot)?.setId">
+                    · {{ setName(affixFor(gear.slot)?.setId) }}</span
+                  >
+                </p>
+                <button
+                  class="btn btn-xs whitespace-nowrap"
+                  @click="toggleAffixLock(gear.slot, 0)"
+                >
+                  {{
+                    affixFor(gear.slot)?.locked ? "主词条已锁" : "锁定主词条"
+                  }}
+                </button>
+              </div>
+              <div
+                v-if="secondaryAffixFor(gear.slot)"
+                class="flex items-start justify-between gap-2"
               >
-              Lv.{{ affixFor(gear.slot)?.level }} ·
-              {{ affixFor(gear.slot)?.desc }}
-              <span v-if="affixFor(gear.slot)?.setId">
-                · {{ setName(affixFor(gear.slot)?.setId) }}</span
-              >
-            </p>
-            <p v-if="secondaryAffixFor(gear.slot)" class="text-muted">
-              副词条：<span
-                :class="affixRarityClass(secondaryAffixFor(gear.slot)?.rarity)"
-              >
-                {{ secondaryAffixFor(gear.slot)?.rarity || "普通" }}·{{
-                  secondaryAffixFor(gear.slot)?.name
-                }}
-              </span>
-              Lv.{{ secondaryAffixFor(gear.slot)?.level }} ·
-              {{ secondaryAffixFor(gear.slot)?.desc }}
-            </p>
+                <p class="text-muted leading-relaxed">
+                  副词条：<span
+                    :class="
+                      affixRarityClass(secondaryAffixFor(gear.slot)?.rarity)
+                    "
+                  >
+                    {{ secondaryAffixFor(gear.slot)?.rarity || "普通" }}·{{
+                      secondaryAffixFor(gear.slot)?.name
+                    }}
+                  </span>
+                  Lv.{{ secondaryAffixFor(gear.slot)?.level }} ·
+                  {{ secondaryAffixFor(gear.slot)?.desc }}
+                </p>
+                <button
+                  class="btn btn-xs whitespace-nowrap"
+                  @click="toggleAffixLock(gear.slot, 1)"
+                >
+                  {{
+                    secondaryAffixFor(gear.slot)?.locked
+                      ? "副词条已锁"
+                      : "锁定副词条"
+                  }}
+                </button>
+              </div>
+            </div>
             <p v-else class="text-muted">
               暂无词条，可消耗灵石洗练出随机方向；连续8次未出稀有会触发保底。
             </p>
-            <div class="grid grid-cols-2 gap-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
               <button
                 class="btn justify-center text-xs"
                 :disabled="
-                  spiritStoneCount < (affixFor(gear.slot)?.locked ? 20 : 12)
+                  affixFor(gear.slot)?.locked ||
+                  spiritStoneCount <
+                    (secondaryAffixFor(gear.slot)?.locked ? 20 : 12)
                 "
                 @click="rerollAffix(gear.slot)"
               >
-                洗练（{{
-                  affixFor(gear.slot)?.locked ? "锁定×20" : "灵石×12"
+                重洗主词条（灵石×{{
+                  secondaryAffixFor(gear.slot)?.locked ? 20 : 12
                 }}）
               </button>
               <button
                 class="btn justify-center text-xs"
-                :disabled="!affixFor(gear.slot)"
-                @click="toggleAffixLock(gear.slot)"
-              >
-                {{ affixFor(gear.slot)?.locked ? "解锁词条" : "锁定词条" }}
-              </button>
-              <button
-                class="btn justify-center text-xs col-span-2"
                 :disabled="
                   !affixFor(gear.slot) ||
-                  spiritStoneCount < 18 ||
+                  secondaryAffixFor(gear.slot)?.locked ||
+                  spiritStoneCount < (affixFor(gear.slot)?.locked ? 24 : 18) ||
                   blueprintCount <
                     (affixFor(gear.slot)?.rarity === '绝品' ? 2 : 1)
                 "
                 @click="rerollSecondaryAffix(gear.slot)"
               >
-                副词条洗练（灵石×18 / 图纸×{{
-                  affixFor(gear.slot)?.rarity === "绝品" ? 2 : 1
-                }}）
+                重洗副词条（灵石×{{ affixFor(gear.slot)?.locked ? 24 : 18 }} /
+                图纸×{{ affixFor(gear.slot)?.rarity === "绝品" ? 2 : 1 }}）
               </button>
             </div>
+            <p class="text-muted">
+              可选择锁定主词条或副词条；锁定一条后，使用另一侧洗练按钮重洗未锁定词条。两条不会同时锁定。
+            </p>
             <p class="text-muted">
               保底进度：{{ longTerm.gearPity[gear.slot] || 0 }}/8
             </p>
@@ -342,8 +373,8 @@ const gearCards = computed(() =>
   }),
 );
 
-const toggleAffixLock = (slot: string) => {
-  const res = longTerm.toggleAffixLock(slot);
+const toggleAffixLock = (slot: string, index: number) => {
+  const res = longTerm.toggleAffixLock(slot, index);
   addLog(res.message);
   showFloat(res.message, res.success ? "success" : "danger");
 };

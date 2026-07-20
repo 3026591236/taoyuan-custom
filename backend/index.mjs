@@ -661,54 +661,70 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.2.3 仙缘指引与词条定向洗练",
+      date: "2026-07-20",
+      content:
+        "根据游戏内意见反馈补强仙灵与炼器体验：仙灵页新增六条仙缘的分阶段指引，只展示下一步可追寻线索，并实时标记季节、天气、时辰、地点、行囊物品、技能、任务、矿层与好感等条件是否满足；剧情门槛和旧存档保持不变。装备词条洗练改为可选择锁定主词条或副词条，锁定一条后可明确重洗另一条，修复锁定后副词条无法继续洗练及只扣材料不产出新词条的问题；同件装备最多锁定一条，兼容原有 locked 字段。同步细化材料默认来源及炼器图纸、魂晶、雷精、龙玉、蚕丝、雪莲等关键物品的获取文案。",
+    },
+    {
       title: "V3.2.2 意见反馈体验修复",
       date: "2026-07-20",
-      content: "根据游戏内意见反馈修复四项体验问题：最高品质工具的详情页继续显示工具精通等级、材料与升级按钮，不再因品质满级隐藏；灵牧苑动物派遣取消额外推进1小时游戏时间，保留原有每日休整限制；洞府聚灵阵补齐升级按钮与明确费用，每级提高现实日五行元气和灵石产量且不清空待领取天数；出货灵匣新增全部、灵植/果实、鱼获、牧产、加工/料理、其他六类筛选，便于快速批量出货。",
+      content:
+        "根据游戏内意见反馈修复四项体验问题：最高品质工具的详情页继续显示工具精通等级、材料与升级按钮，不再因品质满级隐藏；灵牧苑动物派遣取消额外推进1小时游戏时间，保留原有每日休整限制；洞府聚灵阵补齐升级按钮与明确费用，每级提高现实日五行元气和灵石产量且不清空待领取天数；出货灵匣新增全部、灵植/果实、鱼获、牧产、加工/料理、其他六类筛选，便于快速批量出货。",
     },
     {
       title: "V3.2.1 水域巡钓与实获结算",
       date: "2026-07-20",
-      content: "重构完整钓鱼结算链：将鱼池加权选择、宝箱奖品、蟹笼产物和主/临时纳戒批次容量模拟抽取为独立可测试领域规则；修复鱼池全部为零权重时仍选中首鱼的问题。鱼获、垃圾、宝箱、淘金和蟹笼现在只按实际成功入包推进图鉴、任务、鱼获统计和经验，容量不足不再虚假结算；宝箱多物品按整箱原子预检，蟹笼收获失败保留饵料与下次收获机会，浮漂和蟹笼回收失败保持原状态。保留61种鱼、creek/pond/river/mine/waterfall/swamp六个水域、鱼饵/浮漂/蟹笼ID、概率权重、品质与经验公式，以及原有五个钓鱼存档字段。",
+      content:
+        "重构完整钓鱼结算链：将鱼池加权选择、宝箱奖品、蟹笼产物和主/临时纳戒批次容量模拟抽取为独立可测试领域规则；修复鱼池全部为零权重时仍选中首鱼的问题。鱼获、垃圾、宝箱、淘金和蟹笼现在只按实际成功入包推进图鉴、任务、鱼获统计和经验，容量不足不再虚假结算；宝箱多物品按整箱原子预检，蟹笼收获失败保留饵料与下次收获机会，浮漂和蟹笼回收失败保持原状态。保留61种鱼、creek/pond/river/mine/waterfall/swamp六个水域、鱼饵/浮漂/蟹笼ID、概率权重、品质与经验公式，以及原有五个钓鱼存档字段。",
     },
     {
       title: "V3.2.0 山野巡护与资源谱系",
       date: "2026-07-19",
-      content: "山海野境原有采集入口升级为山野巡护：新增综合巡查、竹坞材料线、坡荫药植线与溪缘遗存线，并为17种固定采集物补齐地貌带、供给职责、加工去向和调查说明；巡护区仅影响当次行动，不新增存档字段。普通采集、专精资源、追踪者、友好动物和野兽掉落统一按实际入包结算，整批容量不足时不消耗资源、不推进任务、图鉴或经验；补齐野兽击杀、遭遇及掉落任务记账，修正采集图鉴任务统计和战败提示。同步重写云飞、李渔翁、小满、雪芹、丹青五名人物职责、日常对话、相关主线与云飞/雪芹/丹青15段关系事件。保留 forage 路由、nature 地点组、foraging 技能、资源/动物/敌对单位/NPC/事件/任务ID、门槛、奖励及旧存档结构。",
+      content:
+        "山海野境原有采集入口升级为山野巡护：新增综合巡查、竹坞材料线、坡荫药植线与溪缘遗存线，并为17种固定采集物补齐地貌带、供给职责、加工去向和调查说明；巡护区仅影响当次行动，不新增存档字段。普通采集、专精资源、追踪者、友好动物和野兽掉落统一按实际入包结算，整批容量不足时不消耗资源、不推进任务、图鉴或经验；补齐野兽击杀、遭遇及掉落任务记账，修正采集图鉴任务统计和战败提示。同步重写云飞、李渔翁、小满、雪芹、丹青五名人物职责、日常对话、相关主线与云飞/雪芹/丹青15段关系事件。保留 forage 路由、nature 地点组、foraging 技能、资源/动物/敌对单位/NPC/事件/任务ID、门槛、奖励及旧存档结构。",
     },
     {
       title: "V3.1.9 四时田契与百工作序",
       date: "2026-07-19",
-      content: "原创化基础阶段首批发布：16种四时田契锚点作物接入公开供给定位，20类加工设施重述为百工作序，商店、加工、料理、集仓订单、功业与乡志共建册形成一致的公开经济表达；12名经济人物职责和春兰、红豆10段关系事件完整重写。保留作物、配方、商店、NPC、关系事件、任务、功业及共建册内部ID、旧档进度和既有数值规则。修复手动与自动加工、烹饪在成品空间不足时可能丢失产物或材料的问题：现在会保留完成状态或不消耗材料。",
+      content:
+        "原创化基础阶段首批发布：16种四时田契锚点作物接入公开供给定位，20类加工设施重述为百工作序，商店、加工、料理、集仓订单、功业与乡志共建册形成一致的公开经济表达；12名经济人物职责和春兰、红豆10段关系事件完整重写。保留作物、配方、商店、NPC、关系事件、任务、功业及共建册内部ID、旧档进度和既有数值规则。修复手动与自动加工、烹饪在成品空间不足时可能丢失产物或材料的问题：现在会保留完成状态或不消耗材料。",
     },
     {
       title: "V3.1.8 山河双线人物重写",
       date: "2026-07-19",
-      content: "原创化第四阶段完整重写星澜河与玄矿幽脉人物线：沈听澜（星澜河巡汛师）负责水位、鱼汛、护岸、放流与合规捕捞；裴砚川（地脉勘验师）负责矿层测绘、闭井警戒、支护风险与开采边界。两人四阶段日常台词、3段恋爱事件和2段知己事件全部重写，并同步主线、商店、节庆、食谱、秘闻、竞赛及系统提示。内部 qiu_yue、a_shi 与原有事件ID、好感、婚姻、任务、食谱和旧存档数据保持兼容。",
+      content:
+        "原创化第四阶段完整重写星澜河与玄矿幽脉人物线：沈听澜（星澜河巡汛师）负责水位、鱼汛、护岸、放流与合规捕捞；裴砚川（地脉勘验师）负责矿层测绘、闭井警戒、支护风险与开采边界。两人四阶段日常台词、3段恋爱事件和2段知己事件全部重写，并同步主线、商店、节庆、食谱、秘闻、竞赛及系统提示。内部 qiu_yue、a_shi 与原有事件ID、好感、婚姻、任务、食谱和旧存档数据保持兼容。",
     },
     {
       title: "V3.1.7 万象集开篇人物重写",
       date: "2026-07-19",
-      content: "原创化第三阶段完整重写万象集开篇三人组：顾百川（万象行主）、陆清和（乡志司书）、陆镇岳（万象集执事）启用全新姓名、身份、性格与人物关系；陆清和五段好感/知己事件重写为星澜河水文、无名地契、乡志新卷、双页校记与远行留页；同步重写三人关联主线章节、祠堂订单、节庆职责、晨间引导、25条执事生活提示、知己日结、婚礼、公仓来信、食谱叙述与旁人评价，并将万物铺公开名称统一为万象行。内部 chen_bo、liu_niang、liu_cunzhang ID及好感、婚姻、任务、食谱和旧存档数据保持兼容。",
+      content:
+        "原创化第三阶段完整重写万象集开篇三人组：顾百川（万象行主）、陆清和（乡志司书）、陆镇岳（万象集执事）启用全新姓名、身份、性格与人物关系；陆清和五段好感/知己事件重写为星澜河水文、无名地契、乡志新卷、双页校记与远行留页；同步重写三人关联主线章节、祠堂订单、节庆职责、晨间引导、25条执事生活提示、知己日结、婚礼、公仓来信、食谱叙述与旁人评价，并将万物铺公开名称统一为万象行。内部 chen_bo、liu_niang、liu_cunzhang ID及好感、婚姻、任务、食谱和旧存档数据保持兼容。",
     },
     {
       title: "V3.1.6 世界观术语统一",
       date: "2026-07-19",
-      content: "原创化第二阶段建立《万象仙乡》世界观与术语规范，并统一当前玩法、剧情、成就、活动、商店和福利界面的旧称：灵田洞天、星澜河、万象云集、仙乡知交等名称正式启用。仅调整玩家可见表达，不修改任务ID、NPC ID、物品ID、存档结构及 taoyuan_* 兼容键，旧玩家存档可直接沿用；原作署名与 CC BY-NC 4.0 说明继续保留。",
+      content:
+        "原创化第二阶段建立《万象仙乡》世界观与术语规范，并统一当前玩法、剧情、成就、活动、商店和福利界面的旧称：灵田洞天、星澜河、万象云集、仙乡知交等名称正式启用。仅调整玩家可见表达，不修改任务ID、NPC ID、物品ID、存档结构及 taoyuan_* 兼容键，旧玩家存档可直接沿用；原作署名与 CC BY-NC 4.0 说明继续保留。",
     },
     {
       title: "V3.1.5 关于页仓库展示调整",
       date: "2026-07-19",
-      content: "按展示要求移除首页关于游戏与版权来源页中的本项目 GitHub 仓库信息，并撤下后台对应配置入口；原版作品来源与 CC BY-NC 4.0 合规说明继续保留。",
+      content:
+        "按展示要求移除首页关于游戏与版权来源页中的本项目 GitHub 仓库信息，并撤下后台对应配置入口；原版作品来源与 CC BY-NC 4.0 合规说明继续保留。",
     },
     {
       title: "V3.1.4 原创化第一阶段",
       date: "2026-07-19",
-      content: "启动按模块原创化改造：停用并移除授权链未核验的 zpix 字体，改用系统中文字体栈；移除未使用的旧 Logo、旧首页图与本地赞助二维码；首页关于页新增固定的原版来源、CC BY-NC 4.0 状态和本项目仓库说明；Android 公开标题及备用服务默认品牌统一为万象仙乡；新增原创化进度、来源留证和第三方声明文档。兼容性存档键、数据库名及部署路径暂时保留，避免影响旧档。",
+      content:
+        "启动按模块原创化改造：停用并移除授权链未核验的 zpix 字体，改用系统中文字体栈；移除未使用的旧 Logo、旧首页图与本地赞助二维码；首页关于页新增固定的原版来源、CC BY-NC 4.0 状态和本项目仓库说明；Android 公开标题及备用服务默认品牌统一为万象仙乡；新增原创化进度、来源留证和第三方声明文档。兼容性存档键、数据库名及部署路径暂时保留，避免影响旧档。",
     },
     {
       title: "V3.1.3 今日全服巡检修复",
       date: "2026-07-18",
-      content: "收紧云存档槽位、角色归属与多端冲突保护；匿名反馈新增IP频率与每日配额；修复瀚海装备兑换和旧档迁移；拆分龙珠作物/信物及柿子作物/果树鲜果ID；同步时间禁锢丹30分钟文案，并移除数据库凭据源码默认值。",
+      content:
+        "收紧云存档槽位、角色归属与多端冲突保护；匿名反馈新增IP频率与每日配额；修复瀚海装备兑换和旧档迁移；拆分龙珠作物/信物及柿子作物/果树鲜果ID；同步时间禁锢丹30分钟文案，并移除数据库凭据源码默认值。",
     },
     {
       title: "V3.1.2 装备方案与炼丹体验",
@@ -2033,7 +2049,10 @@ app.put("/api/saves/:slot", async (req, res) => {
     const hasLoadedAt = Boolean(meta && meta.lastLoadedAt);
     const clientLoadedAt = hasLoadedAt ? new Date(meta.lastLoadedAt) : null;
     if (hasLoadedAt && !Number.isFinite(clientLoadedAt.getTime()))
-      return send(res, 400, { error: "存档加载时间无效，请重新进入游戏。", code: "INVALID_LAST_LOADED_AT" });
+      return send(res, 400, {
+        error: "存档加载时间无效，请重新进入游戏。",
+        code: "INVALID_LAST_LOADED_AT",
+      });
     const metaJson = meta ? JSON.stringify(meta) : null;
     const plainData = data || (raw ? safeJsonParse(raw, null) : null);
     const dataJson = plainData ? JSON.stringify(plainData) : null;
@@ -2046,58 +2065,179 @@ app.put("/api/saves/:slot", async (req, res) => {
       [user.id, slot],
     );
     if (!chars.length) {
-      await conn.rollback(); transactionStarted = false;
-      return send(res, 409, { error: "当前槽位角色不存在，请返回角色列表刷新。", code: "SAVE_CHARACTER_NOT_FOUND" });
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 409, {
+        error: "当前槽位角色不存在，请返回角色列表刷新。",
+        code: "SAVE_CHARACTER_NOT_FOUND",
+      });
     }
     const saveCharacterId = chars[0].id;
-    const authoritativePlayerName = normalizePlayerName(chars[0].name) || playerName;
+    const authoritativePlayerName =
+      normalizePlayerName(chars[0].name) || playerName;
     const [currentRows] = await conn.execute(
       "SELECT updated_at, character_id, player_name, raw, data_json FROM saves WHERE user_id = ? AND slot = ? LIMIT 1 FOR UPDATE",
       [user.id, slot],
     );
     const currentSaveRow = currentRows[0] || null;
     if (currentSaveRow) {
-      if (currentSaveRow.character_id && currentSaveRow.character_id !== saveCharacterId) {
-        await conn.rollback(); transactionStarted = false;
-        return send(res, 409, { error: "角色与存档归属不一致，请联系管理员。", code: "SAVE_CHARACTER_MISMATCH" });
+      if (
+        currentSaveRow.character_id &&
+        currentSaveRow.character_id !== saveCharacterId
+      ) {
+        await conn.rollback();
+        transactionStarted = false;
+        return send(res, 409, {
+          error: "角色与存档归属不一致，请联系管理员。",
+          code: "SAVE_CHARACTER_MISMATCH",
+        });
       }
       if (!hasLoadedAt) {
-        await conn.rollback(); transactionStarted = false;
-        await recordSaveAuditEvent(user, req, { eventType: "save_conflict", status: "conflict", slot, characterId: saveCharacterId, playerName: authoritativePlayerName, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, serverUpdatedAt: currentSaveRow.updated_at, detail: { ...summary, reason: "missing_last_loaded_at" } });
-        return send(res, 428, { error: "请先从云端重新加载该存档，再进行保存。", code: "LAST_LOADED_AT_REQUIRED", conflict: true, serverUpdatedAt: currentSaveRow.updated_at });
+        await conn.rollback();
+        transactionStarted = false;
+        await recordSaveAuditEvent(user, req, {
+          eventType: "save_conflict",
+          status: "conflict",
+          slot,
+          characterId: saveCharacterId,
+          playerName: authoritativePlayerName,
+          rawSize: summary.rawSize,
+          dataSize: summary.dataSize,
+          dataHash: summary.dataHash,
+          serverUpdatedAt: currentSaveRow.updated_at,
+          detail: { ...summary, reason: "missing_last_loaded_at" },
+        });
+        return send(res, 428, {
+          error: "请先从云端重新加载该存档，再进行保存。",
+          code: "LAST_LOADED_AT_REQUIRED",
+          conflict: true,
+          serverUpdatedAt: currentSaveRow.updated_at,
+        });
       }
       const serverUpdatedAt = new Date(currentSaveRow.updated_at);
       if (serverUpdatedAt.getTime() - clientLoadedAt.getTime() > 1500) {
-        await conn.rollback(); transactionStarted = false;
-        await recordSaveAuditEvent(user, req, { eventType: "save_conflict", status: "conflict", slot, characterId: saveCharacterId, playerName: authoritativePlayerName, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, clientLoadedAt: meta.lastLoadedAt, serverUpdatedAt: currentSaveRow.updated_at, detail: { ...summary, reason: "stale_client_overwrite_rejected" } });
-        return send(res, 409, { error: "云端存档已由其他设备更新，请刷新或重新进入后再继续。", code: "SAVE_CONFLICT", conflict: true, serverUpdatedAt: currentSaveRow.updated_at });
+        await conn.rollback();
+        transactionStarted = false;
+        await recordSaveAuditEvent(user, req, {
+          eventType: "save_conflict",
+          status: "conflict",
+          slot,
+          characterId: saveCharacterId,
+          playerName: authoritativePlayerName,
+          rawSize: summary.rawSize,
+          dataSize: summary.dataSize,
+          dataHash: summary.dataHash,
+          clientLoadedAt: meta.lastLoadedAt,
+          serverUpdatedAt: currentSaveRow.updated_at,
+          detail: { ...summary, reason: "stale_client_overwrite_rejected" },
+        });
+        return send(res, 409, {
+          error: "云端存档已由其他设备更新，请刷新或重新进入后再继续。",
+          code: "SAVE_CONFLICT",
+          conflict: true,
+          serverUpdatedAt: currentSaveRow.updated_at,
+        });
       }
     }
-    const guardResult = await validateSaveProgression(user, req, { slot, summary, currentSaveRow, plainData, meta, saveCharacterId, playerName: authoritativePlayerName });
-    if (guardResult) { await conn.rollback(); transactionStarted = false; return send(res, 400, guardResult); }
+    const guardResult = await validateSaveProgression(user, req, {
+      slot,
+      summary,
+      currentSaveRow,
+      plainData,
+      meta,
+      saveCharacterId,
+      playerName: authoritativePlayerName,
+    });
+    if (guardResult) {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 400, guardResult);
+    }
     await conn.execute(
       "INSERT INTO saves (user_id, character_id, slot, player_name, raw, data_json, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE character_id=VALUES(character_id), player_name=VALUES(player_name), raw=VALUES(raw), data_json=VALUES(data_json), meta_json=VALUES(meta_json)",
-      [user.id, saveCharacterId, slot, authoritativePlayerName || null, raw || dataJson || "", dataJson || raw || "", metaJson],
+      [
+        user.id,
+        saveCharacterId,
+        slot,
+        authoritativePlayerName || null,
+        raw || dataJson || "",
+        dataJson || raw || "",
+        metaJson,
+      ],
     );
-    const [savedRows] = await conn.execute("SELECT updated_at, character_id, player_name FROM saves WHERE user_id = ? AND slot = ? LIMIT 1", [user.id, slot]);
-    await conn.commit(); transactionStarted = false;
+    const [savedRows] = await conn.execute(
+      "SELECT updated_at, character_id, player_name FROM saves WHERE user_id = ? AND slot = ? LIMIT 1",
+      [user.id, slot],
+    );
+    await conn.commit();
+    transactionStarted = false;
 
     try {
       if (plainData) {
-        const p = plainData.player || plainData.playerStore || (plainData.stores && plainData.stores.player) || {};
-        const cu = plainData.cultivation || plainData.cultivationStore || (plainData.stores && plainData.stores.cultivation) || {};
-        const g = plainData.game || plainData.gameStore || (plainData.stores && plainData.stores.game) || {};
-        const asc = plainData.ascension || plainData.ascensionStore || (plainData.stores && plainData.stores.ascension) || {};
-        await pool.execute("INSERT INTO leaderboard (user_id, username, player_name, realm_name, cultivation, aura, money, game_year, game_season, game_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name=VALUES(player_name), realm_name=VALUES(realm_name), cultivation=VALUES(cultivation), aura=VALUES(aura), money=VALUES(money), game_year=VALUES(game_year), game_season=VALUES(game_season), game_day=VALUES(game_day)", [user.id, user.username, authoritativePlayerName || p.playerName || p.name || "无名", realmNameFromSave(cu, asc), cu.cultivation || 0, cu.aura || 0, p.money || (meta && meta.money) || 0, g.year || (meta && meta.year) || 1, g.season || (meta && meta.season) || "春", g.day || (meta && meta.day) || 1]);
+        const p =
+          plainData.player ||
+          plainData.playerStore ||
+          (plainData.stores && plainData.stores.player) ||
+          {};
+        const cu =
+          plainData.cultivation ||
+          plainData.cultivationStore ||
+          (plainData.stores && plainData.stores.cultivation) ||
+          {};
+        const g =
+          plainData.game ||
+          plainData.gameStore ||
+          (plainData.stores && plainData.stores.game) ||
+          {};
+        const asc =
+          plainData.ascension ||
+          plainData.ascensionStore ||
+          (plainData.stores && plainData.stores.ascension) ||
+          {};
+        await pool.execute(
+          "INSERT INTO leaderboard (user_id, username, player_name, realm_name, cultivation, aura, money, game_year, game_season, game_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE player_name=VALUES(player_name), realm_name=VALUES(realm_name), cultivation=VALUES(cultivation), aura=VALUES(aura), money=VALUES(money), game_year=VALUES(game_year), game_season=VALUES(game_season), game_day=VALUES(game_day)",
+          [
+            user.id,
+            user.username,
+            authoritativePlayerName || p.playerName || p.name || "无名",
+            realmNameFromSave(cu, asc),
+            cu.cultivation || 0,
+            cu.aura || 0,
+            p.money || (meta && meta.money) || 0,
+            g.year || (meta && meta.year) || 1,
+            g.season || (meta && meta.season) || "春",
+            g.day || (meta && meta.day) || 1,
+          ],
+        );
       }
-    } catch (e2) { console.error("lb err", e2.message); }
-    await recordSaveAuditEvent(user, req, { eventType: "save_write", status: "ok", slot, characterId: saveCharacterId, playerName: authoritativePlayerName, rawSize: summary.rawSize, dataSize: summary.dataSize, dataHash: summary.dataHash, clientLoadedAt: meta?.lastLoadedAt || null, serverUpdatedAt: savedRows[0]?.updated_at || null, detail: summary });
+    } catch (e2) {
+      console.error("lb err", e2.message);
+    }
+    await recordSaveAuditEvent(user, req, {
+      eventType: "save_write",
+      status: "ok",
+      slot,
+      characterId: saveCharacterId,
+      playerName: authoritativePlayerName,
+      rawSize: summary.rawSize,
+      dataSize: summary.dataSize,
+      dataHash: summary.dataHash,
+      clientLoadedAt: meta?.lastLoadedAt || null,
+      serverUpdatedAt: savedRows[0]?.updated_at || null,
+      detail: summary,
+    });
     send(res, 200, { ok: true, updatedAt: savedRows[0]?.updated_at || null });
   } catch (e) {
-    if (transactionStarted) { try { await conn.rollback(); } catch {} }
+    if (transactionStarted) {
+      try {
+        await conn.rollback();
+      } catch {}
+    }
     console.error("save err", e);
     send(res, 500, { error: "服务器错误" });
-  } finally { conn.release(); }
+  } finally {
+    conn.release();
+  }
 });
 
 app.delete("/api/saves/:slot", async (req, res) => {
@@ -2620,12 +2760,16 @@ function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}, asc = {}) {
 
 // 匿名反馈采用进程内短时限流；每日配额同时查询数据库，重启不会清空日配额。
 const feedbackIpWindows = new Map();
-function feedbackClientIp(req) { return String(req.ip || req.socket?.remoteAddress || "unknown").slice(0, 80); }
+function feedbackClientIp(req) {
+  return String(req.ip || req.socket?.remoteAddress || "unknown").slice(0, 80);
+}
 function consumeFeedbackBurst(ip, now = Date.now()) {
   const cutoff = now - 10 * 60 * 1000;
   const recent = (feedbackIpWindows.get(ip) || []).filter((t) => t > cutoff);
   if (recent.length >= 3) return false;
-  recent.push(now); feedbackIpWindows.set(ip, recent); return true;
+  recent.push(now);
+  feedbackIpWindows.set(ip, recent);
+  return true;
 }
 
 // --- 玩家反馈 ---
@@ -2634,13 +2778,19 @@ app.post("/api/feedbacks", async (req, res) => {
     const user = await auth(req);
     const ip = feedbackClientIp(req);
     if (!consumeFeedbackBurst(ip))
-      return send(res, 429, { error: "提交过于频繁，请稍后再试。", code: "FEEDBACK_RATE_LIMITED" });
+      return send(res, 429, {
+        error: "提交过于频繁，请稍后再试。",
+        code: "FEEDBACK_RATE_LIMITED",
+      });
     const [dailyRows] = await pool.execute(
       "SELECT COUNT(*) AS count FROM feedbacks WHERE ip = ? AND created_at >= CURRENT_DATE() AND created_at < CURRENT_DATE() + INTERVAL 1 DAY",
       [ip],
     );
     if (Number(dailyRows[0]?.count || 0) >= 10)
-      return send(res, 429, { error: "今日反馈次数已达上限，请明日再试。", code: "FEEDBACK_DAILY_LIMIT" });
+      return send(res, 429, {
+        error: "今日反馈次数已达上限，请明日再试。",
+        code: "FEEDBACK_DAILY_LIMIT",
+      });
     const { category, title, content } = req.body || {};
     if (!category || !title || !content)
       return send(res, 400, { error: "分类/标题/内容不能为空" });
