@@ -559,7 +559,8 @@ const handleUpgradeMastery = (type: ToolType) => {
     addLog(
       `${TOOL_NAMES[type]}精通提升至${inventoryStore.getTool(type)?.masteryLevel ?? cost.level}级：${cost.effect}。`,
     );
-    const tr = gameStore.advanceTime(20);
+    // advanceTime 的单位是小时；工具精通只消耗20分钟。
+    const tr = gameStore.advanceTime(20 / 60);
     if (tr.message) addLog(tr.message);
     if (tr.passedOut) handleEndDay();
   }
