@@ -1000,7 +1000,11 @@ const maybeShowAnnouncement = () => {
   const text = String(serverConfig.value?.announcement || "").trim();
   if (!text) return;
   const hours = Number(serverConfig.value?.announcementIntervalHours ?? 24);
-  const key = "taoyuan_announcement_last_shown_at";
+  const announcementVersion = `${text}|${String(serverConfig.value?.updateLogs?.[0]?.title || "")}`;
+  let hash = 0;
+  for (let i = 0; i < announcementVersion.length; i++)
+    hash = (hash * 31 + announcementVersion.charCodeAt(i)) >>> 0;
+  const key = `taoyuan_announcement_last_shown_at_${hash}`;
   const last = Number(localStorage.getItem(key) || "0");
   const now = Date.now();
   if (!last || hours <= 0 || now - last >= hours * 3600 * 1000) {

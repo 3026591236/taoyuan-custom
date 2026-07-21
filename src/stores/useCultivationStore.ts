@@ -703,6 +703,8 @@ type MarketPillId =
 type UsablePillId = PillId | MarketPillId;
 export type AlchemyQuality = "normal" | "fine" | "perfect";
 export const getAlchemyRecipes = () => ALCHEMY_RECIPES;
+export const SPIRIT_ARRAY_MAX_LEVEL = 10;
+
 export const HERB_DATA: Record<
   string,
   { name: string; emoji: string; rarity: number; desc: string }
@@ -3419,6 +3421,9 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const spiritArrayUpgradeCost = computed(
     () => (spiritArrayLevel.value + 1) * 3000,
   );
+  const spiritArrayAtMaxLevel = computed(
+    () => spiritArrayLevel.value >= SPIRIT_ARRAY_MAX_LEVEL,
+  );
 
   const claimDailyHerbs = () => {
     if (!hasCaveSlot("herbgarden")) {
@@ -3433,8 +3438,11 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const inventory = useInventoryStore();
     const qty = herbDailyYield.value * days;
     const ids = Object.keys(HERB_DATA);
+    const guaranteedZiwan = Math.max(1, days);
     for (let i = 0; i < qty; i++) {
-      const id = ids[Math.floor(Math.random() * ids.length)]!;
+      const id = i < guaranteedZiwan
+        ? "ziwan"
+        : ids[Math.floor(Math.random() * ids.length)]!;
       herbs.value[id] = (herbs.value[id] ?? 0) + 1;
       inventory.addItem(id, 1);
     }
@@ -3463,6 +3471,10 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const upgradeSpiritArray = () => {
     if (!hasCaveSlot("spiritArray")) {
       showFloat("请先安置聚灵阵。", "danger");
+      return false;
+    }
+    if (spiritArrayAtMaxLevel.value) {
+      showFloat(`聚灵阵已达Lv.${SPIRIT_ARRAY_MAX_LEVEL}上限。`, "danger");
       return false;
     }
     const cost = spiritArrayUpgradeCost.value;
@@ -4068,6 +4080,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     spiritArrayLevel,
     spiritArrayLastDaily,
     spiritArrayUpgradeCost,
+    spiritArrayAtMaxLevel,
     elements,
     yuanShenLevel,
     yuanShenExp,

@@ -122,6 +122,12 @@ export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
     description: "调和高阶丹性的稀有药材",
   },
   {
+    itemId: "ziwan",
+    name: "紫菀",
+    price: 520,
+    description: "百草园稀有药材；修仙市集提供稳定补给",
+  },
+  {
     itemId: "mana_recovery_pill",
     name: "回灵丹",
     price: 520,

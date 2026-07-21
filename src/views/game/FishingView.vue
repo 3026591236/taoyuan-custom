@@ -178,9 +178,18 @@
           <Box :size="14" class="inline" />
           蟹笼
         </p>
-        <span class="text-xs text-muted"
-          >{{ fishingStore.crabPots.length }}/10</span
-        >
+        <div class="flex items-center gap-2">
+          <Button
+            v-if="crabPotLocations.some((loc) => loc.baited < loc.total)"
+            class="py-0 px-2 text-[10px]"
+            @click="handleBaitAllCrabPots"
+          >
+            一键放饵
+          </Button>
+          <span class="text-xs text-muted"
+            >{{ fishingStore.crabPots.length }}/10</span
+          >
+        </div>
       </div>
       <div
         v-if="crabPotLocations.length > 0"
@@ -979,6 +988,11 @@ const handleRemoveCrabPot = (locId: string) => {
 const handleBaitCrabPots = (locId: string) => {
   const result = fishingStore.baitCrabPots(locId as FishingLocation);
   addLog(result.message);
+};
+
+const handleBaitAllCrabPots = () => {
+  const baited = fishingStore.baitAllCrabPots();
+  addLog(baited > 0 ? `一键为${baited}个蟹笼放入鱼饵。` : "没有待装饵的蟹笼，或鱼饵不足。");
 };
 
 // === Panning ===

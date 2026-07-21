@@ -661,6 +661,12 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.2.4 功能反馈综合修复",
+      date: "2026-07-21",
+      content:
+        "处理功能反馈#20：蟹笼新增跨水域一键放饵；百草园每日保底紫菀并在修仙市集增加稳定补给；聚灵阵明确基础Lv.0、最高Lv.10、升级费用和满级状态；宗门百艺显示当前与升级后实际加成，三大建筑改为精确效果并接入领奖、洗练及宗门副本结算；日志清空与关闭按钮分区，扩大移动端关闭触控区域；更新公告按内容版本重新提示，配置接口禁用缓存，减少公告已更新但页面资源仍旧的情况。",
+    },
+    {
       title: "V3.2.3 仙缘指引与词条定向洗练",
       date: "2026-07-20",
       content:
@@ -1680,6 +1686,7 @@ async function setConfigMulti(obj) {
 // ========== 公开 API ==========
 app.get("/api/config", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     send(res, 200, await getConfig());
   } catch (e) {
     send(res, 500, { error: "服务器错误" });

@@ -156,7 +156,7 @@
     <div v-else class="space-y-2">
       <div class="grid grid-cols-2 gap-2 text-xs mb-2">
         <div class="stat-card">
-          <span>聚灵阵</span><b>Lv.{{ cultivation.spiritArrayLevel }}</b>
+          <span>聚灵阵</span><b>Lv.{{ cultivation.spiritArrayLevel }} / {{ SPIRIT_ARRAY_MAX_LEVEL }}</b>
         </div>
         <div class="stat-card">
           <span>现实日元气</span
@@ -178,13 +178,14 @@
         >
         <Button
           class="w-full justify-center"
+          :disabled="cultivation.spiritArrayAtMaxLevel"
           @click="cultivation.upgradeSpiritArray"
         >
-          升级（{{ cultivation.spiritArrayUpgradeCost }}文）
+          {{ cultivation.spiritArrayAtMaxLevel ? "已达最高等级" : `升级（${cultivation.spiritArrayUpgradeCost}文）` }}
         </Button>
       </div>
       <p class="text-[10px] text-muted text-center">
-        每级提高现实日五行元气与灵石产量，升级不会清空待领取天数。
+        基础阵从 Lv.0 起步，最高 Lv.{{ SPIRIT_ARRAY_MAX_LEVEL }}；每级提高现实日五行元气与灵石产量，升级不会清空待领取天数。
       </p>
       <div class="grid grid-cols-5 gap-1">
         <div
@@ -271,6 +272,7 @@ import {
   useCultivationStore,
   HERB_DATA,
   SPIRIT_STONE_EXCHANGES,
+  SPIRIT_ARRAY_MAX_LEVEL,
 } from "@/stores/useCultivationStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
 import type { CaveSlotType } from "@/stores/useCultivationStore";

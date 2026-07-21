@@ -278,21 +278,21 @@ const SECT_PROJECTS: {
     name: "聚灵阵",
     emoji: "🌀",
     desc: "宗门合力修筑聚灵阵，稳定提升修行与灵气循环。",
-    effect: "修行/灵气收益方向",
+    effect: "每升1级：本店领奖修为/灵气+2%（最高20%）",
   },
   {
     id: "craft_hall",
     name: "百工堂",
     emoji: "🏗️",
     desc: "扩建百工堂，支援炼器、洗练与农具维护。",
-    effect: "炼器/洗练/自动化方向",
+    effect: "每升1级：词条洗练灵石消耗-2%（最高20%）",
   },
   {
     id: "sword_platform",
     name: "试剑台",
     emoji: "⚔️",
     desc: "搭建试剑台，宗门弟子共同演武镇魔。",
-    effect: "战斗/镇魔/宗门演武方向",
+    effect: "每升1级：宗门副本功勋/灵气+3%（最高25%）",
   },
 ];
 
@@ -602,7 +602,16 @@ export const useLongTermStore = defineStore("longTerm", () => {
   const sectBuildNeed = computed(() => 120 + sectBuildLevel.value * 80);
   const sectBuildBonusText = computed(
     () =>
-      `宗门建设Lv.${sectBuildLevel.value}：修炼/镇魔/炼器收益+${Math.min(30, sectBuildLevel.value * 3)}%`,
+      `宗门建设Lv.${sectBuildLevel.value}：长老试炼功勋+${sectBuildLevel.value * 3}、灵气+${sectBuildLevel.value * 80}`,
+  );
+  const sectSpiritArrayBonusRate = computed(() =>
+    Math.min(0.2, Math.max(0, (sectProjects.value.spirit_array || 1) - 1) * 0.02),
+  );
+  const sectCraftHallDiscountRate = computed(() =>
+    Math.min(0.2, Math.max(0, (sectProjects.value.craft_hall || 1) - 1) * 0.02),
+  );
+  const sectSwordPlatformBonusRate = computed(() =>
+    Math.min(0.25, Math.max(0, (sectProjects.value.sword_platform || 1) - 1) * 0.03),
   );
   const affixPowerBonus = computed(() =>
     Object.values(gearAffixes.value)
@@ -660,9 +669,11 @@ export const useLongTermStore = defineStore("longTerm", () => {
     }
   }
   function addReward(reward: Reward) {
+    const spiritBonus = 1 + sectSpiritArrayBonusRate.value;
     if (reward.money) player().money += reward.money;
-    if (reward.aura) cultivation().aura += reward.aura;
-    if (reward.cultivation) cultivation().cultivation += reward.cultivation;
+    if (reward.aura) cultivation().aura += Math.floor(reward.aura * spiritBonus);
+    if (reward.cultivation)
+      cultivation().cultivation += Math.floor(reward.cultivation * spiritBonus);
     if (reward.spiritStone) inv().addItem("spirit_stone", reward.spiritStone);
     for (const item of reward.items || [])
       inv().addItem(item.itemId, item.quantity);
@@ -892,7 +903,8 @@ export const useLongTermStore = defineStore("longTerm", () => {
     const current = affixes[0];
     const secondary = affixes[1];
     const lockedSecondary = !!secondary?.locked;
-    const cost = lockedSecondary ? 20 : 12;
+    const baseCost = lockedSecondary ? 20 : 12;
+    const cost = Math.max(1, Math.ceil(baseCost * (1 - sectCraftHallDiscountRate.value)));
     if (current?.locked)
       return {
         success: false,
@@ -928,7 +940,11 @@ export const useLongTermStore = defineStore("longTerm", () => {
         success: false,
         message: "副词条已锁定，请使用主词条洗练来重洗另一条。",
       };
-    const costSpirit = current.locked ? 24 : 18;
+    const baseCostSpirit = current.locked ? 24 : 18;
+    const costSpirit = Math.max(
+      1,
+      Math.ceil(baseCostSpirit * (1 - sectCraftHallDiscountRate.value)),
+    );
     const costBlueprint = current.rarity === "绝品" ? 2 : 1;
     if (inv().getItemCount("spirit_stone") < costSpirit)
       return { success: false, message: `副词条洗练需要灵石×${costSpirit}` };
@@ -1048,6 +1064,9 @@ export const useLongTermStore = defineStore("longTerm", () => {
     seasonTasks,
     sectBuildNeed,
     sectBuildBonusText,
+    sectSpiritArrayBonusRate,
+    sectCraftHallDiscountRate,
+    sectSwordPlatformBonusRate,
     sectProjectCards,
     sectProjectBonusText,
     affixPowerBonus,

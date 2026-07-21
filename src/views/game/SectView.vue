@@ -430,6 +430,9 @@
           <div class="text-[10px] text-muted min-h-[2.25rem]">
             {{ skill.desc }}
           </div>
+          <div class="text-[10px] text-success leading-relaxed">
+            {{ getSectSkillEffectText(i) }}
+          </div>
           <div class="text-[10px]">升级费用：{{ getSkillCost(i) }} 贡献</div>
           <button
             class="btn w-full justify-center text-xs"
@@ -943,9 +946,7 @@ const canChallengeSectDungeon = (dungeon: (typeof SECT_DUNGEONS)[number]) => {
 const challengeSectDungeon = (dungeon: (typeof SECT_DUNGEONS)[number]) => {
   if (!canChallengeSectDungeon(dungeon)) return;
   const rankBonus = 1 + (cultivationStore.sectRank || 0) * 0.14;
-  const projectBonus =
-    1 +
-    Math.min(0.25, ((longTerm.sectProjects?.sword_platform || 1) - 1) * 0.03);
+  const projectBonus = 1 + longTerm.sectSwordPlatformBonusRate;
   const merit = Math.floor(dungeon.merit * rankBonus * projectBonus);
   const contribution = Math.floor(dungeon.contribution * rankBonus);
   const aura = Math.floor(dungeon.aura * projectBonus);
@@ -1022,6 +1023,26 @@ const finishCommission = () => {
 
 const getSectSkillLevel = (idx: number) =>
   cultivationStore.sectSkills?.[idx] || 0;
+const getSectSkillEffectText = (idx: number) => {
+  const level = getSectSkillLevel(idx);
+  const next = Math.min(skillLevelCap.value, level + 1);
+  const total = cultivationStore.sectSkills.reduce(
+    (sum, lv, i) => sum + (i === idx ? 0 : Number(lv) || 0),
+    0,
+  );
+  const describe = (lv: number) => {
+    const skillTotal = total + lv;
+    const rank = cultivationStore.sectRank || 0;
+    if (cultivationStore.sect === "sword")
+      return `攻击+${Math.min(35, skillTotal * 4 + rank * 2.5).toFixed(1).replace(".0", "")}%`;
+    if (cultivationStore.sect === "alchemy")
+      return `额外成丹+${Math.min(35, skillTotal * 4 + rank * 3)}%，灵植灵气+${Math.min(30, skillTotal * 3.5 + rank * 2).toFixed(1).replace(".0", "")}%`;
+    return `防御+${Math.min(30, skillTotal * 3.5 + rank * 2.5).toFixed(1).replace(".0", "")}%，气血+${Math.min(24, skillTotal * 2.5 + rank * 2).toFixed(1).replace(".0", "")}%，心魔净化+${Math.min(10, skillTotal + rank * 2)}`;
+  };
+  return level >= skillLevelCap.value
+    ? `当前总效果：${describe(level)}（职位上限）`
+    : `当前总效果：${describe(level)}；升级后：${describe(next)}`;
+};
 const getSkillCost = (idx: number) => {
   const level = getSectSkillLevel(idx);
   return (idx + 1) * 60 * (level + 1) + level * 40;

@@ -905,27 +905,28 @@
         <div
           class="game-panel max-w-md w-full max-h-[80vh] flex flex-col relative"
         >
-          <button
-            class="absolute top-2 right-2 text-muted hover:text-text"
-            @click="showLogModal = false"
-          >
-            <X :size="14" />
-          </button>
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center justify-between gap-3 mb-3">
             <p class="text-sm text-accent">
               <History :size="14" class="inline" />
               日志
             </p>
-            <Button
-              v-if="groupedLogs.length > 0"
-              class="py-0 px-1.5 text-[10px] mr-5"
-              :icon="Trash2"
-              :icon-size="10"
-              @click="requestClearLogs(null)"
+            <button
+              class="min-w-9 min-h-9 flex items-center justify-center rounded-xs border border-accent/20 text-muted hover:text-text"
+              aria-label="关闭日志"
+              @click="showLogModal = false"
             >
-              清空全部
-            </Button>
+              <X :size="16" />
+            </button>
           </div>
+          <Button
+            v-if="groupedLogs.length > 0"
+            class="w-full justify-center py-1.5 mb-3 text-[11px] btn-danger"
+            :icon="Trash2"
+            :icon-size="12"
+            @click="requestClearLogs(null)"
+          >
+            清空全部日志
+          </Button>
           <div class="flex-1 overflow-y-auto min-h-0">
             <div
               v-if="groupedLogs.length === 0"
