@@ -48,9 +48,7 @@
               </span>
               <span class="text-muted text-xs">
                 {{ info.playerName ?? "未命名" }} · 第{{ info.year }}年
-                {{
-                  SEASON_NAMES[info.season as keyof typeof SEASON_NAMES]
-                }}
+                {{ SEASON_NAMES[info.season as keyof typeof SEASON_NAMES] }}
                 第{{ info.day }}天
               </span>
             </button>
@@ -64,9 +62,7 @@
               </span>
               <span class="text-muted text-xs">
                 {{ info.playerName ?? "未命名" }} · 第{{ info.year }}年
-                {{
-                  SEASON_NAMES[info.season as keyof typeof SEASON_NAMES]
-                }}
+                {{ SEASON_NAMES[info.season as keyof typeof SEASON_NAMES] }}
                 第{{ info.day }}天
               </span>
             </div>
@@ -266,7 +262,15 @@ const accountHeaders = () => ({
 const accountApi = async (path: string, options: RequestInit = {}) => {
   const res = await fetch(path, options);
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "请求失败");
+  if (!res.ok) {
+    const err = new Error(data.error || "请求失败") as Error & {
+      status?: number;
+      data?: any;
+    };
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
   return data;
 };
 const saveKey = (slot: number) => `taoyuanxiang_save_${slot}`;
@@ -319,7 +323,24 @@ const handleAccountUpload = async (slot: number) => {
       );
     showFloat(`存档 ${slot + 1} 已保存到账号数据库。`, "success");
   } catch (e: any) {
-    showFloat(e.message || "保存到账号失败。", "danger");
+    const rollback =
+      e?.data?.code === "SAVE_AUTO_ROLLED_BACK" && e.data.rollback;
+    if (
+      rollback &&
+      typeof e.data.raw === "string" &&
+      saveStore.importSave(slot, e.data.raw) &&
+      saveStore.loadFromSlot(slot)
+    ) {
+      localStorage.setItem(
+        `taoyuan_cloud_loaded_at_${slot}`,
+        String(e.data.updatedAt || ""),
+      );
+      refreshSlots();
+      emit("change");
+      showFloat("检测到高置信数据异常，已恢复并载入服务器可信存档。", "danger");
+    } else {
+      showFloat(e.message || "保存到账号失败。", "danger");
+    }
   } finally {
     accountBusy.value = false;
     menuOpen.value = null;

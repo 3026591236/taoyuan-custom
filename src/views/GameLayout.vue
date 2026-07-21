@@ -121,7 +121,12 @@
             可在背包中加入最多5个快捷物品。
           </p>
           <div v-if="inventoryStore.equipmentPresets.length" class="mb-3">
-            <p class="text-[10px] text-muted mb-1">快捷换装（已保存 {{ inventoryStore.equipmentPresets.length }}/{{ MAX_EQUIPMENT_PRESETS }} 套）</p>
+            <p class="text-[10px] text-muted mb-1">
+              快捷换装（已保存 {{ inventoryStore.equipmentPresets.length }}/{{
+                MAX_EQUIPMENT_PRESETS
+              }}
+              套）
+            </p>
             <div class="grid grid-cols-2 gap-1.5">
               <button
                 v-for="preset in inventoryStore.equipmentPresets"
@@ -1658,6 +1663,24 @@ const autoSaveCurrent = async () => {
         String(result.updatedAt),
       );
   } catch (e: any) {
+    const rollback =
+      e?.data?.code === "SAVE_AUTO_ROLLED_BACK" && e.data.rollback;
+    if (
+      rollback &&
+      typeof e.data.raw === "string" &&
+      saveStore.importSave(slot, e.data.raw) &&
+      saveStore.loadFromSlot(slot)
+    ) {
+      localStorage.setItem(
+        `taoyuan_cloud_loaded_at_${slot}`,
+        String(e.data.updatedAt || ""),
+      );
+      stopAccountAutoSave();
+      addLog(
+        "云端检测到高置信数据异常，已自动恢复并载入服务器可信存档，同时暂停自动保存。请确认当前进度后再继续。",
+      );
+      return;
+    }
     if (e?.status === 409) {
       stopAccountAutoSave();
       addLog(
@@ -1691,7 +1714,9 @@ if (isAdminImmortalPreviewRoute) {
   gameStore.isGameStarted = true;
   ascensionStore.enterAdminPreview();
 } else if (!gameStore.isGameStarted) {
-  const lastActiveSlot = Number(localStorage.getItem("taoyuan_active_slot") ?? "-1");
+  const lastActiveSlot = Number(
+    localStorage.getItem("taoyuan_active_slot") ?? "-1",
+  );
   const restored = Number.isInteger(lastActiveSlot)
     ? saveStore.loadFromSlot(lastActiveSlot)
     : false;
@@ -2588,16 +2613,12 @@ const confirmSleep = () => {
   .quick-use-float-btn {
     top: auto;
     right: 12px;
-    bottom: calc(
-      calc(0.35rem * 10) + 192px + env(safe-area-inset-bottom, 0px)
-    );
+    bottom: calc(calc(0.35rem * 10) + 192px + env(safe-area-inset-bottom, 0px));
     transform: none;
   }
   .floating-welfare-btn {
     right: 54px;
-    bottom: calc(
-      calc(0.35rem * 10) + 144px + env(safe-area-inset-bottom, 0px)
-    );
+    bottom: calc(calc(0.35rem * 10) + 144px + env(safe-area-inset-bottom, 0px));
   }
   .quick-use-float-btn > span,
   .floating-welfare-btn > span {

@@ -7,6 +7,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { v4 as uuidv4 } from "uuid";
+import {
+  inspectSaveProgression,
+  absoluteGameDay,
+} from "./save-progression.mjs";
 
 // 兼容旧 pbkdf2 密码验证
 function verifyLegacyPassword(password, stored) {
@@ -193,6 +197,21 @@ async function ensureSchema() {
       "ALTER TABLE feedbacks ADD INDEX idx_feedbacks_ip_created (ip, created_at)",
     );
 
+  await pool.execute(`CREATE TABLE IF NOT EXISTS save_trusted_snapshots (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    character_id VARCHAR(36) NULL,
+    slot TINYINT NOT NULL DEFAULT 0,
+    player_name VARCHAR(20) NULL,
+    raw LONGTEXT NOT NULL,
+    data_json LONGTEXT NULL,
+    meta_json LONGTEXT NULL,
+    game_absolute_day INT NULL,
+    source_updated_at DATETIME NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_trusted_snapshot_slot_time (user_id, slot, created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+
   await pool.execute(`CREATE TABLE IF NOT EXISTS save_audit_events (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
@@ -259,6 +278,17 @@ function saveSummary(raw, data, meta = {}) {
     day: g.day ?? meta.day ?? null,
     realm: cu.realmName ?? cu.realm ?? cu.realmIndex ?? null,
     cultivation: cu.cultivation ?? null,
+    aura: cu.aura ?? null,
+    spiritStone: Array.isArray(items)
+      ? items
+          .filter((item) => item?.itemId === "spirit_stone")
+          .reduce(
+            (total, item) => total + saveSummaryNumber(item?.quantity, 0),
+            0,
+          )
+      : null,
+    immortalJade: data?.ascension?.immortalJade ?? null,
+    immortalMerit: data?.ascension?.merit ?? null,
     itemKinds: Array.isArray(items)
       ? items.length
       : items && typeof items === "object"
@@ -271,77 +301,66 @@ function saveSummaryNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
-async function validateSaveProgression(
-  user,
-  req,
-  {
-    slot,
-    summary,
-    currentSaveRow,
-    plainData,
-    meta,
-    saveCharacterId,
-    playerName,
-  },
-) {
-  if (!currentSaveRow || !currentSaveRow.data_json || !plainData) return null;
-  const prev = safeJsonParse(currentSaveRow.data_json, null);
-  if (!prev) return null;
-  const prevSummary = saveSummary(
+function validateSaveProgression({ summary, currentSaveRow, plainData }) {
+  if (!currentSaveRow || !currentSaveRow.data_json) return null;
+  const previousData = safeJsonParse(currentSaveRow.data_json, null);
+  if (!previousData)
+    return {
+      abnormal: true,
+      reasons: ["trusted_save_unreadable"],
+      dayDelta: 0,
+    };
+  const previous = saveSummary(
     currentSaveRow.raw || currentSaveRow.data_json || "",
-    prev,
-    {},
+    previousData,
+    safeJsonParse(currentSaveRow.meta_json, {}),
   );
-  const prevMoney = saveSummaryNumber(prevSummary.money, 0);
-  const nextMoney = saveSummaryNumber(summary.money, prevMoney);
-  const prevCultivation = saveSummaryNumber(prevSummary.cultivation, 0);
-  const nextCultivation = saveSummaryNumber(
-    summary.cultivation,
-    prevCultivation,
+  return inspectSaveProgression(previous, summary, plainData);
+}
+
+async function sampleTrustedSnapshot(conn, userId, slot, currentSaveRow) {
+  if (!currentSaveRow) return;
+  const data = safeJsonParse(currentSaveRow.data_json, null);
+  const summary = saveSummary(
+    currentSaveRow.raw || currentSaveRow.data_json || "",
+    data,
+    safeJsonParse(currentSaveRow.meta_json, {}),
   );
-  const prevDay = saveSummaryNumber(prevSummary.day, 1);
-  const nextDay = saveSummaryNumber(summary.day, prevDay);
-  const dayDelta = Math.max(0, nextDay - prevDay);
-  const moneyDelta = nextMoney - prevMoney;
-  const cultivationDelta = nextCultivation - prevCultivation;
-  const reasons = [];
-
-  // 正常玩法可以在结算、邮件、活动里增长，但分钟级直接写入千万/十亿级资产应拒绝。
-  // 按游戏节奏给足宽限：单次保存最多允许 100万 + 每推进1天 100万 铜钱；修为最多允许 200万 + 每天 200万。
-  if (moneyDelta > 1000000 + dayDelta * 1000000)
-    reasons.push(`money_jump:${prevMoney}->${nextMoney}`);
-  if (cultivationDelta > 2000000 + dayDelta * 2000000)
-    reasons.push(`cultivation_jump:${prevCultivation}->${nextCultivation}`);
-  if (nextMoney >= 100000000 && moneyDelta > 10000000)
-    reasons.push(`money_ceiling_jump:${prevMoney}->${nextMoney}`);
-  if (!reasons.length) return null;
-
-  await recordSaveAuditEvent(user, req, {
-    eventType: "save_guard",
-    status: "rejected",
-    slot,
-    characterId: currentSaveRow.character_id || saveCharacterId,
-    playerName: currentSaveRow.player_name || playerName || summary.playerName,
-    rawSize: summary.rawSize,
-    dataSize: summary.dataSize,
-    dataHash: summary.dataHash,
-    clientLoadedAt: meta?.lastLoadedAt || null,
-    serverUpdatedAt: currentSaveRow.updated_at,
-    detail: {
-      ...summary,
-      previous: {
-        money: prevMoney,
-        cultivation: prevCultivation,
-        day: prevDay,
-      },
-      reasons,
-    },
-  });
-  return {
-    error: "检测到异常存档写入，已拒绝保存。请刷新页面或联系管理员处理。",
-    saveGuard: true,
-    reasons,
-  };
+  const gameDay = absoluteGameDay(summary);
+  const [latest] = await conn.execute(
+    `SELECT game_absolute_day, created_at FROM save_trusted_snapshots
+     WHERE user_id = ? AND slot = ? ORDER BY id DESC LIMIT 1`,
+    [userId, slot],
+  );
+  const last = latest[0];
+  const oldEnough =
+    !last || Date.now() - new Date(last.created_at).getTime() >= 15 * 60 * 1000;
+  const dayChanged =
+    gameDay != null && (!last || Number(last.game_absolute_day) !== gameDay);
+  if (!oldEnough && !dayChanged) return;
+  await conn.execute(
+    `INSERT INTO save_trusted_snapshots
+      (user_id, character_id, slot, player_name, raw, data_json, meta_json, game_absolute_day, source_updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      userId,
+      currentSaveRow.character_id || null,
+      slot,
+      currentSaveRow.player_name || null,
+      currentSaveRow.raw || "",
+      currentSaveRow.data_json || null,
+      currentSaveRow.meta_json || null,
+      gameDay,
+      currentSaveRow.updated_at || null,
+    ],
+  );
+  await conn.execute(
+    `DELETE FROM save_trusted_snapshots WHERE user_id = ? AND slot = ? AND id NOT IN (
+       SELECT id FROM (SELECT id FROM save_trusted_snapshots
+       WHERE user_id = ? AND slot = ? ORDER BY id DESC LIMIT 12) kept
+     )`,
+    [userId, slot, userId, slot],
+  );
 }
 
 function validateInitialCharacterSave(summary) {
@@ -357,11 +376,11 @@ function validateInitialCharacterSave(summary) {
   return reasons;
 }
 
-async function recordSaveAuditEvent(user, req, event = {}) {
+async function recordSaveAuditEvent(user, req, event = {}, db = pool) {
   if (!user) return;
   try {
     const detail = event.detail == null ? null : JSON.stringify(event.detail);
-    await pool.execute(
+    await db.execute(
       `INSERT INTO save_audit_events
       (user_id, username, character_id, player_name, slot, event_type, status, raw_size, data_size, data_hash, client_loaded_at, server_updated_at, detail_json, ip, user_agent)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -660,6 +679,12 @@ const defaultConfig = {
     ],
   },
   updateLogs: [
+    {
+      title: "V3.2.5 数据异常自动回档",
+      date: "2026-07-21",
+      content:
+        "云存档新增可信历史快照与高置信异常自动回档：正常单项增长和集中结算采用宽松规则，修正跨季、跨年游戏日计算；仅在关键数值荒谬、极端硬上限、极端跳变或多项强异常时拒绝来档，并立即用服务器可信存档恢复本地、暂停自动保存并记录审计事件。每个槽位最多保留12份可信快照，按时间间隔或游戏日变化采样，避免高频自动保存造成快照膨胀。仅防范后续异常，不追溯或改动现有玩家存档。",
+    },
     {
       title: "V3.2.4 功能反馈综合修复",
       date: "2026-07-21",
@@ -2083,7 +2108,7 @@ app.put("/api/saves/:slot", async (req, res) => {
     const authoritativePlayerName =
       normalizePlayerName(chars[0].name) || playerName;
     const [currentRows] = await conn.execute(
-      "SELECT updated_at, character_id, player_name, raw, data_json FROM saves WHERE user_id = ? AND slot = ? LIMIT 1 FOR UPDATE",
+      "SELECT updated_at, character_id, player_name, raw, data_json, meta_json FROM saves WHERE user_id = ? AND slot = ? LIMIT 1 FOR UPDATE",
       [user.id, slot],
     );
     const currentSaveRow = currentRows[0] || null;
@@ -2146,20 +2171,47 @@ app.put("/api/saves/:slot", async (req, res) => {
         });
       }
     }
-    const guardResult = await validateSaveProgression(user, req, {
-      slot,
+    const guardResult = validateSaveProgression({
       summary,
       currentSaveRow,
       plainData,
-      meta,
-      saveCharacterId,
-      playerName: authoritativePlayerName,
     });
-    if (guardResult) {
-      await conn.rollback();
+    if (guardResult?.abnormal) {
+      await recordSaveAuditEvent(
+        user,
+        req,
+        {
+          eventType: "save_auto_rollback",
+          status: "rolled_back",
+          slot,
+          characterId: currentSaveRow.character_id || saveCharacterId,
+          playerName: currentSaveRow.player_name || authoritativePlayerName,
+          rawSize: summary.rawSize,
+          dataSize: summary.dataSize,
+          dataHash: summary.dataHash,
+          clientLoadedAt: meta?.lastLoadedAt || null,
+          serverUpdatedAt: currentSaveRow.updated_at,
+          detail: {
+            ...summary,
+            reasons: guardResult.reasons,
+            dayDelta: guardResult.dayDelta,
+          },
+        },
+        conn,
+      );
+      await conn.commit();
       transactionStarted = false;
-      return send(res, 400, guardResult);
+      return send(res, 422, {
+        error: "检测到高置信数据异常，已恢复为服务器可信存档。",
+        code: "SAVE_AUTO_ROLLED_BACK",
+        rollback: true,
+        raw: currentSaveRow.raw || currentSaveRow.data_json || "",
+        meta: safeJsonParse(currentSaveRow.meta_json, {}),
+        updatedAt: currentSaveRow.updated_at,
+        reasons: guardResult.reasons,
+      });
     }
+    await sampleTrustedSnapshot(conn, user.id, slot, currentSaveRow);
     await conn.execute(
       "INSERT INTO saves (user_id, character_id, slot, player_name, raw, data_json, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE character_id=VALUES(character_id), player_name=VALUES(player_name), raw=VALUES(raw), data_json=VALUES(data_json), meta_json=VALUES(meta_json)",
       [
