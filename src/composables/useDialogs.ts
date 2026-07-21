@@ -208,6 +208,17 @@ export const showDiscoveryScene = (npcId: string, step: DiscoveryStep) => {
   }
 };
 
+/** 条件变化后即时检查仙缘；日结仍保留兜底。 */
+export const checkAndShowHiddenNpcDiscovery = () => {
+  const hiddenNpcStore = useHiddenNpcStore();
+  const triggered = hiddenNpcStore.checkDiscoveryConditions();
+  for (const { npcId, step } of triggered) {
+    if (step.logMessage) addLog(step.logMessage);
+    if (step.scenes.length > 0) showDiscoveryScene(npcId, step);
+  }
+  return triggered.length;
+};
+
 /** 关闭当前仙灵发现场景，显示队列中的下一个 */
 export const closeDiscoveryScene = () => {
   pendingDiscoveryScene.value = pendingDiscoveryScenes.value.shift() ?? null;

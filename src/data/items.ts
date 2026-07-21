@@ -2862,7 +2862,7 @@ export const ITEMS: ItemDef[] = [
     id: "fox_bead",
     name: "狐珠",
     category: "misc",
-    description: "玄矿幽脉深处捡到的赤红色珠子，温热如有生命。",
+    description: "击败玄矿幽脉60层熔岩君主后获得的赤红色珠子，温热如有生命。",
     sellPrice: 500,
     edible: false,
   },

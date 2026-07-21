@@ -1041,13 +1041,18 @@ import {
   useInventoryStore,
 } from "@/stores/useInventoryStore";
 import { useNpcStore } from "@/stores/useNpcStore";
+import { useSkillStore } from "@/stores/useSkillStore";
+import { useAchievementStore } from "@/stores/useAchievementStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useWarehouseStore } from "@/stores/useWarehouseStore";
 import { parseSaveData, useSaveStore } from "@/stores/useSaveStore";
 import { useFloatingWelfareStore } from "@/stores/useFloatingWelfareStore";
 import { useAscensionStore } from "@/stores/useAscensionStore";
 import { useFarmStore } from "@/stores/useFarmStore";
-import { useDialogs } from "@/composables/useDialogs";
+import {
+  checkAndShowHiddenNpcDiscovery,
+  useDialogs,
+} from "@/composables/useDialogs";
 import type { MorningChoiceEvent } from "@/data/farmEvents";
 import { handleEndDay } from "@/composables/useEndDay";
 import {
@@ -2082,6 +2087,35 @@ const handleChildProposalResponse = (
 const inventoryStore = useInventoryStore();
 const itemUsage = useItemUsage();
 const warehouseStore = useWarehouseStore();
+
+// 地点、时辰、天气、行囊与成长条件满足后即时推进一段仙缘，避免必须睡到次日。
+const hiddenNpcDiscoverySignature = computed(() =>
+  JSON.stringify({
+    route: route.name,
+    year: gameStore.year,
+    season: gameStore.season,
+    day: gameStore.day,
+    hour: gameStore.hour,
+    weather: gameStore.weather,
+    money: playerStore.money,
+    items: inventoryStore.items.map((item) => [
+      item.itemId,
+      item.quality,
+      item.quantity,
+    ]),
+    skills: useSkillStore().skills.map((skill) => [skill.type, skill.level]),
+    quests: questStore.completedMainQuests,
+    mineFloor: useAchievementStore().stats.highestMineFloor,
+    discoveredItems: useAchievementStore().discoveredItems,
+  }),
+);
+watch(
+  hiddenNpcDiscoverySignature,
+  () => {
+    if (gameStore.isGameStarted) checkAndShowHiddenNpcDiscovery();
+  },
+  { flush: "post", immediate: true },
+);
 
 const handleFarmEventChoice = (
   choice: MorningChoiceEvent["choices"][number],

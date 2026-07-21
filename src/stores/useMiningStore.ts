@@ -1294,6 +1294,17 @@ export const useMiningStore = defineStore("mining", () => {
             msg += ` 首次击败BOSS！获得了传说武器：${displayName}！`;
           }
         }
+        // 狐仙剧情关键物品采用60层BOSS确定性保底；旧档已首杀玩家再次击败也可补领。
+        const foxState = useHiddenNpcStore().getHiddenNpcState("hu_xian");
+        if (
+          currentFloor.value === 60 &&
+          foxState?.discoveryPhase !== "revealed" &&
+          inventoryStore.getItemCount("fox_bead") < 1
+        ) {
+          inventoryStore.addItem("fox_bead");
+          sessionLoot.value.push({ itemId: "fox_bead", quantity: 1 });
+          msg += " 从熔岩君主守护的矿脉中找到了狐珠！";
+        }
         // 装备掉落（独立于首杀，使用 has* 去重，兼容旧存档补发）
         const bossRingId = BOSS_DROP_RINGS[currentFloor.value];
         if (bossRingId && !inventoryStore.hasRing(bossRingId)) {
