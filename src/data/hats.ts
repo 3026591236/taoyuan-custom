@@ -82,7 +82,8 @@ export const HATS: HatDef[] = [
   {
     id: "herbalist_hat",
     name: "药师帽",
-    description: "采药人常戴的宽帽，灵耕时减少体力且提高灵植品质。",
+    description:
+      "独立灵耕装备：灵耕体力消耗-6%、灵植品质+5%；不属于丰收套装。",
     effects: [
       { type: "farming_stamina", value: 0.06 },
       { type: "crop_quality_bonus", value: 0.05 },

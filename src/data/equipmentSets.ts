@@ -111,7 +111,7 @@ export const EQUIPMENT_SETS: EquipmentSetDef[] = [
   {
     id: "harvest_set",
     name: "丰收套装",
-    description: "丰收季节的农人装束",
+    description: "由丰收月戒、碧玉簪、云锦履组成",
     pieces: {
       ring: "harvest_moon_ring",
       hat: "jade_hairpin",

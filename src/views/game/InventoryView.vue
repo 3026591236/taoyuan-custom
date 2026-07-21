@@ -470,6 +470,7 @@
             <span class="text-xs text-accent">{{ set.name }}</span>
             <span class="text-xs text-muted">{{ set.equippedCount }}/{{ set.bonuses.some((b) => b.count === 4) ? 4 : 3 }}</span>
           </div>
+          <p class="text-[10px] text-muted mb-1">{{ set.description }}</p>
           <div
             v-for="bonus in set.bonuses"
             :key="bonus.count"
