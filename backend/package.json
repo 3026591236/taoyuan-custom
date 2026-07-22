@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node save-progression.test.mjs && node --test test/*.test.mjs"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +12,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
+    "crypto-js": "^4.2.0",
     "express": "^5.2.1",
     "mysql2": "^3.22.5",
     "uuid": "^14.0.1"
