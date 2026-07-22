@@ -1594,8 +1594,13 @@ export const useMiningStore = defineStore("mining", () => {
     itemId: string,
     quantity: number = 1,
   ): { success: boolean; message: string } => {
+    if (["guild_badge", "life_talisman", "lucky_coin", "defense_charm"].includes(itemId))
+      return { success: false, message: "该道具必须通过服务器权威接口使用。" };
     if (!inCombat.value && !isExploring.value)
       return { success: false, message: "不在玄矿幽脉中。" };
+
+    if (!Number.isSafeInteger(quantity) || quantity <= 0)
+      return { success: false, message: "使用数量无效。" };
 
     // 仙盟徽章：永久+3攻击力
     if (itemId === "guild_badge") {
@@ -1604,8 +1609,18 @@ export const useMiningStore = defineStore("mining", () => {
         inventoryStore.getItemCount("guild_badge"),
       );
       if (actual <= 0) return { success: false, message: "没有仙盟徽章。" };
-      inventoryStore.removeItem("guild_badge", actual);
-      guildBadgeBonusAttack.value += 3 * actual;
+      if (!inventoryStore.removeItem("guild_badge", actual))
+        return { success: false, message: "仙盟徽章扣除失败。" };
+      guildBadgeBonusAttack.value = Math.min(
+        Number.MAX_SAFE_INTEGER,
+        Math.max(
+          0,
+          Number.isFinite(guildBadgeBonusAttack.value)
+            ? guildBadgeBonusAttack.value
+            : 0,
+        ) +
+          3 * actual,
+      );
       const msg = `使用了仙盟徽章×${actual}，攻击力永久+${3 * actual}！`;
       if (inCombat.value) combatLog.value.push(msg);
       return { success: true, message: msg };
@@ -1618,8 +1633,16 @@ export const useMiningStore = defineStore("mining", () => {
         inventoryStore.getItemCount("life_talisman"),
       );
       if (actual <= 0) return { success: false, message: "没有生命护符。" };
-      inventoryStore.removeItem("life_talisman", actual);
-      guildBonusMaxHp.value += 15 * actual;
+      if (!inventoryStore.removeItem("life_talisman", actual))
+        return { success: false, message: "生命护符扣除失败。" };
+      guildBonusMaxHp.value = Math.min(
+        Number.MAX_SAFE_INTEGER,
+        Math.max(
+          0,
+          Number.isFinite(guildBonusMaxHp.value) ? guildBonusMaxHp.value : 0,
+        ) +
+          15 * actual,
+      );
       const msg = `使用了生命护符×${actual}，最大生命值永久+${15 * actual}！`;
       if (inCombat.value) combatLog.value.push(msg);
       return { success: true, message: msg };
@@ -1632,8 +1655,18 @@ export const useMiningStore = defineStore("mining", () => {
         inventoryStore.getItemCount("lucky_coin"),
       );
       if (actual <= 0) return { success: false, message: "没有幸运铜钱。" };
-      inventoryStore.removeItem("lucky_coin", actual);
-      guildBonusDropRate.value += 0.05 * actual;
+      if (!inventoryStore.removeItem("lucky_coin", actual))
+        return { success: false, message: "幸运铜钱扣除失败。" };
+      guildBonusDropRate.value = Math.min(
+        Number.MAX_SAFE_INTEGER,
+        Math.max(
+          0,
+          Number.isFinite(guildBonusDropRate.value)
+            ? guildBonusDropRate.value
+            : 0,
+        ) +
+          0.05 * actual,
+      );
       const msg = `使用了幸运铜钱×${actual}，怪物掉落率永久+${5 * actual}%！`;
       if (inCombat.value) combatLog.value.push(msg);
       return { success: true, message: msg };
@@ -1646,8 +1679,18 @@ export const useMiningStore = defineStore("mining", () => {
         inventoryStore.getItemCount("defense_charm"),
       );
       if (actual <= 0) return { success: false, message: "没有守护符。" };
-      inventoryStore.removeItem("defense_charm", actual);
-      guildBonusDefense.value += 0.03 * actual;
+      if (!inventoryStore.removeItem("defense_charm", actual))
+        return { success: false, message: "守护符扣除失败。" };
+      guildBonusDefense.value = Math.min(
+        Number.MAX_SAFE_INTEGER,
+        Math.max(
+          0,
+          Number.isFinite(guildBonusDefense.value)
+            ? guildBonusDefense.value
+            : 0,
+        ) +
+          0.03 * actual,
+      );
       const msg = `使用了守护符×${actual}，防御永久+${3 * actual}%！`;
       if (inCombat.value) combatLog.value.push(msg);
       return { success: true, message: msg };

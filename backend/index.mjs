@@ -11,6 +11,41 @@ import {
   inspectSaveProgression,
   absoluteGameDay,
 } from "./save-progression.mjs";
+import { validateSavePayload } from "./lib/save-payload.mjs";
+import {
+  matchIssuedMailGrants,
+  parseGrantRows,
+  resolveMailClaimCharacter,
+} from "./lib/mail-grants.mjs";
+import {
+  issueSourceGrant,
+  resolveRewardCharacter,
+} from "./lib/reward-grants.mjs";
+import {
+  floatingWelfareConfigVersion,
+  floatingWelfareSourceId,
+  resolveWelfarePeriod,
+  welfareResetForGift,
+} from "./lib/floating-welfare.mjs";
+import {
+  DEFAULT_ASSET_AUTHORITY_MODE,
+  persistAssetBaseline,
+} from "./lib/asset-authority.mjs";
+import {
+  resolveWorldBossTierClaim,
+  WORLD_BOSS_TIER_ROUTES,
+} from "./lib/world-boss-tier-rewards.mjs";
+import {
+  contributionCycle,
+  contributionFeatureEnabled,
+  WORLD_BOSS_CONTRIBUTION_MODE_KEY,
+} from "./lib/world-boss-contributions.mjs";
+import {
+  applyProtectedConsumable,
+  encryptSave,
+  PROTECTED_CONSUMABLES,
+} from "./lib/consumable-use.mjs";
+import { canonicalJson } from "./lib/save-payload.mjs";
 
 // 兼容旧 pbkdf2 密码验证
 function verifyLegacyPassword(password, stored) {
@@ -130,6 +165,10 @@ async function ensureSchema() {
     JOIN users u ON (m.target = 'all' OR m.target = u.id)
     LEFT JOIN mail_claims mc ON mc.mail_id = m.id AND mc.user_id = u.id`);
 
+  // Mail grants use the candidate asset_grants/asset_ledger migration.
+  // Do not silently create those tables here: rollout must apply/review the
+  // candidate migration before this code is enabled.
+
   const [characterIdCols] = await pool.execute(
     "SHOW COLUMNS FROM saves LIKE 'character_id'",
   );
@@ -235,6 +274,63 @@ async function ensureSchema() {
     INDEX idx_save_audit_player_name (player_name),
     INDEX idx_save_audit_status_time (status, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+
+  // Phase 1 runtime dependency. This only creates additive authority metadata;
+  // existing saves are deliberately not scanned, rewritten, or backfilled.
+  await pool.execute(`CREATE TABLE IF NOT EXISTS asset_baselines (
+    user_id VARCHAR(36) NOT NULL,
+    character_id VARCHAR(36) NOT NULL,
+    slot TINYINT NOT NULL,
+    schema_version INT NOT NULL DEFAULT 1,
+    save_hash CHAR(64) NOT NULL,
+    assets_json LONGTEXT NOT NULL,
+    established_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, slot),
+    UNIQUE KEY uk_asset_baseline_character (character_id),
+    KEY idx_asset_baseline_user_updated (user_id, updated_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  await pool.execute(`CREATE TABLE IF NOT EXISTS authority_config (
+    config_key VARCHAR(64) NOT NULL,
+    config_value VARCHAR(255) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (config_key)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  await pool.execute(
+    "INSERT IGNORE INTO authority_config (config_key, config_value) VALUES ('asset_authority_mode', ?)",
+    [DEFAULT_ASSET_AUTHORITY_MODE],
+  );
+  await pool.execute(`CREATE TABLE IF NOT EXISTS floating_welfare_users (
+    user_id VARCHAR(36) NOT NULL,
+    first_seen_date DATE NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+}
+
+async function assetAuthorityMode(conn) {
+  const [rows] = await conn.execute(
+    "SELECT config_value FROM authority_config WHERE config_key = 'asset_authority_mode' LIMIT 1",
+  );
+  return String(rows[0]?.config_value || DEFAULT_ASSET_AUTHORITY_MODE);
+}
+
+async function worldBossContributionAvailable(conn = pool) {
+  try {
+    const [rows] = await conn.execute(
+      "SELECT config_value FROM authority_config WHERE config_key = ? LIMIT 1",
+      [WORLD_BOSS_CONTRIBUTION_MODE_KEY],
+    );
+    if (!contributionFeatureEnabled(rows[0]?.config_value)) return false;
+    await conn.execute("SELECT 1 FROM world_boss_contributions LIMIT 0");
+    await conn.execute("SELECT 1 FROM world_boss_contribution_events LIMIT 0");
+    await conn.execute("SELECT 1 FROM asset_grants LIMIT 0");
+    await conn.execute("SELECT 1 FROM asset_ledger LIMIT 0");
+    return true;
+  } catch (error) {
+    if (["ER_NO_SUCH_TABLE", "ER_BAD_TABLE_ERROR", "ER_BAD_FIELD_ERROR"].includes(error?.code)) return false;
+    throw error;
+  }
 }
 
 function send(res, status, data) {
@@ -301,7 +397,12 @@ function saveSummaryNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
-function validateSaveProgression({ summary, currentSaveRow, plainData }) {
+function validateSaveProgression({
+  summary,
+  currentSaveRow,
+  plainData,
+  authorizedDelta = null,
+}) {
   if (!currentSaveRow || !currentSaveRow.data_json) return null;
   const previousData = safeJsonParse(currentSaveRow.data_json, null);
   if (!previousData)
@@ -315,7 +416,9 @@ function validateSaveProgression({ summary, currentSaveRow, plainData }) {
     previousData,
     safeJsonParse(currentSaveRow.meta_json, {}),
   );
-  return inspectSaveProgression(previous, summary, plainData);
+  return inspectSaveProgression(previous, summary, plainData, previousData, {
+    authorizedDelta,
+  });
 }
 
 async function sampleTrustedSnapshot(conn, userId, slot, currentSaveRow) {
@@ -679,6 +782,18 @@ const defaultConfig = {
     ],
   },
   updateLogs: [
+    {
+      title: "V3.2.9 服务端权威结算第一阶段",
+      date: "2026-07-21",
+      content:
+        "云存档开始建立资产基线与授权账本；邮件、签到和悬浮福利奖励改为服务器签发后随云档确认，受保护道具（仙盟永久增益、洗髓丹、仙桃、体力丹、时间禁锢丹、灵芝培元丹）改由服务器锁定云档后结算并记录消费回执。体力丹的每日次数、冷却、额外体力上限与游戏时间成本，以及凌晨2点后的丹药限制均由服务器校验。镇魔分档奖励预留服务器观测贡献账本，未部署可信战斗观测器时维持关闭，避免客户端伪造贡献领奖。仅对后续操作生效，不追溯或改动已有玩家资产。",
+    },
+    {
+      title: "V3.2.8 装备效果说明优化",
+      date: "2026-07-21",
+      content:
+        "明确药师帽是独立灵耕装备，效果为灵耕体力消耗-6%、灵植品质+5%，不属于丰收套装；丰收套装固定由丰收月戒、碧玉簪、云锦履组成，背包套装区域可直接查看组成与说明。未改动装备数值、掉落、套装判定或存档结构。",
+    },
     {
       title: "V3.2.7 工具精通时间修复",
       date: "2026-07-21",
@@ -1707,6 +1822,9 @@ async function getConfig() {
     cfg.floatingWelfare,
     defaultConfig.floatingWelfare,
   );
+  cfg.floatingWelfare.configVersion = floatingWelfareConfigVersion(
+    cfg.floatingWelfare,
+  );
   return cfg;
 }
 async function setConfig(key, value) {
@@ -1920,7 +2038,15 @@ app.post("/api/characters", async (req, res) => {
       return send(res, 409, { error: "每个账号最多创建3个角色" });
     }
     const raw = String(req.body.raw || "");
-    const data = req.body.data || (raw ? safeJsonParse(raw, null) : null);
+    const payloadCheck = validateSavePayload(raw, req.body.data);
+    if (!payloadCheck.ok) {
+      return send(res, 400, {
+        error: "存档密文与明文数据不一致，请刷新后重试。",
+        code: payloadCheck.code,
+        saveGuard: true,
+      });
+    }
+    const data = payloadCheck.data;
     const meta = req.body.meta || {};
     if (!name) {
       conn.release();
@@ -1974,6 +2100,13 @@ app.post("/api/characters", async (req, res) => {
         metaJson,
       ],
     );
+    await persistAssetBaseline(conn, {
+      userId: user.id,
+      characterId: id,
+      slot,
+      save: data,
+      mode: await assetAuthorityMode(conn),
+    });
     await conn.commit();
     await recordSaveAuditEvent(user, req, {
       eventType: "character_create_save",
@@ -2079,6 +2212,176 @@ app.get("/api/saves/:slot", async (req, res) => {
   }
 });
 
+// Protected permanent/real-day consumables are settled directly into the
+// authoritative cloud save. The client supplies only slot/item/quantity and a
+// retry key; it never supplies effects, counters or timestamps.
+app.post("/api/saves/:slot/consume-protected", async (req, res) => {
+  const conn = await pool.getConnection();
+  let transactionStarted = false;
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    const slot = Number(req.params.slot);
+    const itemId = String(req.body?.itemId || "");
+    const quantity = Number(req.body?.quantity ?? 1);
+    const idempotencyKey = String(req.body?.idempotencyKey || "");
+    const expectedVersion = String(req.body?.expectedVersion || "");
+    if (!Number.isInteger(slot) || slot < 0 || slot > 2)
+      return send(res, 400, { error: "槽位无效", code: "INVALID_SAVE_SLOT" });
+    if (!PROTECTED_CONSUMABLES.has(itemId))
+      return send(res, 400, { error: "道具不在权威消费清单中", code: "ITEM_NOT_PROTECTED" });
+    if (!Number.isSafeInteger(quantity) || quantity <= 0 || quantity > 100)
+      return send(res, 400, { error: "使用数量无效", code: "INVALID_QUANTITY" });
+    if (!/^[A-Za-z0-9:_-]{16,96}$/.test(idempotencyKey))
+      return send(res, 400, { error: "幂等键无效", code: "INVALID_IDEMPOTENCY_KEY" });
+    if (!expectedVersion || !Number.isFinite(new Date(expectedVersion).getTime()))
+      return send(res, 400, { error: "云档版本无效", code: "INVALID_SAVE_VERSION" });
+
+    await conn.beginTransaction();
+    transactionStarted = true;
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
+    const [characters] = await conn.execute(
+      "SELECT id, name FROM characters WHERE user_id = ? AND slot = ? LIMIT 1 FOR UPDATE",
+      [user.id, slot],
+    );
+    if (!characters.length) {
+      await conn.rollback(); transactionStarted = false;
+      return send(res, 404, { error: "角色不存在", code: "SAVE_CHARACTER_NOT_FOUND" });
+    }
+    const character = characters[0];
+    const [saveRows] = await conn.execute(
+      "SELECT raw, data_json, meta_json, updated_at FROM saves WHERE user_id = ? AND character_id = ? AND slot = ? LIMIT 1 FOR UPDATE",
+      [user.id, character.id, slot],
+    );
+    if (!saveRows.length) {
+      await conn.rollback(); transactionStarted = false;
+      return send(res, 404, { error: "云存档不存在", code: "SAVE_NOT_FOUND" });
+    }
+    const current = saveRows[0];
+    const [receiptRows] = await conn.execute(
+      "SELECT * FROM consumable_use_receipts WHERE user_id = ? AND idempotency_key = ? LIMIT 1 FOR UPDATE",
+      [user.id, idempotencyKey],
+    );
+    if (receiptRows.length) {
+      const receipt = receiptRows[0];
+      if (receipt.character_id !== character.id || Number(receipt.slot) !== slot || receipt.item_id !== itemId || Number(receipt.quantity) !== quantity) {
+        await conn.rollback(); transactionStarted = false;
+        return send(res, 409, { error: "幂等键已绑定其他消费请求", code: "IDEMPOTENCY_BINDING_MISMATCH" });
+      }
+      const currentHash = crypto
+        .createHash("sha256")
+        .update(canonicalJson(safeJsonParse(current.data_json, null)))
+        .digest("hex");
+      if (currentHash !== receipt.after_hash) {
+        await conn.rollback(); transactionStarted = false;
+        return send(res, 409, {
+          error: "该消费请求已完成，但云档已有更新，请重新加载后继续。",
+          code: "CONSUMABLE_RECEIPT_STALE",
+          conflict: true,
+          serverUpdatedAt: current.updated_at,
+        });
+      }
+      await conn.commit(); transactionStarted = false;
+      return send(res, 200, {
+        ok: true, idempotent: true, receiptId: receipt.id, state: receipt.state,
+        slot, raw: receipt.result_raw,
+        data: safeJsonParse(receipt.result_data_json, null),
+        effect: safeJsonParse(receipt.expected_effect_json, null),
+        updatedAt: current.updated_at,
+      });
+    }
+    if (new Date(current.updated_at).getTime() !== new Date(expectedVersion).getTime()) {
+      await conn.rollback(); transactionStarted = false;
+      return send(res, 409, {
+        error: "云档版本已变化，请重新加载后再使用。", code: "SAVE_CONFLICT",
+        conflict: true, serverUpdatedAt: current.updated_at,
+      });
+    }
+    const trusted = safeJsonParse(current.data_json, null);
+    if (!trusted || typeof trusted !== "object" || Array.isArray(trusted)) {
+      await conn.rollback(); transactionStarted = false;
+      return send(res, 422, { error: "服务器云档无法解密或结构异常", code: "TRUSTED_SAVE_INVALID" });
+    }
+    // Validate the persisted ciphertext too; this prevents settling against a
+    // data_json/raw disagreement left by an old or partial write.
+    const payloadCheck = validateSavePayload(current.raw, trusted);
+    if (!payloadCheck.ok) {
+      await conn.rollback(); transactionStarted = false;
+      return send(res, 422, { error: "服务器云档密文校验失败", code: payloadCheck.code });
+    }
+    const nowMs = Date.now();
+    const applied = applyProtectedConsumable({ data: payloadCheck.data, itemId, quantity, nowMs });
+    if (!applied.ok) {
+      await conn.rollback(); transactionStarted = false;
+      const status = applied.code === "INSUFFICIENT_INVENTORY" ? 409 : 422;
+      return send(res, status, { error: applied.message, code: applied.code });
+    }
+    const beforeHash = crypto.createHash("sha256").update(canonicalJson(payloadCheck.data)).digest("hex");
+    const afterHash = crypto.createHash("sha256").update(canonicalJson(applied.data)).digest("hex");
+    const resultRaw = encryptSave(applied.data);
+    const resultDataJson = JSON.stringify(applied.data);
+    const receiptId = uuidv4();
+    await conn.execute(
+      `INSERT INTO consumable_use_receipts
+       (id,user_id,character_id,slot,item_id,quantity,idempotency_key,old_save_updated_at,before_hash,after_hash,expected_effect_json,result_raw,result_data_json,state)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'issued')`,
+      [receiptId, user.id, character.id, slot, itemId, quantity, idempotencyKey,
+       current.updated_at, beforeHash, afterHash, JSON.stringify(applied.effect), resultRaw, resultDataJson],
+    );
+    await sampleTrustedSnapshot(conn, user.id, slot, {
+      ...current, character_id: character.id, player_name: character.name,
+    });
+    await conn.execute(
+      "UPDATE saves SET raw = ?, data_json = ? WHERE user_id = ? AND character_id = ? AND slot = ?",
+      [resultRaw, resultDataJson, user.id, character.id, slot],
+    );
+    await persistAssetBaseline(conn, {
+      userId: user.id, characterId: character.id, slot, save: applied.data,
+      mode: await assetAuthorityMode(conn),
+    });
+    await conn.execute(
+      `INSERT INTO asset_ledger
+       (user_id, character_id, slot, idempotency_key, event_type, source_type, source_id,
+        delta_json, before_hash, after_hash)
+       VALUES (?, ?, ?, ?, 'protected_consumable', 'consume_protected', ?, ?, ?, ?)`,
+      [
+        user.id,
+        character.id,
+        slot,
+        `consume-protected:${receiptId}`,
+        receiptId,
+        JSON.stringify({ items: [{ itemId, quantity: -quantity }], effect: applied.effect }),
+        beforeHash,
+        afterHash,
+      ],
+    );
+    await conn.execute(
+      "UPDATE consumable_use_receipts SET state='consumed', consumed_at=NOW(6) WHERE id=? AND state='issued'",
+      [receiptId],
+    );
+    const [updatedRows] = await conn.execute(
+      "SELECT updated_at FROM saves WHERE user_id=? AND character_id=? AND slot=? LIMIT 1",
+      [user.id, character.id, slot],
+    );
+    await conn.commit(); transactionStarted = false;
+    return send(res, 200, {
+      ok: true, idempotent: false, receiptId, state: "consumed", slot,
+      raw: resultRaw, data: applied.data, effect: applied.effect,
+      updatedAt: updatedRows[0]?.updated_at || null,
+    });
+  } catch (e) {
+    if (transactionStarted) { try { await conn.rollback(); } catch {} }
+    if (e?.code === "ER_DUP_ENTRY")
+      return send(res, 409, { error: "并发请求冲突，请使用同一幂等键重试", code: "IDEMPOTENCY_RACE" });
+    if (["ER_NO_SUCH_TABLE", "ER_BAD_TABLE_ERROR"].includes(e?.code))
+      return send(res, 503, { error: "权威消费账本迁移尚未部署", code: "CONSUMABLE_AUTHORITY_UNAVAILABLE" });
+    console.error("consume protected err", e);
+    return send(res, 500, { error: "服务器错误" });
+  } finally {
+    conn.release();
+  }
+});
+
 app.put("/api/saves/:slot", async (req, res) => {
   const conn = await pool.getConnection();
   let transactionStarted = false;
@@ -2098,8 +2401,15 @@ app.put("/api/saves/:slot", async (req, res) => {
         code: "INVALID_LAST_LOADED_AT",
       });
     const metaJson = meta ? JSON.stringify(meta) : null;
-    const plainData = data || (raw ? safeJsonParse(raw, null) : null);
-    const dataJson = plainData ? JSON.stringify(plainData) : null;
+    const payloadCheck = validateSavePayload(raw, data);
+    if (!payloadCheck.ok)
+      return send(res, 400, {
+        error: "存档密文与明文数据不一致，请重新加载后保存。",
+        code: payloadCheck.code,
+        saveGuard: true,
+      });
+    const plainData = payloadCheck.data;
+    const dataJson = JSON.stringify(plainData);
     const summary = saveSummary(raw || dataJson || "", plainData, meta || {});
 
     await conn.beginTransaction();
@@ -2183,10 +2493,44 @@ app.put("/api/saves/:slot", async (req, res) => {
         });
       }
     }
+    let matchedGrantIds = [];
+    let authorizedGrantDelta = null;
+    if (currentSaveRow?.data_json) {
+      const [issuedGrantRows] = await conn.execute(
+        `SELECT id, payload_json AS rewards_json FROM asset_grants
+         WHERE user_id = ? AND character_id = ? AND slot = ? AND state = 'issued'
+         ORDER BY issued_at, id FOR UPDATE`,
+        [user.id, saveCharacterId, slot],
+      );
+      if (issuedGrantRows.length) {
+        const previousPlainData = safeJsonParse(currentSaveRow.data_json, null);
+        const grantMatch = previousPlainData
+          ? matchIssuedMailGrants(
+              previousPlainData,
+              plainData,
+              parseGrantRows(issuedGrantRows, safeJsonParse),
+            )
+          : { matchedIds: [], mismatch: true };
+        if (grantMatch.mismatch) {
+          await conn.rollback();
+          transactionStarted = false;
+          return send(res, 409, {
+            error: "存档中的奖励增量与服务器授权不匹配，请重新加载存档后重试。",
+            code: "ASSET_GRANT_DELTA_MISMATCH",
+            conflict: true,
+            pendingGrant: true,
+            serverUpdatedAt: currentSaveRow.updated_at,
+          });
+        }
+        matchedGrantIds = grantMatch.matchedIds;
+        authorizedGrantDelta = grantMatch.authorizedDelta;
+      }
+    }
     const guardResult = validateSaveProgression({
       summary,
       currentSaveRow,
       plainData,
+      authorizedDelta: authorizedGrantDelta,
     });
     if (guardResult?.abnormal) {
       await recordSaveAuditEvent(
@@ -2236,10 +2580,40 @@ app.put("/api/saves/:slot", async (req, res) => {
         metaJson,
       ],
     );
+    const baselineResult = await persistAssetBaseline(conn, {
+      userId: user.id,
+      characterId: saveCharacterId,
+      slot,
+      save: plainData,
+      mode: await assetAuthorityMode(conn),
+    });
+    // baseline_only only observes accepted state/hash. Positive client deltas
+    // are not grants; future ledger/grant enforcement owns authorization.
     const [savedRows] = await conn.execute(
       "SELECT updated_at, character_id, player_name FROM saves WHERE user_id = ? AND slot = ? LIMIT 1",
       [user.id, slot],
     );
+    if (matchedGrantIds.length) {
+      const placeholders = matchedGrantIds.map(() => "?").join(",");
+      await conn.execute(
+        `UPDATE asset_grants SET state = 'consumed', consumed_at = NOW()
+         WHERE user_id = ? AND character_id = ? AND slot = ? AND state = 'issued'
+           AND id IN (${placeholders})`,
+        [user.id, saveCharacterId, slot, ...matchedGrantIds],
+      );
+      for (const grantId of matchedGrantIds) {
+        await conn.execute(
+          `INSERT INTO asset_ledger
+           (user_id, character_id, slot, idempotency_key, event_type, source_type, source_id,
+            delta_json, before_hash, after_hash)
+           SELECT user_id, character_id, slot, CONCAT('grant-apply:', id), 'grant_consumed',
+                  source_type, source_id, payload_json, NULL, ?
+           FROM asset_grants WHERE id = ? AND user_id = ?
+           ON DUPLICATE KEY UPDATE id = id`,
+          [baselineResult.saveHash, grantId, user.id],
+        );
+      }
+    }
     await conn.commit();
     transactionStarted = false;
 
@@ -2297,7 +2671,14 @@ app.put("/api/saves/:slot", async (req, res) => {
       serverUpdatedAt: savedRows[0]?.updated_at || null,
       detail: summary,
     });
-    send(res, 200, { ok: true, updatedAt: savedRows[0]?.updated_at || null });
+    send(res, 200, {
+      ok: true,
+      updatedAt: savedRows[0]?.updated_at || null,
+      assetAuthority: {
+        mode: baselineResult.mode,
+        baselineEstablished: baselineResult.established,
+      },
+    });
   } catch (e) {
     if (transactionStarted) {
       try {
@@ -2375,8 +2756,8 @@ function addDaysKey(key, days) {
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
-async function getCheckinStreak(userId, today) {
-  const [rows] = await pool.execute(
+async function getCheckinStreak(userId, today, db = pool) {
+  const [rows] = await db.execute(
     "SELECT DATE_FORMAT(check_date, '%Y-%m-%d') AS check_date FROM checkins WHERE user_id = ? ORDER BY check_date DESC LIMIT 60",
     [userId],
   );
@@ -2416,7 +2797,12 @@ app.get("/api/checkin", async (req, res) => {
     if (!user) return send(res, 401, { error: "请先登录" });
     const today = localDateKey(8);
     const [rows] = await pool.execute(
-      "SELECT id FROM checkins WHERE user_id = ? AND check_date = ?",
+      `SELECT c.id, g.id AS grant_id, g.state AS grant_state, g.slot AS grant_slot
+       FROM checkins c
+       LEFT JOIN asset_grants g
+         ON g.user_id = c.user_id AND g.source_type = 'daily_checkin'
+        AND g.source_id = DATE_FORMAT(c.check_date, '%Y-%m-%d')
+       WHERE c.user_id = ? AND c.check_date = ? LIMIT 1`,
       [user.id, today],
     );
     const [total] = await pool.execute(
@@ -2426,7 +2812,12 @@ app.get("/api/checkin", async (req, res) => {
     const currentStreak = await getCheckinStreak(user.id, today);
     const nextStreak = rows.length ? currentStreak : currentStreak + 1;
     send(res, 200, {
-      checked: rows.length > 0,
+      // An issued grant is deliberately retryable: the client may have lost
+      // the claim response before applying and saving the exact reward delta.
+      checked: rows.length > 0 && rows[0].grant_state !== "issued",
+      pendingGrant: rows[0]?.grant_state === "issued",
+      pendingSlot:
+        rows[0]?.grant_state === "issued" ? Number(rows[0].grant_slot) : null,
       today,
       timezone: "Asia/Shanghai",
       total: total[0].c,
@@ -2442,41 +2833,164 @@ app.get("/api/checkin", async (req, res) => {
 });
 
 app.post("/api/checkin", async (req, res) => {
+  const conn = await pool.getConnection();
+  let transactionStarted = false;
   try {
     const user = await auth(req);
     if (!user) return send(res, 401, { error: "请先登录" });
     const today = localDateKey(8);
-    const [exist] = await pool.execute(
-      "SELECT id FROM checkins WHERE user_id = ? AND check_date = ?",
+    await conn.beginTransaction();
+    transactionStarted = true;
+
+    // The account row serializes same-user claims even before a checkins row
+    // exists; the unique source/grant keys remain the final idempotency guard.
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
+    const [bindingRows] = await conn.execute(
+      `SELECT c.slot, c.id AS character_id
+       FROM characters c
+       JOIN saves s
+         ON s.user_id = c.user_id AND s.slot = c.slot AND s.character_id = c.id
+       WHERE c.user_id = ? ORDER BY c.slot FOR UPDATE`,
+      [user.id],
+    );
+    const binding = resolveRewardCharacter(bindingRows, req.body?.slot);
+    if (binding.kind !== "ok") {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, binding.kind === "invalid_slot" ? 400 : 409, {
+        error:
+          binding.kind === "invalid_slot"
+            ? "角色槽位无效，请重新进入角色后重试。"
+            : "该角色槽位不属于当前账号或未绑定当前存档。",
+        code:
+          binding.kind === "invalid_slot"
+            ? "CHECKIN_INVALID_SLOT"
+            : "CHECKIN_SLOT_NOT_BOUND",
+      });
+    }
+    const selected = binding.binding;
+    const [existingCheckins] = await conn.execute(
+      "SELECT id, reward FROM checkins WHERE user_id = ? AND check_date = ? FOR UPDATE",
       [user.id, today],
     );
-    if (exist.length) return send(res, 409, { error: "今天已经签到过了" });
     const yesterday = addDaysKey(today, -1);
-    const yesterdayStreak = await getCheckinStreak(user.id, yesterday);
+    const yesterdayStreak = await getCheckinStreak(user.id, yesterday, conn);
     const streak = yesterdayStreak + 1;
     const reward = checkinRewardForStreak(streak);
     const items = checkinItemsForStreak(streak);
-    await pool.execute(
-      "INSERT INTO checkins (user_id, check_date, reward) VALUES (?, ?, ?)",
-      [user.id, today, reward],
-    );
-    await recordEconomyEvent(user, req, {
-      eventType: "checkin",
-      amount: reward,
-      source: "daily_checkin",
-      detail: { today, timezone: "Asia/Shanghai", items, streak },
+    const rewards = { money: reward, items };
+
+    const repo = {
+      async findGrant(userId, sourceType, sourceId) {
+        const [rows] = await conn.execute(
+          `SELECT id, character_id AS characterId, slot, state AS status,
+                  payload_json AS rewardsJson
+           FROM asset_grants
+           WHERE user_id = ? AND source_type = ? AND source_id = ?
+           LIMIT 1 FOR UPDATE`,
+          [userId, sourceType, sourceId],
+        );
+        return rows.length
+          ? { ...rows[0], rewards: safeJsonParse(rows[0].rewardsJson, {}) }
+          : null;
+      },
+      async insertGrant(grant) {
+        await conn.execute(
+          `INSERT INTO asset_grants
+           (id, user_id, character_id, slot, grant_type, source_type, source_id,
+            payload_json, state)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'issued')`,
+          [
+            grant.id,
+            grant.userId,
+            grant.characterId,
+            grant.slot,
+            grant.grantType,
+            grant.sourceType,
+            grant.sourceId,
+            JSON.stringify(grant.rewards),
+          ],
+        );
+      },
+      async insertIssuedLedger(grant) {
+        await conn.execute(
+          `INSERT INTO asset_ledger
+           (user_id, character_id, slot, idempotency_key, event_type,
+            source_type, source_id, delta_json)
+           VALUES (?, ?, ?, ?, 'grant_issued', ?, ?, ?)`,
+          [
+            grant.userId,
+            grant.characterId,
+            grant.slot,
+            `grant-issue:${grant.id}`,
+            grant.sourceType,
+            grant.sourceId,
+            JSON.stringify(grant.rewards),
+          ],
+        );
+      },
+    };
+    const grantResult = await issueSourceGrant(repo, {
+      userId: user.id,
+      characterId: selected.characterId,
+      slot: selected.slot,
+      sourceType: "daily_checkin",
+      sourceId: today,
+      grantType: "checkin_reward",
+      grantId: uuidv4(),
+      rewards,
     });
+    if (grantResult.kind === "character_mismatch") {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 409, {
+        error: "今日签到奖励已绑定其他角色，请切回原角色重试。",
+        code: "CHECKIN_GRANT_CHARACTER_MISMATCH",
+      });
+    }
+    if (grantResult.kind === "consumed") {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 409, { error: "今天已经签到过了", code: "CHECKIN_APPLIED" });
+    }
+    if (existingCheckins.length && !grantResult.idempotent) {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 409, {
+        error: "今天已经签到过了（旧版记录无待应用奖励）。",
+        code: "LEGACY_CHECKIN_APPLIED",
+      });
+    }
+    if (!existingCheckins.length)
+      await conn.execute(
+        "INSERT INTO checkins (user_id, check_date, reward) VALUES (?, ?, ?)",
+        [user.id, today, reward],
+      );
+    await conn.commit();
+    transactionStarted = false;
+    const issuedRewards = grantResult.grant.rewards || rewards;
     send(res, 200, {
       ok: true,
+      idempotent: grantResult.idempotent,
+      grantId: grantResult.grant.id,
+      grantStatus: "issued",
+      pendingSave: true,
+      slot: selected.slot,
       today,
       timezone: "Asia/Shanghai",
-      reward,
-      items,
+      reward: Number(issuedRewards.money || 0),
+      items: issuedRewards.items || [],
+      rewards: issuedRewards,
       streak,
     });
   } catch (e) {
+    if (transactionStarted) {
+      try { await conn.rollback(); } catch {}
+    }
     console.error("checkin post err", e);
     send(res, 500, { error: "服务器错误" });
+  } finally {
+    conn.release();
   }
 });
 
@@ -2486,7 +3000,11 @@ app.get("/api/mails", async (req, res) => {
     const user = await auth(req);
     if (!user) return send(res, 401, { error: "请先登录" });
     const [mails] = await pool.execute(
-      "SELECT * FROM user_mails WHERE user_id = ? ORDER BY created_at DESC",
+      `SELECT um.*, rg.state AS grant_status
+       FROM user_mails um
+       LEFT JOIN asset_grants rg
+         ON rg.id = um.grant_id AND rg.user_id = um.user_id AND rg.source_type = 'mail_claim'
+       WHERE um.user_id = ? ORDER BY um.created_at DESC`,
       [user.id],
     );
     send(res, 200, {
@@ -2497,7 +3015,9 @@ app.get("/api/mails", async (req, res) => {
         rewards: sanitizeRewardPayload(safeJsonParse(m.rewards, {})),
         from: m.from_name,
         createdAt: m.created_at,
-        claimed: !!m.claimed,
+        // An issued-but-unapplied grant remains claimable in old clients, so a
+        // lost HTTP response can replay the same grant instead of losing it.
+        claimed: !!m.claimed && m.grant_status !== "issued",
       })),
     });
   } catch (e) {
@@ -2508,47 +3028,130 @@ app.get("/api/mails", async (req, res) => {
 
 app.post("/api/mails/:id/claim", async (req, res) => {
   const conn = await pool.getConnection();
+  let transactionStarted = false;
   try {
     const user = await auth(req);
     if (!user) return send(res, 401, { error: "请先登录" });
     await conn.beginTransaction();
+    transactionStarted = true;
     const [mailRows] = await conn.execute(
       "SELECT * FROM user_mails WHERE id = ? AND user_id = ? FOR UPDATE",
       [req.params.id, user.id],
     );
     if (!mailRows.length) {
       await conn.rollback();
+      transactionStarted = false;
       return send(res, 404, { error: "邮件不存在" });
     }
     const mail = mailRows[0];
+    const [bindingRows] = await conn.execute(
+      `SELECT c.slot, c.id AS character_id
+       FROM characters c
+       JOIN saves s
+         ON s.user_id = c.user_id AND s.slot = c.slot AND s.character_id = c.id
+       WHERE c.user_id = ? ORDER BY c.slot FOR UPDATE`,
+      [user.id],
+    );
+    const binding = resolveMailClaimCharacter(bindingRows, req.body?.slot);
+    if (binding.kind !== "ok") {
+      await conn.rollback();
+      transactionStarted = false;
+      const errors = {
+        invalid_slot: {
+          status: 400,
+          error: "角色槽位无效，请刷新客户端后重试。",
+          code: "MAIL_CLAIM_INVALID_SLOT",
+        },
+        slot_not_bound: {
+          status: 409,
+          error: "该角色槽位不属于当前账号或未绑定当前存档，请重新进入角色后重试。",
+          code: "MAIL_CLAIM_SLOT_NOT_BOUND",
+        },
+        character_required: {
+          status: 409,
+          error: "请先进入一个角色后再领取邮件。",
+          code: "MAIL_CLAIM_CHARACTER_REQUIRED",
+        },
+        client_refresh_required: {
+          status: 409,
+          error: "检测到多个角色，旧版客户端无法确认奖励归属。请刷新或更新客户端后重试。",
+          code: "MAIL_CLAIM_CLIENT_REFRESH_REQUIRED",
+        },
+      };
+      const detail = errors[binding.kind];
+      return send(res, detail.status, { error: detail.error, code: detail.code });
+    }
+    const selectedSave = binding.binding;
+    const [existingRows] = await conn.execute(
+      `SELECT id, payload_json AS rewards_json, state AS status, slot, character_id FROM asset_grants
+       WHERE user_id = ? AND source_type = 'mail_claim' AND source_id = ? LIMIT 1 FOR UPDATE`,
+      [user.id, mail.id],
+    );
+    if (existingRows.length) {
+      const grant = existingRows[0];
+      if (
+        Number(grant.slot) !== selectedSave.slot ||
+        grant.character_id !== selectedSave.characterId
+      ) {
+        await conn.rollback();
+        transactionStarted = false;
+        return send(res, 409, {
+          error: "该邮件奖励已绑定其他角色，请切回原角色后重试。",
+          code: "MAIL_GRANT_CHARACTER_MISMATCH",
+        });
+      }
+      await conn.commit();
+      transactionStarted = false;
+      if (grant.status === "consumed")
+        return send(res, 409, { error: "已领取", code: "MAIL_GRANT_APPLIED" });
+      return send(res, 200, {
+        ok: true,
+        idempotent: true,
+        grantId: grant.id,
+        grantStatus: "issued",
+        pendingSave: true,
+        slot: Number(grant.slot),
+        rewards: safeJsonParse(grant.rewards_json, {}),
+      });
+    }
     if (mail.claimed) {
       await conn.rollback();
-      return send(res, 409, { error: "已领取" });
+      transactionStarted = false;
+      return send(res, 409, { error: "已领取", code: "LEGACY_MAIL_CLAIMED" });
     }
-    await conn.execute(
-      "UPDATE user_mails SET claimed = 1, claimed_at = NOW() WHERE id = ? AND user_id = ?",
-      [req.params.id, user.id],
-    );
     const rawRewards = safeJsonParse(mail.rewards, {});
     const rewards = sanitizeRewardPayload(rawRewards);
+    const grantId = uuidv4();
+    await conn.execute(
+      `INSERT INTO asset_grants
+       (id, user_id, character_id, slot, grant_type, source_type, source_id, payload_json, state)
+       VALUES (?, ?, ?, ?, 'mail_reward', 'mail_claim', ?, ?, 'issued')`,
+      [grantId, user.id, selectedSave.characterId, selectedSave.slot, mail.id, JSON.stringify(rewards)],
+    );
+    await conn.execute(
+      `INSERT INTO asset_ledger
+       (user_id, character_id, slot, idempotency_key, event_type, source_type, source_id, delta_json)
+       VALUES (?, ?, ?, ?, 'grant_issued', 'mail_claim', ?, ?)`,
+      [user.id, selectedSave.characterId, selectedSave.slot, `mail-issue:${grantId}`, mail.id, JSON.stringify(rewards)],
+    );
+    await conn.execute(
+      "UPDATE user_mails SET claimed = 1, claimed_at = NOW(), grant_id = ? WHERE id = ? AND user_id = ? AND claimed = 0",
+      [grantId, mail.id, user.id],
+    );
     await conn.commit();
-    await recordEconomyEvent(user, req, {
-      eventType: "mail_claim",
-      amount: Number(rewards.money || 0),
-      source: "mail",
-      detail: {
-        mailId: mail.id,
-        legacyMailId: mail.legacy_mail_id,
-        title: mail.title,
-        rewards,
-        clamped: rewardClampInfo(rawRewards, rewards),
-      },
+    transactionStarted = false;
+    send(res, 200, {
+      ok: true,
+      grantId,
+      grantStatus: "issued",
+      pendingSave: true,
+      slot: selectedSave.slot,
+      rewards,
     });
-    send(res, 200, { ok: true, rewards });
   } catch (e) {
-    try {
-      await conn.rollback();
-    } catch {}
+    if (transactionStarted) {
+      try { await conn.rollback(); } catch {}
+    }
     console.error("claim user mail err", e);
     send(res, 500, { error: "服务器错误" });
   } finally {
@@ -3344,10 +3947,134 @@ app.get("/api/events/world-boss", async (req, res) => {
       participants: stats.participants,
       percent: stats.percent,
       statusText: stats.statusText,
+      tierClaimsEnabled: await worldBossContributionAvailable(),
+      contributionSemantics: "server_observed_only",
     });
   } catch (e) {
     console.error("world boss err", e);
     send(res, 500, { error: "服务器错误" });
+  }
+});
+
+app.post("/api/events/world-boss/claim-tier", async (req, res) => {
+  let conn;
+  let transactionStarted = false;
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    const route = String(req.body?.route || "");
+    const tierId = String(req.body?.tierId || "").slice(0, 48);
+    if (!Object.values(WORLD_BOSS_TIER_ROUTES).includes(route) || !tierId)
+      return send(res, 400, { error: "镇魔奖励档位无效", code: "WORLD_BOSS_TIER_INVALID" });
+
+    conn = await pool.getConnection();
+    if (!await worldBossContributionAvailable(conn))
+      return send(res, 503, {
+        error: "镇魔贡献账本维护中，奖励领取暂未开放。旧存档贡献仅供展示。",
+        code: "WORLD_BOSS_CONTRIBUTION_MAINTENANCE",
+      });
+
+    await conn.beginTransaction();
+    transactionStarted = true;
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
+    const [bindingRows] = await conn.execute(
+      `SELECT c.slot, c.id AS character_id
+       FROM characters c JOIN saves s
+         ON s.user_id = c.user_id AND s.slot = c.slot AND s.character_id = c.id
+       WHERE c.user_id = ? ORDER BY c.slot FOR UPDATE`,
+      [user.id],
+    );
+    const binding = resolveRewardCharacter(bindingRows, req.body?.slot);
+    if (binding.kind !== "ok") {
+      await conn.rollback(); transactionStarted = false;
+      return send(res, binding.kind === "invalid_slot" ? 400 : 409, {
+        error: binding.kind === "invalid_slot" ? "角色槽位无效，请重新进入角色后重试。" : "该角色槽位不属于当前账号或未绑定当前存档。",
+        code: binding.kind === "invalid_slot" ? "WORLD_BOSS_INVALID_SLOT" : "WORLD_BOSS_SLOT_NOT_BOUND",
+      });
+    }
+    const selected = binding.binding;
+    const cycleKey = contributionCycle(route, new Date());
+    const [contributionRows] = await conn.execute(
+      `SELECT route, cycle_key, contribution FROM world_boss_contributions
+       WHERE user_id = ? AND character_id = ? AND slot = ? AND route = ? AND cycle_key = ?
+       LIMIT 1 FOR UPDATE`,
+      [user.id, selected.characterId, selected.slot, route, cycleKey],
+    );
+    const qualification = resolveWorldBossTierClaim({
+      route, tierId, cycleKey, contributionRow: contributionRows[0] || null,
+      // No client save field influences qualification or reward value.
+      serverRewardContext: {},
+    });
+    if (qualification.kind !== "eligible") {
+      await conn.rollback(); transactionStarted = false;
+      const status = qualification.kind === "invalid_tier" ? 404 : 409;
+      return send(res, status, {
+        error: qualification.kind === "not_eligible"
+          ? `服务端镇魔贡献不足，需要 ${qualification.required || 0}。旧档进度不可兑换。`
+          : "镇魔奖励不可领取。",
+        code: `WORLD_BOSS_${qualification.kind.toUpperCase()}`,
+        contribution: qualification.contribution || 0,
+        cycleKey,
+      });
+    }
+    const sourceType = route === WORLD_BOSS_TIER_ROUTES.YAOCHAO_DAILY
+      ? "world_boss_yaochao_tier" : "world_boss_long_term_tier";
+    const repo = {
+      async findGrant(userId, sourceTypeValue, sourceId) {
+        const [rows] = await conn.execute(
+          `SELECT id, character_id AS characterId, slot, state AS status,
+                  payload_json AS rewardsJson FROM asset_grants
+           WHERE user_id = ? AND source_type = ? AND source_id = ? LIMIT 1 FOR UPDATE`,
+          [userId, sourceTypeValue, sourceId],
+        );
+        return rows.length ? { ...rows[0], rewards: safeJsonParse(rows[0].rewardsJson, {}) } : null;
+      },
+      async insertGrant(grant) {
+        await conn.execute(
+          `INSERT INTO asset_grants
+           (id, user_id, character_id, slot, grant_type, source_type, source_id, payload_json, state)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'issued')`,
+          [grant.id, grant.userId, grant.characterId, grant.slot, grant.grantType,
+           grant.sourceType, grant.sourceId, JSON.stringify(grant.rewards)],
+        );
+      },
+      async insertIssuedLedger(grant) {
+        await conn.execute(
+          `INSERT INTO asset_ledger
+           (user_id, character_id, slot, idempotency_key, event_type, source_type, source_id, delta_json)
+           VALUES (?, ?, ?, ?, 'grant_issued', ?, ?, ?)`,
+          [grant.userId, grant.characterId, grant.slot, `grant-issue:${grant.id}`,
+           grant.sourceType, grant.sourceId, JSON.stringify(grant.rewards)],
+        );
+      },
+    };
+    const grantResult = await issueSourceGrant(repo, {
+      userId: user.id, characterId: selected.characterId, slot: selected.slot,
+      sourceType, sourceId: qualification.sourceId,
+      grantType: "world_boss_tier_reward", grantId: uuidv4(), rewards: qualification.rewards,
+    });
+    if (grantResult.kind === "character_mismatch") {
+      await conn.rollback(); transactionStarted = false;
+      return send(res, 409, { error: "该档奖励已绑定其他角色。", code: "WORLD_BOSS_GRANT_CHARACTER_MISMATCH" });
+    }
+    await conn.commit(); transactionStarted = false;
+    return send(res, 200, {
+      ok: true, idempotent: !!grantResult.idempotent,
+      alreadyApplied: grantResult.kind === "consumed",
+      pendingSave: grantResult.kind !== "consumed",
+      grantId: grantResult.grant.id, grantStatus: grantResult.kind,
+      slot: selected.slot, route, tierId: qualification.tier.id,
+      tier: qualification.tier.title, cycleKey, contribution: qualification.contribution,
+      rewards: grantResult.grant.rewards,
+    });
+  } catch (e) {
+    if (transactionStarted && conn) { try { await conn.rollback(); } catch {} }
+    console.error("world boss tier claim err", e);
+    if (["ER_NO_SUCH_TABLE", "ER_BAD_TABLE_ERROR", "ER_BAD_FIELD_ERROR"].includes(e?.code))
+      return send(res, 503, { error: "镇魔贡献账本维护中。", code: "WORLD_BOSS_CONTRIBUTION_MAINTENANCE" });
+    return send(res, 500, { error: "服务器错误" });
+  } finally {
+    conn?.release();
   }
 });
 
@@ -3356,6 +4083,13 @@ app.post("/api/events/world-boss/claim-cycle", async (req, res) => {
   try {
     const user = await auth(req);
     if (!user) return send(res, 401, { error: "请先登录" });
+    // Legacy cycle settlement still derives from client-save fields and therefore
+    // cannot mint assets in the authoritative contribution rollout.
+    return send(res, 503, {
+      error: "镇魔周期结算维护中；旧档战报仅供展示，不可兑换。",
+      code: "WORLD_BOSS_CONTRIBUTION_MAINTENANCE",
+    });
+    /* istanbul ignore next -- retained for a future ledger-backed rewrite
     const stats = await computeWorldBossStats(user.id);
     const cycleKey = stats.cycleKey;
     const score = stats.focusScore;
@@ -3408,6 +4142,7 @@ app.post("/api/events/world-boss/claim-cycle", async (req, res) => {
       title,
       content,
     });
+    */
   } catch (e) {
     try {
       await conn.rollback();
@@ -3861,16 +4596,242 @@ const sanitizeFloatingWelfare = (input, fallback = {}) => {
         title: String(gift?.title || "福利礼包").slice(0, 30),
         desc: String(gift?.desc || "").slice(0, 160),
         enabled: gift?.enabled !== false,
-        reset: ["once", "daily", "sevenDay"].includes(
-          String(gift?.reset || "once"),
-        )
-          ? String(gift?.reset || "once")
-          : "once",
+        reset: welfareResetForGift({
+          type: ["newbie", "daily", "seven_day", "custom"].includes(
+            String(gift?.type || "custom"),
+          )
+            ? String(gift?.type || "custom")
+            : "custom",
+          reset: String(gift?.reset || "once"),
+        }),
         rewards: cleanRewards(gift?.rewards || {}),
       }))
-      .filter((gift) => gift.title),
+      .filter(
+        (gift, index, gifts) =>
+          gift.title && gifts.findIndex((candidate) => candidate.id === gift.id) === index,
+      ),
   };
 };
+
+async function lockFloatingWelfareConfig(conn) {
+  const [rows] = await conn.execute(
+    "SELECT `value` FROM config WHERE `key` = 'floatingWelfare' LIMIT 1 FOR UPDATE",
+  );
+  const raw = rows.length
+    ? safeJsonParse(rows[0].value, defaultConfig.floatingWelfare)
+    : defaultConfig.floatingWelfare;
+  const config = sanitizeFloatingWelfare(raw, defaultConfig.floatingWelfare);
+  return { config, configVersion: floatingWelfareConfigVersion(config) };
+}
+
+async function lockWelfareFirstSeen(conn, userId, today) {
+  await conn.execute(
+    "INSERT IGNORE INTO floating_welfare_users (user_id, first_seen_date) VALUES (?, ?)",
+    [userId, today],
+  );
+  const [rows] = await conn.execute(
+    "SELECT DATE_FORMAT(first_seen_date, '%Y-%m-%d') AS first_seen_date FROM floating_welfare_users WHERE user_id = ? FOR UPDATE",
+    [userId],
+  );
+  return String(rows[0]?.first_seen_date || today).slice(0, 10);
+}
+
+app.get("/api/floating-welfare", async (req, res) => {
+  const conn = await pool.getConnection();
+  let transactionStarted = false;
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    await conn.beginTransaction();
+    transactionStarted = true;
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
+    const today = localDateKey(8);
+    const firstSeenDate = await lockWelfareFirstSeen(conn, user.id, today);
+    const { config, configVersion } = await lockFloatingWelfareConfig(conn);
+    const gifts = config.gifts.map((gift) => {
+      const period = resolveWelfarePeriod(gift, today, firstSeenDate);
+      return {
+        ...gift,
+        periodKey: period.kind === "ok" ? period.periodKey : null,
+        available: config.enabled && gift.enabled && period.kind === "ok",
+      };
+    });
+    const sourceIds = gifts
+      .filter((gift) => gift.periodKey)
+      .map((gift) => floatingWelfareSourceId(configVersion, gift.id, gift.periodKey));
+    let grants = [];
+    if (sourceIds.length) {
+      const placeholders = sourceIds.map(() => "?").join(",");
+      const [rows] = await conn.execute(
+        `SELECT id, source_id, state FROM asset_grants
+         WHERE user_id = ? AND source_type = 'floating_welfare'
+           AND source_id IN (${placeholders})`,
+        [user.id, ...sourceIds],
+      );
+      grants = rows;
+    }
+    const states = new Map(grants.map((row) => [row.source_id, row]));
+    await conn.commit();
+    transactionStarted = false;
+    res.setHeader("Cache-Control", "no-store");
+    send(res, 200, {
+      ...config,
+      configVersion,
+      firstSeenDate,
+      today,
+      timezone: "Asia/Shanghai",
+      gifts: gifts.map((gift) => {
+        const sourceId = gift.periodKey
+          ? floatingWelfareSourceId(configVersion, gift.id, gift.periodKey)
+          : null;
+        const grant = sourceId ? states.get(sourceId) : null;
+        return {
+          ...gift,
+          grantId: grant?.id || null,
+          grantStatus: grant?.state || null,
+          claimed: grant?.state === "consumed",
+        };
+      }),
+    });
+  } catch (e) {
+    if (transactionStarted) {
+      try { await conn.rollback(); } catch {}
+    }
+    console.error("floating welfare status err", e);
+    send(res, 500, { error: "服务器错误" });
+  } finally {
+    conn.release();
+  }
+});
+
+app.post("/api/floating-welfare/claim", async (req, res) => {
+  const conn = await pool.getConnection();
+  let transactionStarted = false;
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    const giftId = String(req.body?.giftId || "").slice(0, 40);
+    if (!giftId) return send(res, 400, { error: "福利礼包无效", code: "WELFARE_INVALID_GIFT" });
+    await conn.beginTransaction();
+    transactionStarted = true;
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
+    const [bindingRows] = await conn.execute(
+      `SELECT c.slot, c.id AS character_id
+       FROM characters c JOIN saves s
+         ON s.user_id = c.user_id AND s.slot = c.slot AND s.character_id = c.id
+       WHERE c.user_id = ? ORDER BY c.slot FOR UPDATE`,
+      [user.id],
+    );
+    const binding = resolveRewardCharacter(bindingRows, req.body?.slot);
+    if (binding.kind !== "ok") {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, binding.kind === "invalid_slot" ? 400 : 409, {
+        error: binding.kind === "invalid_slot"
+          ? "角色槽位无效，请重新进入角色后重试。"
+          : "该角色槽位不属于当前账号或未绑定当前存档。",
+        code: binding.kind === "invalid_slot" ? "WELFARE_INVALID_SLOT" : "WELFARE_SLOT_NOT_BOUND",
+      });
+    }
+    const today = localDateKey(8);
+    const firstSeenDate = await lockWelfareFirstSeen(conn, user.id, today);
+    const { config, configVersion } = await lockFloatingWelfareConfig(conn);
+    const gift = config.gifts.find((candidate) => candidate.id === giftId);
+    if (!config.enabled || !gift || !gift.enabled) {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 404, { error: "该福利当前不可领取", code: "WELFARE_NOT_AVAILABLE" });
+    }
+    const period = resolveWelfarePeriod(gift, today, firstSeenDate);
+    if (period.kind !== "ok") {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 409, {
+        error: period.kind === "expired" ? "七日福利领取期已结束" : "福利周期无效",
+        code: period.kind === "expired" ? "WELFARE_PERIOD_EXPIRED" : "WELFARE_INVALID_PERIOD",
+      });
+    }
+    const selected = binding.binding;
+    const sourceId = floatingWelfareSourceId(configVersion, gift.id, period.periodKey);
+    const repo = {
+      async findGrant(userId, sourceType, sourceIdValue) {
+        const [rows] = await conn.execute(
+          `SELECT id, character_id AS characterId, slot, state AS status,
+                  payload_json AS rewardsJson FROM asset_grants
+           WHERE user_id = ? AND source_type = ? AND source_id = ? LIMIT 1 FOR UPDATE`,
+          [userId, sourceType, sourceIdValue],
+        );
+        return rows.length ? { ...rows[0], rewards: safeJsonParse(rows[0].rewardsJson, {}) } : null;
+      },
+      async insertGrant(grant) {
+        await conn.execute(
+          `INSERT INTO asset_grants
+           (id, user_id, character_id, slot, grant_type, source_type, source_id, payload_json, state)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'issued')`,
+          [grant.id, grant.userId, grant.characterId, grant.slot, grant.grantType,
+           grant.sourceType, grant.sourceId, JSON.stringify(grant.rewards)],
+        );
+      },
+      async insertIssuedLedger(grant) {
+        await conn.execute(
+          `INSERT INTO asset_ledger
+           (user_id, character_id, slot, idempotency_key, event_type, source_type, source_id, delta_json)
+           VALUES (?, ?, ?, ?, 'grant_issued', ?, ?, ?)`,
+          [grant.userId, grant.characterId, grant.slot, `grant-issue:${grant.id}`,
+           grant.sourceType, grant.sourceId, JSON.stringify(grant.rewards)],
+        );
+      },
+    };
+    const grantResult = await issueSourceGrant(repo, {
+      userId: user.id,
+      characterId: selected.characterId,
+      slot: selected.slot,
+      sourceType: "floating_welfare",
+      sourceId,
+      grantType: "floating_welfare_reward",
+      grantId: uuidv4(),
+      // Rewards come only from the locked, sanitized server config.
+      rewards: gift.rewards,
+    });
+    if (grantResult.kind === "character_mismatch") {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 409, {
+        error: "该福利已绑定其他角色，请切回原角色重试。",
+        code: "WELFARE_GRANT_CHARACTER_MISMATCH",
+      });
+    }
+    if (grantResult.kind === "consumed") {
+      await conn.rollback();
+      transactionStarted = false;
+      return send(res, 409, { error: "该福利已经领取", code: "WELFARE_ALREADY_APPLIED" });
+    }
+    await conn.commit();
+    transactionStarted = false;
+    send(res, 200, {
+      ok: true,
+      idempotent: grantResult.idempotent,
+      grantId: grantResult.grant.id,
+      grantStatus: "issued",
+      pendingSave: true,
+      slot: selected.slot,
+      giftId: gift.id,
+      title: gift.title,
+      desc: gift.desc,
+      configVersion,
+      periodKey: period.periodKey,
+      rewards: grantResult.grant.rewards,
+    });
+  } catch (e) {
+    if (transactionStarted) {
+      try { await conn.rollback(); } catch {}
+    }
+    console.error("floating welfare claim err", e);
+    send(res, 500, { error: "服务器错误" });
+  } finally {
+    conn.release();
+  }
+});
 
 app.get("/api/admin/config", async (req, res) => {
   try {

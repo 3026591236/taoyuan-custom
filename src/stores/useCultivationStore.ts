@@ -1209,6 +1209,11 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const earthPulse = ref(0);
   const totalAuraHarvested = ref(0);
   const alchemyUnlocked = ref(false);
+  // 灵芝培元丹按现实日限用，计数随云存档保存，不能依赖可随意清除的 localStorage。
+  const ganodermaPillDailyKey = ref("");
+  const ganodermaPillDailyCount = ref(0);
+  const ganodermaPillLastUseAt = ref(0);
+  let pillUseLocked = false;
   const daoGear = ref<Record<DaoGearId, number>>({
     immortal_sword: 0,
     dharma_robe: 0,
@@ -2784,21 +2789,29 @@ export const useCultivationStore = defineStore("cultivation", () => {
     };
   };
 
+  const MAX_SAFE_GAME_NUMBER = 9_000_000_000_000_000;
+  const safeGameInt = (value: unknown, fallback = 0) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(0, Math.min(MAX_SAFE_GAME_NUMBER, Math.floor(n)));
+  };
+  const addAura = (amount: number) => {
+    aura.value = safeGameInt(safeGameInt(aura.value) + safeGameInt(amount));
+    return aura.value;
+  };
   const addCultivation = (
     amount: number,
     overflowAuraRate = 0.18,
   ): { actual: number; overflow: number; auraGain: number } => {
-    const gain = Math.max(0, Math.floor(amount));
-    const before = cultivation.value;
-    cultivation.value = Math.min(
-      maxCultivation.value,
-      cultivation.value + gain,
-    );
+    const gain = safeGameInt(amount);
+    const cap = safeGameInt(maxCultivation.value);
+    const before = Math.min(cap, safeGameInt(cultivation.value));
+    cultivation.value = Math.min(cap, safeGameInt(before + gain));
     const actual = cultivation.value - before;
     const overflow = Math.max(0, gain - actual);
     const auraGain =
       overflow > 0 ? Math.max(1, Math.floor(overflow * overflowAuraRate)) : 0;
-    if (auraGain > 0) aura.value += auraGain;
+    if (auraGain > 0) addAura(auraGain);
     return { actual, overflow, auraGain };
   };
 
@@ -2833,214 +2846,285 @@ export const useCultivationStore = defineStore("cultivation", () => {
   };
 
   const usePill = (pillId: UsablePillId) => {
+    if (["marrow_wash_pill", "ganoderma_pill"].includes(pillId)) {
+      addLog("该丹药必须通过服务器权威接口使用。");
+      return false;
+    }
+    if (pillUseLocked) {
+      showFloat("丹药正在炼化，请勿重复服用。", "danger");
+      return false;
+    }
+    pillUseLocked = true;
     const inventory = useInventoryStore();
-    if (!inventory.hasItem(pillId)) {
-      showFloat("纳戒中没有这种丹药。", "danger");
-      return false;
-    }
-    if (pillId === "rebirth_pill") {
-      showFloat("轮回丹是转生凭证，请在修行页「轮回殿」使用。", "accent");
-      addLog(
-        "轮回丹不可直接服用，需要在轮回殿配合灵气、铜钱与轮回材料完成转生。",
-      );
-      return false;
-    }
     const player = usePlayerStore();
-    if (pillId === "mana_recovery_pill") {
-      if (mana.value >= maxMana.value) {
-        showFloat("灵力已满，回灵丹未消耗。", "accent");
-        addLog("灵力已满，回灵丹暂未服用。");
+    // 永久/高价值药效采用同步事务快照：先扣库存，任意异常恢复三方状态。
+    const beforeInventory = structuredClone(inventory.serialize());
+    const beforePlayer = structuredClone(player.serialize());
+    const beforeCultivation = structuredClone(serialize());
+    try {
+      if (!inventory.hasItem(pillId)) {
+        showFloat("纳戒中没有这种丹药。", "danger");
         return false;
       }
-      inventory.removeItem(pillId, 1);
-      const gain = 45 + fieldTier.value * 10;
-      const before = mana.value;
-      mana.value = Math.min(maxMana.value, mana.value + gain);
-      const actual = mana.value - before;
-      addLog(`服下一枚回灵丹，灵力恢复${actual}。`);
-      showFloat(`灵力+${actual}`, "success");
-    } else if (pillId === "cultivation_boost_pill") {
-      if (realmIndex.value >= 16) {
-        showFloat("元婴期及以上已无法服用修为丹。", "danger");
+      if (pillId === "rebirth_pill") {
+        showFloat("轮回丹是转生凭证，请在修行页「轮回殿」使用。", "accent");
+        addLog(
+          "轮回丹不可直接服用，需要在轮回殿配合灵气、铜钱与轮回材料完成转生。",
+        );
         return false;
       }
-      inventory.removeItem(pillId, 1);
-      const gain = Math.max(1200, Math.floor(maxCultivation.value * 0.35));
-      const result = addCultivation(gain);
-      addLog(
-        `服下一枚修为丹，修为增长${result.actual}${result.auraGain ? `，溢出药力化为灵气+${result.auraGain}` : ""}。`,
-      );
-      showFloat(`修为+${result.actual}`, "success");
-    } else if (pillId === "minor_realm_pill") {
-      if (realmIndex.value >= 16) {
-        showFloat("元婴期及以上已无法服用境界丹。", "danger");
-        return false;
+      if (pillId === "mana_recovery_pill") {
+        if (mana.value >= maxMana.value) {
+          showFloat("灵力已满，回灵丹未消耗。", "accent");
+          addLog("灵力已满，回灵丹暂未服用。");
+          return false;
+        }
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const gain = 45 + fieldTier.value * 10;
+        const before = mana.value;
+        mana.value = Math.min(maxMana.value, mana.value + gain);
+        const actual = mana.value - before;
+        addLog(`服下一枚回灵丹，灵力恢复${actual}。`);
+        showFloat(`灵力+${actual}`, "success");
+      } else if (pillId === "cultivation_boost_pill") {
+        if (realmIndex.value >= 16) {
+          showFloat("元婴期及以上已无法服用修为丹。", "danger");
+          return false;
+        }
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const gain = Math.max(1200, Math.floor(maxCultivation.value * 0.35));
+        const result = addCultivation(gain);
+        addLog(
+          `服下一枚修为丹，修为增长${result.actual}${result.auraGain ? `，溢出药力化为灵气+${result.auraGain}` : ""}。`,
+        );
+        showFloat(`修为+${result.actual}`, "success");
+      } else if (pillId === "minor_realm_pill") {
+        if (realmIndex.value >= 16) {
+          showFloat("元婴期及以上已无法服用境界丹。", "danger");
+          return false;
+        }
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const r = advanceMinorRealms(1);
+        addLog(`服下一枚境界丹，从「${r.from}」晋升至「${r.to}」。`);
+        showFloat(`境界提升：${r.to}`, "success");
+      } else if (pillId === "ascension_boost_pill") {
+        if (realmIndex.value >= 16) {
+          showFloat("元婴期及以上已无法服用直升丹。", "danger");
+          return false;
+        }
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const r = advanceMinorRealms(3);
+        addLog(
+          `服下一枚直升丹，从「${r.from}」晋升至「${r.to}」（提升${r.actual}重）。`,
+        );
+        showFloat(`直升至：${r.to}`, "success");
+      } else if (pillId === "qi_gathering_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const gain = 160 + fieldTier.value * 45;
+        addCultivation(gain);
+        addLog(`服下一枚聚气丹，修为增长${gain}。`);
+        showFloat(`修为+${gain}`, "success");
+      } else if (pillId === "foundation_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        foundationPillBlessing.value += 900;
+        addCultivation(300);
+        addLog("服下一枚筑基丹，突破所需灵气降低900，并获得修为300。");
+        showFloat("筑基丹生效", "success");
+      } else if (pillId === "lianjing_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        addCultivation(500);
+        addLog("服下一枚炼精丹，修为增长500。");
+        showFloat("修为+500", "success");
+      } else if (pillId === "huaqi_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        addCultivation(800);
+        mana.value = Math.min(maxMana.value, mana.value + 30);
+        addLog("服下一枚化气丹，修为+800，灵力+30。");
+        showFloat("化气丹生效", "success");
+      } else if (pillId === "lianqi_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        addCultivation(1200);
+        aura.value += 60;
+        addLog("服下一枚炼气丹，修为+1200，灵气+60。");
+        showFloat("炼气丹生效", "success");
+      } else if (pillId === "huashen_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        addCultivation(2500);
+        addLog("服下一枚化神丹，修为增长2500。");
+        showFloat("修为+2500", "success");
+      } else if (pillId === "lianshen_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        addCultivation(4000);
+        addLog("服下一枚炼神丹，修为增长4000。");
+        showFloat("修为+4000", "success");
+      } else if (pillId === "life_extension_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        player.restoreStamina(player.maxStamina);
+        addLog("服下一枚延寿丹，体力完全恢复。");
+        showFloat("体力已恢复", "success");
+      } else if (pillId === "marrow_wash_pill") {
+        const roots: SpiritRoot[] = [
+          "mixed",
+          "wood",
+          "water",
+          "earth",
+          "fire",
+          "metal",
+          "celestial",
+        ];
+        const idx = roots.indexOf(spiritRoot.value);
+        if (idx >= roots.length - 1) {
+          showFloat("已是天灵根，洗髓丹未消耗。", "accent");
+          addLog("你已是天灵根，洗髓丹暂未消耗。");
+          return false;
+        }
+        if (!inventory.removeItem(pillId, 1)) return false;
+        spiritRoot.value = roots[Math.max(0, idx) + 1] ?? "wood";
+        addLog(`服下一枚洗髓丹，灵根晋升为「${spiritRootName.value}」。`);
+        showFloat(`灵根晋升：${spiritRootName.value}`, "success");
+      } else if (pillId === "ganoderma_pill") {
+        const GANODERMA_PILL_DAILY_LIMIT = 3;
+        const GANODERMA_PILL_COOLDOWN_MS = 10_000;
+        const today = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Shanghai",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date());
+        if (ganodermaPillDailyKey.value !== today) {
+          ganodermaPillDailyKey.value = today;
+          ganodermaPillDailyCount.value = 0;
+        }
+        const now = Date.now();
+        if (ganodermaPillDailyCount.value >= GANODERMA_PILL_DAILY_LIMIT) {
+          showFloat(
+            `灵芝培元丹今日最多服用${GANODERMA_PILL_DAILY_LIMIT}枚。`,
+            "danger",
+          );
+          return false;
+        }
+        if (now - ganodermaPillLastUseAt.value < GANODERMA_PILL_COOLDOWN_MS) {
+          showFloat("灵芝药力尚未炼化，请稍后再服用。", "danger");
+          return false;
+        }
+        const before = {
+          cultivation: cultivation.value,
+          aura: aura.value,
+          dailyCount: ganodermaPillDailyCount.value,
+          lastUseAt: ganodermaPillLastUseAt.value,
+        };
+        let consumed = false;
+        try {
+          // 必须先成功扣除，再结算药效，避免连点/异常库存导致凭空生效。
+          consumed = inventory.removeItem(pillId, 1);
+          if (!consumed) {
+            showFloat("丹药扣除失败，未获得药效。", "danger");
+            return false;
+          }
+          const result = addCultivation(
+            Math.max(1, Math.floor(safeGameInt(maxCultivation.value) * 0.15)),
+          );
+          addAura(300);
+          ganodermaPillDailyCount.value += 1;
+          ganodermaPillLastUseAt.value = now;
+          addLog(
+            `服下一枚灵芝培元丹，修为增长${result.actual}，灵气+300${result.auraGain ? `，溢出药力化为灵气+${result.auraGain}` : ""}（今日${ganodermaPillDailyCount.value}/${GANODERMA_PILL_DAILY_LIMIT}）。`,
+          );
+          showFloat(`修为+${result.actual} 灵气+300`, "success");
+        } catch (error) {
+          // 结算链任一步骤异常时恢复完整状态，并把已扣丹药放回纳戒。
+          cultivation.value = before.cultivation;
+          aura.value = before.aura;
+          ganodermaPillDailyCount.value = before.dailyCount;
+          ganodermaPillLastUseAt.value = before.lastUseAt;
+          if (consumed) inventory.addItem(pillId, 1, "normal", false);
+          console.error("灵芝培元丹结算失败，已回滚", error);
+          showFloat("丹药结算异常，已退回丹药。", "danger");
+          return false;
+        }
+      } else if (pillId === "snow_lotus_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const clear = Math.min(18, heartDemon.value);
+        heartDemon.value = Math.max(0, heartDemon.value - clear);
+        insight.value += 8;
+        aura.value += 180;
+        addLog(
+          `服下一枚雪莲清心丹，悟道+8，灵气+180${clear ? `，心魔-${clear}` : "，心境澄明"}。`,
+        );
+        showFloat(clear ? `心魔-${clear} 悟道+8` : "悟道+8", "success");
+      } else if (pillId === "ice_soul_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const manaGain = Math.max(0, maxMana.value - mana.value);
+        mana.value = maxMana.value;
+        const clear = Math.min(28, heartDemon.value);
+        heartDemon.value = Math.max(0, heartDemon.value - clear);
+        const healed = recoverYuanShenInjury(1);
+        addLog(
+          `服下一枚冰魄护魂丹，灵力完全恢复${manaGain ? `（+${manaGain}）` : ""}${clear ? `，心魔-${clear}` : ""}${healed ? `，元神伤势-${healed}` : ""}。`,
+        );
+        showFloat(`灵力已回满${clear ? ` 心魔-${clear}` : ""}`, "success");
+      } else if (pillId === "good_fortune_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const leveled = addYuanShenExp(900);
+        addLog(
+          `服下一枚造化丹，元神经验+900${leveled ? `，元神提升${leveled}级` : ""}。`,
+        );
+        showFloat("元神经验+900", "success");
+      } else if (pillId === "returning_void_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        foundationPillBlessing.value += 1500;
+        addLog("服下一枚还虚丹，下次突破灵气需求降低1500。");
+        showFloat("突破灵气-1500", "success");
+      } else if (pillId === "refining_void_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        foundationPillBlessing.value += 3000;
+        addLog("服下一枚炼虚丹，下次突破灵气需求降低3000。");
+        showFloat("突破灵气-3000", "success");
+      } else if (pillId === "merge_way_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        foundationPillBlessing.value += 5000;
+        addLog("服下一枚合道丹，下次突破灵气需求降低5000。");
+        showFloat("突破灵气-5000", "success");
+      } else if (pillId === "soul_mending_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const healed = recoverYuanShenInjury(2);
+        player.restoreHealth(Math.floor(player.getMaxHp() * 0.35));
+        addLog(`服下一枚养魂丹，元神伤势恢复${healed}层，并治疗肉身伤势。`);
+        showFloat(healed ? `元神伤势-${healed}` : "伤势已恢复", "success");
+      } else if (pillId === "nirvana_soul_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        const healed = recoverYuanShenInjury(9);
+        yuanShenLevel.value += 1;
+        player.restoreHealth(player.getMaxHp());
+        addLog(
+          `服下一枚涅魂丹，元神伤势清除${healed}层，元神等级+1，伤势完全恢复。`,
+        );
+        showFloat("元神重凝，等级+1", "success");
+      } else if (pillId === "dragon_face_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        player.addBonusMaxStamina(20);
+        player.restoreStamina(20);
+        addLog("服下一枚龙颜丹，体力上限+20。");
+        showFloat("体力上限+20", "success");
+      } else if (pillId === "spirit_mending_pill") {
+        if (!inventory.removeItem(pillId, 1)) return false;
+        yuanShenLevel.value++;
+        mana.value = maxMana.value;
+        addLog("服下一枚补灵丹，元神稳固，灵力上限提升。");
+        showFloat("元神等级+1", "success");
       }
-      inventory.removeItem(pillId, 1);
-      const r = advanceMinorRealms(1);
-      addLog(`服下一枚境界丹，从「${r.from}」晋升至「${r.to}」。`);
-      showFloat(`境界提升：${r.to}`, "success");
-    } else if (pillId === "ascension_boost_pill") {
-      if (realmIndex.value >= 16) {
-        showFloat("元婴期及以上已无法服用直升丹。", "danger");
-        return false;
-      }
-      inventory.removeItem(pillId, 1);
-      const r = advanceMinorRealms(3);
-      addLog(
-        `服下一枚直升丹，从「${r.from}」晋升至「${r.to}」（提升${r.actual}重）。`,
-      );
-      showFloat(`直升至：${r.to}`, "success");
-    } else if (pillId === "qi_gathering_pill") {
-      inventory.removeItem(pillId, 1);
-      const gain = 160 + fieldTier.value * 45;
-      addCultivation(gain);
-      addLog(`服下一枚聚气丹，修为增长${gain}。`);
-      showFloat(`修为+${gain}`, "success");
-    } else if (pillId === "foundation_pill") {
-      inventory.removeItem(pillId, 1);
-      foundationPillBlessing.value += 900;
-      addCultivation(300);
-      addLog("服下一枚筑基丹，突破所需灵气降低900，并获得修为300。");
-      showFloat("筑基丹生效", "success");
-    } else if (pillId === "lianjing_pill") {
-      inventory.removeItem(pillId, 1);
-      addCultivation(500);
-      addLog("服下一枚炼精丹，修为增长500。");
-      showFloat("修为+500", "success");
-    } else if (pillId === "huaqi_pill") {
-      inventory.removeItem(pillId, 1);
-      addCultivation(800);
-      mana.value = Math.min(maxMana.value, mana.value + 30);
-      addLog("服下一枚化气丹，修为+800，灵力+30。");
-      showFloat("化气丹生效", "success");
-    } else if (pillId === "lianqi_pill") {
-      inventory.removeItem(pillId, 1);
-      addCultivation(1200);
-      aura.value += 60;
-      addLog("服下一枚炼气丹，修为+1200，灵气+60。");
-      showFloat("炼气丹生效", "success");
-    } else if (pillId === "huashen_pill") {
-      inventory.removeItem(pillId, 1);
-      addCultivation(2500);
-      addLog("服下一枚化神丹，修为增长2500。");
-      showFloat("修为+2500", "success");
-    } else if (pillId === "lianshen_pill") {
-      inventory.removeItem(pillId, 1);
-      addCultivation(4000);
-      addLog("服下一枚炼神丹，修为增长4000。");
-      showFloat("修为+4000", "success");
-    } else if (pillId === "life_extension_pill") {
-      inventory.removeItem(pillId, 1);
-      player.restoreStamina(player.maxStamina);
-      addLog("服下一枚延寿丹，体力完全恢复。");
-      showFloat("体力已恢复", "success");
-    } else if (pillId === "marrow_wash_pill") {
-      const roots: SpiritRoot[] = [
-        "mixed",
-        "wood",
-        "water",
-        "earth",
-        "fire",
-        "metal",
-        "celestial",
-      ];
-      const idx = roots.indexOf(spiritRoot.value);
-      if (idx >= roots.length - 1) {
-        showFloat("已是天灵根，洗髓丹未消耗。", "accent");
-        addLog("你已是天灵根，洗髓丹暂未消耗。");
-        return false;
-      }
-      inventory.removeItem(pillId, 1);
-      spiritRoot.value = roots[Math.max(0, idx) + 1] ?? "wood";
-      addLog(`服下一枚洗髓丹，灵根晋升为「${spiritRootName.value}」。`);
-      showFloat(`灵根晋升：${spiritRootName.value}`, "success");
-    } else if (pillId === "ganoderma_pill") {
-      inventory.removeItem(pillId, 1);
-      const cultivationGain = Math.max(
-        1,
-        Math.floor(maxCultivation.value * 0.15),
-      );
-      const beforeCultivation = cultivation.value;
-      addCultivation(cultivationGain);
-      const actualCultivation = cultivation.value - beforeCultivation;
-      aura.value += 300;
-      addLog(`服下一枚灵芝培元丹，修为增长${actualCultivation}，灵气+300。`);
-      showFloat(`修为+${actualCultivation} 灵气+300`, "success");
-    } else if (pillId === "snow_lotus_pill") {
-      inventory.removeItem(pillId, 1);
-      const clear = Math.min(18, heartDemon.value);
-      heartDemon.value = Math.max(0, heartDemon.value - clear);
-      insight.value += 8;
-      aura.value += 180;
-      addLog(
-        `服下一枚雪莲清心丹，悟道+8，灵气+180${clear ? `，心魔-${clear}` : "，心境澄明"}。`,
-      );
-      showFloat(clear ? `心魔-${clear} 悟道+8` : "悟道+8", "success");
-    } else if (pillId === "ice_soul_pill") {
-      inventory.removeItem(pillId, 1);
-      const manaGain = Math.max(0, maxMana.value - mana.value);
-      mana.value = maxMana.value;
-      const clear = Math.min(28, heartDemon.value);
-      heartDemon.value = Math.max(0, heartDemon.value - clear);
-      const healed = recoverYuanShenInjury(1);
-      addLog(
-        `服下一枚冰魄护魂丹，灵力完全恢复${manaGain ? `（+${manaGain}）` : ""}${clear ? `，心魔-${clear}` : ""}${healed ? `，元神伤势-${healed}` : ""}。`,
-      );
-      showFloat(`灵力已回满${clear ? ` 心魔-${clear}` : ""}`, "success");
-    } else if (pillId === "good_fortune_pill") {
-      inventory.removeItem(pillId, 1);
-      const leveled = addYuanShenExp(900);
-      addLog(
-        `服下一枚造化丹，元神经验+900${leveled ? `，元神提升${leveled}级` : ""}。`,
-      );
-      showFloat("元神经验+900", "success");
-    } else if (pillId === "returning_void_pill") {
-      inventory.removeItem(pillId, 1);
-      foundationPillBlessing.value += 1500;
-      addLog("服下一枚还虚丹，下次突破灵气需求降低1500。");
-      showFloat("突破灵气-1500", "success");
-    } else if (pillId === "refining_void_pill") {
-      inventory.removeItem(pillId, 1);
-      foundationPillBlessing.value += 3000;
-      addLog("服下一枚炼虚丹，下次突破灵气需求降低3000。");
-      showFloat("突破灵气-3000", "success");
-    } else if (pillId === "merge_way_pill") {
-      inventory.removeItem(pillId, 1);
-      foundationPillBlessing.value += 5000;
-      addLog("服下一枚合道丹，下次突破灵气需求降低5000。");
-      showFloat("突破灵气-5000", "success");
-    } else if (pillId === "soul_mending_pill") {
-      inventory.removeItem(pillId, 1);
-      const healed = recoverYuanShenInjury(2);
-      player.restoreHealth(Math.floor(player.getMaxHp() * 0.35));
-      addLog(`服下一枚养魂丹，元神伤势恢复${healed}层，并治疗肉身伤势。`);
-      showFloat(healed ? `元神伤势-${healed}` : "伤势已恢复", "success");
-    } else if (pillId === "nirvana_soul_pill") {
-      inventory.removeItem(pillId, 1);
-      const healed = recoverYuanShenInjury(9);
-      yuanShenLevel.value += 1;
-      player.restoreHealth(player.getMaxHp());
-      addLog(
-        `服下一枚涅魂丹，元神伤势清除${healed}层，元神等级+1，伤势完全恢复。`,
-      );
-      showFloat("元神重凝，等级+1", "success");
-    } else if (pillId === "dragon_face_pill") {
-      inventory.removeItem(pillId, 1);
-      player.addBonusMaxStamina(20);
-      player.restoreStamina(20);
-      addLog("服下一枚龙颜丹，体力上限+20。");
-      showFloat("体力上限+20", "success");
-    } else if (pillId === "spirit_mending_pill") {
-      inventory.removeItem(pillId, 1);
-      yuanShenLevel.value++;
-      mana.value = maxMana.value;
-      addLog("服下一枚补灵丹，元神稳固，灵力上限提升。");
-      showFloat("元神等级+1", "success");
+      return true;
+    } catch (error) {
+      inventory.deserialize(beforeInventory);
+      player.deserialize(beforePlayer);
+      deserialize(beforeCultivation);
+      console.error("丹药结算失败，已回滚", error);
+      showFloat("丹药结算异常，未获得药效。", "danger");
+      return false;
+    } finally {
+      pillUseLocked = false;
     }
-    return true;
   };
-
   const unlockArtifact = (key: ArtifactKey) => {
     if (!unlocked.value) return unlock();
     if (artifacts.value[key]) return true;
@@ -3440,9 +3524,10 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const ids = Object.keys(HERB_DATA);
     const guaranteedZiwan = Math.max(1, days);
     for (let i = 0; i < qty; i++) {
-      const id = i < guaranteedZiwan
-        ? "ziwan"
-        : ids[Math.floor(Math.random() * ids.length)]!;
+      const id =
+        i < guaranteedZiwan
+          ? "ziwan"
+          : ids[Math.floor(Math.random() * ids.length)]!;
       herbs.value[id] = (herbs.value[id] ?? 0) + 1;
       inventory.addItem(id, 1);
     }
@@ -3854,6 +3939,9 @@ export const useCultivationStore = defineStore("cultivation", () => {
     earthPulse: earthPulse.value,
     totalAuraHarvested: totalAuraHarvested.value,
     alchemyUnlocked: alchemyUnlocked.value,
+    ganodermaPillDailyKey: ganodermaPillDailyKey.value,
+    ganodermaPillDailyCount: ganodermaPillDailyCount.value,
+    ganodermaPillLastUseAt: ganodermaPillLastUseAt.value,
     daoGear: daoGear.value,
     daoGearDurability: daoGearDurability.value,
     daoGearStars: daoGearStars.value,
@@ -3910,15 +3998,36 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const deserialize = (data?: Partial<ReturnType<typeof serialize>>) => {
     if (!data) return;
     unlocked.value = data.unlocked ?? false;
-    realmIndex.value = Math.min(data.realmIndex ?? 0, REALMS.length - 1);
-    cultivation.value = data.cultivation ?? 0;
-    aura.value = data.aura ?? 0;
-    mana.value = data.mana ?? 30;
+    realmIndex.value = Math.min(
+      safeGameInt(data.realmIndex),
+      REALMS.length - 1,
+    );
+    cultivation.value = Math.min(
+      safeGameInt(data.cultivation),
+      safeGameInt(REALMS[realmIndex.value]?.maxCultivation),
+    );
+    aura.value = safeGameInt(data.aura);
+    mana.value = Math.min(
+      safeGameInt(data.mana, 30),
+      safeGameInt(maxMana.value),
+    );
     spiritRoot.value = (data.spiritRoot as SpiritRoot) ?? "mixed";
     fieldTier.value = data.fieldTier ?? 0;
     earthPulse.value = data.earthPulse ?? (data.unlocked ? 100 : 0);
     totalAuraHarvested.value = data.totalAuraHarvested ?? 0;
     alchemyUnlocked.value = (data as any).alchemyUnlocked ?? false;
+    ganodermaPillDailyKey.value = String(
+      (data as any).ganodermaPillDailyKey ?? "",
+    ).slice(0, 10);
+    ganodermaPillDailyCount.value = Math.min(
+      3,
+      safeGameInt((data as any).ganodermaPillDailyCount),
+    );
+    // 旧档没有这些字段时安全回落为 0；异常未来时间戳只保留到当前时刻，避免永久冷却。
+    ganodermaPillLastUseAt.value = Math.min(
+      Date.now(),
+      safeGameInt((data as any).ganodermaPillLastUseAt),
+    );
     {
       const oldGear = ((data as any).daoGear ?? {}) as Record<string, number>;
       daoGear.value = {
