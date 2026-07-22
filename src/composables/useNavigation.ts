@@ -59,6 +59,7 @@ export type PanelKey =
   | "breeding"
   | "museum"
   | "guild"
+  | "territory"
   | "hanhai"
   | "fishpond"
   | "cottage"
@@ -121,6 +122,7 @@ export const TABS: {
   { key: "quest", label: "天机榜", icon: ScrollText },
   { key: "museum", label: "藏珍阁", icon: Landmark },
   { key: "guild", label: "仙盟", icon: Swords },
+  { key: "territory", label: "仙乡领地", icon: Landmark },
   { key: "hanhai", label: "瀚海", icon: Tent },
 ];
 

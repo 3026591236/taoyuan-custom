@@ -33,6 +33,7 @@ import { useCombatStore } from "./useCombatStore";
 import { useRetentionStore } from "./useRetentionStore";
 import { useLongTermStore } from "./useLongTermStore";
 import { useFloatingWelfareStore } from "./useFloatingWelfareStore";
+import { useTerritoryStore } from "./useTerritoryStore";
 
 const SAVE_KEY_PREFIX = "taoyuanxiang_save_";
 const MAX_SLOTS = 3;
@@ -157,6 +158,7 @@ export const useSaveStore = defineStore("save", () => {
       const retentionStore = useRetentionStore();
       const longTermStore = useLongTermStore();
       const floatingWelfareStore = useFloatingWelfareStore();
+      const territoryStore = useTerritoryStore();
 
       const data = {
         game: gameStore.serialize(),
@@ -191,6 +193,7 @@ export const useSaveStore = defineStore("save", () => {
         retention: retentionStore.serialize(),
         longTerm: longTermStore.serialize(),
         floatingWelfare: floatingWelfareStore.serialize(),
+        territory: territoryStore.serialize(),
         savedAt: new Date().toISOString(),
       };
       localStorage.setItem(
@@ -250,6 +253,7 @@ export const useSaveStore = defineStore("save", () => {
       const retentionStore = useRetentionStore();
       const longTermStore = useLongTermStore();
       const floatingWelfareStore = useFloatingWelfareStore();
+      const territoryStore = useTerritoryStore();
 
       gameStore.deserialize(data.game);
       playerStore.deserialize(data.player);
@@ -283,6 +287,8 @@ export const useSaveStore = defineStore("save", () => {
       if (data.longTerm) longTermStore.deserialize(data.longTerm);
       if ((data as any).floatingWelfare)
         floatingWelfareStore.deserialize((data as any).floatingWelfare);
+      if ((data as any).territory)
+        territoryStore.deserialize((data as any).territory);
       if (data.hanhai) hanhaiStore.deserialize(data.hanhai);
       longTermStore.touchLoginDay();
       activeSlot.value = slot;

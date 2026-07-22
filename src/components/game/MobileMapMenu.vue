@@ -115,6 +115,19 @@
 
           <div class="map-path">···</div>
 
+          <!-- 势力经营 -->
+          <div class="map-area">
+            <p class="map-area-title">势力经营</p>
+            <div class="map-area-grid">
+              <button class="map-loc" :disabled="navBusy" :class="{ 'map-loc-active': current === 'territory' }" @click="go('territory')">
+                <Landmark :size="18" />
+                <span>仙乡领地</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="map-path">···</div>
+
           <!-- 百工器作 -->
           <div class="map-area">
             <p class="map-area-title">百工器作</p>
@@ -341,6 +354,7 @@ import {
   PawPrint,
   CalendarDays,
   MessageCircle,
+  Landmark,
 } from "lucide-vue-next";
 import { TABS, navigateToPanel } from "@/composables/useNavigation";
 import { useAscensionStore } from "@/stores/useAscensionStore";

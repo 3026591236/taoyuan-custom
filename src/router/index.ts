@@ -45,6 +45,7 @@ const router = createRouter({
         { path: 'breeding', name: 'breeding', component: () => import('@/views/game/BreedingView.vue') },
         { path: 'museum', name: 'museum', component: () => import('@/views/game/MuseumView.vue') },
         { path: 'guild', name: 'guild', component: () => import('@/views/game/GuildView.vue') },
+        { path: 'territory', name: 'territory', component: () => import('@/views/game/TerritoryView.vue') },
         { path: 'hanhai', name: 'hanhai', component: () => import('@/views/game/HanhaiView.vue') },
         { path: 'fishpond', name: 'fishpond', component: () => import('@/views/game/FishPondView.vue') },
         { path: 'ascension', name: 'ascension', component: () => import('@/views/game/AscensionView.vue') },
