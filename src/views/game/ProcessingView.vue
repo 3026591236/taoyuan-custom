@@ -1049,46 +1049,30 @@ const craftCategories = computed(
           badge: `已有${farmStore.scarecrows}`,
           batchable: true,
         },
-        ...((animalStore.buildings.find((b) => b.type === "coop")?.level ??
-          0) >= 2
+        ...((animalStore.buildings.some((b) => b.built && b.level >= 2)
           ? [
               {
-                id: "auto_petter_coop",
-                name: `${AUTO_PETTER.name}（灵禽舍）`,
+                id: "auto_petter_ranch",
+                name: AUTO_PETTER.name,
                 description: AUTO_PETTER.description,
                 materials: AUTO_PETTER.craftCost,
                 cost: AUTO_PETTER.craftMoney,
-                onCraft: () => handleCraftAutoPetter("coop"),
+                onCraft: () => {
+                  const building = animalStore.buildings.find(
+                    (b) => b.built && b.level >= 2,
+                  );
+                  if (building) handleCraftAutoPetter(building.type);
+                },
                 canCraft: () =>
-                  !animalStore.hasAutoPetter("coop") &&
+                  !animalStore.hasAutoPetter() &&
                   processingStore.canCraft(
                     AUTO_PETTER.craftCost,
                     AUTO_PETTER.craftMoney,
                   ),
-                badge: animalStore.hasAutoPetter("coop") ? "已安装" : undefined,
+                badge: animalStore.hasAutoPetter() ? "牧场已覆盖" : undefined,
               },
             ]
-          : []),
-        ...((animalStore.buildings.find((b) => b.type === "barn")?.level ??
-          0) >= 2
-          ? [
-              {
-                id: "auto_petter_barn",
-                name: `${AUTO_PETTER.name}（灵牧苑）`,
-                description: AUTO_PETTER.description,
-                materials: AUTO_PETTER.craftCost,
-                cost: AUTO_PETTER.craftMoney,
-                onCraft: () => handleCraftAutoPetter("barn"),
-                canCraft: () =>
-                  !animalStore.hasAutoPetter("barn") &&
-                  processingStore.canCraft(
-                    AUTO_PETTER.craftCost,
-                    AUTO_PETTER.craftMoney,
-                  ),
-                badge: animalStore.hasAutoPetter("barn") ? "已安装" : undefined,
-              },
-            ]
-          : []),
+          : [])),
       ],
     },
     {
@@ -1396,8 +1380,8 @@ const handleCraftScarecrow = () => {
 };
 
 const handleCraftAutoPetter = (buildingType: AnimalBuildingType) => {
-  if (animalStore.hasAutoPetter(buildingType)) {
-    addLog("该畜舍已安装自动抚摸机。");
+  if (animalStore.hasAutoPetter()) {
+    addLog("自动抚摸机已覆盖整个牧场。");
     return;
   }
   if (

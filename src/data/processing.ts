@@ -2135,7 +2135,7 @@ export const SCARECROW = {
 export const AUTO_PETTER = {
   id: "auto_petter",
   name: "自动抚摸机",
-  description: "安装到畜舍后，每天自动抚摸所有动物。需要大型畜舍（2级）。",
+  description: "安装一台后，每天自动抚摸灵禽舍、灵牧苑与马厩的所有动物。需要任一大型畜舍（2级）。",
   craftCost: [
     { itemId: "gold_bar", quantity: 10 },
     { itemId: "iron_bar", quantity: 20 },

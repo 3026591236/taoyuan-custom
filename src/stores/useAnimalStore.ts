@@ -55,8 +55,9 @@ export const useAnimalStore = defineStore("animal", () => {
   /** 今天是否已放牧 */
   const grazedToday = ref(false);
 
-  /** 已安装自动抚摸机的建筑类型 */
+  /** 已安装自动抚摸机的建筑类型。任意一台均覆盖整个牧场。 */
   const autoPetterBuildings = ref<AnimalBuildingType[]>([]);
+  const hasRanchWideAutoPetter = () => autoPetterBuildings.value.length > 0;
   const BLOODLINE_NAMES: Record<AnimalBloodline, string> = {
     normal: "凡血",
     spirit: "灵脉",
@@ -717,7 +718,7 @@ export const useAnimalStore = defineStore("animal", () => {
         const animalDef = ANIMAL_DEFS.find((d) => d.type === animal.type);
         if (
           animalDef &&
-          autoPetterBuildings.value.includes(animalDef.building)
+          hasRanchWideAutoPetter()
         ) {
           animal.wasPetted = true;
         }
@@ -863,7 +864,7 @@ export const useAnimalStore = defineStore("animal", () => {
     // 自动抚摸机：为新一天预设抚摸状态，使 UI 正确显示「已摸」
     for (const animal of animals.value) {
       const animalDef = ANIMAL_DEFS.find((d) => d.type === animal.type);
-      if (animalDef && autoPetterBuildings.value.includes(animalDef.building)) {
+      if (animalDef && hasRanchWideAutoPetter()) {
         animal.wasPetted = true;
       }
     }
@@ -1045,28 +1046,26 @@ export const useAnimalStore = defineStore("animal", () => {
     return false;
   };
 
-  /** 检查指定建筑是否已安装自动抚摸机 */
-  const hasAutoPetter = (buildingType: AnimalBuildingType): boolean => {
-    return autoPetterBuildings.value.includes(buildingType);
+  /** 任意一台自动抚摸机均覆盖灵禽舍、灵牧苑与马厩。 */
+  const hasAutoPetter = (_buildingType?: AnimalBuildingType): boolean => {
+    return hasRanchWideAutoPetter();
   };
 
-  /** 安装自动抚摸机到指定建筑 */
+  /** 安装自动抚摸机；保留建筑参数以兼容旧存档与现有调用。 */
   const installAutoPetter = (
     buildingType: AnimalBuildingType,
   ): { success: boolean; message: string } => {
-    if (buildingType === "stable")
-      return { success: false, message: "马厩不能安装自动抚摸机。" };
     const building = buildings.value.find((b) => b.type === buildingType);
     if (!building || !building.built)
       return { success: false, message: "需要先建造畜舍。" };
     if (building.level < 2)
       return { success: false, message: "需要大型畜舍（2级）才能安装。" };
-    if (autoPetterBuildings.value.includes(buildingType))
-      return { success: false, message: "该畜舍已安装自动抚摸机。" };
+    if (hasRanchWideAutoPetter())
+      return { success: false, message: "自动抚摸机已覆盖整个牧场。" };
     autoPetterBuildings.value.push(buildingType);
     return {
       success: true,
-      message: `自动抚摸机已安装到${buildingType === "coop" ? "灵禽舍" : "灵牧苑"}。`,
+      message: "自动抚摸机已启动，灵禽舍、灵牧苑与马厩的动物都会自动抚摸。",
     };
   };
 

@@ -159,7 +159,7 @@
           v-if="animalStore.hasAutoPetter(bDef.type)"
           class="text-[10px] text-success mb-2"
         >
-          自动抚摸机运行中 — 每日自动抚摸所有动物
+          自动抚摸机运行中 — 牧场全部动物每日自动抚摸
         </p>
         <!-- 灵禽舍孵化器（灵禽舍2级以上） -->
         <div
