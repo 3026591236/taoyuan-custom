@@ -17,24 +17,29 @@ export type TerritoryNode = {
   lastCollectedAt: number;
   dispatchedAt: number;
   enemyAt: number;
+  links: string[];
 };
 
 const INITIAL_NODES: TerritoryNode[] = [
-  { id: "capital", name: "万象城", kind: "capital", x: 50, y: 51, income: { wood: 3, stone: 3, spirit: 4 }, power: 1, status: "owned", level: 1, lastCollectedAt: Date.now(), dispatchedAt: 0, enemyAt: 0 },
-  { id: "cloud-farm", name: "云禾原", kind: "farm", x: 30, y: 32, income: { wood: 7, stone: 1, spirit: 2 }, power: 12, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "east-farm", name: "东篱田契", kind: "farm", x: 73, y: 31, income: { wood: 6, stone: 2, spirit: 2 }, power: 18, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "black-mine", name: "玄铁矿脉", kind: "mine", x: 18, y: 57, income: { wood: 1, stone: 8, spirit: 1 }, power: 26, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "red-mine", name: "赤霞矿场", kind: "mine", x: 82, y: 59, income: { wood: 2, stone: 7, spirit: 1 }, power: 34, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "star-lake", name: "星澜河口", kind: "spirit", x: 42, y: 20, income: { wood: 2, stone: 2, spirit: 9 }, power: 42, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "moon-spring", name: "月泉灵眼", kind: "spirit", x: 65, y: 75, income: { wood: 1, stone: 2, spirit: 11 }, power: 55, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "north-watch", name: "北境哨塔", kind: "watch", x: 52, y: 9, income: { wood: 3, stone: 4, spirit: 3 }, power: 30, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "south-watch", name: "南岭关", kind: "watch", x: 48, y: 88, income: { wood: 3, stone: 5, spirit: 2 }, power: 48, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "jade-ruins", name: "青玉遗址", kind: "ruins", x: 12, y: 23, income: { wood: 2, stone: 3, spirit: 7 }, power: 62, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "sea-gate", name: "瀚海渡口", kind: "ruins", x: 87, y: 23, income: { wood: 5, stone: 3, spirit: 5 }, power: 70, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
-  { id: "mist-valley", name: "迷雾谷地", kind: "ruins", x: 24, y: 81, income: { wood: 4, stone: 4, spirit: 6 }, power: 82, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0 },
+  { id: "capital", name: "万象城", kind: "capital", x: 50, y: 51, income: { wood: 3, stone: 3, spirit: 4 }, power: 1, status: "owned", level: 1, lastCollectedAt: Date.now(), dispatchedAt: 0, enemyAt: 0, links: ["cloud-farm", "east-farm", "black-mine", "red-mine"] },
+  { id: "cloud-farm", name: "云禾原", kind: "farm", x: 30, y: 32, income: { wood: 7, stone: 1, spirit: 2 }, power: 12, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["capital", "star-lake", "jade-ruins", "bamboo-ward"] },
+  { id: "east-farm", name: "东篱田契", kind: "farm", x: 73, y: 31, income: { wood: 6, stone: 2, spirit: 2 }, power: 18, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["capital", "star-lake", "sea-gate", "wind-terrace"] },
+  { id: "black-mine", name: "玄铁矿脉", kind: "mine", x: 18, y: 57, income: { wood: 1, stone: 8, spirit: 1 }, power: 26, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["capital", "mist-valley", "bamboo-ward", "stone-gate"] },
+  { id: "red-mine", name: "赤霞矿场", kind: "mine", x: 82, y: 59, income: { wood: 2, stone: 7, spirit: 1 }, power: 34, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["capital", "moon-spring", "wind-terrace", "south-watch"] },
+  { id: "star-lake", name: "星澜河口", kind: "spirit", x: 42, y: 20, income: { wood: 2, stone: 2, spirit: 9 }, power: 42, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["cloud-farm", "east-farm", "north-watch", "jade-ruins"] },
+  { id: "moon-spring", name: "月泉灵眼", kind: "spirit", x: 65, y: 75, income: { wood: 1, stone: 2, spirit: 11 }, power: 55, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["red-mine", "south-watch", "mist-valley", "south-gate"] },
+  { id: "north-watch", name: "北境哨塔", kind: "watch", x: 52, y: 8, income: { wood: 3, stone: 4, spirit: 3 }, power: 30, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["star-lake", "jade-ruins", "sea-gate"] },
+  { id: "south-watch", name: "南岭关", kind: "watch", x: 48, y: 91, income: { wood: 3, stone: 5, spirit: 2 }, power: 48, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["moon-spring", "mist-valley", "south-gate"] },
+  { id: "jade-ruins", name: "青玉遗址", kind: "ruins", x: 11, y: 18, income: { wood: 2, stone: 3, spirit: 7 }, power: 62, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["cloud-farm", "star-lake", "north-watch"] },
+  { id: "sea-gate", name: "瀚海渡口", kind: "ruins", x: 89, y: 19, income: { wood: 5, stone: 3, spirit: 5 }, power: 70, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["east-farm", "north-watch", "wind-terrace"] },
+  { id: "mist-valley", name: "迷雾谷地", kind: "ruins", x: 18, y: 82, income: { wood: 4, stone: 4, spirit: 6 }, power: 82, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["black-mine", "moon-spring", "south-watch", "stone-gate"] },
+  { id: "bamboo-ward", name: "青篁驿", kind: "farm", x: 8, y: 42, income: { wood: 8, stone: 1, spirit: 2 }, power: 38, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["cloud-farm", "black-mine", "stone-gate"] },
+  { id: "wind-terrace", name: "听风台", kind: "spirit", x: 91, y: 43, income: { wood: 2, stone: 2, spirit: 10 }, power: 52, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["east-farm", "red-mine", "sea-gate"] },
+  { id: "stone-gate", name: "叠石隘", kind: "watch", x: 31, y: 72, income: { wood: 2, stone: 6, spirit: 3 }, power: 64, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["black-mine", "mist-valley", "bamboo-ward", "south-gate"] },
+  { id: "south-gate", name: "云渡旧关", kind: "ruins", x: 72, y: 88, income: { wood: 4, stone: 4, spirit: 8 }, power: 90, status: "neutral", level: 1, lastCollectedAt: 0, dispatchedAt: 0, enemyAt: 0, links: ["moon-spring", "south-watch", "stone-gate"] },
 ];
 
-const cloneNodes = () => INITIAL_NODES.map((node) => ({ ...node, income: { ...node.income } }));
+const cloneNodes = () => INITIAL_NODES.map((node) => ({ ...node, income: { ...node.income }, links: [...node.links] }));
 
 export const useTerritoryStore = defineStore("territory", () => {
   const nodes = ref<TerritoryNode[]>(cloneNodes());
@@ -46,6 +51,8 @@ export const useTerritoryStore = defineStore("territory", () => {
 
   const ownedNodes = computed(() => nodes.value.filter((node) => node.status === "owned"));
   const selectedNode = computed(() => nodes.value.find((node) => node.id === selectedId.value) || nodes.value[0]);
+  const isReachable = (node: TerritoryNode) => node.id === "capital" || node.links.some((id) => nodes.value.find((entry) => entry.id === id)?.status === "owned");
+  const reachableNodes = computed(() => nodes.value.filter((node) => node.status === "neutral" && isReachable(node)));
   const incomePerHour = computed(() => ownedNodes.value.reduce((total, node) => ({
     wood: total.wood + node.income.wood * node.level,
     stone: total.stone + node.income.stone * node.level,
@@ -70,6 +77,7 @@ export const useTerritoryStore = defineStore("territory", () => {
   const occupy = (id: string) => {
     const node = nodes.value.find((entry) => entry.id === id);
     if (!node || node.status === "owned") return false;
+    if (!isReachable(node)) { lastAction.value = `「${node.name}」尚未接入己方供给线，先占领相邻领地。`; return false; }
     if (commandPower.value < node.power) { lastAction.value = `队伍战力不足，需要 ${node.power} 点调度力。`; return false; }
     commandPower.value -= Math.max(4, Math.floor(node.power / 4));
     node.status = "owned"; node.lastCollectedAt = Date.now();
@@ -126,8 +134,14 @@ export const useTerritoryStore = defineStore("territory", () => {
   };
   const serialize = () => ({ nodes: nodes.value, resources: resources.value, commandPower: commandPower.value, lastAction: lastAction.value, selectedId: selectedId.value });
   const deserialize = (data: any = {}) => {
-    if (Array.isArray(data.nodes)) nodes.value = data.nodes.map((node: TerritoryNode) => ({ ...node, income: { ...node.income } }));
-    resources.value = { ...resources.value, ...(data.resources || {}) }; commandPower.value = Number(data.commandPower ?? 100); lastAction.value = String(data.lastAction || lastAction.value); selectedId.value = String(data.selectedId || "capital");
+    if (Array.isArray(data.nodes)) {
+      const saved = new Map<string, Partial<TerritoryNode>>(data.nodes.map((node: TerritoryNode): [string, Partial<TerritoryNode>] => [node.id, node]));
+      nodes.value = cloneNodes().map((base) => {
+        const previous = saved.get(base.id);
+        return previous ? { ...base, ...previous, income: { ...base.income, ...(previous.income || {}) }, links: [...base.links] } : base;
+      });
+    }
+    resources.value = { ...resources.value, ...(data.resources || {}) }; commandPower.value = Number(data.commandPower ?? 100); lastAction.value = String(data.lastAction || lastAction.value); selectedId.value = nodes.value.some((node) => node.id === data.selectedId) ? String(data.selectedId) : "capital";
   };
-  return { nodes, resources, commandPower, lastAction, selectedId, mapZoom, ownedNodes, selectedNode, incomePerHour, totalPower, select, tick, occupy, dispatch, recall, upgrade, resolveRaid, triggerRaid, serialize, deserialize };
+  return { nodes, resources, commandPower, lastAction, selectedId, mapZoom, ownedNodes, selectedNode, reachableNodes, incomePerHour, totalPower, select, tick, occupy, dispatch, recall, upgrade, resolveRaid, triggerRaid, serialize, deserialize };
 });
