@@ -112,6 +112,12 @@
             好感300解锁，派遣完成会带回采集物、铜钱或修仙材料。
           </p>
         </div>
+        <p
+          v-if="animalStore.hasAutoPetter()"
+          class="text-[10px] text-muted/70 mt-2"
+        >
+          自动抚摸机覆盖畜舍与马厩，宠物可在此单独照料。
+        </p>
       </template>
       <div
         v-else
@@ -422,6 +428,12 @@
       </div>
 
       <template v-if="animalStore.stableBuilt">
+        <p
+          v-if="animalStore.hasAutoPetter('stable')"
+          class="text-[10px] text-success mb-2"
+        >
+          自动抚摸机运行中 — 马厩动物每日自动抚摸
+        </p>
         <div
           v-if="animalStore.getHorse"
           class="border border-accent/10 rounded-xs p-2"
