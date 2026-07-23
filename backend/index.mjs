@@ -783,6 +783,12 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.3.0 玩家数据实时入库",
+      date: "2026-07-23",
+      content:
+        "玩家游玩状态改为每次数据变化后立即写入数据库，不再依赖每5秒自动保存；同一操作内的多项同步变化合并为一次完整写档，写入进行中若继续产生变化，会在当前请求完成后立刻补写最新状态。数据异常守卫收窄为只拦截铜钱、修为、灵气、灵石、仙玉与仙界功德的异常大数值增长，普通玩法变化、集中结算、数值消耗和日期变化不再作为拦截理由。",
+    },
+    {
       title: "V3.2.9 服务端权威结算第一阶段",
       date: "2026-07-21",
       content:
@@ -2393,13 +2399,6 @@ app.put("/api/saves/:slot", async (req, res) => {
       return send(res, 400, { error: "槽位无效", code: "INVALID_SAVE_SLOT" });
     const { raw, meta, data } = req.body || {};
     const playerName = normalizePlayerName((meta && meta.playerName) || "");
-    const hasLoadedAt = Boolean(meta && meta.lastLoadedAt);
-    const clientLoadedAt = hasLoadedAt ? new Date(meta.lastLoadedAt) : null;
-    if (hasLoadedAt && !Number.isFinite(clientLoadedAt.getTime()))
-      return send(res, 400, {
-        error: "存档加载时间无效，请重新进入游戏。",
-        code: "INVALID_LAST_LOADED_AT",
-      });
     const metaJson = meta ? JSON.stringify(meta) : null;
     const payloadCheck = validateSavePayload(raw, data);
     if (!payloadCheck.ok)
@@ -2444,52 +2443,6 @@ app.put("/api/saves/:slot", async (req, res) => {
         return send(res, 409, {
           error: "角色与存档归属不一致，请联系管理员。",
           code: "SAVE_CHARACTER_MISMATCH",
-        });
-      }
-      if (!hasLoadedAt) {
-        await conn.rollback();
-        transactionStarted = false;
-        await recordSaveAuditEvent(user, req, {
-          eventType: "save_conflict",
-          status: "conflict",
-          slot,
-          characterId: saveCharacterId,
-          playerName: authoritativePlayerName,
-          rawSize: summary.rawSize,
-          dataSize: summary.dataSize,
-          dataHash: summary.dataHash,
-          serverUpdatedAt: currentSaveRow.updated_at,
-          detail: { ...summary, reason: "missing_last_loaded_at" },
-        });
-        return send(res, 428, {
-          error: "请先从云端重新加载该存档，再进行保存。",
-          code: "LAST_LOADED_AT_REQUIRED",
-          conflict: true,
-          serverUpdatedAt: currentSaveRow.updated_at,
-        });
-      }
-      const serverUpdatedAt = new Date(currentSaveRow.updated_at);
-      if (serverUpdatedAt.getTime() - clientLoadedAt.getTime() > 1500) {
-        await conn.rollback();
-        transactionStarted = false;
-        await recordSaveAuditEvent(user, req, {
-          eventType: "save_conflict",
-          status: "conflict",
-          slot,
-          characterId: saveCharacterId,
-          playerName: authoritativePlayerName,
-          rawSize: summary.rawSize,
-          dataSize: summary.dataSize,
-          dataHash: summary.dataHash,
-          clientLoadedAt: meta.lastLoadedAt,
-          serverUpdatedAt: currentSaveRow.updated_at,
-          detail: { ...summary, reason: "stale_client_overwrite_rejected" },
-        });
-        return send(res, 409, {
-          error: "云端存档已由其他设备更新，请刷新或重新进入后再继续。",
-          code: "SAVE_CONFLICT",
-          conflict: true,
-          serverUpdatedAt: currentSaveRow.updated_at,
         });
       }
     }
@@ -2609,7 +2562,7 @@ app.put("/api/saves/:slot", async (req, res) => {
            SELECT user_id, character_id, slot, CONCAT('grant-apply:', id), 'grant_consumed',
                   source_type, source_id, payload_json, NULL, ?
            FROM asset_grants WHERE id = ? AND user_id = ?
-           ON DUPLICATE KEY UPDATE id = id`,
+           ON DUPLICATE KEY UPDATE idempotency_key = VALUES(idempotency_key)`,
           [baselineResult.saveHash, grantId, user.id],
         );
       }

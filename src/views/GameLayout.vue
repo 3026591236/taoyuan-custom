@@ -1389,7 +1389,10 @@ const stopOnlineStaminaRegen = () => {
   }
 };
 
-let accountAutoSaveTimer: number | null = null;
+let realtimeSaveListening = false;
+let realtimeSaveScheduled = false;
+let realtimeSavePending = false;
+let accountAutoSaveInFlight = false;
 const saveKey = (slot: number) => `taoyuanxiang_save_${slot}`;
 const accountToken = () => localStorage.getItem("taoyuan_account_token") || "";
 const accountHeaders = () => ({
@@ -1639,6 +1642,10 @@ const useQuickSlot = async (item: { itemId: string; quality: any }) => {
 };
 
 const autoSaveCurrent = async () => {
+  if (accountAutoSaveInFlight) {
+    realtimeSavePending = true;
+    return;
+  }
   if (ascensionStore.adminPreviewMode) return;
   if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return;
   const slot = saveStore.activeSlot;
@@ -1651,6 +1658,7 @@ const autoSaveCurrent = async () => {
   const info = saveStore.getSlots().find((s) => s.slot === slot);
   const loadedAt =
     localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "";
+  accountAutoSaveInFlight = true;
   try {
     const data = parseSaveData(raw);
     const result = await accountApi(`/api/saves/${slot}`, {
@@ -1680,34 +1688,55 @@ const autoSaveCurrent = async () => {
         `taoyuan_cloud_loaded_at_${slot}`,
         String(e.data.updatedAt || ""),
       );
-      stopAccountAutoSave();
+      stopRealtimeSave();
       addLog(
-        "云端检测到高置信数据异常，已自动恢复并载入服务器可信存档，同时暂停自动保存。请确认当前进度后再继续。",
+        "云端检测到异常大数值增长，已自动恢复并载入服务器可信存档，同时暂停实时保存。请确认当前进度后再继续。",
       );
       return;
     }
     if (e?.status === 409) {
-      stopAccountAutoSave();
+      stopRealtimeSave();
       addLog(
-        "检测到同账号其他设备已有更新，已暂停本页自动保存。请刷新或从角色列表重新进入，避免覆盖进度。",
+        "检测到同账号其他设备已有更新，已暂停本页实时保存。请刷新或从角色列表重新进入，避免覆盖进度。",
       );
       return;
     }
     // 自动保存失败不打断游戏，也不刷屏；玩家仍可手动保存。
     console.warn("account autosave failed", e);
+  } finally {
+    accountAutoSaveInFlight = false;
+    if (realtimeSavePending && realtimeSaveListening) {
+      realtimeSavePending = false;
+      scheduleRealtimeSave();
+    }
   }
 };
-const startAccountAutoSave = () => {
-  if (accountAutoSaveTimer != null) return;
-  accountAutoSaveTimer = window.setInterval(() => {
+const scheduleRealtimeSave = () => {
+  if (!realtimeSaveListening || realtimeSaveScheduled) return;
+  realtimeSaveScheduled = true;
+  queueMicrotask(() => {
+    realtimeSaveScheduled = false;
     void autoSaveCurrent();
-  }, 5000);
+  });
 };
-const stopAccountAutoSave = () => {
-  if (accountAutoSaveTimer != null) {
-    window.clearInterval(accountAutoSaveTimer);
-    accountAutoSaveTimer = null;
-  }
+const handlePlayerStateChanged = () => scheduleRealtimeSave();
+const startRealtimeSave = () => {
+  if (realtimeSaveListening) return;
+  realtimeSaveListening = true;
+  window.addEventListener(
+    "taoyuan:player-state-changed",
+    handlePlayerStateChanged,
+  );
+};
+const stopRealtimeSave = () => {
+  if (!realtimeSaveListening) return;
+  realtimeSaveListening = false;
+  realtimeSaveScheduled = false;
+  realtimeSavePending = false;
+  window.removeEventListener(
+    "taoyuan:player-state-changed",
+    handlePlayerStateChanged,
+  );
 };
 
 // 游戏未开始时优先从刷新前的活跃槽位恢复，避免刷新 /game 后回到空内存状态。
@@ -1803,11 +1832,20 @@ const dailyCheckin = async () => {
     addLog("请先在首页登录账号，再进行每日签到。");
     return;
   }
+  const slot = saveStore.activeSlot;
+  if (!Number.isInteger(slot) || slot < 0) {
+    addLog("请先进入一个角色，再进行每日签到。");
+    return;
+  }
   checkinBusy.value = true;
   try {
     const res = await fetch("/api/checkin", {
       method: "POST",
-      headers: { authorization: `Bearer ${t}` },
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${t}`,
+      },
+      body: JSON.stringify({ slot }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -1848,11 +1886,7 @@ const dailyCheckin = async () => {
       emoji: "🎁",
       lines: rewardLines,
     });
-    const slot =
-      saveStore.activeSlot >= 0
-        ? saveStore.activeSlot
-        : saveStore.assignNewSlot();
-    if (slot >= 0) saveStore.saveToSlot(slot);
+    saveStore.saveToSlot(slot);
   } catch {
     addLog("签到失败，请稍后再试。");
   } finally {
@@ -1884,7 +1918,7 @@ const groupedLogs = computed(() => {
 // 实时时钟生命周期
 onMounted(() => {
   startClock();
-  if (!ascensionStore.adminPreviewMode) startAccountAutoSave();
+  if (!ascensionStore.adminPreviewMode) startRealtimeSave();
   startOnlineStaminaRegen();
   startBackgroundMeditation();
   void loadServerConfig();
@@ -1897,7 +1931,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
   stopClock();
-  stopAccountAutoSave();
+  stopRealtimeSave();
   stopOnlineStaminaRegen();
   stopBackgroundMeditation();
   if (worldAnnouncementTimer != null)

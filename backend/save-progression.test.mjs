@@ -4,8 +4,7 @@ import {
   inspectSaveProgression,
 } from "./save-progression.mjs";
 
-const data = { player: {}, cultivation: {}, game: {} };
-const check = (previous, next) => inspectSaveProgression(previous, next, data);
+const check = (previous, next) => inspectSaveProgression(previous, next);
 
 assert.equal(
   check(
@@ -13,7 +12,7 @@ assert.equal(
     { money: 3600000, cultivation: 1000, year: 1, season: "summer", day: 1 },
   ).abnormal,
   false,
-  "正常350万跨季增长应放行",
+  "正常跨季增长应放行",
 );
 assert.equal(
   check(
@@ -45,29 +44,23 @@ assert.equal(
     { money: 900000000000000, year: 1, season: "spring", day: 1 },
   ).abnormal,
   true,
-  "极端资产注入应回档",
+  "异常大数值增长应拦截",
 );
-assert.match(
+assert.equal(
   check(
-    {
-      money: 10000,
-      cultivation: 1000,
-      aura: 100,
-      year: 1,
-      season: "spring",
-      day: 1,
-    },
-    {
-      money: 80000000,
-      cultivation: 300000000,
-      aura: 100,
-      year: 1,
-      season: "spring",
-      day: 1,
-    },
-  ).reasons.join(","),
-  /multiple_strong_anomalies/,
-  "多指标强异常应回档",
+    { money: 900000000000000, year: 1, season: "spring", day: 1 },
+    { money: 10000, year: 1, season: "spring", day: 1 },
+  ).abnormal,
+  false,
+  "数值减少不应被增长守卫拦截",
+);
+assert.equal(
+  check(
+    { money: 1000, year: 1, season: "spring", day: 1 },
+    { money: 1000, year: 999999, season: "unknown", day: 99 },
+  ).abnormal,
+  false,
+  "守卫不应以日期或普通结构变化作为拦截理由",
 );
 assert.equal(
   absoluteGameDay({ year: 2, season: "spring", day: 1 }) -
@@ -76,4 +69,4 @@ assert.equal(
   "跨年应正确计算一天",
 );
 
-console.log("save progression tests: 5 passed");
+console.log("save progression tests: 6 passed");

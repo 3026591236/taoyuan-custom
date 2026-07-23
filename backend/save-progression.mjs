@@ -26,70 +26,45 @@ export function absoluteGameDay(summary = {}) {
   return (year - 1) * 112 + season * 28 + (day - 1);
 }
 
-export function inspectSaveProgression(previous = {}, next = {}, plainData) {
+/**
+ * 实时存档守卫只处理异常大数值增长。
+ * 普通状态变化、数值减少、日期变化和集中结算均不在此处裁决，避免守卫干预正常玩法。
+ */
+export function inspectSaveProgression(previous = {}, next = {}) {
   const reasons = [];
-  if (!plainData || typeof plainData !== "object" || Array.isArray(plainData))
-    return { abnormal: true, reasons: ["invalid_save_structure"], dayDelta: 0 };
-
-  const stack = [plainData];
-  let visited = 0;
-  while (stack.length) {
-    const value = stack.pop();
-    if (++visited > 250000) {
-      reasons.push("save_structure_too_large");
-      break;
-    }
-    if (typeof value === "number" && !Number.isFinite(value)) {
-      reasons.push("non_finite_number");
-      break;
-    }
-    if (value && typeof value === "object") {
-      for (const child of Object.values(value)) stack.push(child);
-    }
-  }
-
   const previousDay = absoluteGameDay(previous);
   const nextDay = absoluteGameDay(next);
-  if (nextDay == null) reasons.push("invalid_game_date");
   const dayDelta =
     previousDay != null && nextDay != null
       ? Math.max(0, nextDay - previousDay)
       : 0;
 
   const fields = [
-    { key: "money", hard: 1e14, jump: 5e8, perDay: 5e7, strong: 5e7 },
-    { key: "cultivation", hard: 1e16, jump: 2e9, perDay: 2e8, strong: 2e8 },
-    { key: "aura", hard: 1e15, jump: 1e9, perDay: 1e8, strong: 1e8 },
-    { key: "spiritStone", hard: 1e12, jump: 5e7, perDay: 5e6, strong: 5e6 },
+    { key: "money", jump: 5e8, perDay: 5e7 },
+    { key: "cultivation", jump: 2e9, perDay: 2e8 },
+    { key: "aura", jump: 1e9, perDay: 1e8 },
+    { key: "spiritStone", jump: 5e7, perDay: 5e6 },
+    { key: "immortalJade", jump: 5e7, perDay: 5e6 },
+    { key: "immortalMerit", jump: 5e7, perDay: 5e6 },
   ];
-  let strongCount = 0;
+
   for (const rule of fields) {
     const before = finite(previous[rule.key], 0);
     const after = Number(next[rule.key] ?? before);
-    if (!Number.isFinite(after) || after < 0) {
-      reasons.push(`${rule.key}_invalid:${String(next[rule.key])}`);
-      continue;
-    }
-    if (after > rule.hard) reasons.push(`${rule.key}_hard_limit:${after}`);
+    if (!Number.isFinite(after)) continue;
     const delta = after - before;
     const allowedExtreme = rule.jump + dayDelta * rule.perDay;
     if (
       delta > allowedExtreme &&
       delta > Math.max(rule.jump, Math.abs(before) * 100)
-    )
+    ) {
       reasons.push(`${rule.key}_extreme_jump:${before}->${after}`);
-    if (
-      delta > rule.strong + dayDelta * (rule.perDay / 2) &&
-      delta > Math.max(rule.strong, Math.abs(before) * 20)
-    )
-      strongCount += 1;
+    }
   }
-  if (strongCount >= 2)
-    reasons.push(`multiple_strong_anomalies:${strongCount}`);
 
   return {
     abnormal: reasons.length > 0,
-    reasons: [...new Set(reasons)],
+    reasons,
     dayDelta,
   };
 }
