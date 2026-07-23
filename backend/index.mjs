@@ -792,6 +792,12 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.3.7 邮箱已领取邮件清理",
+      date: "2026-07-23",
+      content:
+        "系统邮件面板新增‘清理已领取’按钮，可一次删除当前账号已完成领取的历史邮件。清理接口只删除奖励已经确认写入数据库的邮件；未领取邮件以及奖励仍在待确认状态的邮件会继续保留，避免误删尚未到账的奖励。",
+    },
+    {
       title: "V3.3.6 奖励存档串行与历史恢复",
       date: "2026-07-23",
       content:
@@ -3120,6 +3126,26 @@ app.get("/api/mails", async (req, res) => {
     });
   } catch (e) {
     console.error("list user mails err", e);
+    send(res, 500, { error: "服务器错误" });
+  }
+});
+
+app.delete("/api/mails/claimed", async (req, res) => {
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    const [result] = await pool.execute(
+      `DELETE um FROM user_mails um
+       LEFT JOIN asset_grants rg
+         ON rg.id = um.grant_id AND rg.user_id = um.user_id
+        AND rg.source_type = 'mail_claim'
+       WHERE um.user_id = ? AND um.claimed = 1
+         AND (um.grant_id IS NULL OR rg.state = 'consumed')`,
+      [user.id],
+    );
+    send(res, 200, { ok: true, deleted: Number(result.affectedRows || 0) });
+  } catch (e) {
+    console.error("cleanup claimed user mails err", e);
     send(res, 500, { error: "服务器错误" });
   }
 });

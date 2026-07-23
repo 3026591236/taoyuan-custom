@@ -205,7 +205,14 @@
         >
           <div class="flex items-center justify-between gap-2">
             <h2 class="text-accent text-lg">系统邮件</h2>
-            <Button @click="showMailModal = false">关闭</Button>
+            <div class="flex items-center gap-2">
+              <Button
+                v-if="claimedMailCount > 0"
+                :disabled="mailCleanupBusy"
+                @click="cleanupClaimedMails"
+              >{{ mailCleanupBusy ? "清理中…" : `清理已领取（${claimedMailCount}）` }}</Button>
+              <Button @click="showMailModal = false">关闭</Button>
+            </div>
           </div>
           <p class="text-xs text-muted">
             领取奖励后会立即写入当前游戏，并触发一次自动存档。
@@ -1542,9 +1549,13 @@ onMounted(() => {
 
 const showMailModal = ref(false);
 const mailLoading = ref(false);
+const mailCleanupBusy = ref(false);
 const mails = ref<any[]>([]);
 const unclaimedMailCount = computed(
   () => mails.value.filter((m) => !m.claimed).length,
+);
+const claimedMailCount = computed(
+  () => mails.value.filter((m) => m.claimed).length,
 );
 const loadMails = async () => {
   const token = accountToken();
@@ -1560,6 +1571,24 @@ const loadMails = async () => {
     console.warn("load mails failed", e);
   } finally {
     mailLoading.value = false;
+  }
+};
+const cleanupClaimedMails = async () => {
+  if (mailCleanupBusy.value || claimedMailCount.value <= 0) return;
+  if (!window.confirm(`确定清理${claimedMailCount.value}封已领取邮件吗？未领取和奖励待确认邮件会保留。`))
+    return;
+  mailCleanupBusy.value = true;
+  try {
+    const data = await accountApi("/api/mails/claimed", {
+      method: "DELETE",
+      headers: accountHeaders(),
+    });
+    await loadMails();
+    addLog(`已清理${Number(data.deleted) || 0}封已领取邮件。`);
+  } catch (error: any) {
+    addLog(`邮件清理失败：${error?.message || "请求失败"}`);
+  } finally {
+    mailCleanupBusy.value = false;
   }
 };
 const openLeaderboard = () => {
