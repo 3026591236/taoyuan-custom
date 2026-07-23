@@ -732,6 +732,11 @@ const defaultConfig = {
   sponsorAlipayImageUrl: "",
   sponsorWechatImageUrl: "",
   sponsorAfdianUrl: "",
+  groupEntry: {
+    enabled: false,
+    buttonText: "点我加群",
+    url: "",
+  },
   floatingWelfare: {
     enabled: true,
     buttonText: "福利",
@@ -1875,6 +1880,15 @@ async function getConfig() {
       cfg[r.key] = r.value;
     }
   }
+  cfg.groupEntry = {
+    enabled: Boolean(cfg.groupEntry?.enabled),
+    buttonText: String(
+      cfg.groupEntry?.buttonText || defaultConfig.groupEntry.buttonText,
+    )
+      .trim()
+      .slice(0, 12),
+    url: String(cfg.groupEntry?.url || "").trim().slice(0, 1000),
+  };
   cfg.floatingWelfare = sanitizeFloatingWelfare(
     cfg.floatingWelfare,
     defaultConfig.floatingWelfare,
@@ -5012,6 +5026,19 @@ app.put("/api/admin/config", async (req, res) => {
       sponsorAfdianUrl: String(
         body.sponsorAfdianUrl ?? cfg.sponsorAfdianUrl,
       ).slice(0, 500),
+      groupEntry: {
+        enabled: Boolean(body.groupEntry?.enabled),
+        buttonText: String(
+          body.groupEntry?.buttonText ??
+            cfg.groupEntry?.buttonText ??
+            "点我加群",
+        )
+          .trim()
+          .slice(0, 12),
+        url: String(body.groupEntry?.url ?? cfg.groupEntry?.url ?? "")
+          .trim()
+          .slice(0, 1000),
+      },
       floatingWelfare: sanitizeFloatingWelfare(
         body.floatingWelfare ?? cfg.floatingWelfare,
         cfg.floatingWelfare,

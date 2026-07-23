@@ -155,6 +155,15 @@
         @click.stop="router.push('/tutorial')"
         >新手教程</Button
       >
+      <a
+        v-if="groupEntryVisible"
+        :href="groupEntryUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn text-center justify-center py-2"
+      >
+        {{ groupEntryText }}
+      </a>
 
       <div
         v-if="iosDownloadUrl || androidDownloadUrl"
@@ -880,6 +889,11 @@ const serverConfig = ref<any>({
   updateLogs: [],
   registrationEnabled: true,
   maintenanceMode: false,
+  groupEntry: {
+    enabled: false,
+    buttonText: "点我加群",
+    url: "",
+  },
   iosDownloadUrl: "",
   androidDownloadUrl: "",
 });
@@ -893,6 +907,19 @@ const aboutTapTapUrl = computed(
   () =>
     serverConfig.value?.aboutTapTapUrl ||
     `https://www.taptap.cn/app/${(pkg as any).tapid}`,
+);
+const groupEntryUrl = computed(() =>
+  String(serverConfig.value?.groupEntry?.url || "").trim(),
+);
+const groupEntryText = computed(
+  () =>
+    String(serverConfig.value?.groupEntry?.buttonText || "点我加群").trim() ||
+    "点我加群",
+);
+const groupEntryVisible = computed(
+  () =>
+    Boolean(serverConfig.value?.groupEntry?.enabled) &&
+    /^https?:\/\//i.test(groupEntryUrl.value),
 );
 const iosDownloadUrl = computed(() =>
   String(serverConfig.value?.iosDownloadUrl || "").trim(),

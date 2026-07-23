@@ -107,6 +107,33 @@
               ><input v-model="config.maintenanceMode" type="checkbox" />
               维护模式提示</label
             >
+            <div class="border border-accent/10 rounded-xs p-3 space-y-2">
+              <div class="text-sm text-accent">首页加群入口</div>
+              <label class="flex items-center gap-2 text-sm">
+                <input v-model="config.groupEntry.enabled" type="checkbox" />
+                在新手教程下方显示加群按钮
+              </label>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <label class="text-sm space-y-1">
+                  <span>按钮文字</span>
+                  <input
+                    v-model="config.groupEntry.buttonText"
+                    class="input"
+                    maxlength="12"
+                    placeholder="点我加群"
+                  />
+                </label>
+                <label class="text-sm space-y-1 md:col-span-2">
+                  <span>加群链接</span>
+                  <input
+                    v-model="config.groupEntry.url"
+                    class="input"
+                    maxlength="1000"
+                    placeholder="https://qm.qq.com/..."
+                  />
+                </label>
+              </div>
+            </div>
             <button class="btn w-full justify-center" @click="saveConfig">
               保存基础配置
             </button>
@@ -1131,6 +1158,11 @@ const config = reactive<any>({
   androidDownloadUrl: "",
   registrationEnabled: true,
   maintenanceMode: false,
+  groupEntry: {
+    enabled: false,
+    buttonText: "点我加群",
+    url: "",
+  },
   floatingWelfare: {
     enabled: false,
     buttonText: "福利",
@@ -1452,6 +1484,11 @@ function syncFloatingItemName(item: any) {
   if (found && !item.name) item.name = found.name;
 }
 function normalizeFloatingWelfareConfig() {
+  config.groupEntry ||= {
+    enabled: false,
+    buttonText: "点我加群",
+    url: "",
+  };
   config.floatingWelfare ||= {
     enabled: false,
     buttonText: "福利",
