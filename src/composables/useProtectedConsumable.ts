@@ -87,17 +87,12 @@ export const useProtectedConsumable = () => {
         if (Number(result?.slot) !== slot || saveStore.activeSlot !== slot || typeof result?.raw !== "string")
           throw new Error("服务器返回的角色槽位不一致");
         const versionKey = `taoyuan_cloud_loaded_at_${slot}`;
-        const pendingKey = `taoyuan_pending_server_save_${slot}`;
         const previousVersion = localStorage.getItem(versionKey);
-        const previousPending = localStorage.getItem(pendingKey);
         localStorage.setItem(versionKey, String(result.updatedAt));
-        localStorage.removeItem(pendingKey);
         saveClientIdentity.restoreSequence(result.serverSequence);
         if (!saveStore.importSave(slot, result.raw) || !saveStore.loadFromSlot(slot)) {
           if (previousVersion == null) localStorage.removeItem(versionKey);
           else localStorage.setItem(versionKey, previousVersion);
-          if (previousPending == null) localStorage.removeItem(pendingKey);
-          else localStorage.setItem(pendingKey, previousPending);
           throw new Error("服务器状态加载失败，请重新进入游戏");
         }
         const freezeUntil = Number(result.data?.player?.timeStasisPillFreezeUntil || 0);

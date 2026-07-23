@@ -1396,10 +1396,15 @@ let realtimeSavePending = false;
 let accountAutoSaveInFlight = false;
 let realtimeSaveApplyingServerState = false;
 let lastRealtimeSaveSucceeded = true;
-const saveKey = (slot: number) => `taoyuanxiang_save_${slot}`;
-const pendingSaveKey = (slot: number) => `taoyuan_pending_server_save_${slot}`;
+let pendingRealtimeSave: {
+  characterId: string;
+  baseServerUpdatedAt: string;
+  localSavedAt: string;
+  pageId: string;
+  sequence: number;
+} | null = null;
 const accountToken = () => localStorage.getItem("taoyuan_account_token") || "";
-const persistLocalRecovery = () => {
+const captureRuntimeSave = () => {
   if (
     !realtimeSaveListening ||
     realtimeSaveApplyingServerState ||
@@ -1408,40 +1413,20 @@ const persistLocalRecovery = () => {
     return false;
   if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return false;
   const slot = saveStore.activeSlot;
-  if (!saveStore.saveToSlot(slot)) return false;
-  const raw = localStorage.getItem(saveKey(slot));
-  const data = raw ? parseSaveData(raw) : null;
   const characterId = localStorage.getItem("taoyuan_active_character_id") || "";
-  if (!raw || !data?.savedAt || !characterId) return false;
+  if (!characterId || !accountToken() || !saveStore.saveToSlot(slot)) return false;
+  const raw = saveStore.getRaw(slot);
+  const data = raw ? parseSaveData(raw) : null;
+  if (!raw || !data?.savedAt) return false;
   localStorage.setItem("taoyuan_active_slot", String(slot));
-  const existingRaw = localStorage.getItem(pendingSaveKey(slot));
-  let existing: {
-    pageId?: string;
-    previousPageId?: string;
-  } | null = null;
-  if (existingRaw) {
-    try {
-      existing = JSON.parse(existingRaw);
-    } catch {
-      localStorage.removeItem(pendingSaveKey(slot));
-    }
-  }
-  const sequence = saveClientIdentity.nextSequence();
-  localStorage.setItem(
-    pendingSaveKey(slot),
-    JSON.stringify({
-      characterId,
-      baseServerUpdatedAt:
-        localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "",
-      localSavedAt: String(data.savedAt),
-      pageId: saveClientIdentity.pageId,
-      sequence,
-      previousPageId:
-        existing?.pageId && existing.pageId !== saveClientIdentity.pageId
-          ? existing.pageId
-          : existing?.previousPageId || "",
-    }),
-  );
+  pendingRealtimeSave = {
+    characterId,
+    baseServerUpdatedAt:
+      localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "",
+    localSavedAt: String(data.savedAt),
+    pageId: saveClientIdentity.pageId,
+    sequence: saveClientIdentity.nextSequence(),
+  };
   return true;
 };
 const accountHeaders = () => ({
@@ -1694,33 +1679,17 @@ const autoSaveCurrent = async (): Promise<boolean> => {
   if (ascensionStore.adminPreviewMode) return false;
   if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return false;
   const slot = saveStore.activeSlot;
-  if (!localStorage.getItem(pendingSaveKey(slot)) && !persistLocalRecovery())
-    return false;
+  if (!pendingRealtimeSave && !captureRuntimeSave()) return false;
   if (accountAutoSaveInFlight) {
     realtimeSavePending = true;
     return lastRealtimeSaveSucceeded;
   }
   const token = accountToken();
   if (!token) return false;
-  const raw = localStorage.getItem(saveKey(slot));
+  const raw = saveStore.getRaw(slot);
   const uploadedData = raw ? parseSaveData(raw) : null;
-  const pendingRaw = localStorage.getItem(pendingSaveKey(slot));
-  if (!raw || !uploadedData?.savedAt || !pendingRaw) return false;
-  let pending: {
-    characterId?: string;
-    baseServerUpdatedAt?: string;
-    localSavedAt?: string;
-    pageId?: string;
-    sequence?: number;
-    previousPageId?: string;
-  };
-  try {
-    pending = JSON.parse(pendingRaw);
-  } catch {
-    localStorage.removeItem(pendingSaveKey(slot));
-    if (!persistLocalRecovery()) return false;
-    return autoSaveCurrent();
-  }
+  const pending = pendingRealtimeSave;
+  if (!raw || !uploadedData?.savedAt || !pending) return false;
   const info = saveStore.getSlots().find((s) => s.slot === slot);
   const loadedAt =
     localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "";
@@ -1737,8 +1706,8 @@ const autoSaveCurrent = async (): Promise<boolean> => {
           ...(info || {}),
           autoSaved: true,
           lastLoadedAt: loadedAt,
-          savePageId: pending.pageId || saveClientIdentity.pageId,
-          saveSequence: pending.sequence || saveClientIdentity.currentSequence(),
+          savePageId: pending.pageId,
+          saveSequence: pending.sequence,
         },
       }),
     });
@@ -1747,13 +1716,10 @@ const autoSaveCurrent = async (): Promise<boolean> => {
         `taoyuan_cloud_loaded_at_${slot}`,
         String(result.updatedAt),
       );
-      const latestRaw = localStorage.getItem(pendingSaveKey(slot));
-      const latest = latestRaw ? JSON.parse(latestRaw) : null;
-      if (latest?.localSavedAt === uploadedData.savedAt) {
-        localStorage.removeItem(pendingSaveKey(slot));
-      } else if (latest) {
-        latest.baseServerUpdatedAt = String(result.updatedAt);
-        localStorage.setItem(pendingSaveKey(slot), JSON.stringify(latest));
+      if (pendingRealtimeSave?.localSavedAt === uploadedData.savedAt) {
+        pendingRealtimeSave = null;
+      } else if (pendingRealtimeSave) {
+        pendingRealtimeSave.baseServerUpdatedAt = String(result.updatedAt);
         realtimeSavePending = true;
       }
     }
@@ -1772,7 +1738,7 @@ const autoSaveCurrent = async (): Promise<boolean> => {
         `taoyuan_cloud_loaded_at_${slot}`,
         String(e.data.updatedAt || ""),
       );
-      localStorage.removeItem(pendingSaveKey(slot));
+      pendingRealtimeSave = null;
       stopRealtimeSave();
       addLog(
         "云端检测到异常大数值增长，已自动恢复并载入服务器可信存档，同时暂停实时保存。请确认当前进度后再继续。",
@@ -1781,21 +1747,17 @@ const autoSaveCurrent = async (): Promise<boolean> => {
       return false;
     }
     if (e?.status === 409 && e?.data?.code === "SAVE_CONFLICT") {
-      const latestPendingRaw = localStorage.getItem(pendingSaveKey(slot));
-      const latestPending = latestPendingRaw ? JSON.parse(latestPendingRaw) : null;
+      const latestPending = pendingRealtimeSave;
       const serverPageId = String(e?.data?.serverPageId || "");
       const serverUpdatedAt = String(e?.data?.serverUpdatedAt || "");
       const serverSequence = Number(e?.data?.serverSequence || 0);
       const localSequence = Number(latestPending?.sequence || 0);
       const samePage =
         serverPageId &&
-        [latestPending?.pageId, latestPending?.previousPageId].includes(
-          serverPageId,
-        );
+        latestPending?.pageId === serverPageId;
       if (serverUpdatedAt && samePage && localSequence > serverSequence) {
         localStorage.setItem(`taoyuan_cloud_loaded_at_${slot}`, serverUpdatedAt);
         latestPending.baseServerUpdatedAt = serverUpdatedAt;
-        localStorage.setItem(pendingSaveKey(slot), JSON.stringify(latestPending));
         realtimeSavePending = true;
         lastRealtimeSaveSucceeded = false;
         return false;
@@ -1816,7 +1778,7 @@ const autoSaveCurrent = async (): Promise<boolean> => {
             `taoyuan_cloud_loaded_at_${slot}`,
             String(authoritative.updatedAt || serverUpdatedAt),
           );
-          localStorage.removeItem(pendingSaveKey(slot));
+          pendingRealtimeSave = null;
           saveClientIdentity.restoreSequence(
             authoritative.serverSequence || serverSequence,
           );
@@ -1864,7 +1826,7 @@ const scheduleRealtimeSave = () => {
   });
 };
 const handlePlayerStateChanged = () => {
-  if (persistLocalRecovery()) scheduleRealtimeSave();
+  if (captureRuntimeSave()) scheduleRealtimeSave();
 };
 const waitForRealtimeSaveIdle = async (timeoutMs = 10000) => {
   const deadline = Date.now() + timeoutMs;
@@ -1895,6 +1857,7 @@ const stopRealtimeSave = () => {
   realtimeSaveListening = false;
   realtimeSaveScheduled = false;
   realtimeSavePending = false;
+  pendingRealtimeSave = null;
   window.removeEventListener(
     "taoyuan:player-state-changed",
     handlePlayerStateChanged,

@@ -1115,111 +1115,33 @@ const continueCharacter = async (character: any) => {
   localStorage.setItem("taoyuan_active_character_id", String(character.id || ""));
   await downloadCloudSaveToLocal(Number(character.slot), String(character.id || ""));
 };
-const pendingServerSaveKey = (slot: number) =>
-  `taoyuan_pending_server_save_${slot}`;
-const sameServerVersion = (left: unknown, right: unknown) => {
-  const a = new Date(String(left || "")).getTime();
-  const b = new Date(String(right || "")).getTime();
-  return Number.isFinite(a) && Number.isFinite(b) && a === b;
+const clearLegacyLocalCharacterData = () => {
+  for (let slot = 0; slot < 3; slot += 1) {
+    localStorage.removeItem(`taoyuanxiang_save_${slot}`);
+    localStorage.removeItem(`taoyuan_pending_server_save_${slot}`);
+  }
 };
 const downloadCloudSaveToLocal = async (slot: number, characterId: string) => {
   showAnnouncement.value = false;
   showUpdateLogs.value = false;
   try {
+    // The database is the only authority. Never upload or reconcile a browser
+    // payload while the player is still on the home page.
+    clearLegacyLocalCharacterData();
     const server = await accountApi(`/api/saves/${slot}`, {
       headers: accountHeaders(),
     });
-    const pendingRaw = localStorage.getItem(pendingServerSaveKey(slot));
-    const localRaw = localStorage.getItem(`taoyuanxiang_save_${slot}`);
-    if (pendingRaw && localRaw) {
-      const pending = JSON.parse(pendingRaw) as {
-        characterId?: string;
-        baseServerUpdatedAt?: string;
-        localSavedAt?: string;
-        pageId?: string;
-        sequence?: number;
-        previousPageId?: string;
-      };
-      const localData = parseSaveData(localRaw);
-      if (
-        pending.characterId !== characterId ||
-        pending.localSavedAt !== localData?.savedAt
-      ) {
-        throw new Error("检测到本地恢复副本归属异常，已停止覆盖，请联系管理员核查。");
-      }
-      if (!sameServerVersion(pending.baseServerUpdatedAt, server.updatedAt)) {
-        const serverPageId = String(server.serverPageId || "");
-        const serverSequence = Number(server.serverSequence || 0);
-        const localSequence = Number(pending.sequence || 0);
-        const samePage =
-          serverPageId &&
-          [pending.pageId, pending.previousPageId].includes(serverPageId);
-        if (!samePage) {
-          throw new Error(
-            "本地待同步进度与服务器版本已分叉，已保留两份数据并停止覆盖，请联系管理员核查。",
-          );
-        }
-        if (localSequence <= serverSequence) {
-          if (!saveStore.importSave(slot, server.raw))
-            throw new Error("服务器存档无效或已损坏");
-          localStorage.removeItem(pendingServerSaveKey(slot));
-          localStorage.setItem(
-            `taoyuan_cloud_loaded_at_${slot}`,
-            String(server.updatedAt || ""),
-          );
-          saveClientIdentity.restoreSequence(serverSequence);
-          localStorage.setItem("taoyuan_active_slot", String(slot));
-          refreshSlots();
-          showFloat("已载入本页面刷新前完成的最新云端进度。", "success");
-          handleLoadGame(slot);
-          return;
-        }
-        pending.baseServerUpdatedAt = String(server.updatedAt || "");
-        localStorage.setItem(
-          pendingServerSaveKey(slot),
-          JSON.stringify(pending),
-        );
-      }
-      const info = saveStore.getSlots().find((item) => item.slot === slot);
-      const uploaded = await accountApi(`/api/saves/${slot}`, {
-        method: "PUT",
-        headers: accountHeaders(),
-        body: JSON.stringify({
-          raw: localRaw,
-          data: localData,
-          expectedServerUpdatedAt:
-            pending.baseServerUpdatedAt || server.updatedAt,
-          meta: {
-            ...(info || {}),
-            autoSaved: true,
-            recoveredAfterRefresh: true,
-            lastLoadedAt: pending.baseServerUpdatedAt || server.updatedAt,
-            savePageId: pending.pageId || saveClientIdentity.pageId,
-            saveSequence: pending.sequence || 0,
-          },
-        }),
-      });
-      localStorage.removeItem(pendingServerSaveKey(slot));
-      localStorage.setItem(
-        `taoyuan_cloud_loaded_at_${slot}`,
-        String(uploaded.updatedAt || server.updatedAt || ""),
-      );
-      localStorage.setItem("taoyuan_active_slot", String(slot));
-      refreshSlots();
-      showFloat("已恢复并同步刷新前的最新进度。", "success");
-      handleLoadGame(slot);
-      return;
-    }
     if (!saveStore.importSave(slot, server.raw))
       throw new Error("服务器存档无效或已损坏");
-    if (server.updatedAt)
-      localStorage.setItem(
-        `taoyuan_cloud_loaded_at_${slot}`,
-        String(server.updatedAt),
-      );
+    localStorage.setItem(
+      `taoyuan_cloud_loaded_at_${slot}`,
+      String(server.updatedAt || ""),
+    );
+    saveClientIdentity.restoreSequence(server.serverSequence || 0);
     localStorage.setItem("taoyuan_active_slot", String(slot));
+    localStorage.setItem("taoyuan_active_character_id", characterId);
     refreshSlots();
-    showFloat("继续游戏。", "success");
+    showFloat("已从服务器读取最新角色数据。", "success");
     handleLoadGame(slot);
   } catch (e: any) {
     showFloat(e.message || "继续游戏失败。", "danger");
@@ -1271,12 +1193,15 @@ const logoutAccount = async () => {
     });
   } catch {}
   localStorage.removeItem("taoyuan_account_token");
+  saveStore.clearRuntimeSlots();
+  clearLegacyLocalCharacterData();
   accountUser.value = null;
   accountSaves.value = [];
   accountCharacters.value = [];
   showFloat("已退出账号。");
 };
 onMounted(() => {
+  clearLegacyLocalCharacterData();
   void loadServerConfig();
   void loadAccountMe();
 });
@@ -1397,7 +1322,7 @@ const handleNewGame = async () => {
     showFloat("初始存档失败，请重试。", "danger");
     return;
   }
-  const raw = localStorage.getItem(`taoyuanxiang_save_${slot}`);
+  const raw = saveStore.getRaw(slot);
   const info = saveStore.getSlots().find((s) => s.slot === slot);
   try {
     const data = raw ? parseSaveData(raw) : null;

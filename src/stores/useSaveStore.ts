@@ -35,9 +35,11 @@ import { useLongTermStore } from "./useLongTermStore";
 import { useFloatingWelfareStore } from "./useFloatingWelfareStore";
 import { useTerritoryStore } from "./useTerritoryStore";
 
-const SAVE_KEY_PREFIX = "taoyuanxiang_save_";
 const MAX_SLOTS = 3;
 const ENCRYPTION_KEY = "taoyuanxiang_2024_secret";
+// Character payloads are runtime-only. The database is the sole persistent
+// authority; a page refresh must fetch the selected character again.
+const runtimeSaves = new Map<number, string>();
 
 /** 加密 JSON 字符串 */
 const encrypt = (json: string): string => {
@@ -86,7 +88,7 @@ export const useSaveStore = defineStore("save", () => {
     const slots: SaveSlotInfo[] = [];
     for (let i = 0; i < MAX_SLOTS; i++) {
       try {
-        const raw = localStorage.getItem(`${SAVE_KEY_PREFIX}${i}`);
+        const raw = runtimeSaves.get(i) || null;
         if (raw) {
           const data = parseSaveData(raw);
           if (data) {
@@ -196,10 +198,7 @@ export const useSaveStore = defineStore("save", () => {
         territory: territoryStore.serialize(),
         savedAt: new Date().toISOString(),
       };
-      localStorage.setItem(
-        `${SAVE_KEY_PREFIX}${slot}`,
-        encrypt(JSON.stringify(data)),
-      );
+      runtimeSaves.set(slot, encrypt(JSON.stringify(data)));
       activeSlot.value = slot;
       return true;
     } catch {
@@ -216,7 +215,7 @@ export const useSaveStore = defineStore("save", () => {
   /** 从指定槽位加载 */
   const loadFromSlot = (slot: number): boolean => {
     try {
-      const raw = localStorage.getItem(`${SAVE_KEY_PREFIX}${slot}`);
+      const raw = runtimeSaves.get(slot);
       if (!raw) return false;
 
       const data = parseSaveData(raw);
@@ -298,27 +297,31 @@ export const useSaveStore = defineStore("save", () => {
     }
   };
 
-  /** 删除指定槽位 */
+  /** 删除指定槽位的运行时副本；正式数据只由服务器删除接口处理。 */
   const deleteSlot = (slot: number): boolean => {
     if (slot < 0 || slot >= MAX_SLOTS) return false;
-    localStorage.removeItem(`${SAVE_KEY_PREFIX}${slot}`);
+    runtimeSaves.delete(slot);
     if (activeSlot.value === slot) activeSlot.value = -1;
     return true;
+  };
+
+  const getRaw = (slot: number): string | null => runtimeSaves.get(slot) || null;
+
+  const clearRuntimeSlots = () => {
+    runtimeSaves.clear();
+    activeSlot.value = -1;
   };
 
   /** 本地文件导出已禁用，防止绕过账号云存档审计。 */
   const exportSave = (_slot: number): boolean => false;
 
-  /**
-   * 内部恢复存档：仅供账号云存档/WebDAV 下载写入本地槽位使用。
-   * 文件导入入口已从 UI 移除，避免玩家手动导入本地篡改存档。
-   */
+  /** 把服务器权威存档装入当前页面内存，不写浏览器持久化存储。 */
   const importSave = (slot: number, fileContent: string): boolean => {
     if (slot < 0 || slot >= MAX_SLOTS) return false;
     try {
       const data = parseSaveData(fileContent);
       if (!data) return false;
-      localStorage.setItem(`${SAVE_KEY_PREFIX}${slot}`, fileContent);
+      runtimeSaves.set(slot, fileContent);
       return true;
     } catch {
       return false;
@@ -333,6 +336,8 @@ export const useSaveStore = defineStore("save", () => {
     autoSave,
     loadFromSlot,
     deleteSlot,
+    getRaw,
+    clearRuntimeSlots,
     exportSave,
     importSave,
   };
