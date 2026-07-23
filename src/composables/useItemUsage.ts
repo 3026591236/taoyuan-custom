@@ -8,6 +8,10 @@ import { useCookingStore } from "@/stores/useCookingStore";
 import { useSkillStore } from "@/stores/useSkillStore";
 import { addLog } from "./useGameLog";
 import { useGameClock } from "./useGameClock";
+import {
+  PROTECTED_CONSUMABLE_IDS,
+  useProtectedConsumable,
+} from "./useProtectedConsumable";
 
 export const CULTIVATION_PILL_IDS = new Set([
   "mana_recovery_pill",
@@ -70,6 +74,7 @@ export const useItemUsage = () => {
   const cultivationStore = useCultivationStore();
   const cookingStore = useCookingStore();
   const skillStore = useSkillStore();
+  const { consumeProtected } = useProtectedConsumable();
 
   const eatItem = (itemId: string, quality: Quality = "normal"): boolean => {
     const def = getItemById(itemId);
@@ -100,7 +105,10 @@ export const useItemUsage = () => {
     return true;
   };
 
-  const useItem = (itemId: string, quality: Quality = "normal"): boolean => {
+  const useItem = async (
+    itemId: string,
+    quality: Quality = "normal",
+  ): Promise<boolean> => {
     const isPill =
       CULTIVATION_PILL_IDS.has(itemId) ||
       itemId === "stamina_pill" ||
@@ -109,6 +117,10 @@ export const useItemUsage = () => {
       addLog("已经凌晨2点了，不能继续服用丹药，请立刻休息。");
       return false;
     }
+    // 高价值/永久效果道具只能由服务器锁定权威云档后结算。
+    // 所有入口（背包、快捷页、悬浮快捷栏）统一经过这里，禁止落回本地 usePill。
+    if (PROTECTED_CONSUMABLE_IDS.has(itemId))
+      return consumeProtected(itemId, 1);
     if (CULTIVATION_PILL_IDS.has(itemId))
       return cultivationStore.usePill(itemId as any);
     if (itemId === "stamina_pill") {

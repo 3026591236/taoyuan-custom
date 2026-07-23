@@ -47,8 +47,8 @@ export const useProtectedConsumable = () => {
       addLog("受保护道具必须联网使用；离线期间不会扣除、不会排队。");
       return false;
     }
-    const expectedVersion = localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "";
-    if (!expectedVersion) {
+    const initialExpectedVersion = localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "";
+    if (!initialExpectedVersion) {
       addLog("请先重新加载账号云存档，再使用此受保护道具。");
       return false;
     }
@@ -57,14 +57,25 @@ export const useProtectedConsumable = () => {
     if (existing) return existing;
     const task = (async () => {
       try {
-        const response = await fetch(`/api/saves/${slot}/consume-protected`, {
-          method: "POST",
-          headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-          body: JSON.stringify({ itemId, quantity, idempotencyKey, expectedVersion }),
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result.error || "权威消费失败");
-        if (Number(result.slot) !== slot || saveStore.activeSlot !== slot || typeof result.raw !== "string")
+        let result: any = null;
+        // 状态变化可能刚触发本页面实时写档。若权威消费恰好撞上该请求，
+        // 等待实时写档回写最新版本后用同一幂等键重试；真正的外部更新仍会失败。
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const expectedVersion =
+            localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) ||
+            initialExpectedVersion;
+          const response = await fetch(`/api/saves/${slot}/consume-protected`, {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+            body: JSON.stringify({ itemId, quantity, idempotencyKey, expectedVersion }),
+          });
+          result = await response.json().catch(() => ({}));
+          if (response.ok) break;
+          if (result?.code !== "SAVE_CONFLICT" || attempt === 4)
+            throw new Error(result.error || "权威消费失败");
+          await new Promise((resolve) => window.setTimeout(resolve, 250));
+        }
+        if (Number(result?.slot) !== slot || saveStore.activeSlot !== slot || typeof result?.raw !== "string")
           throw new Error("服务器返回的角色槽位不一致");
         if (!saveStore.importSave(slot, result.raw) || !saveStore.loadFromSlot(slot))
           throw new Error("服务器状态加载失败，请重新进入游戏");

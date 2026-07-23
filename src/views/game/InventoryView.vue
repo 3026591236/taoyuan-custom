@@ -1862,8 +1862,8 @@ const handleSetQuickUse = (itemId: string, quality: Quality) => {
   else inventoryStore.setQuickUseItem(itemId, quality);
 };
 
-const handleUse = (itemId: string, quality: Quality) => {
-  itemUsage.useItem(itemId, quality);
+const handleUse = async (itemId: string, quality: Quality) => {
+  await itemUsage.useItem(itemId, quality);
   if (
     !inventoryStore.items.find(
       (i) => i.itemId === itemId && i.quality === quality,

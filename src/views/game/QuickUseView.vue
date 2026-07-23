@@ -113,11 +113,11 @@ const usageText = (itemId: string, fallback?: string) => {
   return map[itemId] || fallback || "可直接使用。";
 };
 
-const handleUse = (itemId: string, quality: Quality) => {
+const handleUse = async (itemId: string, quality: Quality) => {
   const def = getItemById(itemId);
   if (def?.edible && def.staminaRestore && !isQuickUsableItem(itemId))
     usage.eatItem(itemId, quality);
-  else usage.useItem(itemId, quality);
+  else await usage.useItem(itemId, quality);
 };
 </script>
 

@@ -1624,7 +1624,7 @@ const handleQuickSlotClick = (slot: {
 const useQuickSlot = async (item: { itemId: string; quality: any }) => {
   const def = getItemById(item.itemId);
   const ok = isQuickUsableItem(item.itemId)
-    ? itemUsage.useItem(item.itemId, item.quality)
+    ? await itemUsage.useItem(item.itemId, item.quality)
     : itemUsage.eatItem(item.itemId, item.quality);
   if (ok) {
     if (
@@ -1694,11 +1694,16 @@ const autoSaveCurrent = async () => {
       );
       return;
     }
-    if (e?.status === 409) {
+    if (e?.status === 409 && e?.data?.code === "SAVE_CONFLICT") {
       stopRealtimeSave();
       addLog(
-        "检测到同账号其他设备已有更新，已暂停本页实时保存。请刷新或从角色列表重新进入，避免覆盖进度。",
+        "检测到云档确有其他页面或设备更新，已暂停本页实时保存。请刷新或从角色列表重新进入，避免覆盖进度。",
       );
+      return;
+    }
+    if (e?.status === 409) {
+      // 409 也可能是奖励授权、角色归属或库存等业务冲突，不能误报为多设备。
+      addLog(e?.data?.error || "本次实时保存未完成，稍后会随下一次变化重试。");
       return;
     }
     // 自动保存失败不打断游戏，也不刷屏；玩家仍可手动保存。
