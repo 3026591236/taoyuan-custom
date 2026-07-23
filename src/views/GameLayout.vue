@@ -1812,7 +1812,6 @@ const autoSaveCurrent = async (): Promise<boolean> => {
   } finally {
     accountAutoSaveInFlight = false;
     if (realtimeSavePending && realtimeSaveListening) {
-      realtimeSavePending = false;
       scheduleRealtimeSave();
     }
   }
@@ -1822,11 +1821,18 @@ const scheduleRealtimeSave = () => {
   realtimeSaveScheduled = true;
   queueMicrotask(() => {
     realtimeSaveScheduled = false;
-    void autoSaveCurrent();
+    if (accountAutoSaveInFlight) return;
+    if (!realtimeSavePending) return;
+    realtimeSavePending = false;
+    // A single player action can synchronously mutate many Pinia stores (for
+    // example harvesting 100 plots). Capture once after that mutation burst,
+    // rather than serializing the complete save after every individual change.
+    if (captureRuntimeSave()) void autoSaveCurrent();
   });
 };
 const handlePlayerStateChanged = () => {
-  if (captureRuntimeSave()) scheduleRealtimeSave();
+  realtimeSavePending = true;
+  scheduleRealtimeSave();
 };
 const waitForRealtimeSaveIdle = async (timeoutMs = 10000) => {
   const deadline = Date.now() + timeoutMs;

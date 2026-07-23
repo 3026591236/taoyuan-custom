@@ -325,6 +325,14 @@
                 </div>
                 <span>飞书</span>
               </button>
+              <button
+                class="map-loc"
+                :disabled="navBusy"
+                @click="openBaixiao"
+              >
+                <BookOpenText :size="18" />
+                <span>百晓</span>
+              </button>
             </div>
           </div>
         </template>
@@ -355,6 +363,7 @@ import {
   CalendarDays,
   MessageCircle,
   Landmark,
+  BookOpenText,
 } from "lucide-vue-next";
 import { TABS, navigateToPanel } from "@/composables/useNavigation";
 import { useAscensionStore } from "@/stores/useAscensionStore";
@@ -475,6 +484,11 @@ const handleCheckin = () => {
 const handleOpenMail = () => {
   afterCloseNavigate(() => emit("openMail"));
 };
+const openBaixiao = () => {
+  afterCloseNavigate(() => {
+    void router.push({ path: "/tutorial", query: { from: route.fullPath } });
+  });
+};
 const handleSpecial = (
   event: "openLeaderboard" | "openCombat" | "openForge" | "openSect",
 ) => {
@@ -503,6 +517,7 @@ const preloadCultivationPages = () => {
       import("@/views/game/EventView.vue"),
       import("@/views/game/AscensionView.vue"),
       import("@/views/game/ImmortalWorldView.vue"),
+      import("@/views/TutorialView.vue"),
     ]);
   };
   const idle = (globalThis as any).requestIdleCallback as

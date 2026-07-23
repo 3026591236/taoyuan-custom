@@ -8,7 +8,7 @@
             新手教程、玩法说明、材料来源和版本更新都放在这里；不懂的直接搜索。
           </p>
         </div>
-        <button class="btn text-xs" @click="router.back()">返回</button>
+        <button class="btn text-xs" @click="goBack">返回</button>
       </div>
 
       <div class="border border-accent/20 rounded-xs p-4 space-y-3 bg-black/10">
@@ -88,10 +88,17 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { RECENT_KNOWLEDGE_ENTRIES } from "@/data/knowledgeBase";
 
 const router = useRouter();
+const route = useRoute();
+const goBack = () => {
+  const from = typeof route.query.from === "string" ? route.query.from : "";
+  if (from.startsWith("/game")) void router.replace(from);
+  else if (window.history.length > 1) router.back();
+  else void router.replace("/");
+};
 const query = ref("");
 const activeCategory = ref("全部");
 const categories = [
@@ -159,6 +166,11 @@ const hotQueries = [
   "装备方案",
   "炼丹动画",
   "我的反馈",
+  "实时存档",
+  "百晓",
+  "一键收获",
+  "自动抚摸机",
+  "仙乡领地",
 ];
 
 function scrollTo(i: number) {
