@@ -1,0 +1,1 @@
+const t=crypto.randomUUID();let e=0;const s={pageId:t,nextSequence(){return e+=1,e},currentSequence(){return e},restoreSequence(n){const r=Number(n);return Number.isSafeInteger(r)&&r>e&&(e=r),e}};export{s};

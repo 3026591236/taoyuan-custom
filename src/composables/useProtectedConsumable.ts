@@ -1,6 +1,7 @@
 import { useSaveStore } from "@/stores/useSaveStore";
 import { useGameClock } from "./useGameClock";
 import { addLog } from "./useGameLog";
+import { saveClientIdentity } from "@/services/saveClientIdentity";
 
 export const PROTECTED_CONSUMABLE_IDS = new Set([
   "guild_badge", "life_talisman", "lucky_coin", "defense_charm",
@@ -55,6 +56,7 @@ export const useProtectedConsumable = () => {
     const requestKey = `${slot}:${itemId}:${idempotencyKey}`;
     const existing = pending.get(requestKey);
     if (existing) return existing;
+    const authoritySequence = saveClientIdentity.nextSequence();
     const task = (async () => {
       try {
         let result: any = null;
@@ -67,7 +69,14 @@ export const useProtectedConsumable = () => {
           const response = await fetch(`/api/saves/${slot}/consume-protected`, {
             method: "POST",
             headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-            body: JSON.stringify({ itemId, quantity, idempotencyKey, expectedVersion }),
+            body: JSON.stringify({
+              itemId,
+              quantity,
+              idempotencyKey,
+              expectedVersion,
+              pageId: saveClientIdentity.pageId,
+              sequence: authoritySequence,
+            }),
           });
           result = await response.json().catch(() => ({}));
           if (response.ok) break;
@@ -77,9 +86,20 @@ export const useProtectedConsumable = () => {
         }
         if (Number(result?.slot) !== slot || saveStore.activeSlot !== slot || typeof result?.raw !== "string")
           throw new Error("服务器返回的角色槽位不一致");
-        if (!saveStore.importSave(slot, result.raw) || !saveStore.loadFromSlot(slot))
+        const versionKey = `taoyuan_cloud_loaded_at_${slot}`;
+        const pendingKey = `taoyuan_pending_server_save_${slot}`;
+        const previousVersion = localStorage.getItem(versionKey);
+        const previousPending = localStorage.getItem(pendingKey);
+        localStorage.setItem(versionKey, String(result.updatedAt));
+        localStorage.removeItem(pendingKey);
+        saveClientIdentity.restoreSequence(result.serverSequence);
+        if (!saveStore.importSave(slot, result.raw) || !saveStore.loadFromSlot(slot)) {
+          if (previousVersion == null) localStorage.removeItem(versionKey);
+          else localStorage.setItem(versionKey, previousVersion);
+          if (previousPending == null) localStorage.removeItem(pendingKey);
+          else localStorage.setItem(pendingKey, previousPending);
           throw new Error("服务器状态加载失败，请重新进入游戏");
-        localStorage.setItem(`taoyuan_cloud_loaded_at_${slot}`, String(result.updatedAt));
+        }
         const freezeUntil = Number(result.data?.player?.timeStasisPillFreezeUntil || 0);
         if (Number.isSafeInteger(freezeUntil) && freezeUntil > 0) {
           const clock = useGameClock();

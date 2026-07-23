@@ -345,6 +345,15 @@ function toMysqlDateTime(val) {
     .slice(0, 19)
     .replace(String.fromCharCode(84), String.fromCharCode(32));
 }
+function saveWriterMeta(metaValue) {
+  const meta = safeJsonParse(metaValue, {});
+  return {
+    pageId: String(meta?.savePageId || "").slice(0, 80),
+    sequence: Number.isSafeInteger(Number(meta?.saveSequence))
+      ? Number(meta.saveSequence)
+      : 0,
+  };
+}
 function saveSummary(raw, data, meta = {}) {
   const dataText = data ? JSON.stringify(data) : "";
   const rawText = raw ? String(raw) : "";
@@ -782,6 +791,12 @@ const defaultConfig = {
     ],
   },
   updateLogs: [
+    {
+      title: "V3.3.3 实时存档冲突与宠物照料修复",
+      date: "2026-07-23",
+      content:
+        "实时存档增加页面实例与单调序号标识，区分本页写档、刷新前本页写档、服务器权威用药和真正的其他页面更新；同页较新进度自动补写，已完成的权威结果优先载入，只有不同页面更新才暂停保存，修复单页面被误报冲突后永久停止上传的问题。处理BUG反馈#34：自动抚摸机现在也覆盖独立猫狗宠物状态，每天自动抚摸并增加5点好感，安装机器后已有宠物和已有机器后新领养宠物都会立即生效，重复结算不会重复增加。",
+    },
     {
       title: "V3.3.2 实时存档入口与转生修复",
       date: "2026-07-23",
@@ -2224,6 +2239,8 @@ app.get("/api/saves/:slot", async (req, res) => {
       raw: rawResp,
       meta: r.meta_json,
       updatedAt: r.updated_at,
+      serverPageId: saveWriterMeta(r.meta_json).pageId,
+      serverSequence: saveWriterMeta(r.meta_json).sequence,
     });
   } catch (e) {
     send(res, 500, { error: "服务器错误" });
@@ -2244,6 +2261,8 @@ app.post("/api/saves/:slot/consume-protected", async (req, res) => {
     const quantity = Number(req.body?.quantity ?? 1);
     const idempotencyKey = String(req.body?.idempotencyKey || "");
     const expectedVersion = String(req.body?.expectedVersion || "");
+    const requestPageId = String(req.body?.pageId || "").slice(0, 80);
+    const requestSequence = Number(req.body?.sequence || 0);
     if (!Number.isInteger(slot) || slot < 0 || slot > 2)
       return send(res, 400, { error: "槽位无效", code: "INVALID_SAVE_SLOT" });
     if (!PROTECTED_CONSUMABLES.has(itemId))
@@ -2254,6 +2273,13 @@ app.post("/api/saves/:slot/consume-protected", async (req, res) => {
       return send(res, 400, { error: "幂等键无效", code: "INVALID_IDEMPOTENCY_KEY" });
     if (!expectedVersion || !Number.isFinite(new Date(expectedVersion).getTime()))
       return send(res, 400, { error: "云档版本无效", code: "INVALID_SAVE_VERSION" });
+    if (
+      requestPageId &&
+      (!/^[A-Za-z0-9-]{16,80}$/.test(requestPageId) ||
+        !Number.isSafeInteger(requestSequence) ||
+        requestSequence <= 0)
+    )
+      return send(res, 400, { error: "保存页面标识无效", code: "INVALID_SAVE_WRITER" });
 
     await conn.beginTransaction();
     transactionStarted = true;
@@ -2306,6 +2332,8 @@ app.post("/api/saves/:slot/consume-protected", async (req, res) => {
         data: safeJsonParse(receipt.result_data_json, null),
         effect: safeJsonParse(receipt.expected_effect_json, null),
         updatedAt: current.updated_at,
+        serverPageId: saveWriterMeta(current.meta_json).pageId,
+        serverSequence: saveWriterMeta(current.meta_json).sequence,
       });
     }
     if (new Date(current.updated_at).getTime() !== new Date(expectedVersion).getTime()) {
@@ -2313,6 +2341,8 @@ app.post("/api/saves/:slot/consume-protected", async (req, res) => {
       return send(res, 409, {
         error: "云档版本已变化，请重新加载后再使用。", code: "SAVE_CONFLICT",
         conflict: true, serverUpdatedAt: current.updated_at,
+        serverPageId: saveWriterMeta(current.meta_json).pageId,
+        serverSequence: saveWriterMeta(current.meta_json).sequence,
       });
     }
     const trusted = safeJsonParse(current.data_json, null);
@@ -2349,9 +2379,21 @@ app.post("/api/saves/:slot/consume-protected", async (req, res) => {
     await sampleTrustedSnapshot(conn, user.id, slot, {
       ...current, character_id: character.id, player_name: character.name,
     });
+    const currentMeta = safeJsonParse(current.meta_json, {});
+    const currentWriter = saveWriterMeta(current.meta_json);
+    const authoritySequence = Math.max(
+      currentWriter.sequence + 1,
+      Number.isSafeInteger(requestSequence) ? requestSequence : 0,
+    );
+    const protectedMeta = JSON.stringify({
+      ...currentMeta,
+      savePageId: requestPageId || currentWriter.pageId,
+      saveSequence: authoritySequence,
+      authorityUpdated: true,
+    });
     await conn.execute(
-      "UPDATE saves SET raw = ?, data_json = ? WHERE user_id = ? AND character_id = ? AND slot = ?",
-      [resultRaw, resultDataJson, user.id, character.id, slot],
+      "UPDATE saves SET raw = ?, data_json = ?, meta_json = ? WHERE user_id = ? AND character_id = ? AND slot = ?",
+      [resultRaw, resultDataJson, protectedMeta, user.id, character.id, slot],
     );
     await persistAssetBaseline(conn, {
       userId: user.id, characterId: character.id, slot, save: applied.data,
@@ -2386,6 +2428,8 @@ app.post("/api/saves/:slot/consume-protected", async (req, res) => {
       ok: true, idempotent: false, receiptId, state: "consumed", slot,
       raw: resultRaw, data: applied.data, effect: applied.effect,
       updatedAt: updatedRows[0]?.updated_at || null,
+      serverPageId: requestPageId || currentWriter.pageId,
+      serverSequence: authoritySequence,
     });
   } catch (e) {
     if (transactionStarted) { try { await conn.rollback(); } catch {} }
@@ -2411,6 +2455,14 @@ app.put("/api/saves/:slot", async (req, res) => {
       return send(res, 400, { error: "槽位无效", code: "INVALID_SAVE_SLOT" });
     const { raw, meta, data, expectedServerUpdatedAt } = req.body || {};
     const playerName = normalizePlayerName((meta && meta.playerName) || "");
+    const incomingWriter = saveWriterMeta(meta);
+    if (
+      incomingWriter.pageId &&
+      (!/^[A-Za-z0-9-]{16,80}$/.test(incomingWriter.pageId) ||
+        !Number.isSafeInteger(incomingWriter.sequence) ||
+        incomingWriter.sequence <= 0)
+    )
+      return send(res, 400, { error: "保存页面标识无效", code: "INVALID_SAVE_WRITER" });
     const metaJson = meta ? JSON.stringify(meta) : null;
     const payloadCheck = validateSavePayload(raw, data);
     if (!payloadCheck.ok)
@@ -2469,6 +2521,8 @@ app.put("/api/saves/:slot", async (req, res) => {
           code: "SAVE_CONFLICT",
           conflict: true,
           serverUpdatedAt: currentSaveRow.updated_at,
+          serverPageId: saveWriterMeta(currentSaveRow.meta_json).pageId,
+          serverSequence: saveWriterMeta(currentSaveRow.meta_json).sequence,
         });
       }
     }
@@ -2653,6 +2707,8 @@ app.put("/api/saves/:slot", async (req, res) => {
     send(res, 200, {
       ok: true,
       updatedAt: savedRows[0]?.updated_at || null,
+      serverPageId: incomingWriter.pageId,
+      serverSequence: incomingWriter.sequence,
       assetAuthority: {
         mode: baselineResult.mode,
         baselineEstablished: baselineResult.established,

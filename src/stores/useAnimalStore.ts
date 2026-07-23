@@ -58,6 +58,13 @@ export const useAnimalStore = defineStore("animal", () => {
   /** 已安装自动抚摸机的建筑类型。任意一台均覆盖整个牧场。 */
   const autoPetterBuildings = ref<AnimalBuildingType[]>([]);
   const hasRanchWideAutoPetter = () => autoPetterBuildings.value.length > 0;
+  const applyAutoPetterToPet = (): boolean => {
+    if (!hasRanchWideAutoPetter() || !pet.value || pet.value.wasPetted)
+      return false;
+    pet.value.wasPetted = true;
+    pet.value.friendship = Math.min(1000, pet.value.friendship + 5);
+    return true;
+  };
   const BLOODLINE_NAMES: Record<AnimalBloodline, string> = {
     normal: "凡血",
     spirit: "灵脉",
@@ -506,6 +513,7 @@ export const useAnimalStore = defineStore("animal", () => {
   /** 领养宠物 */
   const adoptPet = (type: PetType, name: string) => {
     pet.value = { type, name, friendship: 0, wasPetted: false };
+    applyAutoPetterToPet();
   };
 
   /** 抚摸宠物 */
@@ -525,6 +533,7 @@ export const useAnimalStore = defineStore("animal", () => {
       pet.value.friendship = Math.max(0, pet.value.friendship - 2);
     }
     pet.value.wasPetted = false;
+    applyAutoPetterToPet();
 
     // 高好感带回采集物
     if (pet.value.friendship >= 800 && Math.random() < 0.1) {
@@ -1063,9 +1072,10 @@ export const useAnimalStore = defineStore("animal", () => {
     if (hasRanchWideAutoPetter())
       return { success: false, message: "自动抚摸机已覆盖整个牧场。" };
     autoPetterBuildings.value.push(buildingType);
+    applyAutoPetterToPet();
     return {
       success: true,
-      message: "自动抚摸机已启动，灵禽舍、灵牧苑与马厩的动物都会自动抚摸。",
+      message: "自动抚摸机已启动，灵禽舍、灵牧苑、马厩与宠物都会每日自动抚摸。",
     };
   };
 

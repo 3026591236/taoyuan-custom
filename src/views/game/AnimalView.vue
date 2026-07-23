@@ -116,7 +116,7 @@
           v-if="animalStore.hasAutoPetter()"
           class="text-[10px] text-muted/70 mt-2"
         >
-          自动抚摸机覆盖畜舍与马厩，宠物可在此单独照料。
+          自动抚摸机运行中 — 宠物每日自动抚摸并获得好感
         </p>
       </template>
       <div

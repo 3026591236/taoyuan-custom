@@ -1,0 +1,1 @@
+System.register([],function(e,r){"use strict";return{execute:function(){var r=crypto.randomUUID(),n=0;e("s",{pageId:r,nextSequence:function(){return n+=1},currentSequence:function(){return n},restoreSequence:function(e){var r=Number(e);return Number.isSafeInteger(r)&&r>n&&(n=r),n}})}}});

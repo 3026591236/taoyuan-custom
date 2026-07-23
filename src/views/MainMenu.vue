@@ -834,6 +834,7 @@ import { resetAllStoresForNewGame } from "@/composables/useResetGame";
 import { useTutorialStore } from "@/stores/useTutorialStore";
 import type { FarmMapType, Gender } from "@/types";
 import { Capacitor } from "@capacitor/core";
+import { saveClientIdentity } from "@/services/saveClientIdentity";
 
 const router = useRouter();
 const { startBgm } = useAudio();
@@ -1135,6 +1136,9 @@ const downloadCloudSaveToLocal = async (slot: number, characterId: string) => {
         characterId?: string;
         baseServerUpdatedAt?: string;
         localSavedAt?: string;
+        pageId?: string;
+        sequence?: number;
+        previousPageId?: string;
       };
       const localData = parseSaveData(localRaw);
       if (
@@ -1144,8 +1148,36 @@ const downloadCloudSaveToLocal = async (slot: number, characterId: string) => {
         throw new Error("检测到本地恢复副本归属异常，已停止覆盖，请联系管理员核查。");
       }
       if (!sameServerVersion(pending.baseServerUpdatedAt, server.updatedAt)) {
-        throw new Error(
-          "本地待同步进度与服务器版本已分叉，已保留两份数据并停止覆盖，请联系管理员核查。",
+        const serverPageId = String(server.serverPageId || "");
+        const serverSequence = Number(server.serverSequence || 0);
+        const localSequence = Number(pending.sequence || 0);
+        const samePage =
+          serverPageId &&
+          [pending.pageId, pending.previousPageId].includes(serverPageId);
+        if (!samePage) {
+          throw new Error(
+            "本地待同步进度与服务器版本已分叉，已保留两份数据并停止覆盖，请联系管理员核查。",
+          );
+        }
+        if (localSequence <= serverSequence) {
+          if (!saveStore.importSave(slot, server.raw))
+            throw new Error("服务器存档无效或已损坏");
+          localStorage.removeItem(pendingServerSaveKey(slot));
+          localStorage.setItem(
+            `taoyuan_cloud_loaded_at_${slot}`,
+            String(server.updatedAt || ""),
+          );
+          saveClientIdentity.restoreSequence(serverSequence);
+          localStorage.setItem("taoyuan_active_slot", String(slot));
+          refreshSlots();
+          showFloat("已载入本页面刷新前完成的最新云端进度。", "success");
+          handleLoadGame(slot);
+          return;
+        }
+        pending.baseServerUpdatedAt = String(server.updatedAt || "");
+        localStorage.setItem(
+          pendingServerSaveKey(slot),
+          JSON.stringify(pending),
         );
       }
       const info = saveStore.getSlots().find((item) => item.slot === slot);
@@ -1155,12 +1187,15 @@ const downloadCloudSaveToLocal = async (slot: number, characterId: string) => {
         body: JSON.stringify({
           raw: localRaw,
           data: localData,
-          expectedServerUpdatedAt: pending.baseServerUpdatedAt,
+          expectedServerUpdatedAt:
+            pending.baseServerUpdatedAt || server.updatedAt,
           meta: {
             ...(info || {}),
             autoSaved: true,
             recoveredAfterRefresh: true,
-            lastLoadedAt: pending.baseServerUpdatedAt,
+            lastLoadedAt: pending.baseServerUpdatedAt || server.updatedAt,
+            savePageId: pending.pageId || saveClientIdentity.pageId,
+            saveSequence: pending.sequence || 0,
           },
         }),
       });

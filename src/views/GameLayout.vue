@@ -1111,6 +1111,7 @@ import SettingsDialog from "@/components/game/SettingsDialog.vue";
 import SaveManager from "@/components/game/SaveManager.vue";
 import DiscoveryScene from "@/components/game/DiscoveryScene.vue";
 import { Capacitor } from "@capacitor/core";
+import { saveClientIdentity } from "@/services/saveClientIdentity";
 
 const router = useRouter();
 const route = useRoute();
@@ -1393,12 +1394,18 @@ let realtimeSaveListening = false;
 let realtimeSaveScheduled = false;
 let realtimeSavePending = false;
 let accountAutoSaveInFlight = false;
+let realtimeSaveApplyingServerState = false;
 let lastRealtimeSaveSucceeded = true;
 const saveKey = (slot: number) => `taoyuanxiang_save_${slot}`;
 const pendingSaveKey = (slot: number) => `taoyuan_pending_server_save_${slot}`;
 const accountToken = () => localStorage.getItem("taoyuan_account_token") || "";
 const persistLocalRecovery = () => {
-  if (!realtimeSaveListening || ascensionStore.adminPreviewMode) return false;
+  if (
+    !realtimeSaveListening ||
+    realtimeSaveApplyingServerState ||
+    ascensionStore.adminPreviewMode
+  )
+    return false;
   if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return false;
   const slot = saveStore.activeSlot;
   if (!saveStore.saveToSlot(slot)) return false;
@@ -1407,6 +1414,19 @@ const persistLocalRecovery = () => {
   const characterId = localStorage.getItem("taoyuan_active_character_id") || "";
   if (!raw || !data?.savedAt || !characterId) return false;
   localStorage.setItem("taoyuan_active_slot", String(slot));
+  const existingRaw = localStorage.getItem(pendingSaveKey(slot));
+  let existing: {
+    pageId?: string;
+    previousPageId?: string;
+  } | null = null;
+  if (existingRaw) {
+    try {
+      existing = JSON.parse(existingRaw);
+    } catch {
+      localStorage.removeItem(pendingSaveKey(slot));
+    }
+  }
+  const sequence = saveClientIdentity.nextSequence();
   localStorage.setItem(
     pendingSaveKey(slot),
     JSON.stringify({
@@ -1414,6 +1434,12 @@ const persistLocalRecovery = () => {
       baseServerUpdatedAt:
         localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "",
       localSavedAt: String(data.savedAt),
+      pageId: saveClientIdentity.pageId,
+      sequence,
+      previousPageId:
+        existing?.pageId && existing.pageId !== saveClientIdentity.pageId
+          ? existing.pageId
+          : existing?.previousPageId || "",
     }),
   );
   return true;
@@ -1680,11 +1706,21 @@ const autoSaveCurrent = async (): Promise<boolean> => {
   const uploadedData = raw ? parseSaveData(raw) : null;
   const pendingRaw = localStorage.getItem(pendingSaveKey(slot));
   if (!raw || !uploadedData?.savedAt || !pendingRaw) return false;
-  const pending = JSON.parse(pendingRaw) as {
+  let pending: {
     characterId?: string;
     baseServerUpdatedAt?: string;
     localSavedAt?: string;
+    pageId?: string;
+    sequence?: number;
+    previousPageId?: string;
   };
+  try {
+    pending = JSON.parse(pendingRaw);
+  } catch {
+    localStorage.removeItem(pendingSaveKey(slot));
+    if (!persistLocalRecovery()) return false;
+    return autoSaveCurrent();
+  }
   const info = saveStore.getSlots().find((s) => s.slot === slot);
   const loadedAt =
     localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "";
@@ -1697,7 +1733,13 @@ const autoSaveCurrent = async (): Promise<boolean> => {
         raw,
         data: uploadedData,
         expectedServerUpdatedAt: pending.baseServerUpdatedAt || loadedAt,
-        meta: { ...(info || {}), autoSaved: true, lastLoadedAt: loadedAt },
+        meta: {
+          ...(info || {}),
+          autoSaved: true,
+          lastLoadedAt: loadedAt,
+          savePageId: pending.pageId || saveClientIdentity.pageId,
+          saveSequence: pending.sequence || saveClientIdentity.currentSequence(),
+        },
       }),
     });
     if (result?.updatedAt) {
@@ -1739,6 +1781,55 @@ const autoSaveCurrent = async (): Promise<boolean> => {
       return false;
     }
     if (e?.status === 409 && e?.data?.code === "SAVE_CONFLICT") {
+      const latestPendingRaw = localStorage.getItem(pendingSaveKey(slot));
+      const latestPending = latestPendingRaw ? JSON.parse(latestPendingRaw) : null;
+      const serverPageId = String(e?.data?.serverPageId || "");
+      const serverUpdatedAt = String(e?.data?.serverUpdatedAt || "");
+      const serverSequence = Number(e?.data?.serverSequence || 0);
+      const localSequence = Number(latestPending?.sequence || 0);
+      const samePage =
+        serverPageId &&
+        [latestPending?.pageId, latestPending?.previousPageId].includes(
+          serverPageId,
+        );
+      if (serverUpdatedAt && samePage && localSequence > serverSequence) {
+        localStorage.setItem(`taoyuan_cloud_loaded_at_${slot}`, serverUpdatedAt);
+        latestPending.baseServerUpdatedAt = serverUpdatedAt;
+        localStorage.setItem(pendingSaveKey(slot), JSON.stringify(latestPending));
+        realtimeSavePending = true;
+        lastRealtimeSaveSucceeded = false;
+        return false;
+      }
+      if (serverUpdatedAt && samePage && localSequence <= serverSequence) {
+        try {
+          realtimeSaveApplyingServerState = true;
+          const authoritative = await accountApi(`/api/saves/${slot}`, {
+            headers: accountHeaders(),
+          });
+          if (
+            typeof authoritative?.raw !== "string" ||
+            !saveStore.importSave(slot, authoritative.raw) ||
+            !saveStore.loadFromSlot(slot)
+          )
+            throw new Error("服务器权威存档加载失败");
+          localStorage.setItem(
+            `taoyuan_cloud_loaded_at_${slot}`,
+            String(authoritative.updatedAt || serverUpdatedAt),
+          );
+          localStorage.removeItem(pendingSaveKey(slot));
+          saveClientIdentity.restoreSequence(
+            authoritative.serverSequence || serverSequence,
+          );
+          lastRealtimeSaveSucceeded = true;
+          return true;
+        } catch (reloadError) {
+          console.warn("same-page save conflict reload failed", reloadError);
+          lastRealtimeSaveSucceeded = false;
+          return false;
+        } finally {
+          realtimeSaveApplyingServerState = false;
+        }
+      }
       stopRealtimeSave();
       addLog(
         "检测到云档确有其他页面或设备更新，已暂停本页实时保存。请刷新或从角色列表重新进入，避免覆盖进度。",
