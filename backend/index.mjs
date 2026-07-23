@@ -792,6 +792,12 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.3.6 奖励存档串行与历史恢复",
+      date: "2026-07-23",
+      content:
+        "修复反馈#37：邮件、签到和悬浮福利领取改为先写稳原进度，再逐笔应用奖励并等待数据库确认；领取期间暂停体力恢复和自动吐纳等资产变化，回家休息前后也会等待最新存档落库，避免奖励增量与普通操作交错后反复提示不符。进入角色时会从服务器权威存档按顺序恢复历史待确认奖励，确保不吞奖励、不重复发放。",
+    },
+    {
       title: "V3.3.5 百晓入口与一键收获优化",
       date: "2026-07-23",
       content:
@@ -3038,6 +3044,51 @@ app.post("/api/checkin", async (req, res) => {
     send(res, 500, { error: "服务器错误" });
   } finally {
     conn.release();
+  }
+});
+
+// --- 待确认资产授权恢复 ---
+app.get("/api/asset-grants/pending", async (req, res) => {
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    const slot = Number(req.query?.slot);
+    if (!Number.isInteger(slot) || slot < 0 || slot > 2)
+      return send(res, 400, { error: "角色槽位无效", code: "INVALID_GRANT_SLOT" });
+    const [bindings] = await pool.execute(
+      `SELECT c.id AS character_id
+       FROM characters c
+       JOIN saves s
+         ON s.user_id = c.user_id AND s.slot = c.slot AND s.character_id = c.id
+       WHERE c.user_id = ? AND c.slot = ? LIMIT 1`,
+      [user.id, slot],
+    );
+    if (!bindings.length)
+      return send(res, 409, {
+        error: "该角色槽位不属于当前账号或未绑定当前存档。",
+        code: "GRANT_SLOT_NOT_BOUND",
+      });
+    const [rows] = await pool.execute(
+      `SELECT id, grant_type, source_type, source_id, payload_json, issued_at
+       FROM asset_grants
+       WHERE user_id = ? AND character_id = ? AND slot = ? AND state = 'issued'
+       ORDER BY issued_at, id`,
+      [user.id, bindings[0].character_id, slot],
+    );
+    res.setHeader("Cache-Control", "no-store");
+    send(res, 200, {
+      grants: rows.map((row) => ({
+        id: row.id,
+        grantType: row.grant_type,
+        sourceType: row.source_type,
+        sourceId: row.source_id,
+        issuedAt: row.issued_at,
+        rewards: sanitizeRewardPayload(safeJsonParse(row.payload_json, {})),
+      })),
+    });
+  } catch (e) {
+    console.error("list pending asset grants err", e);
+    send(res, 500, { error: "服务器错误" });
   }
 });
 

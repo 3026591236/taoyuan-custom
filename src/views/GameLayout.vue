@@ -1198,6 +1198,81 @@ const floatingGiftResetText = (gift: FloatingWelfareGift) =>
     : gift.reset === "sevenDay"
       ? "七日"
       : "一次性";
+const authorizedGrantBusy = ref(false);
+let authorizedGrantQueue: Promise<boolean> = Promise.resolve(true);
+
+const applyAuthorizedRewards = (rewards: any) => {
+  const lines: string[] = [];
+  if (rewards?.money) {
+    const amount = Number(rewards.money) || 0;
+    playerStore.earnMoney(amount);
+    lines.push(`铜钱 +${amount}`);
+  }
+  if (rewards?.stamina) {
+    const before = playerStore.stamina;
+    playerStore.restoreStamina(Number(rewards.stamina) || 0);
+    lines.push(`体力 +${playerStore.stamina - before}`);
+  }
+  if (rewards?.cultivation) {
+    const gain = Number(rewards.cultivation) || 0;
+    const before = cultivationStore.cultivation;
+    cultivationStore.cultivation = Math.min(
+      cultivationStore.maxCultivation,
+      cultivationStore.cultivation + gain,
+    );
+    const actual = cultivationStore.cultivation - before;
+    const overflow = Math.max(0, gain - actual);
+    if (overflow) cultivationStore.aura += overflow;
+    lines.push(`修为 +${actual}`);
+    if (overflow) lines.push(`溢出灵气 +${overflow}`);
+  }
+  if (rewards?.aura) {
+    const amount = Number(rewards.aura) || 0;
+    cultivationStore.aura += amount;
+    lines.push(`灵气 +${amount}`);
+  }
+  if (rewards?.mana) {
+    const before = cultivationStore.mana;
+    cultivationStore.mana = Math.min(
+      cultivationStore.maxMana,
+      cultivationStore.mana + (Number(rewards.mana) || 0),
+    );
+    lines.push(`灵力 +${cultivationStore.mana - before}`);
+  }
+  const attr = rewards?.attributeExp || {};
+  const attrGains: Partial<Record<AttributeKey, number>> = {};
+  for (const key of [
+    "physique",
+    "strength",
+    "agility",
+    "perception",
+  ] as AttributeKey[])
+    if (Number(attr[key]) > 0) attrGains[key] = Number(attr[key]);
+  if (Object.keys(attrGains).length) {
+    playerStore.addAttributeExpBatch(attrGains);
+    lines.push(
+      `资质经验 +${Object.values(attrGains).reduce((sum, value) => sum + (Number(value) || 0), 0)}`,
+    );
+  }
+  const spiritStone = Number(
+    rewards?.spiritStone || rewards?.spirit_stone || 0,
+  );
+  if (spiritStone) {
+    inventoryStore.addItem("spirit_stone", spiritStone);
+    lines.push(`灵石 +${spiritStone}`);
+  }
+  for (const item of rewards?.items || []) {
+    const quantity = Number(item.quantity) || 1;
+    inventoryStore.addItem(
+      String(item.itemId),
+      quantity,
+      item.quality || "normal",
+    );
+    lines.push(`${item.name || getItemName(item.itemId)} ×${quantity}`);
+  }
+  return lines;
+};
+
 const floatingRewardText = (rewards: any) => {
   const parts: string[] = [];
   if (rewards?.money) parts.push(`铜钱+${rewards.money}`);
@@ -1220,72 +1295,22 @@ const floatingRewardText = (rewards: any) => {
 };
 const claimFloatingWelfare = async (gift: FloatingWelfareGift) => {
   const key = floatingGiftClaimKey(gift);
-  if (floatingWelfareStore.isClaimed(key)) return;
-  const rewards = gift.rewards || {};
-  const lines: string[] = [];
-  if (rewards.money) {
-    playerStore.earnMoney(Number(rewards.money) || 0);
-    lines.push(`铜钱 +${Number(rewards.money) || 0}`);
-  }
-  if (rewards.stamina) {
-    playerStore.restoreStamina(Number(rewards.stamina) || 0);
-    lines.push(`体力 +${Number(rewards.stamina) || 0}`);
-  }
-  if (rewards.spiritStone) {
-    inventoryStore.addItem("spirit_stone", Number(rewards.spiritStone) || 0);
-    lines.push(`灵石 +${Number(rewards.spiritStone) || 0}`);
-  }
-  if (rewards.aura) {
-    cultivationStore.aura += Number(rewards.aura) || 0;
-    lines.push(`灵气 +${Number(rewards.aura) || 0}`);
-  }
-  if (rewards.cultivation) {
-    const gain = Number(rewards.cultivation) || 0;
-    const before = cultivationStore.cultivation;
-    cultivationStore.cultivation = Math.min(
-      cultivationStore.maxCultivation,
-      cultivationStore.cultivation + gain,
-    );
-    lines.push(`修为 +${cultivationStore.cultivation - before}`);
-  }
-  if (rewards.mana) {
-    const v = Number(rewards.mana) || 0;
-    cultivationStore.mana = Math.min(
-      cultivationStore.maxMana,
-      cultivationStore.mana + v,
-    );
-    lines.push(`灵力 +${v}`);
-  }
-  const attr = rewards.attributeExp || {};
-  const attrGains: Partial<Record<AttributeKey, number>> = {};
-  for (const k of [
-    "physique",
-    "strength",
-    "agility",
-    "perception",
-  ] as AttributeKey[])
-    if (Number(attr[k]) > 0) attrGains[k] = Number(attr[k]);
-  if (Object.keys(attrGains).length) {
-    playerStore.addAttributeExpBatch(attrGains);
-    lines.push(
-      `资质经验 +${Object.values(attrGains).reduce((a, b) => a + (Number(b) || 0), 0)}`,
-    );
-  }
-  for (const item of rewards.items || []) {
-    const qty = Number(item.quantity) || 1;
-    inventoryStore.addItem(String(item.itemId), qty, item.quality || "normal");
-    lines.push(`${item.name || getItemName(item.itemId)} ×${qty}`);
-  }
-  floatingWelfareStore.markClaimed(key);
-  const text = lines.length ? lines : ["奖励已到账"];
-  addLog(`领取${gift.title}：${text.join("，")}。`);
-  showRewardBurst({
-    title: gift.title || "福利已领取",
-    desc: gift.desc || "奖励已放入当前存档。",
-    emoji: "🎁",
-    lines: text,
+  if (floatingWelfareStore.isClaimed(key) || authorizedGrantBusy.value) return;
+  await runAuthorizedGrantClaim(async () => {
+    const data = await accountApi("/api/floating-welfare/claim", {
+      method: "POST",
+      headers: accountHeaders(),
+      body: JSON.stringify({ giftId: gift.id, slot: saveStore.activeSlot }),
+    });
+    const rewards = data.rewards || gift.rewards || {};
+    const lines = applyAuthorizedRewards(rewards);
+    floatingWelfareStore.markClaimed(key);
+    return {
+      title: gift.title || "福利已领取",
+      desc: gift.desc || "奖励已放入当前存档。",
+      lines,
+    };
   });
-  await autoSaveCurrent();
 };
 const loadServerConfig = async () => {
   try {
@@ -1343,7 +1368,11 @@ let backgroundMeditateTimer: number | null = null;
 const startBackgroundMeditation = () => {
   if (backgroundMeditateTimer != null) return;
   backgroundMeditateTimer = window.setInterval(() => {
-    if (!gameStore.isGameStarted || !cultivationStore.autoMeditateEnabled)
+    if (
+      authorizedGrantBusy.value ||
+      !gameStore.isGameStarted ||
+      !cultivationStore.autoMeditateEnabled
+    )
       return;
     if (isTimeFrozen.value) return;
     const changed = cultivationStore.runAutoMeditateTick();
@@ -1362,7 +1391,7 @@ let staminaRegenTimer: number | null = null;
 const startOnlineStaminaRegen = () => {
   if (staminaRegenTimer != null) return;
   staminaRegenTimer = window.setInterval(() => {
-    if (!gameStore.isGameStarted) return;
+    if (authorizedGrantBusy.value || !gameStore.isGameStarted) return;
     let changed = false;
     if (playerStore.stamina < playerStore.maxStamina) {
       const before = playerStore.stamina;
@@ -1568,47 +1597,26 @@ const mailRewardText = (rewards: any) => {
 };
 const formatMailTime = (v: string) => (v ? new Date(v).toLocaleString() : "");
 const claimMail = async (mail: any) => {
-  try {
+  if (authorizedGrantBusy.value) return;
+  const ok = await runAuthorizedGrantClaim(async () => {
     const data = await accountApi(
       `/api/mails/${encodeURIComponent(mail.id)}/claim`,
-      { method: "POST", headers: accountHeaders() },
+      {
+        method: "POST",
+        headers: accountHeaders(),
+        body: JSON.stringify({ slot: saveStore.activeSlot }),
+      },
     );
     const rewards = data.rewards || {};
-    if (rewards.money) playerStore.earnMoney(Number(rewards.money) || 0);
-    if (rewards.stamina)
-      playerStore.restoreStamina(Number(rewards.stamina) || 0);
-    if (rewards.cultivation)
-      cultivationStore.cultivation += Number(rewards.cultivation) || 0;
-    if (rewards.aura) cultivationStore.aura += Number(rewards.aura) || 0;
-    if (rewards.mana)
-      cultivationStore.mana = Math.min(
-        cultivationStore.maxMana,
-        cultivationStore.mana + (Number(rewards.mana) || 0),
-      );
-    if (rewards.spiritStone || rewards.spirit_stone)
-      inventoryStore.addItem(
-        "spirit_stone",
-        Number(rewards.spiritStone || rewards.spirit_stone) || 0,
-      );
-    for (const item of rewards.items || []) {
-      inventoryStore.addItem(
-        String(item.itemId),
-        Number(item.quantity) || 1,
-        item.quality || "normal",
-      );
-    }
-    mail.claimed = true;
-    const text = mailRewardText(rewards);
-    addLog(`领取邮件奖励：${text}`);
-    showRewardBurst({
+    return {
       title: "邮件奖励已领取",
       desc: mail.title || "系统奖励已放入背包。",
-      emoji: "📮",
-      lines: text.split("，").filter(Boolean),
-    });
-    await autoSaveCurrent();
-  } catch (e: any) {
-    addLog(`领取邮件失败：${e?.message || "请求失败"}`);
+      lines: applyAuthorizedRewards(rewards),
+    };
+  });
+  if (ok) {
+    mail.claimed = true;
+    await loadMails();
   }
 };
 const showQuickUsePicker = ref(false);
@@ -1841,13 +1849,94 @@ const waitForRealtimeSaveIdle = async (timeoutMs = 10000) => {
   }
   return !accountAutoSaveInFlight;
 };
+const flushRealtimeSaveCurrent = async (timeoutMs = 15000) => {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    // Let the mutation-burst microtask run before deciding whether a capture is
+    // needed. Explicit grant/sleep flushes must wait for the latest state,
+    // rather than returning the result of an older in-flight request.
+    await Promise.resolve();
+    if (!(await waitForRealtimeSaveIdle(Math.max(0, deadline - Date.now()))))
+      return false;
+    if (realtimeSaveScheduled) continue;
+    if (realtimeSavePending || !pendingRealtimeSave) {
+      realtimeSavePending = false;
+      captureRuntimeSave();
+    }
+    if (pendingRealtimeSave) {
+      const saved = await autoSaveCurrent();
+      if (!saved) return false;
+      continue;
+    }
+    return lastRealtimeSaveSucceeded;
+  }
+  return false;
+};
+const runAuthorizedGrantClaim = async (
+  claim: () => Promise<{
+    title: string;
+    desc?: string;
+    lines?: string[];
+  }>,
+) => {
+  const run = authorizedGrantQueue.then(async () => {
+    authorizedGrantBusy.value = true;
+    try {
+      if (!(await flushRealtimeSaveCurrent()))
+        throw new Error("领取前的角色进度尚未写入服务器，请稍后重试。");
+      const result = await claim();
+      if (!(await flushRealtimeSaveCurrent()))
+        throw new Error("奖励已由服务器保留，但本次存档确认失败。请重新进入角色自动恢复。");
+      const lines = result.lines?.length ? result.lines : ["奖励已到账"];
+      addLog(`${result.title}：${lines.join("，")}。`);
+      showRewardBurst({
+        title: result.title,
+        desc: result.desc || "奖励已写入当前角色存档。",
+        emoji: "🎁",
+        lines,
+      });
+      return true;
+    } catch (error: any) {
+      addLog(error?.message || "奖励领取未完成，请稍后重试。");
+      return false;
+    } finally {
+      authorizedGrantBusy.value = false;
+    }
+  });
+  authorizedGrantQueue = run.catch(() => false);
+  return run;
+};
+const recoverPendingAssetGrants = async () => {
+  const slot = saveStore.activeSlot;
+  if (!Number.isInteger(slot) || slot < 0 || !accountToken()) return true;
+  try {
+    const data = await accountApi(
+      `/api/asset-grants/pending?slot=${encodeURIComponent(slot)}`,
+      { headers: accountHeaders() },
+    );
+    const grants = Array.isArray(data.grants) ? data.grants : [];
+    if (!grants.length) return true;
+    addLog(`检测到${grants.length}笔待确认奖励，正在按顺序恢复。`);
+    for (const grant of grants) {
+      const ok = await runAuthorizedGrantClaim(async () => ({
+        title: "历史奖励恢复",
+        desc: "服务器保留的待确认奖励已安全写入当前角色。",
+        lines: applyAuthorizedRewards(grant.rewards || {}),
+      }));
+      if (!ok) return false;
+    }
+    await loadMails();
+    await loadCheckinStatus();
+    return true;
+  } catch (error: any) {
+    addLog(error?.message || "待确认奖励恢复失败，请重新进入角色后重试。");
+    return false;
+  }
+};
 const handleRealtimeSaveFlush = async (event: Event) => {
   const detail = (event as CustomEvent<{ resolve?: (ok: boolean) => void }>)
     .detail;
-  const idle = await waitForRealtimeSaveIdle();
-  const saved = idle ? await autoSaveCurrent() : false;
-  const completed = await waitForRealtimeSaveIdle();
-  detail?.resolve?.(saved && completed && lastRealtimeSaveSucceeded);
+  detail?.resolve?.(await flushRealtimeSaveCurrent());
 };
 const startRealtimeSave = () => {
   if (realtimeSaveListening) return;
@@ -1961,7 +2050,12 @@ const loadCheckinStatus = async () => {
   } catch {}
 };
 const dailyCheckin = async () => {
-  if (checkinBusy.value || checkinChecked.value) return;
+  if (
+    checkinBusy.value ||
+    checkinChecked.value ||
+    authorizedGrantBusy.value
+  )
+    return;
   const t = accountToken();
   if (!t) {
     addLog("请先在首页登录账号，再进行每日签到。");
@@ -1974,56 +2068,23 @@ const dailyCheckin = async () => {
   }
   checkinBusy.value = true;
   try {
-    const res = await fetch("/api/checkin", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${t}`,
-      },
-      body: JSON.stringify({ slot }),
+    const ok = await runAuthorizedGrantClaim(async () => {
+      const data = await accountApi("/api/checkin", {
+        method: "POST",
+        headers: accountHeaders(),
+        body: JSON.stringify({ slot }),
+      });
+      const rewards = data.rewards || {
+        money: Number(data.reward || 0),
+        items: Array.isArray(data.items) ? data.items : [],
+      };
+      return {
+        title: `每日签到成功${data.streak ? `（连续${data.streak}天）` : ""}`,
+        desc: "连续回来就会越来越稳，今天也把万象仙乡照看起来了。",
+        lines: applyAuthorizedRewards(rewards),
+      };
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      addLog(data.error || "签到失败。");
-      return;
-    }
-    playerStore.earnMoney(Number(data.reward || 0));
-    const itemRewards = Array.isArray(data.items) ? data.items : [];
-    for (const item of itemRewards) {
-      inventoryStore.addItem(
-        String(item.itemId),
-        Number(item.quantity) || 1,
-        item.quality || "normal",
-      );
-    }
-    checkinChecked.value = true;
-    const itemText = itemRewards.length
-      ? "，并获得 " +
-        itemRewards
-          .map(
-            (item: any) =>
-              `${getItemName(String(item.itemId))}×${Number(item.quantity) || 1}`,
-          )
-          .join("、")
-      : "";
-    const streakText = data.streak ? `（连续${data.streak}天）` : "";
-    const rewardLines = [
-      `铜钱 +${data.reward}`,
-      ...itemRewards.map(
-        (item: any) =>
-          `${getItemName(String(item.itemId))} ×${Number(item.quantity) || 1}`,
-      ),
-    ];
-    addLog(`每日签到成功${streakText}，获得 ${data.reward} 铜钱${itemText}。`);
-    showRewardBurst({
-      title: `每日签到成功${streakText}`,
-      desc: "连续回来就会越来越稳，今天也把万象仙乡照看起来了。",
-      emoji: "🎁",
-      lines: rewardLines,
-    });
-    saveStore.saveToSlot(slot);
-  } catch {
-    addLog("签到失败，请稍后再试。");
+    if (ok) checkinChecked.value = true;
   } finally {
     checkinBusy.value = false;
   }
@@ -2060,8 +2121,12 @@ onMounted(() => {
   void loadCheckinStatus();
   void loadMails();
   if (!ascensionStore.adminPreviewMode) {
-    void grantOfflineRewards();
-    void autoSaveCurrent();
+    void (async () => {
+      const recovered = await recoverPendingAssetGrants();
+      if (!recovered) return;
+      await grantOfflineRewards();
+      await flushRealtimeSaveCurrent();
+    })();
   }
 });
 onUnmounted(() => {
@@ -2492,11 +2557,21 @@ const confirmVoidQty = () => {
   voidQtyModal.value = null;
 };
 
-const confirmSleep = () => {
+const confirmSleep = async () => {
+  if (authorizedGrantBusy.value) {
+    addLog("奖励正在写入服务器，请稍候再休息。");
+    return;
+  }
   showSleepConfirm.value = false;
   pauseClock();
+  if (!(await flushRealtimeSaveCurrent())) {
+    addLog("当前进度尚未写入服务器，本次休息已取消，请稍后重试。");
+    resumeClock();
+    return;
+  }
   handleEndDay();
   switchToSeasonalBgm();
+  await flushRealtimeSaveCurrent();
   resumeClock();
 };
 </script>
