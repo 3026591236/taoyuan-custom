@@ -6,9 +6,27 @@ import { usePlayerStore } from "./usePlayerStore";
 import { useInventoryStore } from "./useInventoryStore";
 import { useAchievementStore } from "./useAchievementStore";
 import { useSkillStore } from "./useSkillStore";
+import { getItemById } from "@/data/items";
 
 export type SpiritRoot =
   "mixed" | "wood" | "water" | "earth" | "fire" | "metal" | "celestial";
+export const SPIRIT_ROOT_ORDER: readonly SpiritRoot[] = [
+  "mixed",
+  "wood",
+  "water",
+  "earth",
+  "fire",
+  "metal",
+  "celestial",
+];
+export const nextSpiritRoot = (current: SpiritRoot): SpiritRoot => {
+  const index = SPIRIT_ROOT_ORDER.indexOf(current);
+  if (index < 0) return "mixed";
+  return (
+    SPIRIT_ROOT_ORDER[Math.min(index + 1, SPIRIT_ROOT_ORDER.length - 1)] ??
+    "celestial"
+  );
+};
 export type ArtifactKey = "glimmerHoe" | "spiritKettle" | "spiritRain";
 export type BeastId = "fox" | "crane" | "phoenix";
 export type CaveSlotType =
@@ -2588,17 +2606,26 @@ export const useCultivationStore = defineStore("cultivation", () => {
       return false;
     }
     const inventory = useInventoryStore();
-    for (const mat of recipe.materials) {
-      if (inventory.getItemCount(mat.itemId) < mat.quantity) {
-        showFloat("灵植材料不足。", "danger");
-        return false;
-      }
-    }
+    const missingMaterials = recipe.materials.flatMap((mat) => {
+      const current = inventory.getItemCount(mat.itemId);
+      if (current >= mat.quantity) return [];
+      const name = getItemById(mat.itemId)?.name ?? mat.itemId;
+      return [`${name}${current}/${mat.quantity}`];
+    });
     const auraCost = hasCaveSlot("alchemy")
       ? Math.floor(recipe.aura * 0.8)
       : recipe.aura;
-    if (aura.value < auraCost || mana.value < recipe.mana) {
-      showFloat(`炼丹需要灵气${auraCost}、灵力${recipe.mana}。`, "danger");
+    const missingResources = [
+      ...(aura.value < auraCost
+        ? [`灵气${Math.floor(aura.value)}/${auraCost}`]
+        : []),
+      ...(mana.value < recipe.mana
+        ? [`灵力${Math.floor(mana.value)}/${recipe.mana}`]
+        : []),
+    ];
+    const missing = [...missingMaterials, ...missingResources];
+    if (missing.length) {
+      showFloat(`炼丹缺少：${missing.join("、")}`, "danger");
       return false;
     }
     for (const mat of recipe.materials)
@@ -3913,6 +3940,8 @@ export const useCultivationStore = defineStore("cultivation", () => {
       inventory.removeItem(m.itemId, m.quantity);
     aura.value -= rebirthCost.value.aura;
     player.spendMoney(rebirthCost.value.money);
+    const previousSpiritRoot = spiritRoot.value;
+    spiritRoot.value = nextSpiritRoot(previousSpiritRoot);
     rebirthCount.value++;
     rebirthBonus.value += 10;
     lingYun.value += 1 + consumedJade;
@@ -3921,8 +3950,12 @@ export const useCultivationStore = defineStore("cultivation", () => {
     beastBond.value = 0;
     fieldTier.value = Math.min(fieldTier.value, 1);
     mana.value = maxMana.value;
+    const spiritRootChange =
+      previousSpiritRoot === spiritRoot.value
+        ? `${spiritRootName.value}已达上限`
+        : `灵根由${SPIRIT_ROOT_NAMES[previousSpiritRoot]}晋升为${spiritRootName.value}`;
     addLog(
-      `你以轮回丹为引，消耗轮回材料踏入第${rebirthCount.value}转。灵气产量+10%，灵蕴+${1 + consumedJade}。`,
+      `你以轮回丹为引，消耗轮回材料踏入第${rebirthCount.value}转。灵气产量+10%，灵蕴+${1 + consumedJade}，${spiritRootChange}。`,
     );
     showFloat(`第${rebirthCount.value}转完成`, "success");
     return true;

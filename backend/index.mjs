@@ -783,6 +783,12 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.3.2 实时存档入口与转生修复",
+      date: "2026-07-23",
+      content:
+        "存档统一为游戏数据变化后实时写入服务器，移除 WebDAV 和手动云端上传、下载入口；每次变化先同步写浏览器恢复副本，突然刷新后会核对同账号、同角色和服务器基线，安全时先补传最新本地进度，版本分叉时停止覆盖并提示核查。排行榜刷新前先等待最新进度落库，同步失败时不再展示可能过期的数据。炼丹失败会明确列出每种缺失材料及灵气、灵力的现有/需要数量。修复轮回殿转生遗漏灵根晋升：成功转生按杂、木、水、土、火、金、天灵根逐阶提升，天灵根封顶，确认弹窗和游戏日志显示前后变化。核查当前服务器存档后未发现已转生角色，因此无需猜测性批量补档。",
+    },
+    {
       title: "V3.3.1 权威用药与实时保存提示修复",
       date: "2026-07-23",
       content:
@@ -2403,7 +2409,7 @@ app.put("/api/saves/:slot", async (req, res) => {
     const slot = Number(req.params.slot);
     if (!Number.isInteger(slot) || slot < 0 || slot > 2)
       return send(res, 400, { error: "槽位无效", code: "INVALID_SAVE_SLOT" });
-    const { raw, meta, data } = req.body || {};
+    const { raw, meta, data, expectedServerUpdatedAt } = req.body || {};
     const playerName = normalizePlayerName((meta && meta.playerName) || "");
     const metaJson = meta ? JSON.stringify(meta) : null;
     const payloadCheck = validateSavePayload(raw, data);
@@ -2449,6 +2455,20 @@ app.put("/api/saves/:slot", async (req, res) => {
         return send(res, 409, {
           error: "角色与存档归属不一致，请联系管理员。",
           code: "SAVE_CHARACTER_MISMATCH",
+        });
+      }
+      if (
+        expectedServerUpdatedAt &&
+        new Date(expectedServerUpdatedAt).getTime() !==
+          new Date(currentSaveRow.updated_at).getTime()
+      ) {
+        await conn.rollback();
+        transactionStarted = false;
+        return send(res, 409, {
+          error: "服务器存档已由其他页面或设备更新，请重新进入角色核对进度。",
+          code: "SAVE_CONFLICT",
+          conflict: true,
+          serverUpdatedAt: currentSaveRow.updated_at,
         });
       }
     }

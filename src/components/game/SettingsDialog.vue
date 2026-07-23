@@ -102,135 +102,12 @@
                 </div>
               </div>
 
-              <!-- WebDAV 云同步 -->
               <div class="border border-accent/20 rounded-xs p-3 mr-1">
-                <div class="flex items-center justify-between mb-2">
-                  <p class="text-xs text-muted">WebDAV 云同步</p>
-                  <div class="flex space-x-1">
-                    <Button
-                      class="py-0.5 px-2 text-[10px]"
-                      :class="{ '!bg-accent !text-bg': webdavConfig.enabled }"
-                      @click="setWebdavEnabled(true)"
-                    >
-                      开
-                    </Button>
-                    <Button
-                      class="py-0.5 px-2 text-[10px]"
-                      :class="{ '!bg-accent !text-bg': !webdavConfig.enabled }"
-                      @click="setWebdavEnabled(false)"
-                    >
-                      关
-                    </Button>
-                  </div>
-                </div>
-                <template v-if="webdavConfig.enabled">
-                  <div class="flex flex-col space-y-2">
-                    <div>
-                      <label class="text-[10px] text-muted mb-0.5 block"
-                        >服务器地址</label
-                      >
-                      <input
-                        v-model="webdavConfig.serverUrl"
-                        placeholder="请输入WebDAV云同步服务器地址"
-                        class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors"
-                        @change="saveWebdavConfig"
-                      />
-                    </div>
-                    <div>
-                      <label class="text-[10px] text-muted mb-0.5 block"
-                        >存储路径</label
-                      >
-                      <input
-                        v-model="webdavConfig.path"
-                        placeholder="如果没有路径需求的话可以为空"
-                        class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors"
-                        @change="saveWebdavConfig"
-                      />
-                      <p class="text-[10px] text-muted/50 mt-0.5">
-                        填写网盘中已有的文件夹名，留空则存到根目录
-                      </p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="text-[10px] text-muted mb-0.5 block"
-                          >用户名</label
-                        >
-                        <input
-                          v-model="webdavConfig.username"
-                          placeholder="请输入用户名"
-                          class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors"
-                          @change="saveWebdavConfig"
-                        />
-                      </div>
-                      <div>
-                        <label class="text-[10px] text-muted mb-0.5 block"
-                          >密码</label
-                        >
-                        <input
-                          v-model="webdavConfig.password"
-                          type="password"
-                          placeholder="请输入密码"
-                          class="w-full px-2 py-1.5 bg-bg border border-accent/30 rounded-xs text-xs text-text focus:border-accent outline-none placeholder:text-muted/40 transition-colors"
-                          @change="saveWebdavConfig"
-                        />
-                      </div>
-                    </div>
-                    <Button
-                      class="py-1 px-3 text-xs w-full justify-center"
-                      :disabled="
-                        webdavTestStatus === 'testing' ||
-                        !webdavConfig.serverUrl
-                      "
-                      @click="handleTestWebdav"
-                    >
-                      {{
-                        webdavTestStatus === "testing"
-                          ? "测试中..."
-                          : "测试连接"
-                      }}
-                    </Button>
-                    <p
-                      v-if="webdavTestStatus === 'success'"
-                      class="text-success text-xs text-center mt-1 break-words"
-                    >
-                      连接成功
-                    </p>
-                    <p
-                      v-if="webdavTestStatus === 'failed'"
-                      class="text-danger text-xs text-center mt-1 break-words"
-                    >
-                      {{ webdavTestError || "连接失败" }}
-                    </p>
-                    <div
-                      v-if="webdavTraceLogs.length"
-                      class="border border-accent/20 rounded-xs p-2 bg-bg/40"
-                    >
-                      <div class="flex items-center justify-between mb-1">
-                        <p class="text-[10px] text-muted">请求流程日志</p>
-                        <button
-                          class="text-[10px] text-muted hover:text-text"
-                          @click="clearWebdavTrace"
-                        >
-                          清空
-                        </button>
-                      </div>
-                      <div class="max-h-28 overflow-y-auto text-left">
-                        <p
-                          v-for="(line, idx) in webdavTraceLogs"
-                          :key="idx"
-                          class="text-[10px] text-muted/80 leading-4 break-all"
-                        >
-                          {{ line }}
-                        </p>
-                      </div>
-                      <button
-                        class="webdav-log-copy text-[10px] text-muted hover:text-text"
-                      >
-                        复制日志
-                      </button>
-                    </div>
-                  </div>
-                </template>
+                <p class="text-xs text-accent mb-1">服务器实时存档</p>
+                <p class="text-[10px] text-muted leading-relaxed">
+                  登录角色后，游戏数据变化会立即保存到服务器。旧 WebDAV
+                  与手动云端上传、下载方式即将弃用，无需再连接第三方云盘。
+                </p>
               </div>
             </div>
           </template>
@@ -683,7 +560,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, type Component } from "vue";
+import { ref, type Component } from "vue";
 import {
   X,
   Pause,
@@ -716,17 +593,14 @@ import Button from "@/components/game/Button.vue";
 import Divider from "@/components/game/Divider.vue";
 import { useAudio } from "@/composables/useAudio";
 import { useGameClock } from "@/composables/useGameClock";
-import { useGameLog } from "@/composables/useGameLog";
 import {
   useSettingsStore,
   type QmsgPosition,
   type QmsgLimitWidthWrap,
 } from "@/stores/useSettingsStore";
 import { useTutorialStore } from "@/stores/useTutorialStore";
-import { useWebdav } from "@/composables/useWebdav";
 import { THEMES } from "@/data/themes";
 import SaveManager from "@/components/game/SaveManager.vue";
-import ClipboardJS from "clipboard";
 
 type SettingsTab = "general" | "display" | "notification" | "feedback";
 
@@ -789,18 +663,8 @@ const goHome = () => {
 const activeTab = ref<SettingsTab>("general");
 const { sfxEnabled, bgmEnabled, toggleSfx, toggleBgm } = useAudio();
 const { isPaused, gameSpeed, togglePause, cycleSpeed } = useGameClock();
-const { showFloat } = useGameLog();
 const settingsStore = useSettingsStore();
 const tutorialStore = useTutorialStore();
-const {
-  webdavConfig,
-  webdavTestStatus,
-  webdavTestError,
-  webdavTraceLogs,
-  saveConfig: saveWebdavConfig,
-  clearTrace: clearWebdavTrace,
-  testConnection,
-} = useWebdav();
 
 const showSaveManager = ref(false);
 const FEEDBACK_CATEGORIES: { key: string; label: string; icon: Component }[] = [
@@ -934,36 +798,6 @@ const submitFeedback = async () => {
   } finally {
     feedbackBusy.value = false;
   }
-};
-
-let clipboard: ClipboardJS | null = null;
-
-onMounted(() => {
-  clipboard = new ClipboardJS(".webdav-log-copy", {
-    text: () => webdavTraceLogs.value.join("\n"),
-  });
-  clipboard.on("success", (e) => {
-    e.clearSelection();
-    showFloat("日志已复制", "success");
-  });
-  clipboard.on("error", () => {
-    document.body.classList.remove("select-none");
-    showFloat("复制失败，请手动复制", "danger");
-  });
-});
-
-onBeforeUnmount(() => {
-  clipboard?.destroy();
-  clipboard = null;
-});
-
-const handleTestWebdav = async () => {
-  await testConnection();
-};
-
-const setWebdavEnabled = (val: boolean) => {
-  webdavConfig.value.enabled = val;
-  saveWebdavConfig();
 };
 
 const changeTimeout = (delta: number) => {

@@ -13,25 +13,10 @@
         <X :size="14" />
       </button>
       <Divider title class="my-4" label="存档管理" />
-      <div class="grid grid-cols-1 gap-2 mb-3">
-        <Button
-          :icon="Download"
-          class="text-center justify-center text-sm w-full"
-          :disabled="accountBusy"
-          @click="handleSaveCurrentLocal"
-        >
-          保存当前进度
-        </Button>
-        <Button
-          :icon="CloudUpload"
-          class="text-center justify-center text-sm w-full"
-          :disabled="accountBusy"
-          @click="handleSaveCurrentToAccount"
-        >
-          {{ accountBusy ? "保存中..." : "保存当前进度到账号" }}
-        </Button>
-        <p class="text-xs text-muted">
-          保存到账号后，下次登录首页会显示“下载并继续”。
+      <div class="border border-accent/20 rounded-xs p-3 mb-3 text-left">
+        <p class="text-xs text-accent mb-1">服务器实时存档已启用</p>
+        <p class="text-[10px] text-muted leading-relaxed">
+          游戏数据变化后会立即保存到服务器，无需手动上传或下载。重新登录时从角色列表继续即可。
         </p>
       </div>
       <div class="flex-1 flex flex-col space-y-2 mb-3" @click="menuOpen = null">
@@ -80,44 +65,6 @@
                 class="absolute right-0 top-full mt-1 z-10 flex flex-col border border-accent/30 rounded-xs overflow-hidden w-30"
               >
                 <Button
-                  v-if="webdavReady"
-                  :icon="CloudUpload"
-                  :icon-size="12"
-                  class="text-center !rounded-none justify-center text-sm"
-                  :disabled="uploading"
-                  @click="handleUpload(info.slot)"
-                >
-                  {{ uploading ? "上传中..." : "上传云端" }}
-                </Button>
-                <Button
-                  v-if="webdavReady"
-                  :icon="CloudDownload"
-                  :icon-size="12"
-                  class="text-center !rounded-none justify-center text-sm"
-                  :disabled="downloading"
-                  @click="handleDownload(info.slot)"
-                >
-                  {{ downloading ? "下载中..." : "云端下载" }}
-                </Button>
-                <Button
-                  :icon="CloudUpload"
-                  :icon-size="12"
-                  class="text-center !rounded-none justify-center text-sm"
-                  :disabled="accountBusy"
-                  @click="handleAccountUpload(info.slot)"
-                >
-                  {{ accountBusy ? "保存中..." : "保存到账号" }}
-                </Button>
-                <Button
-                  :icon="CloudDownload"
-                  :icon-size="12"
-                  class="text-center !rounded-none justify-center text-sm"
-                  :disabled="accountBusy"
-                  @click="handleAccountDownload(info.slot)"
-                >
-                  {{ accountBusy ? "处理中..." : "账号下载" }}
-                </Button>
-                <Button
                   :icon="Trash2"
                   :icon-size="12"
                   class="btn-danger !rounded-none text-center justify-center text-sm"
@@ -134,27 +81,6 @@
             >
               存档 {{ info.slot + 1 }} — 空
             </div>
-            <Button
-              v-if="webdavReady"
-              :icon="CloudDownload"
-              :icon-size="12"
-              class="px-2"
-              :disabled="downloading"
-              @click="handleDownload(info.slot)"
-            >
-              <span class="text-xs">{{
-                downloading ? "下载中..." : "云端"
-              }}</span>
-            </Button>
-            <Button
-              :icon="CloudDownload"
-              :icon-size="12"
-              class="px-2"
-              :disabled="accountBusy"
-              @click="handleAccountDownload(info.slot)"
-            >
-              <span class="text-xs">账号云端</span>
-            </Button>
           </div>
         </div>
       </div>
@@ -190,29 +116,20 @@ import {
   X,
   FolderOpen,
   Settings,
-  Download,
   Trash2,
-  CloudUpload,
-  CloudDownload,
 } from "lucide-vue-next";
 import Button from "@/components/game/Button.vue";
 import Divider from "@/components/game/Divider.vue";
 import { SEASON_NAMES } from "@/stores/useGameStore";
-import { parseSaveData, useSaveStore } from "@/stores/useSaveStore";
-import { showFloat } from "@/composables/useGameLog";
-import { useWebdav } from "@/composables/useWebdav";
+import { useSaveStore } from "@/stores/useSaveStore";
 
 defineProps<{ allowLoad?: boolean }>();
 const emit = defineEmits<{ close: []; load: [slot: number]; change: [] }>();
 
 const saveStore = useSaveStore();
-const { webdavReady, uploadSave, downloadSave } = useWebdav();
 
 const slots = ref(saveStore.getSlots());
 const menuOpen = ref<number | null>(null);
-const uploading = ref(false);
-const downloading = ref(false);
-const accountBusy = ref(false);
 
 const refreshSlots = () => {
   slots.value = saveStore.getSlots();
@@ -234,134 +151,4 @@ const confirmDelete = () => {
   }
 };
 
-const handleUpload = async (slot: number) => {
-  uploading.value = true;
-  const result = await uploadSave(slot);
-  uploading.value = false;
-  showFloat(result.message, result.success ? "success" : "danger");
-  menuOpen.value = null;
-};
-
-const handleDownload = async (slot: number) => {
-  downloading.value = true;
-  const result = await downloadSave(slot);
-  downloading.value = false;
-  if (result.success) {
-    refreshSlots();
-    emit("change");
-  }
-  showFloat(result.message, result.success ? "success" : "danger");
-  menuOpen.value = null;
-};
-
-const accountToken = () => localStorage.getItem("taoyuan_account_token") || "";
-const accountHeaders = () => ({
-  "content-type": "application/json",
-  authorization: `Bearer ${accountToken()}`,
-});
-const accountApi = async (path: string, options: RequestInit = {}) => {
-  const res = await fetch(path, options);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(data.error || "请求失败") as Error & {
-      status?: number;
-      data?: any;
-    };
-    err.status = res.status;
-    err.data = data;
-    throw err;
-  }
-  return data;
-};
-const saveKey = (slot: number) => `taoyuanxiang_save_${slot}`;
-const currentSlot = () => {
-  const slot = saveStore.activeSlot;
-  if (slot >= 0) return slot;
-  const existing = saveStore.getSlots().find((s) => s.exists);
-  return existing?.slot ?? 0;
-};
-const handleSaveCurrentLocal = () => {
-  const slot = currentSlot();
-  if (saveStore.saveToSlot(slot)) {
-    refreshSlots();
-    emit("change");
-    showFloat(`当前进度已保存到存档 ${slot + 1}。`, "success");
-  } else {
-    showFloat("保存失败，请先进入游戏后再保存。", "danger");
-  }
-};
-const handleSaveCurrentToAccount = async () => {
-  const slot = currentSlot();
-  await handleAccountUpload(slot);
-};
-const handleAccountUpload = async (slot: number) => {
-  accountBusy.value = true;
-  try {
-    // 先把当前游戏状态写入本地槽位，再上传到账号数据库
-    if (!saveStore.saveToSlot(slot))
-      throw new Error("本地存档失败，请先进入游戏后再保存");
-    const raw = localStorage.getItem(saveKey(slot));
-    if (!raw) throw new Error("本地没有这个存档");
-    refreshSlots();
-    const info = saveStore.getSlots().find((s) => s.slot === slot);
-    const data = parseSaveData(raw);
-    const loadedAt =
-      localStorage.getItem(`taoyuan_cloud_loaded_at_${slot}`) || "";
-    const result = await accountApi(`/api/saves/${slot}`, {
-      method: "PUT",
-      headers: accountHeaders(),
-      body: JSON.stringify({
-        raw,
-        data,
-        meta: { ...(info || {}), manualSaved: true, lastLoadedAt: loadedAt },
-      }),
-    });
-    if (result?.updatedAt)
-      localStorage.setItem(
-        `taoyuan_cloud_loaded_at_${slot}`,
-        String(result.updatedAt),
-      );
-    showFloat(`存档 ${slot + 1} 已保存到账号数据库。`, "success");
-  } catch (e: any) {
-    const rollback =
-      e?.data?.code === "SAVE_AUTO_ROLLED_BACK" && e.data.rollback;
-    if (
-      rollback &&
-      typeof e.data.raw === "string" &&
-      saveStore.importSave(slot, e.data.raw) &&
-      saveStore.loadFromSlot(slot)
-    ) {
-      localStorage.setItem(
-        `taoyuan_cloud_loaded_at_${slot}`,
-        String(e.data.updatedAt || ""),
-      );
-      refreshSlots();
-      emit("change");
-      showFloat("检测到高置信数据异常，已恢复并载入服务器可信存档。", "danger");
-    } else {
-      showFloat(e.message || "保存到账号失败。", "danger");
-    }
-  } finally {
-    accountBusy.value = false;
-    menuOpen.value = null;
-  }
-};
-const handleAccountDownload = async (slot: number) => {
-  accountBusy.value = true;
-  try {
-    const data = await accountApi(`/api/saves/${slot}`, {
-      headers: accountHeaders(),
-    });
-    if (!saveStore.importSave(slot, data.raw))
-      throw new Error("云端存档无效或已损坏");
-    refreshSlots();
-    emit("change");
-    showFloat(`账号云端存档 ${slot + 1} 已下载。`, "success");
-  } catch (e: any) {
-    showFloat(e.message || "账号云端下载失败。", "danger");
-  } finally {
-    accountBusy.value = false;
-    menuOpen.value = null;
-  }
-};
 </script>

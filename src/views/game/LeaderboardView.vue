@@ -15,13 +15,19 @@
     </div>
 
     <div v-if="loading" class="text-xs text-muted text-center py-4">
-      加载中...
+      正在同步最新数据...
+    </div>
+    <div
+      v-else-if="loadError"
+      class="border border-danger/30 bg-danger/5 text-xs text-danger text-center p-3"
+    >
+      {{ loadError }}
     </div>
     <div
       v-else-if="entries.length === 0"
       class="text-xs text-muted text-center py-4"
     >
-      暂无数据。需要玩家登录账号并保存云存档后才会出现。
+      暂无数据。登录角色并产生游戏数据后才会出现。
     </div>
     <div v-else class="space-y-1">
       <div
@@ -94,6 +100,7 @@ const tabs = [
 const activeTab = ref("cultivation");
 const entries = ref<any[]>([]);
 const loading = ref(false);
+const loadError = ref("");
 
 const activeTabLabel = computed(
   () => tabs.find((t) => t.key === activeTab.value)?.label ?? "",
@@ -151,14 +158,40 @@ const formatValue = (entry: any) => {
   return `${entry.realmName || "凡人"} · ${entry.cultivation || 0}`;
 };
 
+const flushRealtimeSave = () =>
+  new Promise<boolean>((resolve) => {
+    const timeout = window.setTimeout(() => resolve(false), 12000);
+    window.dispatchEvent(
+      new CustomEvent("taoyuan:flush-realtime-save", {
+        detail: {
+          resolve: (ok: boolean) => {
+            window.clearTimeout(timeout);
+            resolve(ok);
+          },
+        },
+      }),
+    );
+  });
+
 const loadLeaderboard = async () => {
+  if (loading.value) return;
   loading.value = true;
+  loadError.value = "";
   try {
+    const synced = await flushRealtimeSave();
+    if (!synced) {
+      entries.value = [];
+      loadError.value =
+        "最新进度尚未写入服务器，已停止刷新排行榜，请稍后重试。游戏数据不会因排行榜未更新而回退。";
+      return;
+    }
     const res = await fetch(`/api/leaderboard?by=${activeTab.value}`);
     const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "排行榜请求失败");
     entries.value = data.leaderboard || [];
-  } catch {
+  } catch (error: any) {
     entries.value = [];
+    loadError.value = error?.message || "排行榜加载失败，请稍后重试。";
   } finally {
     loading.value = false;
   }

@@ -716,6 +716,9 @@
               → <span class="text-success">黄阶灵田</span>
             </p>
             <p>· 灵兽羁绊：归零（灵兽保留）</p>
+            <p class="text-success">
+              · 灵根：{{ cultivation.spiritRootName }} → {{ nextSpiritRootName }}
+            </p>
             <p class="text-success">· 保留：洞府/法宝/元神/丹药效果/30%灵气</p>
             <p>
               · 消耗：{{

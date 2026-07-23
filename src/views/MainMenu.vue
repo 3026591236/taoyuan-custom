@@ -945,7 +945,15 @@ const accountHeaders = () => ({
 const accountApi = async (path: string, options: RequestInit = {}) => {
   const res = await fetch(path, options);
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "请求失败");
+  if (!res.ok) {
+    const error = new Error(data.error || "请求失败") as Error & {
+      status?: number;
+      data?: any;
+    };
+    error.status = res.status;
+    error.data = data;
+    throw error;
+  }
   return data;
 };
 const openHomeFeedback = (category: "feature" | "bug" | "suggestion") => {
@@ -1087,6 +1095,7 @@ const deleteAccountSave = async () => {
     });
     saveStore.deleteSlot(slot);
     localStorage.removeItem(`taoyuan_cloud_loaded_at_${slot}`);
+    localStorage.removeItem(`taoyuan_pending_server_save_${slot}`);
     if (localStorage.getItem("taoyuan_active_slot") === String(slot))
       localStorage.removeItem("taoyuan_active_slot");
     await loadAccountCharacters();
@@ -1102,23 +1111,76 @@ const deleteAccountSave = async () => {
 };
 const continueCharacter = async (character: any) => {
   if (!character) return;
-  // 角色列表和存档摘要可能因网络请求先后不同步；继续游戏应以服务端 slot 实际存档为准。
-  // downloadCloudSaveToLocal 会在账号校验后直接读取云端，避免已有存档被前端摘要误判为不存在。
-  await downloadCloudSaveToLocal(Number(character.slot));
+  localStorage.setItem("taoyuan_active_character_id", String(character.id || ""));
+  await downloadCloudSaveToLocal(Number(character.slot), String(character.id || ""));
 };
-const downloadCloudSaveToLocal = async (slot: number) => {
+const pendingServerSaveKey = (slot: number) =>
+  `taoyuan_pending_server_save_${slot}`;
+const sameServerVersion = (left: unknown, right: unknown) => {
+  const a = new Date(String(left || "")).getTime();
+  const b = new Date(String(right || "")).getTime();
+  return Number.isFinite(a) && Number.isFinite(b) && a === b;
+};
+const downloadCloudSaveToLocal = async (slot: number, characterId: string) => {
   showAnnouncement.value = false;
   showUpdateLogs.value = false;
   try {
-    const data = await accountApi(`/api/saves/${slot}`, {
+    const server = await accountApi(`/api/saves/${slot}`, {
       headers: accountHeaders(),
     });
-    if (!saveStore.importSave(slot, data.raw))
-      throw new Error("云端存档无效或已损坏");
-    if (data.updatedAt)
+    const pendingRaw = localStorage.getItem(pendingServerSaveKey(slot));
+    const localRaw = localStorage.getItem(`taoyuanxiang_save_${slot}`);
+    if (pendingRaw && localRaw) {
+      const pending = JSON.parse(pendingRaw) as {
+        characterId?: string;
+        baseServerUpdatedAt?: string;
+        localSavedAt?: string;
+      };
+      const localData = parseSaveData(localRaw);
+      if (
+        pending.characterId !== characterId ||
+        pending.localSavedAt !== localData?.savedAt
+      ) {
+        throw new Error("检测到本地恢复副本归属异常，已停止覆盖，请联系管理员核查。");
+      }
+      if (!sameServerVersion(pending.baseServerUpdatedAt, server.updatedAt)) {
+        throw new Error(
+          "本地待同步进度与服务器版本已分叉，已保留两份数据并停止覆盖，请联系管理员核查。",
+        );
+      }
+      const info = saveStore.getSlots().find((item) => item.slot === slot);
+      const uploaded = await accountApi(`/api/saves/${slot}`, {
+        method: "PUT",
+        headers: accountHeaders(),
+        body: JSON.stringify({
+          raw: localRaw,
+          data: localData,
+          expectedServerUpdatedAt: pending.baseServerUpdatedAt,
+          meta: {
+            ...(info || {}),
+            autoSaved: true,
+            recoveredAfterRefresh: true,
+            lastLoadedAt: pending.baseServerUpdatedAt,
+          },
+        }),
+      });
+      localStorage.removeItem(pendingServerSaveKey(slot));
       localStorage.setItem(
         `taoyuan_cloud_loaded_at_${slot}`,
-        String(data.updatedAt),
+        String(uploaded.updatedAt || server.updatedAt || ""),
+      );
+      localStorage.setItem("taoyuan_active_slot", String(slot));
+      refreshSlots();
+      showFloat("已恢复并同步刷新前的最新进度。", "success");
+      handleLoadGame(slot);
+      return;
+    }
+    if (!saveStore.importSave(slot, server.raw))
+      throw new Error("服务器存档无效或已损坏");
+    if (server.updatedAt)
+      localStorage.setItem(
+        `taoyuan_cloud_loaded_at_${slot}`,
+        String(server.updatedAt),
       );
     localStorage.setItem("taoyuan_active_slot", String(slot));
     refreshSlots();
