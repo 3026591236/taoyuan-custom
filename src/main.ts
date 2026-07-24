@@ -29,8 +29,11 @@ pinia.use(({ store }) => {
       const keys = events
         .map((event: any) => String(event?.key ?? ''))
         .filter(Boolean)
+      const naturalClockTick =
+        store.$id === 'game' &&
+        Boolean((window as any).__taoyuanNaturalClockTick)
       window.dispatchEvent(new CustomEvent('taoyuan:player-state-changed', {
-        detail: { storeId: store.$id, keys },
+        detail: { storeId: store.$id, keys, naturalClockTick },
       }))
     }, { detached: true, flush: 'sync' })
   }

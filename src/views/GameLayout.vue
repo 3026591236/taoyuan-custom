@@ -1032,6 +1032,22 @@
         </div>
       </div>
     </Transition>
+
+    <!-- 日结算可能涉及大量系统更新与云存档确认，给玩家明确的进行中反馈。 -->
+    <Transition name="panel-fade">
+      <div
+        v-if="sleepSettling"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-[70] p-4"
+      >
+        <div class="game-panel max-w-xs w-full text-center py-7">
+          <div class="text-4xl mb-3 sleep-sunrise">☀️</div>
+          <Divider title>新的一天正在结算</Divider>
+          <p class="text-xs text-muted leading-relaxed">
+            正在更新灵田、牧场、委托与云端存档，请稍候，不要关闭页面。
+          </p>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -1881,19 +1897,20 @@ const scheduleRealtimeSave = () => {
 const handlePlayerStateChanged = (event: Event) => {
   if (realtimeSaveCapturing) return;
   realtimeSavePending = true;
-  const detail = (event as CustomEvent<{ storeId?: string; keys?: string[] }>).detail;
-  const isClockTick =
-    detail?.storeId === "game" &&
-    detail.keys?.length === 1 &&
-    detail.keys[0] === "hour";
-  if (isClockTick) {
-    // Clock display changes five times per second. Uploading a complete mature
-    // save (~180 KB) for every visual tick can consume nearly 1 MB/s.
+  const detail = (event as CustomEvent<{
+    storeId?: string;
+    keys?: string[];
+    naturalClockTick?: boolean;
+  }>).detail;
+  if (detail?.naturalClockTick) {
+    // The real-time clock explicitly tags its own 5 Hz visual movement. Do not
+    // depend on Pinia mutation keys here: production builds may omit them and
+    // previously turned every clock frame into a complete cloud-save upload.
     if (realtimeClockSaveTimer == null) {
       realtimeClockSaveTimer = window.setTimeout(() => {
         realtimeClockSaveTimer = null;
         scheduleRealtimeSave();
-      }, 5000);
+      }, 30000);
     }
     return;
   }
@@ -1989,6 +2006,15 @@ const recoverPendingAssetGrants = async () => {
         lines: applyAuthorizedRewards(grant.rewards || {}),
       }));
       if (!ok) return false;
+      // A welfare grant can be issued before its confirming save succeeds. Once
+      // recovery consumes it, mirror the server source back into the local
+      // claimed-key store so the button cannot misleadingly remain claimable.
+      if (grant.sourceType === "floating_welfare") {
+        const sourceId = String(grant.sourceId || "");
+        const firstColon = sourceId.indexOf(":");
+        if (firstColon >= 0 && firstColon < sourceId.length - 1)
+          floatingWelfareStore.markClaimed(sourceId.slice(firstColon + 1));
+      }
     }
     await loadMails();
     await loadCheckinStatus();
@@ -2079,6 +2105,7 @@ const showMobileMap = ref(false);
 
 /** 休息确认弹窗 */
 const showSleepConfirm = ref(false);
+const sleepSettling = ref(false);
 
 /** 设置弹窗 */
 const showSettings = ref(false);
@@ -2627,25 +2654,42 @@ const confirmVoidQty = () => {
 };
 
 const confirmSleep = async () => {
-  if (authorizedGrantBusy.value) {
-    addLog("奖励正在写入服务器，请稍候再休息。");
+  if (authorizedGrantBusy.value || sleepSettling.value) {
+    addLog("奖励或日结算正在写入服务器，请稍候再休息。");
     return;
   }
   showSleepConfirm.value = false;
+  sleepSettling.value = true;
   pauseClock();
-  if (!(await flushRealtimeSaveCurrent())) {
-    addLog("当前进度尚未写入服务器，本次休息已取消，请稍后重试。");
+  // Let Vue paint the settlement overlay before synchronous daily systems run.
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  try {
+    if (!(await flushRealtimeSaveCurrent())) {
+      addLog("当前进度尚未写入服务器，本次休息已取消，请稍后重试。");
+      return;
+    }
+    handleEndDay();
+    switchToSeasonalBgm();
+    if (!(await flushRealtimeSaveCurrent()))
+      addLog("新一天已完成，云端存档仍在重试，请暂勿关闭页面。");
+  } finally {
+    sleepSettling.value = false;
     resumeClock();
-    return;
   }
-  handleEndDay();
-  switchToSeasonalBgm();
-  await flushRealtimeSaveCurrent();
-  resumeClock();
 };
 </script>
 
 <style scoped>
+.sleep-sunrise {
+  animation: sleep-sunrise 1.4s ease-in-out infinite alternate;
+}
+@keyframes sleep-sunrise {
+  from { transform: translateY(6px) scale(0.92); opacity: 0.7; }
+  to { transform: translateY(-4px) scale(1.08); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sleep-sunrise { animation: none; }
+}
 .world-announcement-box {
   width: min(86vw, 680px);
   overflow: hidden;

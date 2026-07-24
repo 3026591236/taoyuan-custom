@@ -267,10 +267,27 @@
         </Button>
       </div>
 
-      <!-- 进度 -->
-      <p class="text-xs text-muted mb-2">
-        已发现 {{ filteredDiscoveredCount }}/{{ filteredHybrids.length }}
-      </p>
+      <!-- 进度与排序 -->
+      <div class="flex flex-wrap items-center justify-between gap-1 mb-2">
+        <p class="text-xs text-muted">
+          已发现 {{ filteredDiscoveredCount }}/{{ filteredHybrids.length }}
+        </p>
+        <div class="flex items-center gap-1">
+          <span class="text-xs text-muted">排序</span>
+          <Button
+            :class="{ '!bg-accent !text-bg': compendiumSort === 'tier' }"
+            @click="compendiumSort = 'tier'"
+          >代数</Button>
+          <Button
+            :class="{ '!bg-accent !text-bg': compendiumSort === 'name' }"
+            @click="compendiumSort = 'name'"
+          >名称</Button>
+          <Button
+            :class="{ '!bg-accent !text-bg': compendiumSort === 'score' }"
+            @click="compendiumSort = 'score'"
+          >分数</Button>
+        </div>
+      </div>
 
       <!-- 图鉴网格 -->
       <div
@@ -288,7 +305,12 @@
           "
           @click="isDiscovered(hybrid.id) && (activeHybrid = hybrid)"
         >
-          <template v-if="isDiscovered(hybrid.id)">{{ hybrid.name }}</template>
+          <template v-if="isDiscovered(hybrid.id)">
+            <div class="truncate">{{ hybrid.name }}</div>
+            <div class="text-[10px] text-muted mt-0.5">
+              {{ hybridBestScore(hybrid.id) }}分
+            </div>
+          </template>
           <Lock v-else :size="12" class="mx-auto text-muted/30" />
         </div>
       </div>
@@ -879,10 +901,27 @@ const TIER_FILTERS = [
 ];
 
 const tierFilter = ref(0);
+type CompendiumSort = "tier" | "name" | "score";
+const compendiumSort = ref<CompendiumSort>("tier");
+const hybridBestScore = (hybridId: string) =>
+  breedingStore.compendium.find((entry) => entry.hybridId === hybridId)
+    ?.bestTotalStats ?? 0;
 
 const filteredHybrids = computed(() => {
-  if (tierFilter.value === 0) return HYBRID_DEFS;
-  return HYBRID_DEFS.filter((h) => getHybridTier(h.id) === tierFilter.value);
+  const rows = (tierFilter.value === 0
+    ? HYBRID_DEFS
+    : HYBRID_DEFS.filter((h) => getHybridTier(h.id) === tierFilter.value)
+  ).slice();
+  if (compendiumSort.value === "name")
+    return rows.sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+  if (compendiumSort.value === "score")
+    return rows.sort((a, b) => {
+      const discoveredDelta = Number(isDiscovered(b.id)) - Number(isDiscovered(a.id));
+      if (discoveredDelta) return discoveredDelta;
+      return hybridBestScore(b.id) - hybridBestScore(a.id) ||
+        a.name.localeCompare(b.name, "zh-CN");
+    });
+  return rows;
 });
 
 const filteredDiscoveredCount = computed(() => {

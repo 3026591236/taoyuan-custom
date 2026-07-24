@@ -54,7 +54,15 @@ const tick = () => {
     return;
   }
 
-  gameStore.hour = newHour;
+  // Explicitly tag natural visual clock movement. Pinia mutation metadata can
+  // omit/refactor the changed key in production builds, so the save layer must
+  // not infer a 5 Hz clock tick from `events[].key` alone.
+  (window as any).__taoyuanNaturalClockTick = true;
+  try {
+    gameStore.hour = newHour;
+  } finally {
+    (window as any).__taoyuanNaturalClockTick = false;
+  }
 
   // 跨午夜提示（仅一次，与 advanceTime 共享标志）
   if (
