@@ -933,14 +933,25 @@
                 <span v-if="fb.player_name"> · 角色：{{ fb.player_name }}</span>
                 <span> · {{ new Date(fb.created_at).toLocaleString() }}</span>
               </div>
-              <div class="flex gap-2 mt-2">
-                <button
-                  v-if="fb.user_id"
-                  class="btn text-xs"
-                  @click="prepareFeedbackCompensation(fb)"
-                >
-                  补偿该玩家
-                </button>
+              <div class="mt-2 space-y-2">
+                <textarea
+                  v-model="fb.admin_reply_tmp"
+                  class="input min-h-20 w-full"
+                  maxlength="4000"
+                  placeholder="直接回复玩家；处理意见会显示在玩家的“我的反馈”中"
+                ></textarea>
+                <div class="flex gap-2">
+                  <button class="btn text-xs" @click="saveFeedbackReply(fb)">
+                    保存回复
+                  </button>
+                  <button
+                    v-if="fb.user_id"
+                    class="btn text-xs"
+                    @click="prepareFeedbackCompensation(fb)"
+                  >
+                    发放采纳奖励
+                  </button>
+                </div>
               </div>
             </div>
           </template>
@@ -1336,6 +1347,7 @@ async function loadFeedbacks() {
     feedbacks.value = (data.feedbacks || []).map((f: any) => ({
       ...f,
       status_tmp: f.status,
+      admin_reply_tmp: f.admin_reply || "",
     }));
   } catch {}
 }
@@ -1344,11 +1356,31 @@ async function updateFeedbackStatus(fb: any) {
     await api(`/api/admin/feedbacks/${fb.id}`, {
       method: "PUT",
       headers: headers(),
-      body: JSON.stringify({ status: fb.status_tmp }),
+      body: JSON.stringify({
+        status: fb.status_tmp,
+        adminReply: fb.admin_reply_tmp || "",
+      }),
     });
     fb.status = fb.status_tmp;
   } catch {
     fb.status_tmp = fb.status;
+  }
+}
+async function saveFeedbackReply(fb: any) {
+  try {
+    await api(`/api/admin/feedbacks/${fb.id}`, {
+      method: "PUT",
+      headers: headers(),
+      body: JSON.stringify({
+        status: fb.status_tmp,
+        adminReply: fb.admin_reply_tmp || "",
+      }),
+    });
+    fb.status = fb.status_tmp;
+    fb.admin_reply = fb.admin_reply_tmp || null;
+    setMsg("反馈回复已保存，玩家可在“我的反馈”中查看");
+  } catch (e: any) {
+    setMsg(e.message || "反馈回复保存失败", "error");
   }
 }
 function prepareFeedbackCompensation(fb: any) {

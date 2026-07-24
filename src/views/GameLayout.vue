@@ -1431,6 +1431,7 @@ let realtimeSaveScheduled = false;
 let realtimeSavePending = false;
 let accountAutoSaveInFlight = false;
 let realtimeSaveApplyingServerState = false;
+let realtimeSaveCapturing = false;
 let lastRealtimeSaveSucceeded = true;
 let pendingRealtimeSave: {
   characterId: string;
@@ -1450,7 +1451,16 @@ const captureRuntimeSave = () => {
   if (!gameStore.isGameStarted || saveStore.activeSlot < 0) return false;
   const slot = saveStore.activeSlot;
   const characterId = localStorage.getItem("taoyuan_active_character_id") || "";
-  if (!characterId || !accountToken() || !saveStore.saveToSlot(slot)) return false;
+  if (!characterId || !accountToken()) return false;
+  // Some serialize() helpers normalize their own store state. Those synchronous
+  // internal mutations are part of this snapshot, not a new player action;
+  // otherwise each capture schedules another capture and explicit flushes time out.
+  realtimeSaveCapturing = true;
+  try {
+    if (!saveStore.saveToSlot(slot)) return false;
+  } finally {
+    realtimeSaveCapturing = false;
+  }
   const raw = saveStore.getRaw(slot);
   const data = raw ? parseSaveData(raw) : null;
   if (!raw || !data?.savedAt) return false;
@@ -1868,6 +1878,7 @@ const scheduleRealtimeSave = () => {
   });
 };
 const handlePlayerStateChanged = () => {
+  if (realtimeSaveCapturing) return;
   realtimeSavePending = true;
   scheduleRealtimeSave();
 };

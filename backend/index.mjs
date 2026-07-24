@@ -219,6 +219,8 @@ async function ensureSchema() {
     title VARCHAR(100) NOT NULL,
     content TEXT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending|read|resolved|closed',
+    admin_reply TEXT NULL,
+    replied_at DATETIME NULL,
     ip VARCHAR(80) NULL,
     user_agent VARCHAR(255) NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -227,6 +229,17 @@ async function ensureSchema() {
     INDEX idx_feedbacks_created (created_at),
     INDEX idx_feedbacks_ip_created (ip, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+
+  const [feedbackAdminReplyColumns] = await pool.execute(
+    "SHOW COLUMNS FROM feedbacks WHERE Field IN ('admin_reply', 'replied_at')",
+  );
+  const feedbackAdminReplyColumnNames = new Set(
+    feedbackAdminReplyColumns.map((row) => row.Field),
+  );
+  if (!feedbackAdminReplyColumnNames.has("admin_reply"))
+    await pool.execute("ALTER TABLE feedbacks ADD COLUMN admin_reply TEXT NULL AFTER status");
+  if (!feedbackAdminReplyColumnNames.has("replied_at"))
+    await pool.execute("ALTER TABLE feedbacks ADD COLUMN replied_at DATETIME NULL AFTER admin_reply");
 
   const [feedbackIpCreatedIdx] = await pool.execute(
     "SHOW INDEX FROM feedbacks WHERE Key_name = 'idx_feedbacks_ip_created'",
@@ -3649,7 +3662,7 @@ app.get("/api/feedbacks", async (req, res) => {
     if (!user) return send(res, 401, { error: "请先登录账号" });
     const limit = Math.max(1, Math.min(Number(req.query.limit) || 50, 100));
     const [rows] = await pool.execute(
-      `SELECT id, category, title, content, status, created_at
+      `SELECT id, category, title, content, status, admin_reply, replied_at, created_at
        FROM feedbacks
        WHERE user_id = ?
        ORDER BY created_at DESC, id DESC
@@ -3663,9 +3676,9 @@ app.get("/api/feedbacks", async (req, res) => {
         title: row.title,
         content: row.content,
         status: row.status,
-        adminReply: null,
+        adminReply: row.admin_reply || null,
         createdAt: row.created_at,
-        updatedAt: null,
+        updatedAt: row.replied_at || null,
       })),
     });
   } catch (e) {
@@ -3721,13 +3734,16 @@ app.put("/api/admin/feedbacks/:id", async (req, res) => {
   try {
     const u = await requireAdmin(req, res);
     if (!u) return;
-    const { status } = req.body || {};
+    const { status, adminReply } = req.body || {};
     if (!status || !["pending", "read", "resolved", "closed"].includes(status))
       return send(res, 400, { error: "状态无效" });
-    await pool.execute("UPDATE feedbacks SET status = ? WHERE id = ?", [
-      status,
-      req.params.id,
-    ]);
+    const reply = String(adminReply ?? "").trim().slice(0, 4000);
+    await pool.execute(
+      `UPDATE feedbacks
+       SET status = ?, admin_reply = ?, replied_at = CASE WHEN ? <> '' THEN NOW() ELSE replied_at END
+       WHERE id = ?`,
+      [status, reply || null, reply, req.params.id],
+    );
     send(res, 200, { ok: true });
   } catch (e) {
     console.error("admin feedback put err", e);
