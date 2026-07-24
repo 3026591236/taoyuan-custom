@@ -578,10 +578,12 @@ export const useLongTermStore = defineStore("longTerm", () => {
   const canClaimReturnGift = computed(
     () => daysAway.value >= 3 && returnGiftClaimedKey.value !== dayKey.value,
   );
-  const currentAdventure = computed(
-    () =>
-      ADVENTURES[adventureIndex.value % ADVENTURES.length] ?? ADVENTURES[0]!,
-  );
+  const currentAdventure = computed(() => {
+    const completed = new Set(adventureDone.value);
+    const current = ADVENTURES[adventureIndex.value];
+    if (current && !completed.has(current.id)) return current;
+    return ADVENTURES.find((adventure) => !completed.has(adventure.id)) ?? null;
+  });
   const worldBossTiers = computed(() =>
     BOSS_TIERS.map((t) => ({
       ...t,
@@ -827,7 +829,7 @@ export const useLongTermStore = defineStore("longTerm", () => {
   }
   function finishAdventure(choiceId: string) {
     const adv = currentAdventure.value;
-    if (!adv) return { success: false, message: "暂无奇遇" };
+    if (!adv) return { success: false, message: "当前奇遇链已全部完成" };
     if (adventureDone.value.includes(adv.id))
       return { success: false, message: "本轮奇遇已完成" };
     const choice = adv.choices.find((c) => c.id === choiceId);

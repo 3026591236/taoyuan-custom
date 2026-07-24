@@ -375,6 +375,12 @@
           </button>
         </div>
       </div>
+      <div v-else class="reward-card claimed">
+        <p class="text-sm text-accent">现有奇遇链已全部完成</p>
+        <p class="text-xs text-muted mt-1 leading-relaxed">
+          已完成 {{ longTerm.adventureStory.completed }} 段奇遇，后续奇遇开放后可继续探索；已完成的首段不会再错误亮起。
+        </p>
+      </div>
     </section>
 
     <section class="game-panel space-y-3">
@@ -382,13 +388,17 @@
         <div>
           <h2 class="text-accent text-lg">七日豪礼</h2>
           <p class="text-xs text-muted leading-relaxed mt-1">
-            新角色前七个游戏日逐步解锁，给新手一个明确的第7日目标。
+            新角色前七个游戏日逐步解锁；这是一次性成长豪礼，第7日领完后不会在第8日重置。
           </p>
         </div>
         <div class="text-right">
           <p class="text-2xl">📅</p>
           <p class="text-[10px] text-muted">
-            当前第 {{ retention.installDayIndex }} 日
+            {{
+              retention.claimableSevenDayCount > 0
+                ? `当前第 ${retention.installDayIndex} 日`
+                : "七日豪礼已完成"
+            }}
           </p>
         </div>
       </div>
