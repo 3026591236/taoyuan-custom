@@ -1880,6 +1880,7 @@ const waitForRealtimeSaveIdle = async (timeoutMs = 10000) => {
 };
 const flushRealtimeSaveCurrent = async (timeoutMs = 15000) => {
   const deadline = Date.now() + timeoutMs;
+  let capturedForFlush = false;
   while (Date.now() < deadline) {
     // Let the mutation-burst microtask run before deciding whether a capture is
     // needed. Explicit grant/sleep flushes must wait for the latest state,
@@ -1888,9 +1889,12 @@ const flushRealtimeSaveCurrent = async (timeoutMs = 15000) => {
     if (!(await waitForRealtimeSaveIdle(Math.max(0, deadline - Date.now()))))
       return false;
     if (realtimeSaveScheduled) continue;
-    if (realtimeSavePending || !pendingRealtimeSave) {
+    // Force exactly one fresh snapshot for this flush. After it succeeds, only
+    // capture again when a real player-state mutation arrived during the PUT;
+    // otherwise !pendingRealtimeSave would manufacture an endless save loop.
+    if (realtimeSavePending || (!pendingRealtimeSave && !capturedForFlush)) {
       realtimeSavePending = false;
-      captureRuntimeSave();
+      capturedForFlush = captureRuntimeSave() || capturedForFlush;
     }
     if (pendingRealtimeSave) {
       const saved = await autoSaveCurrent();

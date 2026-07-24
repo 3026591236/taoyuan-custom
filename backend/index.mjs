@@ -797,6 +797,12 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.3.9 奖励确认与休息存档修复",
+      date: "2026-07-24",
+      content:
+        "修复邮件、签到和悬浮福利领取后奖励账本写入失败的问题；修复强制保存成功后仍重复制造新存档、短时间连续提示奖励增量不匹配并导致休息结算失败的问题。待确认奖励会在重新进入角色后继续按服务器记录恢复，休息前后只写入必要的最新进度。",
+    },
+    {
       title: "V3.3.8 仙乡领地全图战略",
       date: "2026-07-23",
       content:
@@ -2683,9 +2689,11 @@ app.put("/api/saves/:slot", async (req, res) => {
           `INSERT INTO asset_ledger
            (user_id, character_id, slot, idempotency_key, event_type, source_type, source_id,
             delta_json, before_hash, after_hash)
-           SELECT user_id, character_id, slot, CONCAT('grant-apply:', id), 'grant_consumed',
-                  source_type, source_id, payload_json, NULL, ?
-           FROM asset_grants WHERE id = ? AND user_id = ?
+           SELECT grant_row.user_id, grant_row.character_id, grant_row.slot,
+                  CONCAT('grant-apply:', grant_row.id), 'grant_consumed',
+                  grant_row.source_type, grant_row.source_id, grant_row.payload_json, NULL, ?
+           FROM asset_grants AS grant_row
+           WHERE grant_row.id = ? AND grant_row.user_id = ?
            ON DUPLICATE KEY UPDATE idempotency_key = VALUES(idempotency_key)`,
           [baselineResult.saveHash, grantId, user.id],
         );
