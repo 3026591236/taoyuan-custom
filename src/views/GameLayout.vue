@@ -1896,24 +1896,25 @@ const scheduleRealtimeSave = () => {
 };
 const handlePlayerStateChanged = (event: Event) => {
   if (realtimeSaveCapturing) return;
-  realtimeSavePending = true;
   const detail = (event as CustomEvent<{
     storeId?: string;
     keys?: string[];
     naturalClockTick?: boolean;
   }>).detail;
   if (detail?.naturalClockTick) {
-    // The real-time clock explicitly tags its own 5 Hz visual movement. Do not
-    // depend on Pinia mutation keys here: production builds may omit them and
-    // previously turned every clock frame into a complete cloud-save upload.
+    // A natural clock frame is not pending save work yet. Marking it pending
+    // before the 30-second timer made every 5 Hz tick enqueue another PUT while
+    // a save/flush was in flight, so sleep could never observe an idle queue.
     if (realtimeClockSaveTimer == null) {
       realtimeClockSaveTimer = window.setTimeout(() => {
         realtimeClockSaveTimer = null;
+        realtimeSavePending = true;
         scheduleRealtimeSave();
       }, 30000);
     }
     return;
   }
+  realtimeSavePending = true;
   if (realtimeClockSaveTimer != null) {
     window.clearTimeout(realtimeClockSaveTimer);
     realtimeClockSaveTimer = null;
