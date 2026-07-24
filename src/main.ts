@@ -20,8 +20,18 @@ pinia.use(({ store }) => {
   // 玩家状态一旦变化就通知云存档链路；不再依赖固定周期轮询。
   // save store 只保存槽位控制状态，排除它可避免写档动作自身再次触发写档。
   if (store.$id !== 'save') {
-    store.$subscribe(() => {
-      window.dispatchEvent(new CustomEvent('taoyuan:player-state-changed'))
+    store.$subscribe((mutation: any) => {
+      const events = Array.isArray(mutation.events)
+        ? mutation.events
+        : mutation.events
+          ? [mutation.events]
+          : []
+      const keys = events
+        .map((event: any) => String(event?.key ?? ''))
+        .filter(Boolean)
+      window.dispatchEvent(new CustomEvent('taoyuan:player-state-changed', {
+        detail: { storeId: store.$id, keys },
+      }))
     }, { detached: true, flush: 'sync' })
   }
 })

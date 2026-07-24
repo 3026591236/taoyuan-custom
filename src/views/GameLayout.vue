@@ -1429,6 +1429,7 @@ const stopOnlineStaminaRegen = () => {
 let realtimeSaveListening = false;
 let realtimeSaveScheduled = false;
 let realtimeSavePending = false;
+let realtimeClockSaveTimer: number | null = null;
 let accountAutoSaveInFlight = false;
 let realtimeSaveApplyingServerState = false;
 let realtimeSaveCapturing = false;
@@ -1877,9 +1878,29 @@ const scheduleRealtimeSave = () => {
     if (captureRuntimeSave()) void autoSaveCurrent();
   });
 };
-const handlePlayerStateChanged = () => {
+const handlePlayerStateChanged = (event: Event) => {
   if (realtimeSaveCapturing) return;
   realtimeSavePending = true;
+  const detail = (event as CustomEvent<{ storeId?: string; keys?: string[] }>).detail;
+  const isClockTick =
+    detail?.storeId === "game" &&
+    detail.keys?.length === 1 &&
+    detail.keys[0] === "hour";
+  if (isClockTick) {
+    // Clock display changes five times per second. Uploading a complete mature
+    // save (~180 KB) for every visual tick can consume nearly 1 MB/s.
+    if (realtimeClockSaveTimer == null) {
+      realtimeClockSaveTimer = window.setTimeout(() => {
+        realtimeClockSaveTimer = null;
+        scheduleRealtimeSave();
+      }, 5000);
+    }
+    return;
+  }
+  if (realtimeClockSaveTimer != null) {
+    window.clearTimeout(realtimeClockSaveTimer);
+    realtimeClockSaveTimer = null;
+  }
   scheduleRealtimeSave();
 };
 const waitForRealtimeSaveIdle = async (timeoutMs = 10000) => {
@@ -1996,6 +2017,10 @@ const stopRealtimeSave = () => {
   realtimeSaveListening = false;
   realtimeSaveScheduled = false;
   realtimeSavePending = false;
+  if (realtimeClockSaveTimer != null) {
+    window.clearTimeout(realtimeClockSaveTimer);
+    realtimeClockSaveTimer = null;
+  }
   pendingRealtimeSave = null;
   window.removeEventListener(
     "taoyuan:player-state-changed",
