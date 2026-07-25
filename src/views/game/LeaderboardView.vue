@@ -32,43 +32,94 @@
     <div v-else class="space-y-1">
       <div
         v-for="(entry, idx) in entries"
-        :key="idx"
-        class="leaderboard-row border border-accent/15 rounded-xs p-2 flex items-center gap-2"
+        :key="`${entry.playerName}-${entry.realmName}-${idx}`"
+        class="leaderboard-row border border-accent/15 rounded-xs p-2"
         :class="rankRowClass(idx)"
       >
-        <span
-          class="rank-badge text-lg w-8 text-center shrink-0"
-          :class="rankBadgeClass(idx)"
-          >{{ idx < 3 ? ["🥇", "🥈", "🥉"][idx] : idx + 1 }}</span
-        >
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2">
-            <span
-              class="rank-name text-sm truncate"
-              :class="rankNameClass(idx)"
-              :data-name="entry.playerName"
-              >{{ entry.playerName }}</span
-            >
-            <span
-              v-if="entry.daoTitle"
-              class="dao-title text-[10px] shrink-0"
-              >「{{ entry.daoTitle }}」</span
-            >
-            <span
-              v-if="idx < 10"
-              class="rank-effect-tag text-[10px]"
-              :class="rankTagClass(idx)"
-              >{{ rankEffectLabel(idx) }}</span
-            >
-            <span class="text-[10px] text-muted">{{ entry.realmName }}</span>
+        <div class="flex items-center gap-2">
+          <span
+            class="rank-badge text-lg w-8 text-center shrink-0"
+            :class="rankBadgeClass(idx)"
+            >{{ idx < 3 ? ["🥇", "🥈", "🥉"][idx] : idx + 1 }}</span
+          >
+          <button
+            type="button"
+            class="profile-avatar shrink-0"
+            :class="profileAvatarClass(entry)"
+            :aria-label="`查看${entry.playerName}的公开仙籍`"
+            :aria-expanded="expandedEntryKey === entryKey(entry, idx)"
+            @click="toggleProfile(entry, idx)"
+          >
+            <span class="profile-halo">✦</span>
+            <span class="profile-head"></span>
+            <span class="profile-body"></span>
+          </button>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span
+                class="rank-name text-sm truncate"
+                :class="rankNameClass(idx)"
+                :data-name="entry.playerName"
+                >{{ entry.playerName }}</span
+              >
+              <span
+                v-if="entry.daoTitle"
+                class="dao-title text-[10px] shrink-0"
+                >「{{ entry.daoTitle }}」</span
+              >
+              <span
+                v-if="idx < 10"
+                class="rank-effect-tag text-[10px]"
+                :class="rankTagClass(idx)"
+                >{{ rankEffectLabel(idx) }}</span
+              >
+              <span class="text-[10px] text-muted">{{ entry.realmName }}</span>
+            </div>
+            <div class="text-[10px] text-muted flex items-center gap-2">
+              <span>第{{ entry.year }}年 {{ entry.season }} 第{{ entry.day }}天</span>
+              <button
+                type="button"
+                class="profile-toggle"
+                @click="toggleProfile(entry, idx)"
+              >
+                {{ expandedEntryKey === entryKey(entry, idx) ? "收起仙籍" : "查看仙籍" }}
+              </button>
+            </div>
           </div>
-          <div class="text-[10px] text-muted">
-            第{{ entry.year }}年 {{ entry.season }} 第{{ entry.day }}天
+          <div class="text-right shrink-0">
+            <div class="text-sm text-accent">{{ formatValue(entry) }}</div>
+            <div class="text-[10px] text-muted">{{ activeTabLabel }}</div>
           </div>
         </div>
-        <div class="text-right shrink-0">
-          <div class="text-sm text-accent">{{ formatValue(entry) }}</div>
-          <div class="text-[10px] text-muted">{{ activeTabLabel }}</div>
+        <div
+          v-if="expandedEntryKey === entryKey(entry, idx)"
+          class="public-profile mt-2 pt-2 border-t border-accent/15"
+        >
+          <div class="public-profile-title">
+            <span>✦ 公开仙籍</span>
+            <span>{{ entry.publicProfile?.ascended ? "仙界英姿" : "凡界英姿" }}</span>
+          </div>
+          <div class="public-profile-grid">
+            <div><span>身份</span><b>{{ entry.publicProfile?.genderLabel || "未公开" }}</b></div>
+            <div><span>境界</span><b>{{ entry.realmName || "凡人" }}</b></div>
+            <div><span>灵根</span><b>{{ entry.publicProfile?.spiritRoot || "未显灵根" }}</b></div>
+            <div class="col-span-2 profile-attributes">
+              <span>资质</span>
+              <b>
+                根骨 {{ entry.publicProfile?.attributes?.physique || 1 }} ·
+                力道 {{ entry.publicProfile?.attributes?.strength || 1 }} ·
+                身法 {{ entry.publicProfile?.attributes?.agility || 1 }} ·
+                悟性 {{ entry.publicProfile?.attributes?.perception || 1 }}
+              </b>
+            </div>
+            <template v-if="entry.publicProfile?.ascended">
+              <div><span>仙籍</span><b>{{ entry.publicProfile.immortalRank || "初录仙籍" }}</b></div>
+              <div><span>仙职</span><b>{{ entry.publicProfile.immortalOffice || "未授仙职" }}</b></div>
+              <div><span>道统</span><b>{{ entry.publicProfile.lineage || "未立道统" }}</b></div>
+              <div class="col-span-2"><span>本命仙术</span><b>{{ entry.publicProfile.immortalArt || "尚未显化" }}</b></div>
+            </template>
+          </div>
+          <p class="public-profile-note">仅展示角色公开资料，不显示账号、资产与存档隐私。</p>
         </div>
       </div>
     </div>
@@ -101,6 +152,20 @@ const activeTab = ref("cultivation");
 const entries = ref<any[]>([]);
 const loading = ref(false);
 const loadError = ref("");
+const expandedEntryKey = ref("");
+
+const entryKey = (entry: any, idx: number) =>
+  `${entry?.playerName || "无名"}-${entry?.realmName || "凡人"}-${idx}`;
+
+const toggleProfile = (entry: any, idx: number) => {
+  const key = entryKey(entry, idx);
+  expandedEntryKey.value = expandedEntryKey.value === key ? "" : key;
+};
+
+const profileAvatarClass = (entry: any) => ({
+  "profile-avatar-female": entry?.publicProfile?.gender === "female",
+  "profile-avatar-immortal": entry?.publicProfile?.ascended === true,
+});
 
 const activeTabLabel = computed(
   () => tabs.find((t) => t.key === activeTab.value)?.label ?? "",
@@ -178,6 +243,7 @@ const loadLeaderboard = async () => {
   loading.value = true;
   loadError.value = "";
   try {
+    expandedEntryKey.value = "";
     const synced = await flushRealtimeSave();
     if (!synced) {
       entries.value = [];
@@ -244,6 +310,145 @@ onMounted(loadLeaderboard);
   inset: 0;
   opacity: 0;
   pointer-events: none;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 34px;
+  height: 38px;
+  overflow: hidden;
+  border: 1px solid rgba(208, 170, 92, 0.35);
+  border-radius: 8px 8px 5px 5px;
+  background: linear-gradient(180deg, rgba(32, 52, 63, 0.95), rgba(15, 25, 30, 0.95));
+  box-shadow: inset 0 0 10px rgba(108, 184, 178, 0.08);
+}
+
+.profile-avatar:focus-visible,
+.profile-avatar:hover {
+  border-color: rgba(220, 183, 101, 0.85);
+  box-shadow: 0 0 10px rgba(220, 183, 101, 0.22);
+}
+
+.profile-head,
+.profile-body {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: block;
+}
+
+.profile-head {
+  top: 7px;
+  width: 13px;
+  height: 13px;
+  border-radius: 45% 45% 48% 48%;
+  background: #d7b58b;
+  box-shadow: 0 -4px 0 1px #27343c;
+}
+
+.profile-body {
+  bottom: -4px;
+  width: 27px;
+  height: 20px;
+  border-radius: 45% 45% 0 0;
+  background: linear-gradient(135deg, #3d6870, #243e4b 65%);
+  border-top: 2px solid rgba(215, 181, 139, 0.55);
+}
+
+.profile-avatar-female .profile-head {
+  box-shadow: -4px -3px 0 1px #3b2f3d, 4px -3px 0 1px #3b2f3d;
+}
+
+.profile-avatar-female .profile-body {
+  background: linear-gradient(135deg, #72526f, #3f405d 65%);
+}
+
+.profile-halo {
+  position: absolute;
+  z-index: 2;
+  right: 2px;
+  top: 0;
+  color: rgba(244, 205, 112, 0);
+  font-size: 10px;
+}
+
+.profile-avatar-immortal {
+  border-color: rgba(244, 205, 112, 0.72);
+  background: radial-gradient(circle at 50% 25%, rgba(120, 211, 220, 0.3), rgba(25, 30, 54, 0.95) 68%);
+}
+
+.profile-avatar-immortal .profile-halo {
+  color: #f4cd70;
+  text-shadow: 0 0 6px rgba(244, 205, 112, 0.8);
+}
+
+.profile-toggle {
+  color: rgba(217, 181, 102, 0.9);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.public-profile {
+  position: relative;
+  z-index: 1;
+}
+
+.public-profile-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: rgba(225, 190, 111, 0.95);
+  font-size: 11px;
+}
+
+.public-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.public-profile-grid > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 6px;
+  border: 1px solid rgba(208, 170, 92, 0.14);
+  border-radius: 3px;
+  background: rgba(11, 23, 29, 0.35);
+  font-size: 10px;
+}
+
+.public-profile-grid span {
+  color: rgba(155, 168, 169, 0.9);
+}
+
+.public-profile-grid b {
+  overflow: hidden;
+  color: rgba(226, 199, 139, 0.95);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-profile-grid .profile-attributes {
+  align-items: flex-start;
+}
+
+.public-profile-grid .profile-attributes b {
+  overflow: visible;
+  text-align: right;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.public-profile-note {
+  margin-top: 5px;
+  color: rgba(142, 157, 159, 0.75);
+  font-size: 9px;
+  text-align: right;
 }
 
 .rank-row-gold {

@@ -3763,10 +3763,87 @@ app.put("/api/admin/feedbacks/:id", async (req, res) => {
   }
 });
 
+// 排行榜公开仙籍只从固定枚举生成，避免把客户端存档中的任意文本原样公开。
+const LEADERBOARD_GENDERS = new Set(["male", "female"]);
+const LEADERBOARD_SPIRIT_ROOTS = {
+  mixed: "杂灵根",
+  wood: "木灵根",
+  water: "水灵根",
+  earth: "土灵根",
+  fire: "火灵根",
+  metal: "金灵根",
+  celestial: "天灵根",
+};
+const LEADERBOARD_IMMORTAL_OFFICES = {
+  xuntian: "巡天仙使",
+  sinong: "司农仙官",
+  lianbao: "炼宝仙官",
+  wenming: "文命仙官",
+};
+const LEADERBOARD_IMMORTAL_LINEAGES = {
+  sword_dao: "星河剑统",
+  thunder_dao: "紫霄雷统",
+  harvest_dao: "司农仙统",
+  fate_dao: "文命道统",
+};
+const LEADERBOARD_IMMORTAL_ARTS = {
+  starfall_sword: "星河落刃",
+  purple_thunder_seal: "紫霄雷印",
+  solar_flame: "九曜焚天",
+  cloud_body: "云篆护体",
+  void_tide_heart: "归墟潮心",
+  fallen_star_core: "坠星傀核",
+  demon_lamp: "净魔心灯",
+  law_eye: "逆律天瞳",
+};
+const leaderboardSafeInt = (value, min, max, fallback = 0) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(min, Math.min(max, Math.trunc(parsed)));
+};
+const leaderboardImmortalRank = (asc = {}) => {
+  if (!asc || asc.ascended !== true) return "";
+  const merit = leaderboardSafeInt(asc.merit, 0, 1_000_000_000);
+  const jade = leaderboardSafeInt(asc.immortalJade, 0, 1_000_000_000);
+  const rules = leaderboardSafeInt(asc.ruleFragments, 0, 1_000_000_000);
+  const score = merit + jade * 3 + rules * 5;
+  if (score >= 360) return "太乙仙班";
+  if (score >= 180) return "上清仙籍";
+  if (score >= 80) return "云阙仙籍";
+  return "初录仙籍";
+};
+const leaderboardPublicProfile = (player = {}, cultivation = {}, ascension = {}) => {
+  const ascended = ascension?.ascended === true;
+  const gender = LEADERBOARD_GENDERS.has(player?.gender) ? player.gender : "unknown";
+  const spiritRoot = LEADERBOARD_SPIRIT_ROOTS[cultivation?.spiritRoot] || "未显灵根";
+  const sourceAttributes = player?.attributes && typeof player.attributes === "object" ? player.attributes : {};
+  const attributeLevel = (key) =>
+    leaderboardSafeInt(sourceAttributes?.[key]?.level, 1, 60, 1);
+  return {
+    gender,
+    genderLabel: gender === "male" ? "男修" : gender === "female" ? "女修" : "未公开",
+    spiritRoot,
+    attributes: {
+      physique: attributeLevel("physique"),
+      strength: attributeLevel("strength"),
+      agility: attributeLevel("agility"),
+      perception: attributeLevel("perception"),
+    },
+    ascended,
+    immortalRank: ascended ? leaderboardImmortalRank(ascension) : "",
+    immortalOffice: ascended ? LEADERBOARD_IMMORTAL_OFFICES[ascension?.immortalOffice] || "" : "",
+    lineage: ascended ? LEADERBOARD_IMMORTAL_LINEAGES[ascension?.immortalLineage] || "" : "",
+    immortalArt: ascended ? LEADERBOARD_IMMORTAL_ARTS[ascension?.lastArtId] || "" : "",
+  };
+};
+
 // --- 排行榜（优先从 saves.data_json 实时读取；坏数据用 meta/player_name/cache 兜底） ---
 app.get("/api/leaderboard", async (req, res) => {
   try {
-    const by = req.query.by || "cultivation";
+    const requestedBy = String(req.query.by || "cultivation");
+    const by = ["cultivation", "power", "money", "aura"].includes(requestedBy)
+      ? requestedBy
+      : "cultivation";
     const [rows] = await pool.execute(
       `SELECT s.user_id, u.username, s.slot, s.player_name, s.data_json, s.meta_json, s.updated_at,
               lb.realm_name AS cached_realm_name, lb.cultivation AS cached_cultivation, lb.aura AS cached_aura,
@@ -3815,6 +3892,7 @@ app.get("/api/leaderboard", async (req, res) => {
           p.playerName || p.name || meta.playerName || r.player_name || "无名",
         // data_json 属于客户端输入，返回排行榜前必须在服务端再次清洗。
         daoTitle: normalizeDaoTitle(p.daoTitle),
+        publicProfile: leaderboardPublicProfile(p, cu, asc),
         realmName: realmNameFromSave(cu, asc) || r.cached_realm_name || "凡人",
         realmIndex: realmIdx,
         rebirthCount: Number(cu.rebirthCount || 0) || 0,
@@ -3871,7 +3949,22 @@ app.get("/api/leaderboard", async (req, res) => {
         );
       } catch {}
     }
-    send(res, 200, { leaderboard: entries.slice(0, 50) });
+    const publicEntries = entries.slice(0, 50).map((entry) => ({
+      playerName: normalizePlayerName(entry.playerName) || "无名",
+      daoTitle: entry.daoTitle,
+      publicProfile: entry.publicProfile,
+      realmName: entry.realmName,
+      realmIndex: entry.realmIndex,
+      rebirthCount: entry.rebirthCount,
+      cultivation: entry.cultivation,
+      combatPower: entry.combatPower,
+      aura: entry.aura,
+      money: entry.money,
+      year: entry.year,
+      season: entry.season,
+      day: entry.day,
+    }));
+    send(res, 200, { leaderboard: publicEntries });
   } catch (e) {
     console.error("lb err", e);
     send(res, 500, { error: "服务器错误" });
