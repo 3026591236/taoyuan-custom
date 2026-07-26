@@ -46,6 +46,8 @@ import {
   PROTECTED_CONSUMABLES,
 } from "./lib/consumable-use.mjs";
 import { canonicalJson } from "./lib/save-payload.mjs";
+import { sanitizeAvatarId, validateCharacterName, renameTrustedSave } from "./lib/account-profile.mjs";
+import { validateNewPassword } from "./lib/account-auth.mjs";
 
 // 兼容旧 pbkdf2 密码验证
 function verifyLegacyPassword(password, stored) {
@@ -809,6 +811,11 @@ const defaultConfig = {
     ],
   },
   updateLogs: [
+    {
+      title: "V3.3.16 账号资料与四时乐章",
+      date: "2026-07-25",
+      content: "设置新增账号页：安全预设头像可同步到排行榜；改名由服务端事务原子校验全服唯一并消耗改名卡，支持幂等请求；验证旧密码后可修改密码并撤销其他会话。仙市新增高价年度限购改名卡。背景音乐新增四种合成曲风，保留季节、天气、时段及节庆/小游戏覆盖规则并持久化选择。",
+    },
     {
       title: "V3.3.15 仙界成长存档守卫",
       date: "2026-07-25",
@@ -2062,6 +2069,29 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+app.post("/api/auth/change-password", async (req, res) => {
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    const currentPassword = String(req.body?.currentPassword || "");
+    const newPasswordCheck = validateNewPassword(req.body?.newPassword);
+    if (!newPasswordCheck.ok) return send(res, 400, { error: newPasswordCheck.message });
+    const newPassword = newPasswordCheck.password;
+    const hash = String(user.password_hash || "");
+    const valid = hash.startsWith("$2") ? bcrypt.compareSync(currentPassword, hash) : verifyLegacyPassword(currentPassword, hash);
+    if (!valid) return send(res, 401, { error: "旧密码错误" });
+    const token = String(req.headers.authorization || "").startsWith("Bearer ") ? String(req.headers.authorization).slice(7) : "";
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      await conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", [bcrypt.hashSync(newPassword, 12), user.id]);
+      await conn.execute("DELETE FROM sessions WHERE user_id = ? AND token <> ?", [user.id, token]);
+      await conn.commit();
+    } catch (error) { await conn.rollback(); throw error; } finally { conn.release(); }
+    send(res, 200, { ok: true, message: "密码已修改，其他会话已撤销。" });
+  } catch (e) { console.error("change password err", e); send(res, 500, { error: "服务器错误" }); }
+});
+
 app.post("/api/auth/logout", async (req, res) => {
   try {
     const h = req.headers.authorization || "",
@@ -2087,7 +2117,7 @@ app.get("/api/characters", async (req, res) => {
     const user = await auth(req);
     if (!user) return send(res, 401, { error: "请先登录" });
     const [rows] = await pool.execute(
-      `SELECT c.id, c.slot, c.name, c.gender, c.created_at, c.updated_at, s.meta_json, s.updated_at AS save_updated_at
+      `SELECT c.id, c.slot, c.name, c.gender, c.avatar_id, c.created_at, c.updated_at, s.meta_json, s.updated_at AS save_updated_at
       FROM characters c LEFT JOIN saves s ON s.character_id = c.id
       WHERE c.user_id = ? ORDER BY c.slot`,
       [user.id],
@@ -2098,6 +2128,7 @@ app.get("/api/characters", async (req, res) => {
         slot: r.slot,
         name: r.name,
         gender: r.gender,
+        avatarId: sanitizeAvatarId(r.avatar_id),
         createdAt: r.created_at,
         updatedAt: r.updated_at,
         saveUpdatedAt: r.save_updated_at,
@@ -2111,6 +2142,73 @@ app.get("/api/characters", async (req, res) => {
     console.error("characters err", e);
     send(res, 500, { error: "服务器错误" });
   }
+});
+
+app.patch("/api/characters/:id/avatar", async (req, res) => {
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    const avatarId = sanitizeAvatarId(req.body?.avatarId);
+    if (avatarId !== req.body?.avatarId) return send(res, 400, { error: "头像不在安全预设中" });
+    const [result] = await pool.execute("UPDATE characters SET avatar_id = ? WHERE id = ? AND user_id = ?", [avatarId, req.params.id, user.id]);
+    if (!result.affectedRows) return send(res, 404, { error: "角色不存在" });
+    send(res, 200, { ok: true, avatarId });
+  } catch (e) { console.error("avatar err", e); send(res, 500, { error: "服务器错误" }); }
+});
+
+app.post("/api/characters/:id/rename", async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const user = await auth(req);
+    if (!user) return send(res, 401, { error: "请先登录" });
+    const checked = validateCharacterName(req.body?.name);
+    if (!checked.ok) return send(res, 400, { error: checked.message, code: checked.code });
+    const requestId = String(req.body?.requestId || "").trim().slice(0, 80);
+    if (!/^[a-zA-Z0-9_-]{12,80}$/.test(requestId)) return send(res, 400, { error: "缺少有效的请求编号" });
+    await conn.beginTransaction();
+    const [receipts] = await conn.execute("SELECT character_id, new_name FROM character_rename_receipts WHERE user_id = ? AND request_id = ? LIMIT 1 FOR UPDATE", [user.id, requestId]);
+    if (receipts.length) {
+      const receipt = receipts[0];
+      if (receipt.character_id !== req.params.id || receipt.new_name !== checked.name) {
+        await conn.rollback();
+        return send(res, 409, { error: "请求编号已绑定其他改名操作", code: "IDEMPOTENCY_BINDING_MISMATCH" });
+      }
+      await conn.commit();
+      return send(res, 200, { ok: true, name: receipt.new_name, replayed: true });
+    }
+    const [characters] = await conn.execute("SELECT id, slot, name FROM characters WHERE id = ? AND user_id = ? LIMIT 1 FOR UPDATE", [req.params.id, user.id]);
+    if (!characters.length) { await conn.rollback(); return send(res, 404, { error: "角色不存在" }); }
+    const character = characters[0];
+    if (character.name === checked.name) { await conn.rollback(); return send(res, 409, { error: "新名字与当前名字相同" }); }
+    const [duplicate] = await conn.execute("SELECT id FROM characters WHERE name = ? LIMIT 1 FOR UPDATE", [checked.name]);
+    if (duplicate.length) { await conn.rollback(); return send(res, 409, { error: "角色名已被使用" }); }
+    const [saves] = await conn.execute("SELECT raw, data_json, meta_json FROM saves WHERE user_id = ? AND character_id = ? AND slot = ? LIMIT 1 FOR UPDATE", [user.id, character.id, character.slot]);
+    if (!saves.length) { await conn.rollback(); return send(res, 409, { error: "角色云存档不存在" }); }
+    const trusted = safeJsonParse(saves[0].data_json, null);
+    const payloadCheck = validateSavePayload(saves[0].raw, trusted);
+    if (!payloadCheck.ok) {
+      await conn.rollback();
+      return send(res, 422, { error: "服务器云存档密文校验失败", code: payloadCheck.code });
+    }
+    const renamed = renameTrustedSave(payloadCheck.data, checked.name);
+    if (!renamed.ok) { await conn.rollback(); return send(res, 409, { error: renamed.message, code: renamed.code }); }
+    const meta = safeJsonParse(saves[0].meta_json, {}) || {}; meta.playerName = checked.name;
+    const dataJson = JSON.stringify(renamed.data);
+    await conn.execute("UPDATE characters SET name = ? WHERE id = ?", [checked.name, character.id]);
+    await conn.execute("UPDATE saves SET player_name = ?, raw = ?, data_json = ?, meta_json = ? WHERE user_id = ? AND character_id = ?", [checked.name, encryptSave(renamed.data), dataJson, JSON.stringify(meta), user.id, character.id]);
+    await conn.execute("UPDATE leaderboard SET player_name = ? WHERE user_id = ?", [checked.name, user.id]);
+    await persistAssetBaseline(conn, {
+      userId: user.id, characterId: character.id, slot: character.slot,
+      save: renamed.data, mode: await assetAuthorityMode(conn),
+    });
+    await conn.execute("INSERT INTO character_rename_receipts (request_id, user_id, character_id, old_name, new_name) VALUES (?, ?, ?, ?, ?)", [requestId, user.id, character.id, character.name, checked.name]);
+    await conn.commit();
+    send(res, 200, { ok: true, name: checked.name, reloadRequired: true });
+  } catch (e) {
+    try { await conn.rollback(); } catch {}
+    if (e?.code === "ER_DUP_ENTRY") return send(res, 409, { error: "角色名已被使用" });
+    console.error("rename err", e); send(res, 500, { error: "服务器错误" });
+  } finally { conn.release(); }
 });
 
 app.get("/api/check-char-name", async (req, res) => {
@@ -3851,13 +3949,14 @@ app.get("/api/leaderboard", async (req, res) => {
       ? requestedBy
       : "cultivation";
     const [rows] = await pool.execute(
-      `SELECT s.user_id, u.username, s.slot, s.player_name, s.data_json, s.meta_json, s.updated_at,
+      `SELECT s.user_id, u.username, s.slot, s.player_name, s.data_json, s.meta_json, s.updated_at, c.avatar_id,
               lb.realm_name AS cached_realm_name, lb.cultivation AS cached_cultivation, lb.aura AS cached_aura,
               lb.money AS cached_money, lb.game_year AS cached_year, lb.game_season AS cached_season, lb.game_day AS cached_day
        FROM saves s
        INNER JOIN (SELECT user_id, MAX(updated_at) as max_ts FROM saves GROUP BY user_id) latest
          ON s.user_id = latest.user_id AND s.updated_at = latest.max_ts
        JOIN users u ON u.id = s.user_id
+       LEFT JOIN characters c ON c.id = s.character_id
        LEFT JOIN leaderboard lb ON lb.user_id = s.user_id
        ORDER BY s.updated_at DESC`,
     );
@@ -3898,7 +3997,7 @@ app.get("/api/leaderboard", async (req, res) => {
           p.playerName || p.name || meta.playerName || r.player_name || "无名",
         // data_json 属于客户端输入，返回排行榜前必须在服务端再次清洗。
         daoTitle: normalizeDaoTitle(p.daoTitle),
-        publicProfile: leaderboardPublicProfile(p, cu, asc),
+        publicProfile: { ...leaderboardPublicProfile(p, cu, asc), avatarId: sanitizeAvatarId(r.avatar_id) },
         realmName: realmNameFromSave(cu, asc) || r.cached_realm_name || "凡人",
         realmIndex: realmIdx,
         rebirthCount: Number(cu.rebirthCount || 0) || 0,

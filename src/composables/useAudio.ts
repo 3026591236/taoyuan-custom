@@ -22,6 +22,14 @@ const loadTone = async (): Promise<ToneModule> => {
 
 const sfxEnabled = ref(true);
 const bgmEnabled = ref(true);
+export type BgmStyle = "classic" | "serene" | "bright" | "mystic";
+export const BGM_STYLES: { id: BgmStyle; name: string; description: string }[] = [
+  { id: "classic", name: "四时原声", description: "原有五声音阶，均衡自然" },
+  { id: "serene", name: "竹林清韵", description: "舒缓空灵，适合静修" },
+  { id: "bright", name: "云游欢歌", description: "明亮轻快，适合经营" },
+  { id: "mystic", name: "星河玄音", description: "低沉神秘，适合夜游" },
+];
+const bgmStyle = ref<BgmStyle>("classic");
 const sfxVolume = 0.3;
 const bgmVolume = 0.15;
 
@@ -1185,7 +1193,16 @@ const playBgmLoop = async (
     return;
   }
 
-  const baseConfig = BGM_CONFIG[type];
+  const originalConfig = BGM_CONFIG[type];
+  const seasonalStyle = !currentFestivalOverride && type !== "battle" ? bgmStyle.value : "classic";
+  const style = seasonalStyle === "serene"
+    ? { tempo: 1.28, pitch: 0.75, melodyWave: "sine" as WaveType, bassWave: "sine" as WaveType }
+    : seasonalStyle === "bright"
+      ? { tempo: 0.82, pitch: 1.19, melodyWave: "triangle" as WaveType, bassWave: originalConfig.bassWave }
+      : seasonalStyle === "mystic"
+        ? { tempo: 1.12, pitch: 0.67, melodyWave: "sine" as WaveType, bassWave: "triangle" as WaveType }
+        : { tempo: 1, pitch: 1, melodyWave: originalConfig.melodyWave, bassWave: originalConfig.bassWave };
+  const baseConfig = { ...originalConfig, noteDur: originalConfig.noteDur * style.tempo, melodyWave: style.melodyWave, bassWave: style.bassWave, melody: originalConfig.melody.map((n) => n > 0 ? n * style.pitch : 0), bass: originalConfig.bass.map((n) => n > 0 ? n * style.pitch : 0) };
   const isBattle = type === "battle";
   const weatherMod = isBattle
     ? WEATHER_MODIFIERS.sunny
@@ -1342,6 +1359,12 @@ export const useAudio = () => {
     sfxEnabled.value = !sfxEnabled.value;
   };
 
+  const setBgmStyle = (style: BgmStyle) => {
+    if (!BGM_STYLES.some((entry) => entry.id === style)) style = "classic";
+    bgmStyle.value = style;
+    if (bgmEnabled.value && !currentFestivalOverride) { stopBgm(); const { type, weather } = resolveCurrentBgm(); void playBgmLoop(type, weather); }
+  };
+
   const toggleBgm = () => {
     bgmEnabled.value = !bgmEnabled.value;
     if (bgmEnabled.value) {
@@ -1440,6 +1463,8 @@ export const useAudio = () => {
   return {
     sfxEnabled,
     bgmEnabled,
+    bgmStyle,
+    setBgmStyle,
     toggleSfx,
     toggleBgm,
     startBgm,

@@ -89,11 +89,12 @@ export const useSettingsStore = defineStore("settings", () => {
   };
 
   const serialize = () => {
-    const { sfxEnabled, bgmEnabled } = useAudio();
+    const { sfxEnabled, bgmEnabled, bgmStyle } = useAudio();
     return {
       fontSize: fontSize.value,
       sfxEnabled: sfxEnabled.value,
       bgmEnabled: bgmEnabled.value,
+      bgmStyle: bgmStyle.value,
       theme: theme.value,
       qmsgPosition: qmsgPosition.value,
       qmsgTimeout: qmsgTimeout.value,
@@ -128,9 +129,10 @@ export const useSettingsStore = defineStore("settings", () => {
     qmsgShowReverse.value = data?.qmsgShowReverse ?? false;
     inventoryFilter.value = data?.inventoryFilter ?? [];
     syncQmsgConfig();
-    const { sfxEnabled, bgmEnabled } = useAudio();
+    const { sfxEnabled, bgmEnabled, setBgmStyle } = useAudio();
     sfxEnabled.value = data?.sfxEnabled ?? true;
     bgmEnabled.value = data?.bgmEnabled ?? true;
+    setBgmStyle(data?.bgmStyle ?? "classic");
   };
 
   // 初始化时立即同步到 Qmsg，确保新游戏/首次加载也能生效

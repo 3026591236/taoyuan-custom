@@ -50,9 +50,7 @@
             :aria-expanded="expandedEntryKey === entryKey(entry, idx)"
             @click="toggleProfile(entry, idx)"
           >
-            <span class="profile-halo">✦</span>
-            <span class="profile-head"></span>
-            <span class="profile-body"></span>
+            <span class="profile-avatar-emoji">{{ avatarEmoji(entry.publicProfile?.avatarId) }}</span>
           </button>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
@@ -161,6 +159,9 @@ const toggleProfile = (entry: any, idx: number) => {
   const key = entryKey(entry, idx);
   expandedEntryKey.value = expandedEntryKey.value === key ? "" : key;
 };
+
+const AVATAR_EMOJI: Record<string, string> = { bamboo_scholar: "🎋", peach_swordswoman: "🌸", cloud_alchemist: "☁️", crane_hermit: "🪽", lotus_mystic: "🪷", thunder_guardian: "⚡", moon_rabbit: "🐇", golden_carp: "🐟" };
+const avatarEmoji = (id: unknown) => AVATAR_EMOJI[String(id)] || AVATAR_EMOJI.bamboo_scholar;
 
 const profileAvatarClass = (entry: any) => ({
   "profile-avatar-female": entry?.publicProfile?.gender === "female",
@@ -322,6 +323,8 @@ onMounted(loadLeaderboard);
   background: linear-gradient(180deg, rgba(32, 52, 63, 0.95), rgba(15, 25, 30, 0.95));
   box-shadow: inset 0 0 10px rgba(108, 184, 178, 0.08);
 }
+
+.profile-avatar-emoji { font-size: 22px; line-height: 1; }
 
 .profile-avatar:focus-visible,
 .profile-avatar:hover {

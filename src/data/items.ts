@@ -183,6 +183,7 @@ const ORE_ITEMS: ItemDef[] = [
 
 /** 杂项 */
 const MISC_ITEMS: ItemDef[] = [
+  { id: "rename_card", name: "改名卡", category: "misc", description: "由仙市核验身份后使用；改名时服务端消耗，全服角色名唯一。", sellPrice: 5000, edible: false },
   // 修仙 V0.2：炼丹产物
   {
     id: "mana_recovery_pill",

@@ -14,7 +14,7 @@
         </button>
         <Divider title class="my-4" label="设置" />
         <!-- 分类导航 -->
-        <div class="grid grid-cols-3 justify-center gap-1 mb-3">
+        <div class="grid grid-cols-5 justify-center gap-1 mb-3">
           <button
             v-for="tab in SETTINGS_TABS"
             :key="tab.key"
@@ -76,6 +76,10 @@
                     >音乐</Button
                   >
                 </div>
+                <div class="grid grid-cols-2 gap-1 mt-2">
+                  <button v-for="style in BGM_STYLES" :key="style.id" class="border rounded-xs p-1 text-[10px]" :class="bgmStyle === style.id ? 'border-accent bg-accent/20 text-accent' : 'border-accent/20 text-muted'" :title="style.description" @click="setBgmStyle(style.id)">{{ style.name }}</button>
+                </div>
+                <p class="text-[10px] text-muted mt-1">四时、天气与时段规则保持生效；节庆/小游戏覆盖结束后恢复所选曲风。</p>
               </div>
 
               <!-- 新手提示 -->
@@ -340,6 +344,39 @@
           </template>
         </div>
 
+        <!-- ===== 账号 ===== -->
+        <template v-if="activeTab === 'account'">
+          <div class="max-h-[55vh] overflow-y-auto flex flex-col space-y-3">
+            <div class="border border-accent/20 rounded-xs p-3 mr-1">
+              <div class="flex items-center justify-between mb-2"><p class="text-xs text-muted">角色头像</p><Button class="py-1 px-2" :disabled="accountBusy" @click="loadAccount">刷新</Button></div>
+              <p v-if="!accountToken()" class="text-xs text-danger">请先登录账号。</p>
+              <template v-else>
+                <select v-model="selectedCharacterId" class="w-full mb-2 px-2 py-1 bg-bg border border-accent/30 text-xs" @change="syncSelectedCharacter">
+                  <option v-for="character in characters" :key="character.id" :value="character.id">{{ character.name }}</option>
+                </select>
+                <div class="grid grid-cols-4 gap-2">
+                  <button v-for="avatar in SAFE_AVATARS" :key="avatar.id" class="border rounded-xs p-1 text-xl" :class="selectedAvatarId === avatar.id ? 'border-accent bg-accent/20' : 'border-accent/20'" :title="avatar.name" @click="selectedAvatarId = avatar.id">{{ avatar.emoji }}</button>
+                </div>
+                <Button class="w-full justify-center mt-2" :disabled="accountBusy || !selectedCharacterId" @click="saveAvatar">保存安全预设头像</Button>
+              </template>
+            </div>
+            <div class="border border-accent/20 rounded-xs p-3 mr-1">
+              <p class="text-xs text-muted mb-2">修改角色名</p>
+              <input v-model="renameName" maxlength="20" placeholder="1-20位中文/字母/数字/下划线" class="w-full px-2 py-1.5 bg-bg border border-accent/30 text-xs" />
+              <p class="text-[10px] text-muted my-1">服务端原子消耗1张改名卡；全服唯一。重复请求不会重复扣卡。</p>
+              <Button class="w-full justify-center" :disabled="accountBusy || !selectedCharacterId || !renameName.trim()" @click="renameCharacter">消耗改名卡并改名</Button>
+            </div>
+            <div class="border border-accent/20 rounded-xs p-3 mr-1">
+              <p class="text-xs text-muted mb-2">修改密码</p>
+              <input v-model="currentPassword" type="password" autocomplete="current-password" placeholder="旧密码" class="w-full mb-2 px-2 py-1.5 bg-bg border border-accent/30 text-xs" />
+              <input v-model="newPassword" type="password" autocomplete="new-password" placeholder="新密码（至少6位）" class="w-full mb-2 px-2 py-1.5 bg-bg border border-accent/30 text-xs" />
+              <Button class="w-full justify-center" :disabled="accountBusy || newPassword.length < 6 || !currentPassword" @click="changePassword">验证旧密码并修改</Button>
+              <p class="text-[10px] text-muted mt-1">成功后保留当前会话，并撤销其他会话。</p>
+            </div>
+            <p v-if="accountMessage" class="text-xs" :class="accountOk ? 'text-success' : 'text-danger'">{{ accountMessage }}</p>
+          </div>
+        </template>
+
         <!-- ===== 反馈 ===== -->
         <template v-if="activeTab === 'feedback'">
           <div class="max-h-[55vh] overflow-y-auto flex flex-col space-y-3">
@@ -588,10 +625,11 @@ import {
   Bug,
   Lightbulb,
   MessageSquare,
+  UserRound,
 } from "lucide-vue-next";
 import Button from "@/components/game/Button.vue";
 import Divider from "@/components/game/Divider.vue";
-import { useAudio } from "@/composables/useAudio";
+import { useAudio, BGM_STYLES } from "@/composables/useAudio";
 import { useGameClock } from "@/composables/useGameClock";
 import {
   useSettingsStore,
@@ -602,7 +640,7 @@ import { useTutorialStore } from "@/stores/useTutorialStore";
 import { THEMES } from "@/data/themes";
 import SaveManager from "@/components/game/SaveManager.vue";
 
-type SettingsTab = "general" | "display" | "notification" | "feedback";
+type SettingsTab = "general" | "display" | "notification" | "account" | "feedback";
 
 type BoolSettingKey =
   | "qmsgIsLimitWidth"
@@ -616,6 +654,7 @@ const SETTINGS_TABS: { key: SettingsTab; label: string; icon: Component }[] = [
   { key: "general", label: "通用", icon: Settings },
   { key: "display", label: "外观", icon: Palette },
   { key: "notification", label: "通知", icon: Bell },
+  { key: "account", label: "账号", icon: UserRound },
   { key: "feedback", label: "反馈", icon: MessageSquare },
 ];
 
@@ -661,10 +700,49 @@ const goHome = () => {
 };
 
 const activeTab = ref<SettingsTab>("general");
-const { sfxEnabled, bgmEnabled, toggleSfx, toggleBgm } = useAudio();
+const { sfxEnabled, bgmEnabled, bgmStyle, setBgmStyle, toggleSfx, toggleBgm } = useAudio();
 const { isPaused, gameSpeed, togglePause, cycleSpeed } = useGameClock();
 const settingsStore = useSettingsStore();
 const tutorialStore = useTutorialStore();
+
+const SAFE_AVATARS = [
+  { id: "bamboo_scholar", name: "竹隐书生", emoji: "🎋" }, { id: "peach_swordswoman", name: "桃华剑姬", emoji: "🌸" },
+  { id: "cloud_alchemist", name: "云炉丹师", emoji: "☁️" }, { id: "crane_hermit", name: "白鹤散人", emoji: "🪽" },
+  { id: "lotus_mystic", name: "莲心玄女", emoji: "🪷" }, { id: "thunder_guardian", name: "雷门护法", emoji: "⚡" },
+  { id: "moon_rabbit", name: "月宫玉兔", emoji: "🐇" }, { id: "golden_carp", name: "金鳞道友", emoji: "🐟" },
+] as const;
+type CharacterSummary = { id: string; name: string; avatarId: string };
+const characters = ref<CharacterSummary[]>([]); const selectedCharacterId = ref(localStorage.getItem("taoyuan_active_character_id") || "");
+const selectedAvatarId = ref("bamboo_scholar"); const renameName = ref(""); const currentPassword = ref(""); const newPassword = ref("");
+const accountBusy = ref(false); const accountMessage = ref(""); const accountOk = ref(false);
+const accountRequest = async (url: string, init: RequestInit = {}) => {
+  const token = accountToken(); if (!token) throw new Error("请先登录账号");
+  const headers = new Headers(init.headers); headers.set("Authorization", `Bearer ${token}`); if (init.body) headers.set("Content-Type", "application/json");
+  const response = await fetch(url, { ...init, headers }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || "请求失败"); return data;
+};
+const syncSelectedCharacter = () => { const character = characters.value.find((entry) => entry.id === selectedCharacterId.value); if (character) { selectedAvatarId.value = character.avatarId; renameName.value = character.name; } };
+const loadAccount = async () => { accountBusy.value = true; accountMessage.value = ""; try { const data = await accountRequest("/api/characters"); characters.value = Array.isArray(data.characters) ? data.characters : []; if (!characters.value.some((entry) => entry.id === selectedCharacterId.value)) selectedCharacterId.value = characters.value[0]?.id || ""; syncSelectedCharacter(); } catch (error) { accountOk.value = false; accountMessage.value = error instanceof Error ? error.message : "加载失败"; } finally { accountBusy.value = false; } };
+const saveAvatar = async () => { accountBusy.value = true; try { await accountRequest(`/api/characters/${encodeURIComponent(selectedCharacterId.value)}/avatar`, { method: "PATCH", body: JSON.stringify({ avatarId: selectedAvatarId.value }) }); const c = characters.value.find((x) => x.id === selectedCharacterId.value); if (c) c.avatarId = selectedAvatarId.value; accountOk.value = true; accountMessage.value = "头像已更新，排行榜刷新后立即显示。"; } catch (error) { accountOk.value = false; accountMessage.value = error instanceof Error ? error.message : "保存失败"; } finally { accountBusy.value = false; } };
+let pendingRenameRequest: { characterId: string; name: string; requestId: string } | null = null;
+const renameCharacter = async () => {
+  accountBusy.value = true;
+  const characterId = selectedCharacterId.value;
+  const name = renameName.value.trim();
+  if (!pendingRenameRequest || pendingRenameRequest.characterId !== characterId || pendingRenameRequest.name !== name) {
+    pendingRenameRequest = { characterId, name, requestId: globalThis.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2)}` };
+  }
+  try {
+    await accountRequest(`/api/characters/${encodeURIComponent(characterId)}/rename`, { method: "POST", body: JSON.stringify({ name, requestId: pendingRenameRequest.requestId }) });
+    pendingRenameRequest = null;
+    accountOk.value = true;
+    accountMessage.value = "改名成功，正在重新载入服务器权威存档……";
+    emit("close");
+    await router.replace("/");
+  } catch (error) {
+    accountOk.value = false; accountMessage.value = error instanceof Error ? error.message : "改名失败";
+  } finally { accountBusy.value = false; }
+};
+const changePassword = async () => { accountBusy.value = true; try { await accountRequest("/api/auth/change-password", { method: "POST", body: JSON.stringify({ currentPassword: currentPassword.value, newPassword: newPassword.value }) }); currentPassword.value = ""; newPassword.value = ""; accountOk.value = true; accountMessage.value = "密码已修改，其他会话已撤销。"; } catch (error) { accountOk.value = false; accountMessage.value = error instanceof Error ? error.message : "修改失败"; } finally { accountBusy.value = false; } };
 
 const showSaveManager = ref(false);
 const FEEDBACK_CATEGORIES: { key: string; label: string; icon: Component }[] = [

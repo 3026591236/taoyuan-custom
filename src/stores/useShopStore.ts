@@ -187,6 +187,7 @@ export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
     description: "灵石兑换，雷法功法，提升战力与渡劫成功率",
     currency: "spirit_stone",
   },
+  { itemId: "rename_card", name: "改名卡", price: 200, description: "仙市高价限购：每个游戏年仅可购买1张", currency: "spirit_stone" },
   {
     itemId: "void_scripture",
     name: "太虚归元功",
@@ -223,6 +224,7 @@ export const useShopStore = defineStore("shop", () => {
     | "pill_bundle_lot";
   const marketAuctions = ref<Partial<Record<PlayerAuctionId, number>>>({});
   const marketAuctionClaimed = ref<string[]>([]);
+  const annualLimitedPurchases = ref<Record<string, number>>({});
 
   // === 折扣系统 ===
 
@@ -508,6 +510,7 @@ export const useShopStore = defineStore("shop", () => {
     quantity: number = 1,
     currency: "money" | "spirit_stone" = "money",
   ): boolean => {
+    if (itemId === "rename_card" && annualLimitedPurchases.value[itemId] === gameStore.year) return false;
     if (
       inventoryStore.isAllFull &&
       !inventoryStore.items.some(
@@ -527,6 +530,7 @@ export const useShopStore = defineStore("shop", () => {
       else playerStore.earnMoney(totalCost);
       return false;
     }
+    if (itemId === "rename_card") annualLimitedPurchases.value[itemId] = gameStore.year;
     return true;
   };
 
@@ -984,6 +988,7 @@ export const useShopStore = defineStore("shop", () => {
     // 保留字段形状兼容旧存档；价格不再持久累加。
     marketAuctions: {},
     marketAuctionClaimed: marketAuctionClaimed.value,
+    annualLimitedPurchases: annualLimitedPurchases.value,
   });
 
   const deserialize = (data: any) => {
@@ -995,6 +1000,7 @@ export const useShopStore = defineStore("shop", () => {
     shippingHistory.value = data?.shippingHistory ?? {};
     // 旧版竞价次数曾跨日永久累加；读档时不继承历史涨价，按当前游戏日重新定价。
     marketAuctions.value = {};
+    annualLimitedPurchases.value = data?.annualLimitedPurchases && typeof data.annualLimitedPurchases === "object" ? data.annualLimitedPurchases : {};
     const currentDayPrefix = `${auctionDayKey.value}:`;
     marketAuctionClaimed.value = Array.isArray(data?.marketAuctionClaimed)
       ? data.marketAuctionClaimed.filter((key: unknown) =>
