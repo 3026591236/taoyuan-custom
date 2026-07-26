@@ -718,7 +718,7 @@ export const HIDDEN_NPCS: HiddenNpcDef[] = [
         id: "hu_xian_2",
         affinityRequired: 1400,
         name: "灵探",
-        description: "玄矿幽脉额外掉落概率提升",
+        description: "每次采矿有15%概率额外获得1份当前矿石（计入本次收获）",
         passive: { type: "luck", value: 15 },
       },
       {

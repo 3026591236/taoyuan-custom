@@ -1,13 +1,27 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-accent text-sm">
+    <div class="flex items-center justify-between gap-2 mb-3">
+      <h3 class="text-accent text-sm shrink-0">
         <Home :size="14" class="inline" />
         灵牧苑
       </h3>
-      <Button v-if="unpettedCount > 0" :icon="Hand" @click="handlePetAll"
-        >一键抚摸（{{ unpettedCount }}只）</Button
-      >
+      <div class="flex flex-wrap justify-end gap-1">
+        <Button
+          v-if="dispatchableCount > 0"
+          class="py-0 px-1"
+          @click="handleDispatchAll"
+        >
+          一键派遣（{{ dispatchableCount }}只）
+        </Button>
+        <Button
+          v-if="unpettedCount > 0"
+          class="py-0 px-1"
+          :icon="Hand"
+          @click="handlePetAll"
+        >
+          一键抚摸（{{ unpettedCount }}只）
+        </Button>
+      </div>
     </div>
 
     <p v-if="tutorialHint" class="text-[10px] text-muted/50 mb-2">
@@ -1378,6 +1392,19 @@ const handlePetDispatch = (type: "forage" | "guard" | "treasure") => {
 
 const handleAnimalDispatch = (animalId: string) => {
   const result = animalStore.dispatchAnimal(animalId);
+  addLog(result.message);
+};
+
+const dispatchableCount = computed(
+  () =>
+    animalStore.animals.filter(
+      (animal) =>
+        animal.friendship >= 500 && (animal.dispatchCooldown ?? 0) <= 0,
+    ).length,
+);
+
+const handleDispatchAll = () => {
+  const result = animalStore.dispatchEligibleAnimals();
   addLog(result.message);
 };
 

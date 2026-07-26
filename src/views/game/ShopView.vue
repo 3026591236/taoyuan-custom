@@ -43,7 +43,11 @@
       <div class="flex-1" :class="{ 'hidden md:block': mobileTab === 'sell' }">
         <!-- 折扣提示 -->
         <p v-if="hasDiscount" class="text-success text-xs mb-3">
-          折扣生效中：所有购物价格 -{{ discountPercent }}%
+          折扣生效中：所有铜钱购物价格 -{{ discountPercent }}%<span
+            v-if="spiritDiscount > 0"
+            class="text-muted ml-1"
+            >（含狐仙·狐眼 {{ Math.round(spiritDiscount * 100) }}%）</span
+          >
         </p>
 
         <!-- ====== 万象市集总览 ====== -->
@@ -1539,6 +1543,7 @@ import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useShopStore } from "@/stores/useShopStore";
 import type { ShopItemEntry } from "@/stores/useShopStore";
 import { useWalletStore } from "@/stores/useWalletStore";
+import { useHiddenNpcStore } from "@/stores/useHiddenNpcStore";
 import { useWarehouseStore } from "@/stores/useWarehouseStore";
 import { getItemById } from "@/data";
 import { getCropBySeedId } from "@/data/crops";
@@ -1611,6 +1616,7 @@ const inventoryStore = useInventoryStore();
 const farmStore = useFarmStore();
 const warehouseStore = useWarehouseStore();
 const walletStore = useWalletStore();
+const hiddenNpcStore = useHiddenNpcStore();
 const gameStore = useGameStore();
 const tutorialStore = useTutorialStore();
 const achievementStore = useAchievementStore();
@@ -1949,21 +1955,31 @@ const CULTIVATION_USAGE: Record<string, string> = {
   ascension_boost_pill: "元婴以下·升三重",
 };
 
+const spiritDiscount = computed(
+  () => hiddenNpcStore.getAbilityValue("hu_xian_1") / 100,
+);
 const hasDiscount = computed(
   () =>
     walletStore.getShopDiscount() > 0 ||
-    inventoryStore.getRingEffectValue("shop_discount") > 0,
+    inventoryStore.getRingEffectValue("shop_discount") > 0 ||
+    spiritDiscount.value > 0,
 );
 const discountPercent = computed(() => {
   const w = walletStore.getShopDiscount();
   const r = inventoryStore.getRingEffectValue("shop_discount");
-  return Math.round((1 - (1 - w) * (1 - r)) * 100);
+  const s = spiritDiscount.value;
+  return Math.round((1 - (1 - w) * (1 - r) * (1 - s)) * 100);
 });
 
 const discounted = (price: number): number => {
   const walletDiscount = walletStore.getShopDiscount();
   const ringDiscount = inventoryStore.getRingEffectValue("shop_discount");
-  return Math.floor(price * (1 - walletDiscount) * (1 - ringDiscount));
+  return Math.floor(
+    price *
+      (1 - walletDiscount) *
+      (1 - ringDiscount) *
+      (1 - spiritDiscount.value),
+  );
 };
 
 // === 售价加成 ===

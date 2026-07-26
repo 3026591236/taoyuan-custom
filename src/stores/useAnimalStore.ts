@@ -1031,6 +1031,23 @@ export const useAnimalStore = defineStore("animal", () => {
     };
   };
 
+  const dispatchEligibleAnimals = (): { count: number; message: string } => {
+    const eligibleIds = animals.value
+      .filter(
+        (animal) =>
+          animal.friendship >= 500 && (animal.dispatchCooldown ?? 0) <= 0,
+      )
+      .map((animal) => animal.id);
+    for (const animalId of eligibleIds) dispatchAnimal(animalId);
+    return {
+      count: eligibleIds.length,
+      message:
+        eligibleIds.length > 0
+          ? `已一键派遣${eligibleIds.length}只可派遣动物，奖励已统一入账。`
+          : "当前没有可派遣动物（需要好感达到500且已结束休整）。",
+    };
+  };
+
   /** 根据友好度决定产品品质 */
   const getAnimalProductQuality = (friendship: number): Quality => {
     if (friendship >= 800) return "supreme";
@@ -1166,6 +1183,7 @@ export const useAnimalStore = defineStore("animal", () => {
     startPetDispatch,
     dailyPetDispatchUpdate,
     dispatchAnimal,
+    dispatchEligibleAnimals,
     renameAnimal,
     autoPetterBuildings,
     hasAutoPetter,
