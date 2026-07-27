@@ -1286,6 +1286,19 @@ export const useCombatStore = defineStore("combat", () => {
     );
   };
 
+  const continueTrial = () => {
+    const zone = activeZone.value;
+    if (!zone || zone.kind !== "trial" || combatResult.value !== "win") {
+      addLog("当前无法继续红尘历练。");
+      return;
+    }
+    if (drops.value.length) {
+      addLog("请先拾取本轮掉落，再继续历练。");
+      return;
+    }
+    enterZone(zone.id);
+  };
+
   const leaveCombat = () => {
     isFighting.value = false;
     currentZone.value = null;
@@ -1472,6 +1485,7 @@ export const useCombatStore = defineStore("combat", () => {
     isZoneUnlocked,
     lockReason,
     enterZone,
+    continueTrial,
     challengeTower,
     startFight,
     leaveCombat,

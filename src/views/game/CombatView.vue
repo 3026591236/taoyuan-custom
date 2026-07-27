@@ -509,6 +509,18 @@
           继续挑战第{{ combatStore.towerNextFloor }}层
         </button>
         <button
+          v-if="combatStore.activeZone?.kind === 'trial'"
+          class="btn w-full justify-center"
+          :disabled="combatStore.drops.length > 0"
+          @click="combatStore.continueTrial"
+        >
+          {{
+            combatStore.drops.length
+              ? "拾取掉落后继续历练"
+              : `继续历练 (${combatStore.activeZone.cost}灵力/${combatStore.activeZone.staminaCost}体力)`
+          }}
+        </button>
+        <button
           class="btn w-full justify-center"
           @click="combatStore.leaveCombat"
         >
