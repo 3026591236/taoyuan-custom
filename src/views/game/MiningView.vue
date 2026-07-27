@@ -1169,6 +1169,7 @@ import {
 import { useAudio } from "@/composables/useAudio";
 import { addLog } from "@/composables/useGameLog";
 import { handleEndDay } from "@/composables/useEndDay";
+import { useItemUsage } from "@/composables/useItemUsage";
 
 const miningStore = useMiningStore();
 const gameStore = useGameStore();
@@ -1177,6 +1178,7 @@ const inventoryStore = useInventoryStore();
 const skillStore = useSkillStore();
 const achievementStore = useAchievementStore();
 const tutorialStore = useTutorialStore();
+const itemUsage = useItemUsage();
 const { startBattleBgm, resumeNormalBgm } = useAudio();
 
 const tutorialHint = computed(() => {
@@ -1772,18 +1774,25 @@ const handleCombat = (action: CombatAction) => {
   }, 400);
 };
 
-const handleConfirmUseItem = () => {
+const handleConfirmUseItem = async () => {
   if (!pendingItemId.value) return;
-  const result = miningStore.useCombatItem(
-    pendingItemId.value,
-    pendingCanBatch.value ? pendingUseQty.value : 1,
-  );
-  sfxClick();
-  addLog(result.message);
-  if (result.success) {
-    exploreLog.value.push(result.message);
-  }
+  const itemId = pendingItemId.value;
+  const quantity = pendingCanBatch.value ? pendingUseQty.value : 1;
   pendingItemId.value = null;
+  sfxClick();
+
+  if (BATCH_USABLE_ITEMS.has(itemId)) {
+    const success = await itemUsage.useItem(itemId, "normal", quantity);
+    if (success) {
+      const def = getItemById(itemId);
+      exploreLog.value.push(`服务器已结算${def?.name || "永久道具"}×${quantity}。`);
+    }
+    return;
+  }
+
+  const result = miningStore.useCombatItem(itemId, quantity);
+  addLog(result.message);
+  if (result.success) exploreLog.value.push(result.message);
 };
 
 const handlePendingItem = (itemId: string) => {

@@ -11,9 +11,9 @@ export const PROTECTED_CONSUMABLE_IDS = new Set([
 
 const pending = new Map<string, Promise<boolean>>();
 const CONSUMABLE_NAMES: Record<string, string> = {
-  guild_badge: "仙盟战印",
-  life_talisman: "护命符",
-  lucky_coin: "福缘钱",
+  guild_badge: "仙盟徽章",
+  life_talisman: "生命护符",
+  lucky_coin: "幸运铜钱",
   defense_charm: "护身符",
   marrow_wash_pill: "洗髓丹",
   stamina_fruit: "仙桃",

@@ -51,6 +51,10 @@ export const SPECIAL_USABLE_ITEM_IDS = new Set([
   "void_scripture",
   "stamina_pill",
   "time_stasis_pill",
+  "guild_badge",
+  "life_talisman",
+  "lucky_coin",
+  "defense_charm",
 ]);
 
 export const isQuickUsableItem = (itemId: string): boolean =>
@@ -108,6 +112,7 @@ export const useItemUsage = () => {
   const useItem = async (
     itemId: string,
     quality: Quality = "normal",
+    quantity = 1,
   ): Promise<boolean> => {
     const isPill =
       CULTIVATION_PILL_IDS.has(itemId) ||
@@ -120,7 +125,7 @@ export const useItemUsage = () => {
     // 高价值/永久效果道具只能由服务器锁定权威云档后结算。
     // 所有入口（背包、快捷页、悬浮快捷栏）统一经过这里，禁止落回本地 usePill。
     if (PROTECTED_CONSUMABLE_IDS.has(itemId))
-      return consumeProtected(itemId, 1);
+      return consumeProtected(itemId, quantity);
     if (CULTIVATION_PILL_IDS.has(itemId))
       return cultivationStore.usePill(itemId as any);
     if (itemId === "stamina_pill") {
