@@ -132,6 +132,18 @@
       >
       <Button
         class="justify-between"
+        :disabled="!cultivation.deepMeditationUnlocked"
+        @click="cultivation.deepMeditate"
+      >
+        <span>运转大周天</span>
+        <span class="text-muted text-xs">{{
+          cultivation.deepMeditationUnlocked
+            ? `修为+${cultivation.deepMeditationCultivationGain} / 灵气+${cultivation.deepMeditationAuraGain}`
+            : "金丹期解锁"
+        }}</span>
+      </Button>
+      <Button
+        class="justify-between"
         :class="cultivation.autoMeditateEnabled ? 'auto-active' : ''"
         @click="cultivation.toggleAutoMeditate"
       >
@@ -146,7 +158,7 @@
       </Button>
       <Button class="justify-between" @click="cultivation.refineAura"
         ><span>炼化灵气</span
-        ><span class="text-muted text-xs">灵气→修为</span></Button
+        ><span class="text-muted text-xs">境界自适应 · 灵气→修为</span></Button
       >
       <Button class="justify-between" @click="cultivation.meditateInSeclusion"
         ><span>闭关参悟</span
@@ -177,6 +189,14 @@
       v-if="cultivation.unlocked"
       class="border border-accent/15 rounded-xs p-3 bg-panel/30 text-xs space-y-2"
     >
+      <div class="flex items-center justify-between gap-2">
+        <p class="text-accent">🗺️ 修炼渠道</p>
+        <span class="text-[10px] text-muted">不再只靠重复打坐</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[10px] text-muted leading-relaxed">
+        <p><b class="text-success">修为：</b>运转大周天、境界自适应炼化、每日课业、红尘历练/秘境、丹药与灵膳。</p>
+        <p><b class="text-success">灵气：</b>大周天、灵植收获、聚灵阵、灵石坊炼气、红尘历练/秘境与每日课业。</p>
+      </div>
       <div v-if="cultivation.autoMeditateEnabled" class="auto-meditate-card">
         <div class="flex items-center justify-between gap-2">
           <span class="text-accent">🧘 后台自动打坐中</span>

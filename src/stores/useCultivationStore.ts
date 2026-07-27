@@ -1702,6 +1702,26 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const diminishing = Math.max(0, spiritStoneRefineCountToday.value * 900);
     return Math.max(3000, base + realmBonus + caveBonus - diminishing);
   });
+  const deepMeditationUnlocked = computed(() => realmIndex.value >= 13);
+  const deepMeditationManaCost = computed(() =>
+    Math.max(40, Math.floor(maxMana.value * 0.08)),
+  );
+  const deepMeditationCultivationGain = computed(() => {
+    const realmBase = Math.floor(
+      maxCultivation.value * (0.018 + fieldTier.value * 0.001),
+    );
+    const manualRate = 1 + manuals.value.void * 0.025;
+    const pathRate =
+      cultivationPath.value === "balanced"
+        ? 1.1
+        : cultivationPath.value === "sword"
+          ? 1.06
+          : 1;
+    return Math.max(800, Math.floor(realmBase * manualRate * pathRate));
+  });
+  const deepMeditationAuraGain = computed(() =>
+    Math.max(180, Math.floor(realm.value.breakthroughCost * 0.012)),
+  );
   const daoGearLevel = (id: DaoGearId) => daoGear.value[id] || 0;
   const daoGearStarLevel = (id: DaoGearId) => daoGearStars.value[id] || 0;
   const daoGearStarUnlocked = computed(() => rebirthCount.value >= 15);
@@ -1977,6 +1997,42 @@ export const useCultivationStore = defineStore("cultivation", () => {
     return true;
   };
 
+  const deepMeditate = () => {
+    if (!unlocked.value) return unlock();
+    if (!deepMeditationUnlocked.value) {
+      showFloat("金丹期后方可运转大周天。", "danger");
+      return false;
+    }
+    if (cultivation.value >= maxCultivation.value) {
+      showFloat("当前修为已圆满，请先突破。", "accent");
+      return false;
+    }
+    if (mana.value < deepMeditationManaCost.value) {
+      showFloat(`灵力不足，需要${deepMeditationManaCost.value}点。`, "danger");
+      return false;
+    }
+    const player = usePlayerStore();
+    if (!player.consumeStamina(25)) {
+      showFloat("体力不足，大周天需要25点体力。", "danger");
+      return false;
+    }
+    mana.value -= deepMeditationManaCost.value;
+    const game = useGameStore();
+    const fateRate = game.dailyFateType === "cultivation" ? 1.1 : 1;
+    const result = addCultivation(
+      Math.floor(deepMeditationCultivationGain.value * fateRate),
+    );
+    aura.value += deepMeditationAuraGain.value;
+    wearDaoGear(1);
+    const tr = game.advanceTime(2.5);
+    addLog(
+      `运转大周天，消耗体力25、灵力${deepMeditationManaCost.value}，修为+${result.actual}${game.dailyFateType === "cultivation" ? "（今日机缘加成）" : ""}，灵气+${deepMeditationAuraGain.value}${result.auraGain ? `，溢出修为化为灵气+${result.auraGain}` : ""}。`,
+    );
+    showFloat(`大周天 修为+${result.actual}`, "success");
+    if (tr.message) addLog(tr.message);
+    return true;
+  };
+
   const setAutoMeditate = (enabled: boolean) => {
     if (enabled && !unlocked.value) {
       showFloat("需先启蒙灵田。", "danger");
@@ -2030,7 +2086,12 @@ export const useCultivationStore = defineStore("cultivation", () => {
       showFloat("没有可炼化的灵气。", "danger");
       return false;
     }
-    const spend = Math.min(aura.value, 80 + fieldTier.value * 30);
+    // 高境界仍按固定200点灵气炼化会产生大量重复点击；按当前境界上限扩大单次周天。
+    const realmScaledSpend = Math.floor(maxCultivation.value * 0.012);
+    const spend = Math.min(
+      aura.value,
+      Math.max(80 + fieldTier.value * 30, realmScaledSpend),
+    );
     const game = useGameStore();
     const baseGain = Math.floor(
       spend *
@@ -4313,6 +4374,10 @@ export const useCultivationStore = defineStore("cultivation", () => {
     spiritStoneRefineRemaining,
     spiritStoneRefineCost,
     spiritStoneRefineAuraGain,
+    deepMeditationUnlocked,
+    deepMeditationManaCost,
+    deepMeditationCultivationGain,
+    deepMeditationAuraGain,
     unlockTalisman,
     learnManual,
     upgradeManual,
@@ -4320,6 +4385,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     setCultivationPath,
     unlock,
     meditate,
+    deepMeditate,
     setAutoMeditate,
     toggleAutoMeditate,
     runAutoMeditateTick,
