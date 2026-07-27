@@ -92,8 +92,8 @@ export const FRUIT_TREE_DEFS: FruitTreeDef[] = [
   },
 ];
 
-/** 最大果树数量 */
-export const MAX_FRUIT_TREES = 8;
+/** 最大果树数量：8 种果树可各栽一棵，并额外保留 4 个自由搭配树位。 */
+export const MAX_FRUIT_TREES = 12;
 
 export const getFruitTreeDef = (type: string): FruitTreeDef | undefined => {
   return FRUIT_TREE_DEFS.find((d) => d.type === type);

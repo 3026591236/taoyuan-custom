@@ -1229,6 +1229,25 @@
           <p class="text-xs text-muted mb-2">
             选择纳戒中的物品放到通商摊位售卖
           </p>
+          <input
+            v-model.trim="tradeItemQuery"
+            type="search"
+            maxlength="30"
+            placeholder="搜索物品名称"
+            class="w-full text-xs bg-bg/70 border border-accent/20 rounded-xs px-2 py-1.5 mb-2 outline-none focus:border-accent/50"
+          />
+          <div class="flex items-center gap-1 mb-2 overflow-x-auto pb-1">
+            <button
+              v-for="option in tradeCategoryOptions"
+              :key="option.value"
+              class="text-[10px] whitespace-nowrap border rounded-xs px-2 py-1"
+              :class="tradeItemCategory === option.value ? 'border-accent bg-accent/10 text-accent' : 'border-accent/15 text-muted'"
+              @click="tradeItemCategory = option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+          <p class="text-[10px] text-muted mb-1">按类别、名称与品质排列，共 {{ sellableItems.length }} 项</p>
           <div class="flex flex-col space-y-1 max-h-60 overflow-y-auto">
             <div
               v-for="inv in sellableItems"
@@ -1258,7 +1277,7 @@
             v-if="sellableItems.length === 0"
             class="text-xs text-muted text-center py-4"
           >
-            纳戒中没有可售物品
+            {{ tradeItemQuery || tradeItemCategory !== "all" ? "没有匹配的可售物品" : "纳戒中没有可售物品" }}
           </p>
         </div>
       </div>
@@ -1944,28 +1963,68 @@ const qualityColor = (quality: string): string => {
   return "";
 };
 
-/** 纳戒中可上架的物品（有售价的物品） */
+type TradeItemCategory = "all" | "crop" | "material" | "food" | "other";
+const tradeItemQuery = ref("");
+const tradeItemCategory = ref<TradeItemCategory>("all");
+const tradeCategoryOptions: { value: TradeItemCategory; label: string }[] = [
+  { value: "all", label: "全部" },
+  { value: "crop", label: "灵植灵果" },
+  { value: "material", label: "矿材素材" },
+  { value: "food", label: "料理丹药" },
+  { value: "other", label: "其他" },
+];
+const tradeCategoryOf = (category: string): TradeItemCategory => {
+  if (["crop", "fruit", "fish", "animal_product"].includes(category)) return "crop";
+  if (["ore", "gem", "material", "processed", "fossil", "artifact"].includes(category)) return "material";
+  if (["food", "fertilizer", "bait"].includes(category)) return "food";
+  return "other";
+};
+const tradeCategoryOrder: Record<TradeItemCategory, number> = {
+  all: -1,
+  crop: 0,
+  material: 1,
+  food: 2,
+  other: 3,
+};
+const tradeQualityOrder: Record<string, number> = {
+  supreme: 0,
+  excellent: 1,
+  fine: 2,
+  normal: 3,
+};
+
+/** 纳戒中可上架的物品：支持搜索/分类，并按类别、名称、品质稳定排列。 */
 const sellableItems = computed(() => {
+  const query = tradeItemQuery.value.toLocaleLowerCase("zh-CN");
   const result: {
     id: string;
     name: string;
+    category: TradeItemCategory;
     quality: string;
     quantity: number;
     sellPrice: number;
   }[] = [];
   for (const item of inventoryStore.items) {
     const def = getItemById(item.itemId);
-    if (def && def.sellPrice > 0) {
-      result.push({
-        id: item.itemId,
-        name: def.name,
-        quality: item.quality ?? "normal",
-        quantity: item.quantity,
-        sellPrice: def.sellPrice,
-      });
-    }
+    if (!def || def.sellPrice <= 0) continue;
+    const category = tradeCategoryOf(def.category);
+    if (tradeItemCategory.value !== "all" && category !== tradeItemCategory.value) continue;
+    if (query && !def.name.toLocaleLowerCase("zh-CN").includes(query)) continue;
+    result.push({
+      id: item.itemId,
+      name: def.name,
+      category,
+      quality: item.quality ?? "normal",
+      quantity: item.quantity,
+      sellPrice: def.sellPrice,
+    });
   }
-  return result;
+  return result.sort((a, b) =>
+    tradeCategoryOrder[a.category] - tradeCategoryOrder[b.category] ||
+    a.name.localeCompare(b.name, "zh-CN") ||
+    (tradeQualityOrder[a.quality] ?? 9) - (tradeQualityOrder[b.quality] ?? 9) ||
+    a.id.localeCompare(b.id),
+  );
 });
 
 /** 计算积分预览（含财库加成） */

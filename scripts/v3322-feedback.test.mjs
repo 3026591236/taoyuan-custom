@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const trees = readFileSync(new URL("../src/data/fruitTrees.ts", import.meta.url), "utf8");
+const view = readFileSync(new URL("../src/views/game/HanhaiView.vue", import.meta.url), "utf8");
+const backend = readFileSync(new URL("../backend/index.mjs", import.meta.url), "utf8");
+assert.equal((trees.match(/type: "[^"]+_tree"/g) || []).length, 8);
+assert.match(trees, /MAX_FRUIT_TREES = 12/);
+assert.match(view, /v-model\.trim="tradeItemQuery"/);
+assert.match(view, /tradeCategoryOptions/);
+assert.match(view, /tradeCategoryOrder\[a\.category\]/);
+assert.match(view, /localeCompare\(b\.name, "zh-CN"\)/);
+assert.match(view, /tradeQualityOrder\[a\.quality\]/);
+assert.match(backend, /V3\.3\.22 通商检索与果园扩容/);
+console.log("v3322 feedback #61/#62 checks passed");
