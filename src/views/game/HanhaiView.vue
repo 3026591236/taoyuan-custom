@@ -360,15 +360,27 @@
         <div class="border border-accent/20 rounded-xs p-2">
           <p class="text-xs text-accent mb-2">护送契约</p>
           <div class="grid grid-cols-3 gap-1">
-            <Button class="justify-center" @click="handleEscort('scout')"
-              >探路</Button
+            <Button
+              class="justify-center"
+              :disabled="hanhaiStore.isEscortContractDone('scout')"
+              @click="handleEscort('scout')"
             >
-            <Button class="justify-center" @click="handleEscort('escort')"
-              >护送</Button
+              {{ hanhaiStore.isEscortContractDone("scout") ? "探路已完成" : "探路" }}
+            </Button>
+            <Button
+              class="justify-center"
+              :disabled="hanhaiStore.isEscortContractDone('escort')"
+              @click="handleEscort('escort')"
             >
-            <Button class="justify-center" @click="handleEscort('guard')"
-              >镇守</Button
+              {{ hanhaiStore.isEscortContractDone("escort") ? "护送已完成" : "护送" }}
+            </Button>
+            <Button
+              class="justify-center"
+              :disabled="hanhaiStore.isEscortContractDone('guard')"
+              @click="handleEscort('guard')"
             >
+              {{ hanhaiStore.isEscortContractDone("guard") ? "镇守已完成" : "镇守" }}
+            </Button>
           </div>
           <p class="text-[10px] text-muted mt-1">
             每日各一次，消耗体力换商誉、铜钱和少量材料。

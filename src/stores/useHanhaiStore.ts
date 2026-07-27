@@ -159,6 +159,9 @@ export const useHanhaiStore = defineStore("hanhai", () => {
       escortContractsDone.value = [];
     }
   };
+  const isEscortContractDone = (id: "escort" | "scout" | "guard") =>
+    escortContractsDoneKey.value === escortKey() &&
+    escortContractsDone.value.includes(id);
   const caravanRoutes = computed(() => CARAVAN_ROUTES);
 
   const canBet = computed(() => casinoBetsToday.value < MAX_DAILY_BETS);
@@ -731,7 +734,7 @@ export const useHanhaiStore = defineStore("hanhai", () => {
     id: "escort" | "scout" | "guard",
   ): { success: boolean; message: string } => {
     resetEscortIfNeeded();
-    if (escortContractsDone.value.includes(id))
+    if (isEscortContractDone(id))
       return { success: false, message: "今天已完成该护送契约。" };
     const player = usePlayerStore();
     const inventory = useInventoryStore();
@@ -1018,6 +1021,7 @@ export const useHanhaiStore = defineStore("hanhai", () => {
     addTradeSlot,
     dailyTradeUpdate,
     startCaravanRoute,
+    isEscortContractDone,
     finishEscortContract,
     dailyCaravanUpdate,
     upgradeTradeShop,
