@@ -109,9 +109,9 @@
             >
             <Button
               class="justify-center"
-              :disabled="itemCount(recipe.id) <= 0"
-              @click="cultivation.usePill(recipe.id)"
-              >服用</Button
+              :disabled="itemCount(recipe.id) <= 0 || usingPillId === recipe.id"
+              @click="handleUsePill(recipe.id)"
+              >{{ usingPillId === recipe.id ? "服用中" : "服用" }}</Button
             >
           </div>
         </div>
@@ -132,10 +132,22 @@ import Divider from "@/components/game/Divider.vue";
 import Button from "@/components/game/Button.vue";
 import { useCultivationStore, REALMS } from "@/stores/useCultivationStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
+import { useItemUsage } from "@/composables/useItemUsage";
 import type { PillId } from "@/stores/useCultivationStore";
 
 const cultivation = useCultivationStore();
 const inventory = useInventoryStore();
+const itemUsage = useItemUsage();
+const usingPillId = ref<PillId | null>(null);
+const handleUsePill = async (pillId: PillId) => {
+  if (usingPillId.value) return;
+  usingPillId.value = pillId;
+  try {
+    await itemUsage.useItem(pillId);
+  } finally {
+    usingPillId.value = null;
+  }
+};
 const itemCount = (id: string) => inventory.getItemCount(id);
 const pillName = (id: PillId) =>
   pillRecipes.find((p) => p.id === id)?.name ?? "丹药";

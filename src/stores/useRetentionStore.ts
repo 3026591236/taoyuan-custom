@@ -33,6 +33,36 @@ type SevenDayGift = {
   reward: RetentionReward;
 };
 
+export const getStreakCycle = (streak: number) => ({
+  round: Math.floor((Math.max(1, streak) - 1) / 7) + 1,
+  dayInRound: ((Math.max(1, streak) - 1) % 7) + 1,
+});
+
+const SEASON_ORDER: Record<string, number> = {
+  spring: 0,
+  summer: 1,
+  autumn: 2,
+  fall: 2,
+  winter: 3,
+};
+
+export const parseGameDayKey = (key: string) => {
+  const [year, season, day] = key.split("-");
+  return (
+    (Number(year || 1) - 1) * 112 +
+    (SEASON_ORDER[season || "spring"] || 0) * 28 +
+    Number(day || 1)
+  );
+};
+
+export const getStreakStartDayKey = (lastDayKey: string, streak: number) =>
+  lastDayKey && streak > 0
+    ? `game-day-${parseGameDayKey(lastDayKey) - streak + 1}`
+    : "";
+
+export const getStreakClaimKey = (startDayKey: string, round: number, day: number) =>
+  `${startDayKey}:${round}:${day}`;
+
 type StreakGift = {
   day: number;
   title: string;
@@ -429,7 +459,7 @@ export const useRetentionStore = defineStore("retention", () => {
   const worldBossClaimed = ref<string[]>([]);
   const fullActivityStreak = ref(0);
   const lastFullActivityDayKey = ref("");
-  const streakClaimed = ref<number[]>([]);
+  const streakClaimed = ref<string[]>([]);
   const weeklyClaimed = ref<string[]>([]);
   const weeklyBaselineKey = ref("");
   const weeklyBaselines = ref<Partial<Record<WeeklyMetric, number>>>({});
@@ -596,21 +626,7 @@ export const useRetentionStore = defineStore("retention", () => {
   const dayKey = computed(
     () => `${gameStore.year}-${gameStore.season}-${gameStore.day}`,
   );
-  const seasonOrder: Record<string, number> = {
-    spring: 0,
-    summer: 1,
-    autumn: 2,
-    fall: 2,
-    winter: 3,
-  };
-  const parseDayKey = (key: string) => {
-    const [year, season, day] = key.split("-");
-    return (
-      (Number(year || 1) - 1) * 112 +
-      (seasonOrder[season || "spring"] || 0) * 28 +
-      Number(day || 1)
-    );
-  };
+  const parseDayKey = parseGameDayKey;
 
   const weekKey = computed(
     () =>
@@ -668,11 +684,22 @@ export const useRetentionStore = defineStore("retention", () => {
       parseDayKey(dayKey.value) - parseDayKey(lastFullActivityDayKey.value);
     return diff <= 1 ? fullActivityStreak.value : 0;
   });
+  const streakRound = computed(() => getStreakCycle(visibleFullActivityStreak.value).round);
+  const streakDayInRound = computed(() =>
+    visibleFullActivityStreak.value > 0
+      ? getStreakCycle(visibleFullActivityStreak.value).dayInRound
+      : 0,
+  );
+  const streakStartDayKey = computed(() =>
+    getStreakStartDayKey(lastFullActivityDayKey.value, fullActivityStreak.value),
+  );
   const streakGifts = computed(() =>
     STREAK_GIFTS.map((gift) => ({
       ...gift,
-      unlocked: visibleFullActivityStreak.value >= gift.day,
-      claimed: streakClaimed.value.includes(gift.day),
+      unlocked: streakDayInRound.value >= gift.day,
+      claimed: streakClaimed.value.includes(
+        getStreakClaimKey(streakStartDayKey.value, streakRound.value, gift.day),
+      ),
     })),
   );
   const claimableStreakCount = computed(
@@ -788,8 +815,8 @@ export const useRetentionStore = defineStore("retention", () => {
     if (diff === 1) {
       fullActivityStreak.value += 1;
     } else {
+      // 断签后开启新的连续周期；旧周期领取键保留，避免破坏历史档。
       fullActivityStreak.value = 1;
-      streakClaimed.value = [];
     }
     lastFullActivityDayKey.value = dayKey.value;
   }
@@ -830,10 +857,15 @@ export const useRetentionStore = defineStore("retention", () => {
     if (!gift) return { success: false, message: "连续满勤奖励不存在。" };
     if (!gift.unlocked)
       return { success: false, message: "连续满勤天数还不够。" };
-    if (streakClaimed.value.includes(day))
-      return { success: false, message: "这档连续满勤奖励已经领取过。" };
+    const claimKey = getStreakClaimKey(
+      streakStartDayKey.value,
+      streakRound.value,
+      day,
+    );
+    if (streakClaimed.value.includes(claimKey))
+      return { success: false, message: "本轮这档连续满勤奖励已经领取过。" };
     const lines = applyReward(gift.reward);
-    streakClaimed.value.push(day);
+    streakClaimed.value.push(claimKey);
     return {
       success: true,
       message: `领取「${gift.title}」：${lines.join("、")}。`,
@@ -946,9 +978,23 @@ export const useRetentionStore = defineStore("retention", () => {
       : [];
     fullActivityStreak.value = Number(data?.fullActivityStreak || 0);
     lastFullActivityDayKey.value = data?.lastFullActivityDayKey || "";
-    streakClaimed.value = Array.isArray(data?.streakClaimed)
+    const rawStreakClaimed = Array.isArray(data?.streakClaimed)
       ? data.streakClaimed
       : [];
+    const loadedStartDayKey = getStreakStartDayKey(
+      lastFullActivityDayKey.value,
+      fullActivityStreak.value,
+    );
+    // 旧 number[] 只代表第一轮 [3,5,7]，迁移后绝不在第一轮重复发奖。
+    streakClaimed.value = rawStreakClaimed
+      .map((entry: unknown) =>
+        typeof entry === "number"
+          ? getStreakClaimKey(loadedStartDayKey, 1, entry)
+          : typeof entry === "string"
+            ? entry
+            : "",
+      )
+      .filter(Boolean);
     weeklyClaimed.value = Array.isArray(data?.weeklyClaimed)
       ? data.weeklyClaimed
       : [];
@@ -985,6 +1031,8 @@ export const useRetentionStore = defineStore("retention", () => {
     activityBoxes,
     sevenDayGifts,
     visibleFullActivityStreak,
+    streakRound,
+    streakDayInRound,
     streakGifts,
     weeklyTasks,
     weeklyDoneCount,

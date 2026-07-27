@@ -259,6 +259,9 @@
               />
             </div>
             <p class="text-[10px] text-muted mt-1">
+              已锁定亲本配对；出结果时按下方图鉴配方与原有育种规则结算。
+            </p>
+            <p class="text-[10px] text-muted mt-1">
               品种：{{
                 getPondableFishName(fishPondStore.pond.breeding.fishId)
               }}
@@ -290,6 +293,9 @@
             <p class="text-[10px] text-muted">
               请从鱼列表中点击同种成熟鱼进行配对
             </p>
+            <p class="text-[10px] mt-1" :class="breedingPreview.recipe ? 'text-success' : 'text-muted'">
+              {{ breedingPreview.text }}
+            </p>
           </div>
           <!-- 空状态 -->
           <div
@@ -305,6 +311,13 @@
 
       <!-- ===== 图鉴 Tab ===== -->
       <template v-if="currentTab === 'compendium'">
+        <div class="border border-accent/15 rounded-xs p-2 mb-2 text-xs text-muted leading-relaxed">
+          谱系百科公开现有育种配方：可按基础鱼与代数筛选，点选条目查看亲本。未命中明确配方时，后代会按原规则随机继承亲本谱系。
+        </div>
+        <select v-model="compendiumSpecies" class="w-full bg-bg border border-accent/20 rounded-xs px-2 py-1.5 text-xs mb-2">
+          <option value="all">全部基础鱼</option>
+          <option v-for="fish in PONDABLE_FISH" :key="fish.fishId" :value="fish.fishId">{{ fish.name }}</option>
+        </select>
         <!-- 代数筛选 -->
         <div class="grid grid-cols-5 space-x-1 mb-2">
           <Button
@@ -343,18 +356,20 @@
           <div
             v-for="breed in currentGenBreeds"
             :key="breed.breedId"
-            class="border rounded-xs p-1.5 text-xs text-center transition-colors truncate"
-            :class="
-              isDiscovered(breed.breedId)
-                ? 'border-accent/20 ' + genColor(compendiumGen)
-                : 'border-accent/10 text-muted/30'
-            "
+            class="border rounded-xs p-1.5 text-xs text-center transition-colors truncate cursor-pointer"
+            :class="selectedBreed?.breedId === breed.breedId ? 'border-accent bg-accent/10 ' + genColor(compendiumGen) : 'border-accent/20 ' + genColor(compendiumGen)"
+            @click="selectedBreed = breed"
           >
-            <template v-if="isDiscovered(breed.breedId)">{{
-              breed.name
-            }}</template>
-            <Lock v-else :size="12" class="mx-auto text-muted/30" />
+            {{ breed.name }}
           </div>
+        </div>
+
+        <div v-if="selectedBreed" class="mt-3 border border-accent/20 rounded-xs p-3 text-xs space-y-1">
+          <p class="text-accent font-bold">{{ selectedBreed.name }} · 第{{ selectedBreed.generation }}代</p>
+          <p>基础鱼：{{ getPondableFishName(selectedBreed.baseFishId) }}</p>
+          <p v-if="selectedBreed.generation === 1" class="text-muted">一代品种无固定谱系亲本，由基础鱼育种产生。</p>
+          <p v-else class="text-muted">亲本：{{ breedName(selectedBreed.parentBreedA) }} ＋ {{ breedName(selectedBreed.parentBreedB) }}</p>
+          <p :class="isDiscovered(selectedBreed.breedId) ? 'text-success' : 'text-muted'">{{ isDiscovered(selectedBreed.breedId) ? '已收录' : '尚未收录（配方仍公开可查）' }}</p>
         </div>
 
         <!-- 完成度 -->
@@ -580,7 +595,6 @@ import {
   Package,
   ArrowUp,
   Hammer,
-  Lock,
   Fish,
   Heart,
   X,
@@ -603,7 +617,8 @@ import {
   getPondableFish,
   FISH_BREEDING_DAYS,
 } from "@/data/fishPond";
-import { getBreedsByGeneration, BREED_COUNTS } from "@/data/pondBreeds";
+import { getBreedsByGeneration, getBreedById, findBreedByParents, BREED_COUNTS } from "@/data/pondBreeds";
+import type { PondBreedDef } from "@/types/fishPond";
 import { getItemById } from "@/data/items";
 import type { PondFish } from "@/types/fishPond";
 
@@ -616,6 +631,8 @@ const currentTab = ref<"pond" | "compendium">("pond");
 const selectedBreedingFish = ref<PondFish | null>(null);
 const detailFish = ref<PondFish | null>(null);
 const compendiumGen = ref<1 | 2 | 3 | 4 | 5>(1);
+const compendiumSpecies = ref("all");
+const selectedBreed = ref<PondBreedDef | null>(null);
 
 /** 建造/升级统一弹窗 */
 const pondModal = ref<"build" | "upgrade" | null>(null);
@@ -637,8 +654,27 @@ const discoveredCountByGen = (gen: number): number => {
 };
 
 const currentGenBreeds = computed(() =>
-  getBreedsByGeneration(compendiumGen.value),
+  getBreedsByGeneration(compendiumGen.value).filter(
+    (breed) => compendiumSpecies.value === "all" || breed.baseFishId === compendiumSpecies.value,
+  ),
 );
+const breedName = (breedId: string | null) =>
+  breedId ? getBreedById(breedId)?.name ?? breedId : "基础鱼";
+const breedingPreview = computed(() => {
+  const first = selectedBreedingFish.value;
+  if (!first) return { recipe: null as PondBreedDef | null, text: "" };
+  const candidates = fishPondStore.pond.fish.filter(
+    (fish) => fish.id !== first.id && fish.fishId === first.fishId && fish.mature && !fish.sick,
+  );
+  const recipes = candidates
+    .map((fish) => first.breedId && fish.breedId ? findBreedByParents(first.breedId, fish.breedId) : undefined)
+    .filter((breed): breed is PondBreedDef => !!breed);
+  if (recipes.length === 1)
+    return { recipe: recipes[0]!, text: `可命中配方：${recipes[0]!.name}（第${recipes[0]!.generation}代）` };
+  if (recipes.length > 1)
+    return { recipe: recipes[0]!, text: `可选同种亲本命中 ${recipes.length} 个配方；点击具体亲本后即时确认目标品种。` };
+  return { recipe: null, text: "当前可配亲本未命中固定配方，后代将随机继承亲本谱系。" };
+});
 
 /** 图鉴完成度 */
 const completionPercent = computed(() => {
@@ -902,10 +938,15 @@ const handleSelectForBreeding = (fish: PondFish) => {
     return;
   }
 
-  // 尝试配对
+  // 尝试配对，并在开始时明确告知固定配方或随机继承。
+  const recipe = selectedBreedingFish.value.breedId && fish.breedId
+    ? findBreedByParents(selectedBreedingFish.value.breedId, fish.breedId)
+    : undefined;
   if (fishPondStore.startBreeding(selectedBreedingFish.value.id, fish.id)) {
     addLog(
-      `${fish.name}开始繁殖，${fishPondStore.pond.breeding!.daysLeft}天后出结果。`,
+      recipe
+        ? `${fish.name}开始繁殖：命中${recipe.name}（第${recipe.generation}代）配方，${fishPondStore.pond.breeding!.daysLeft}天后出结果。`
+        : `${fish.name}开始繁殖：未命中固定配方，后代将随机继承亲本谱系，${fishPondStore.pond.breeding!.daysLeft}天后出结果。`,
     );
     showFloat("开始繁殖", "success");
     selectedBreedingFish.value = null;

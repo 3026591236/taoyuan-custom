@@ -1182,6 +1182,8 @@ export const SPIRIT_CROP_AURA: Record<string, number> = {
   moonlight_rice: 8,
   phoenix_pepper: 10,
   snow_lotus: 12,
+  ice_soul_lotus: 10,
+  purple_ganoderma: 12,
   fairy_chrysanthemum: 9,
   golden_melon: 6,
   jade_tea: 6,

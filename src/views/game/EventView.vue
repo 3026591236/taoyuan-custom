@@ -160,14 +160,17 @@
         <div>
           <h2 class="text-accent text-lg">连续满勤</h2>
           <p class="text-xs text-muted leading-relaxed mt-1">
-            每天领取100活跃宝箱后计入连续满勤。连续3/5/7天可领取额外修仙材料，给回访玩家一个明确周目标。
+            每天领取100活跃宝箱后计入连续满勤。奖励每7天循环一轮；断签后连续天数与轮次从第一轮重新开始，历史轮次记录仍会保留。
           </p>
         </div>
         <div class="text-right">
           <p class="text-2xl text-accent font-bold">
             {{ retention.visibleFullActivityStreak }}
           </p>
-          <p class="text-[10px] text-muted">连续满勤天</p>
+          <p class="text-[10px] text-muted">总连续满勤天</p>
+          <p class="text-[10px] text-accent mt-1">
+            第{{ retention.streakRound }}轮 · 轮内第{{ retention.streakDayInRound }}天
+          </p>
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -177,7 +180,7 @@
           class="reward-card"
           :class="gift.claimed ? 'claimed' : gift.unlocked ? 'ready' : ''"
         >
-          <p class="text-sm text-accent">连续{{ gift.day }}天</p>
+          <p class="text-sm text-accent">本轮第{{ gift.day }}天</p>
           <p class="text-xs font-bold mt-1">
             {{ gift.title.replace(/^.*：/, "") }}
           </p>
