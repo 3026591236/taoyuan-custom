@@ -597,6 +597,12 @@
           }}
         </p>
         <p>· 铜钱 {{ cultivation.rebirthCost.money.toLocaleString() }}文</p>
+        <p
+          v-if="rebirthMatCount('reincarnation_dust') < (cultivation.rebirthMaterials.find((mat) => mat.itemId === 'reincarnation_dust')?.quantity || 0)"
+          class="text-caution pt-1"
+        >
+          轮回尘来源：饕餮（1转）与穷奇（5转）每日胜利各必得1；云梦泽·泽中水魄（3转）16%；混沌（10转）55%掉落2。
+        </p>
       </div>
       <div v-if="cultivation.canRebirth" class="space-y-2 mb-3">
         <div class="text-xs text-success">

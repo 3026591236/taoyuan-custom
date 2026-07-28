@@ -3302,6 +3302,7 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   tiger_fang: "青篁秘林野兽掉落",
   bear_gall_pill: "百工作序制作",
   tiger_bone_tonic: "百工作序制作",
+  reincarnation_dust: "凶兽·饕餮（1转解锁，每日胜利必得1）、凶兽·穷奇（5转解锁，每日胜利必得1）、云梦泽·泽中水魄（3转解锁，16%）、凶兽·混沌（10转解锁，55%掉落2）",
   artifact_shard: "秘境/凶兽掉落；洞府灵石坊折灵",
   star_iron: "昆仑外境/穷奇/混沌掉落；洞府灵石坊折灵",
   moonlight_jade: "云梦泽、幽冥洞窟掉落；洞府灵石坊折灵",

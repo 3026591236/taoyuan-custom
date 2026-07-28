@@ -204,7 +204,7 @@ export const REALM_ZONES: RealmZone[] = [
     minRebirth: 3,
     cost: 38,
     staminaCost: 8,
-    rewardHint: "魂晶、月华玉、寒髓玉、轮回材料",
+    rewardHint: "魂晶、月华玉、寒髓玉；泽中水魄16%掉落轮回尘",
     monsters: [
       {
         id: "marsh_spirit",
@@ -397,7 +397,7 @@ export const REALM_ZONES: RealmZone[] = [
     cost: 60,
     staminaCost: 12,
     dailyLimit: 1,
-    rewardHint: "真灵秘录、轮回尘、妖丹、龙鳞",
+    rewardHint: "轮回尘×1必得；真灵秘录75%、妖丹22%、龙鳞12%",
     monsters: [
       {
         id: "taotie_boss",
@@ -420,7 +420,7 @@ export const REALM_ZONES: RealmZone[] = [
             itemId: "reincarnation_dust",
             name: "轮回尘",
             qty: 1,
-            chance: 0.45,
+            chance: 1,
           },
           { itemId: "lingyun_jade", name: "灵蕴玉", qty: 1, chance: 0.18 },
           { itemId: "dragon_scale", name: "龙鳞", qty: 1, chance: 0.12 },
@@ -440,7 +440,7 @@ export const REALM_ZONES: RealmZone[] = [
     cost: 90,
     staminaCost: 15,
     dailyLimit: 1,
-    rewardHint: "高级轮回材料、法宝碎片、凤羽、星陨铁",
+    rewardHint: "轮回尘×1必得；真灵秘录75%、法宝碎片45%、星陨铁35%",
     monsters: [
       {
         id: "qiongqi_boss",
@@ -458,6 +458,12 @@ export const REALM_ZONES: RealmZone[] = [
             name: "真灵秘录",
             qty: 2,
             chance: 0.75,
+          },
+          {
+            itemId: "reincarnation_dust",
+            name: "轮回尘",
+            qty: 1,
+            chance: 1,
           },
           { itemId: "artifact_shard", name: "法宝碎片", qty: 2, chance: 0.45 },
           { itemId: "star_iron", name: "星陨铁", qty: 1, chance: 0.35 },

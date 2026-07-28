@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const combat=readFileSync(new URL("../src/stores/useCombatStore.ts",import.meta.url),"utf8"), items=readFileSync(new URL("../src/data/items.ts",import.meta.url),"utf8"), cultivation=readFileSync(new URL("../src/views/game/CultivationView.vue",import.meta.url),"utf8"), knowledge=readFileSync(new URL("../src/data/knowledgeBase.ts",import.meta.url),"utf8"), backend=readFileSync(new URL("../backend/index.mjs",import.meta.url),"utf8");
+const pkg=JSON.parse(readFileSync(new URL("../package.json",import.meta.url),"utf8")), lock=JSON.parse(readFileSync(new URL("../package-lock.json",import.meta.url),"utf8")), gradle=readFileSync(new URL("../android/app/build.gradle",import.meta.url),"utf8");
+const zone=id=>{const a=combat.indexOf(`id: "${id}"`); return combat.slice(a,combat.indexOf("\n  },",a)+5)};
+const taotie=zone("taotie"),qiongqi=zone("qiongqi"),yunmeng=zone("yunmeng_marsh"),hundun=zone("hundun");
+for(const [name,src] of [["饕餮",taotie],["穷奇",qiongqi]]){assert.match(src,/itemId: "reincarnation_dust"[\s\S]*?qty: 1,[\s\S]*?chance: 1,/,`${name} must guarantee one dust`);for(const random of [0,0.5,0.999999])assert.equal(random<1,true)}
+assert.match(taotie,/minRebirth: 1/);assert.match(qiongqi,/minRebirth: 5/);assert.match(yunmeng,/minRebirth: 3[\s\S]*?reincarnation_dust[\s\S]*?chance: 0\.16/);assert.match(hundun,/minRebirth: 10[\s\S]*?reincarnation_dust[\s\S]*?qty: 2,[\s\S]*?chance: 0\.55/);
+assert.match(items,/reincarnation_dust: "凶兽·饕餮（1转解锁，每日胜利必得1）[\s\S]*云梦泽·泽中水魄（3转解锁，16%）/);assert.match(cultivation,/轮回尘来源：饕餮（1转）与穷奇（5转）每日胜利各必得1/);assert.match(knowledge,/V3\.3\.30：轮回尘从哪里获得[\s\S]*泽中水魄有16%概率[\s\S]*混沌，胜利有55%概率掉落×2/);assert.match(backend,/V3\.3\.30 轮回尘供给补全/);
+assert.equal(pkg.version,"3.3.30");assert.equal(lock.version,"3.3.30");assert.equal(lock.packages[""].version,"3.3.30");const p=pkg.version.split(".").map(Number);assert.equal(p[0]*10000+p[1]*100+p[2],30330);assert.match(gradle,/def appVersionName = versionMatcher \? versionMatcher\[0\]\[1\]/);assert.match(gradle,/versionCode appVersionCode/);assert.match(gradle,/versionName appVersionName/);assert.match(readFileSync(new URL("./check-v3324.mjs",import.meta.url),"utf8"),/V3\.3\.24 static scenarios/);
+console.log("V3.3.30 feedback #67 dust supply scenarios: OK; Android 3.3.30/30330");
