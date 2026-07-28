@@ -57,6 +57,28 @@ export const useTerritoryStore = defineStore("territory", () => {
   const totalPower = computed(() => Math.floor(army.value.troops*(.75+army.value.morale/200)+ownedNodes.value.reduce((s,n)=>s+n.garrison*.18+n.level*5,0)+watchBonus.value));
   const territoryProgress = computed(() => Math.round(ownedNodes.value.length/nodes.value.length*100));
   const raidCooldownSeconds = computed(() => Math.max(0, Math.ceil((lastRaidAt.value + 600000 - now()) / 1000)));
+  const governanceMetrics = computed(() => ({
+    owned: ownedNodes.value.length,
+    total: nodes.value.length,
+    progress: territoryProgress.value,
+    levelSum: ownedNodes.value.reduce((sum, node) => sum + node.level, 0),
+    watchLevels: ownedNodes.value.filter(node => node.kind === "watch").reduce((sum, node) => sum + node.level, 0),
+    spiritLevels: ownedNodes.value.filter(node => node.kind === "spirit").reduce((sum, node) => sum + node.level, 0),
+  }));
+  const governanceCost = computed<TerritoryResources>(() => ({
+    wood: Math.min(480, 30 + governanceMetrics.value.owned * 8 + governanceMetrics.value.levelSum * 2),
+    stone: Math.min(420, 24 + governanceMetrics.value.owned * 7 + governanceMetrics.value.watchLevels * 5),
+    spirit: Math.min(300, 16 + governanceMetrics.value.owned * 4 + governanceMetrics.value.spiritLevels * 6),
+  }));
+  const canAffordGovernance = computed(() => resources.value.wood >= governanceCost.value.wood && resources.value.stone >= governanceCost.value.stone && resources.value.spirit >= governanceCost.value.spirit);
+  const consumeGovernanceCost = () => {
+    tick();
+    const cost = governanceCost.value;
+    if (resources.value.wood < cost.wood || resources.value.stone < cost.stone || resources.value.spirit < cost.spirit) return false;
+    resources.value = { wood: resources.value.wood - cost.wood, stone: resources.value.stone - cost.stone, spirit: resources.value.spirit - cost.spirit };
+    lastAction.value = `完成本周巡境：维护消耗木${cost.wood}、石${cost.stone}、灵${cost.spirit}。`;
+    return true;
+  };
 
   const addReport = (title:string,result:BattleReport["result"],detail:string) => { reports.value.unshift({id:`${now()}-${Math.random()}`,at:now(),title,result,detail}); reports.value=reports.value.slice(0,12); };
   const select = (id:string) => { if(nodes.value.some(n=>n.id===id)) selectedId.value=id; };
@@ -133,5 +155,5 @@ export const useTerritoryStore = defineStore("territory", () => {
     const savedArmy=data.army||{};army.value={troops:Math.round(finite(savedArmy.troops,army.value.troops,0,100000)),maxTroops:Math.round(finite(savedArmy.maxTroops,army.value.maxTroops,100,100000)),morale:Math.round(finite(savedArmy.morale,army.value.morale,35,120)),stance:["assault","guard","flank"].includes(savedArmy.stance)?savedArmy.stance:"assault"};army.value.troops=Math.min(army.value.troops,army.value.maxTroops);
     lastAction.value=typeof data.lastAction==="string"?data.lastAction.slice(0,300):lastAction.value;selectedId.value=nodes.value.some(n=>n.id===data.selectedId)?String(data.selectedId):"capital";reports.value=Array.isArray(data.reports)?data.reports.filter((r:any)=>r&&typeof r.title==="string"&&["victory","defeat","info"].includes(r.result)).slice(0,12).map((r:any)=>({...r,title:r.title.slice(0,80),detail:String(r.detail||"").slice(0,300),at:finite(r.at,now(),0,now())})):[];tick();
   };
-  return {nodes,resources,actionPoints,maxActionPoints,army,lastAction,selectedId,reports,ownedNodes,selectedNode,reachableNodes,incomePerHour,totalPower,territoryProgress,raidCooldownSeconds,isReachable,select,setStance,tick,march,recruit,fortify,upgrade,triggerRaid,resolveRaid,serialize,deserialize};
+  return {nodes,resources,actionPoints,maxActionPoints,army,lastAction,selectedId,reports,ownedNodes,selectedNode,reachableNodes,incomePerHour,totalPower,territoryProgress,governanceMetrics,governanceCost,canAffordGovernance,consumeGovernanceCost,raidCooldownSeconds,isReachable,select,setStance,tick,march,recruit,fortify,upgrade,triggerRaid,resolveRaid,serialize,deserialize};
 });

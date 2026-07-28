@@ -158,14 +158,18 @@ async function ensureSchema() {
     UNIQUE KEY uk_user_mails_legacy_user (legacy_mail_id, user_id)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
 
-  await pool.execute(`INSERT IGNORE INTO user_mails (id, user_id, legacy_mail_id, title, content, rewards, from_name, claimed, claimed_at, created_at)
-    SELECT UUID(), u.id, m.id, m.title, m.content, m.rewards, m.from_name,
-      CASE WHEN mc.id IS NULL THEN 0 ELSE 1 END,
-      CASE WHEN mc.id IS NULL THEN NULL ELSE m.created_at END,
-      m.created_at
-    FROM mails m
-    JOIN users u ON (m.target = 'all' OR m.target = u.id)
-    LEFT JOIN mail_claims mc ON mc.mail_id = m.id AND mc.user_id = u.id`);
+  await pool.execute(`CREATE TABLE IF NOT EXISTS mail_claim_tombstones (
+    user_id VARCHAR(36) NOT NULL,
+    source_id VARCHAR(80) NOT NULL,
+    consumed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, source_id),
+    INDEX idx_mail_tombstone_time (consumed_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+
+  // V3.3.24: legacy mails were expanded once during the historical migration.
+  // Never replay the unbounded template table at boot: deleted/consumed rows must
+  // stay gone and accounts created later must not receive ended announcements.
+  // New mail delivery writes user_mails directly.
 
   // Mail grants use the candidate asset_grants/asset_ledger migration.
   // Do not silently create those tables here: rollout must apply/review the
@@ -3326,15 +3330,37 @@ app.delete("/api/mails/claimed", async (req, res) => {
   try {
     const user = await auth(req);
     if (!user) return send(res, 401, { error: "请先登录" });
-    const [result] = await pool.execute(
-      `DELETE um FROM user_mails um
-       LEFT JOIN asset_grants rg
-         ON rg.id = um.grant_id AND rg.user_id = um.user_id
-        AND rg.source_type = 'mail_claim'
-       WHERE um.user_id = ? AND um.claimed = 1
-         AND (um.grant_id IS NULL OR rg.state = 'consumed')`,
-      [user.id],
-    );
+    const conn = await pool.getConnection();
+    let result;
+    try {
+      await conn.beginTransaction();
+      await conn.execute(
+        `INSERT IGNORE INTO mail_claim_tombstones (user_id, source_id, consumed_at)
+         SELECT um.user_id, COALESCE(um.legacy_mail_id, um.id), COALESCE(um.claimed_at, NOW())
+         FROM user_mails um
+         LEFT JOIN asset_grants rg
+           ON rg.id = um.grant_id AND rg.user_id = um.user_id
+          AND rg.source_type = 'mail_claim'
+         WHERE um.user_id = ? AND um.claimed = 1
+           AND (um.grant_id IS NULL OR rg.state = 'consumed')`,
+        [user.id],
+      );
+      [result] = await conn.execute(
+        `DELETE um FROM user_mails um
+         LEFT JOIN asset_grants rg
+           ON rg.id = um.grant_id AND rg.user_id = um.user_id
+          AND rg.source_type = 'mail_claim'
+         WHERE um.user_id = ? AND um.claimed = 1
+           AND (um.grant_id IS NULL OR rg.state = 'consumed')`,
+        [user.id],
+      );
+      await conn.commit();
+    } catch (error) {
+      try { await conn.rollback(); } catch {}
+      throw error;
+    } finally {
+      conn.release();
+    }
     send(res, 200, { ok: true, deleted: Number(result.affectedRows || 0) });
   } catch (e) {
     console.error("cleanup claimed user mails err", e);
@@ -3398,10 +3424,11 @@ app.post("/api/mails/:id/claim", async (req, res) => {
       return send(res, detail.status, { error: detail.error, code: detail.code });
     }
     const selectedSave = binding.binding;
+    const stableMailSourceId = String(mail.legacy_mail_id || mail.id);
     const [existingRows] = await conn.execute(
       `SELECT id, payload_json AS rewards_json, state AS status, slot, character_id FROM asset_grants
        WHERE user_id = ? AND source_type = 'mail_claim' AND source_id = ? LIMIT 1 FOR UPDATE`,
-      [user.id, mail.id],
+      [user.id, stableMailSourceId],
     );
     if (existingRows.length) {
       const grant = existingRows[0];
@@ -3442,13 +3469,13 @@ app.post("/api/mails/:id/claim", async (req, res) => {
       `INSERT INTO asset_grants
        (id, user_id, character_id, slot, grant_type, source_type, source_id, payload_json, state)
        VALUES (?, ?, ?, ?, 'mail_reward', 'mail_claim', ?, ?, 'issued')`,
-      [grantId, user.id, selectedSave.characterId, selectedSave.slot, mail.id, JSON.stringify(rewards)],
+      [grantId, user.id, selectedSave.characterId, selectedSave.slot, stableMailSourceId, JSON.stringify(rewards)],
     );
     await conn.execute(
       `INSERT INTO asset_ledger
        (user_id, character_id, slot, idempotency_key, event_type, source_type, source_id, delta_json)
        VALUES (?, ?, ?, ?, 'grant_issued', 'mail_claim', ?, ?)`,
-      [user.id, selectedSave.characterId, selectedSave.slot, `mail-issue:${grantId}`, mail.id, JSON.stringify(rewards)],
+      [user.id, selectedSave.characterId, selectedSave.slot, `mail-issue:${grantId}`, stableMailSourceId, JSON.stringify(rewards)],
     );
     await conn.execute(
       "UPDATE user_mails SET claimed = 1, claimed_at = NOW(), grant_id = ? WHERE id = ? AND user_id = ? AND claimed = 0",

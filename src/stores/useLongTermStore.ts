@@ -556,6 +556,32 @@ export const useLongTermStore = defineStore("longTerm", () => {
     sword_platform: 1,
   });
   const farmGoalClaimed = ref<FarmGoalId[]>([]);
+  const sectGovernance = ref({
+    founded: false,
+    name: "",
+    prestige: 0,
+    lastSettlementWeek: -1,
+    settlementCount: 0,
+    lastSettlementSummary: "",
+  });
+  const normalizeBranchName = (value: unknown) => Array.from(String(value ?? "").replace(/[\p{Cc}\p{Cf}]/gu, "").trim()).slice(0, 8).join("");
+  const foundSectBranch = (name: unknown) => {
+    const normalized = normalizeBranchName(name);
+    if (Array.from(normalized).length < 2) return { success: false, message: "山门名需为2—8个字符" };
+    sectGovernance.value = { ...sectGovernance.value, founded: true, name: normalized };
+    return { success: true, message: `自立山门「${normalized}」，承本宗道统开设分宗。` };
+  };
+  const recordSectSettlement = (week: number, summary: string, prestigeGain: number) => {
+    if (sectGovernance.value.lastSettlementWeek === week) return false;
+    sectGovernance.value = {
+      ...sectGovernance.value,
+      prestige: Math.min(999999, sectGovernance.value.prestige + Math.max(0, Math.floor(prestigeGain))),
+      lastSettlementWeek: week,
+      settlementCount: Math.min(9999, sectGovernance.value.settlementCount + 1),
+      lastSettlementSummary: String(summary).slice(0, 240),
+    };
+    return true;
+  };
 
   const game = () => useGameStore();
   const inv = () => useInventoryStore();
@@ -995,6 +1021,7 @@ export const useLongTermStore = defineStore("longTerm", () => {
     adventureEndings: adventureEndings.value,
     sectProjects: sectProjects.value,
     farmGoalClaimed: farmGoalClaimed.value,
+    sectGovernance: sectGovernance.value,
   });
   const deserialize = (data: any = {}) => {
     worldBossPersonal.value = Number(data.worldBossPersonal || 0);
@@ -1032,6 +1059,15 @@ export const useLongTermStore = defineStore("longTerm", () => {
     farmGoalClaimed.value = Array.isArray(data.farmGoalClaimed)
       ? data.farmGoalClaimed
       : [];
+    const governance = data.sectGovernance || {};
+    sectGovernance.value = {
+      founded: governance.founded === true,
+      name: normalizeBranchName(governance.name),
+      prestige: Math.min(999999, Math.max(0, Number(governance.prestige) || 0)),
+      lastSettlementWeek: Number.isFinite(Number(governance.lastSettlementWeek)) ? Number(governance.lastSettlementWeek) : -1,
+      settlementCount: Math.min(9999, Math.max(0, Number(governance.settlementCount) || 0)),
+      lastSettlementSummary: String(governance.lastSettlementSummary || "").slice(0, 240),
+    };
   };
   return {
     worldBossPersonal,
@@ -1057,6 +1093,10 @@ export const useLongTermStore = defineStore("longTerm", () => {
     adventureStory,
     sectProjects,
     farmGoalClaimed,
+    sectGovernance,
+    normalizeBranchName,
+    foundSectBranch,
+    recordSectSettlement,
     dayKey,
     monthKeyNow,
     daysAway,

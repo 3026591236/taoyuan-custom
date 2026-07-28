@@ -1099,21 +1099,29 @@
           <p class="text-[10px] text-muted/60 mt-0.5">可在万象铺购买树苗种植</p>
         </div>
         <div
-          v-if="
-            plantableSaplings.length > 0 &&
-            farmStore.fruitTrees.length < MAX_FRUIT_TREES
-          "
-          class="flex space-x-1.5 flex-wrap"
+          v-if="farmStore.fruitTrees.length < MAX_FRUIT_TREES"
+          class="mt-2 rounded-xs border border-accent/20 bg-accent/5 p-2"
         >
-          <Button
-            v-for="s in plantableSaplings"
-            :key="s.saplingId"
-            :icon-size="12"
-            :icon="TreePine"
-            @click="handlePlantTree(s.type)"
-          >
-            种{{ s.name }} (×{{ s.count }})
-          </Button>
+          <p class="text-xs text-accent mb-1">
+            新增果树区 · 剩余 {{ MAX_FRUIT_TREES - farmStore.fruitTrees.length }} 个空位
+          </p>
+          <div v-if="plantableSaplings.length > 0" class="flex space-x-1.5 flex-wrap gap-y-1.5">
+            <Button
+              v-for="s in plantableSaplings"
+              :key="s.saplingId"
+              :icon-size="12"
+              :icon="TreePine"
+              @click="handlePlantTree(s.type)"
+            >
+              种{{ s.name }} (×{{ s.count }})
+            </Button>
+          </div>
+          <div v-else class="flex flex-wrap items-center gap-2">
+            <span class="text-[10px] text-muted">暂无树苗，空位会一直保留。</span>
+            <Button :icon-size="12" :icon="Store" @click="$router.push({ name: 'shop' })">
+              前往万象铺
+            </Button>
+          </div>
         </div>
       </div>
 

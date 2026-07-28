@@ -131,6 +131,26 @@
         </p>
       </div>
 
+      <div class="border border-accent/20 rounded-xs p-3 space-y-2 governance-card">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs text-accent">仙乡共治 · 七日巡境</p>
+          <span class="text-[10px]" :class="canSettleGovernance ? 'text-success' : 'text-muted'">{{ governanceSettledThisWeek ? '本周已结算' : canSettleGovernance ? '本周可结算' : '尚未就绪' }}</span>
+        </div>
+        <p class="text-[10px] text-muted leading-relaxed">山河控制 {{ territoryStore.territoryProgress }}% · 据点 {{ territoryStore.governanceMetrics.owned }}/{{ territoryStore.governanceMetrics.total }} · 等级总和 {{ territoryStore.governanceMetrics.levelSum }} · 关隘 {{ territoryStore.governanceMetrics.watchLevels }} · 灵脉 {{ territoryStore.governanceMetrics.spiritLevels }}</p>
+        <p class="text-[10px] text-muted">本周维护：木{{ territoryStore.governanceCost.wood }}、石{{ territoryStore.governanceCost.stone }}、灵{{ territoryStore.governanceCost.spirit }}；预览奖励：贡献+{{ governancePreview.contribution }}、功勋+{{ governancePreview.merit }}、灵石+{{ governancePreview.spiritStones }}、灵气+{{ governancePreview.aura }}。</p>
+        <button class="btn justify-center text-xs" :disabled="!canSettleGovernance" @click="settleGovernance">巡境结算</button>
+        <p v-if="longTerm.sectGovernance.lastSettlementSummary" class="text-[10px] text-muted">上次：{{ longTerm.sectGovernance.lastSettlementSummary }}</p>
+        <div class="border-t border-accent/10 pt-2 space-y-1">
+          <template v-if="longTerm.sectGovernance.founded">
+            <p class="text-xs text-accent">分宗山门「{{ longTerm.sectGovernance.name }}」</p><p class="text-[10px] text-muted">承 {{ currentSect?.name }} 道统，原宗门身份不变；巡境贡献与功勋享受 +10%。声望 {{ longTerm.sectGovernance.prestige }}。</p>
+          </template>
+          <template v-else>
+            <p class="text-[10px] text-muted">自立条件：亲传或更高、领地≥75%、至少完成一次巡境；仅建立承本宗道统的分宗，不替换原宗门。</p>
+            <div class="flex gap-1.5 flex-wrap"><input v-model="branchNameInput" maxlength="8" class="governance-name" placeholder="山门名（2—8字）" /><button class="btn justify-center text-xs" :disabled="!canFoundBranch" @click="foundBranch">自立山门</button></div>
+          </template>
+        </div>
+      </div>
+
       <div class="border border-accent/20 rounded-xs p-3 space-y-2">
         <div class="flex items-center justify-between">
           <p class="text-xs text-accent">宗门公共建设</p>
@@ -476,6 +496,7 @@ import { useCultivationStore } from "@/stores/useCultivationStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
 import { useGameStore } from "@/stores/useGameStore";
 import { useLongTermStore } from "@/stores/useLongTermStore";
+import { useTerritoryStore } from "@/stores/useTerritoryStore";
 import {
   normalizeDaoTitle,
   usePlayerStore,
@@ -486,8 +507,10 @@ const cultivationStore = useCultivationStore();
 const inventoryStore = useInventoryStore();
 const gameStore = useGameStore();
 const longTerm = useLongTermStore();
+const territoryStore = useTerritoryStore();
 const playerStore = usePlayerStore();
 const daoTitleInput = ref(playerStore.daoTitle);
+const branchNameInput = ref("");
 const canManageDaoTitle = computed(
   () => !!cultivationStore.sect && (cultivationStore.sectRank || 0) >= 2,
 );
@@ -838,6 +861,15 @@ const canPromote = computed(() => {
   );
 });
 
+const absoluteGameDay = computed(() => Math.max(0, (gameStore.year - 1) * 112 + ["spring", "summer", "autumn", "winter"].indexOf(gameStore.season) * 28 + (gameStore.day - 1)));
+const governanceWeek = computed(() => Math.floor(absoluteGameDay.value / 7));
+const governanceSettledThisWeek = computed(() => longTerm.sectGovernance.lastSettlementWeek === governanceWeek.value);
+const governancePreview = computed(() => { const m=territoryStore.governanceMetrics; const build=Math.max(1,longTerm.sectBuildLevel||1); const projects=Object.values(longTerm.sectProjects).reduce((sum,level)=>sum+Number(level||0),0); const base=Math.min(260,24+m.owned*5+m.levelSum*2+m.watchLevels*3+m.spiritLevels*3+build*4+projects*2); const bonus=longTerm.sectGovernance.founded?1.1:1; return { contribution:Math.min(320,Math.floor(base*bonus)), merit:Math.min(180,Math.floor(base*.55*bonus)), spiritStones:Math.min(48,5+Math.floor(m.owned/2)+m.spiritLevels), aura:Math.min(1200,80+m.spiritLevels*35+build*20), prestige:Math.min(120,8+m.owned*2+build+projects) }; });
+const canSettleGovernance = computed(() => !!cultivationStore.sect && !governanceSettledThisWeek.value && territoryStore.governanceMetrics.owned>0 && territoryStore.canAffordGovernance);
+const canFoundBranch = computed(() => !!cultivationStore.sect && (cultivationStore.sectRank||0)>=2 && territoryStore.territoryProgress>=75 && longTerm.sectGovernance.settlementCount>=1 && Array.from(longTerm.normalizeBranchName(branchNameInput.value)).length>=2);
+const settleGovernance=()=>{ if(!canSettleGovernance.value||!territoryStore.consumeGovernanceCost()){showFloat(governanceSettledThisWeek.value?"本周巡境已结算":"领地维护资源不足","danger");return;} const reward=governancePreview.value; cultivationStore.sectContribution=Math.min(999999999,(cultivationStore.sectContribution||0)+reward.contribution); cultivationStore.sectMerit=Math.min(999999999,(cultivationStore.sectMerit||0)+reward.merit); inventoryStore.addItem("spirit_stone",reward.spiritStones); cultivationStore.aura=Math.min(999999999,(cultivationStore.aura||0)+reward.aura); const summary=`第${governanceWeek.value+1}周巡境：贡献+${reward.contribution}、功勋+${reward.merit}、灵石+${reward.spiritStones}、灵气+${reward.aura}`; if(!longTerm.recordSectSettlement(governanceWeek.value,summary,reward.prestige))return; addLog(summary);showFloat("七日巡境结算完成","success"); };
+const foundBranch=()=>{if(!canFoundBranch.value){showFloat("自立山门条件尚未满足","danger");return;}const result=longTerm.foundSectBranch(branchNameInput.value);addLog(result.message);showFloat(result.message,result.success?"success":"danger");if(result.success)branchNameInput.value=longTerm.sectGovernance.name;};
+
 const resetDailyIfNeeded = () => {
   if (cultivationStore.sectDailyKey !== dailyKey.value) {
     cultivationStore.sectDailyKey = dailyKey.value;
@@ -1082,6 +1114,7 @@ const redeem = (item: (typeof TREASURY)[number]) => {
   border-color: rgba(255, 180, 0, 0.4);
   box-shadow: 0 0 15px rgba(255, 180, 0, 0.1);
 }
+.governance-name{min-width:140px;flex:1;border:1px solid rgba(200,164,92,.25);background:rgba(0,0,0,.16);color:inherit;padding:.35rem .5rem;font-size:.75rem;outline:none}
 </style>
 
 <style scoped>
@@ -1095,6 +1128,7 @@ const redeem = (item: (typeof TREASURY)[number]) => {
 .mini-build-btn:hover {
   background: rgba(200, 164, 92, 0.12);
 }
+.governance-name{min-width:140px;flex:1;border:1px solid rgba(200,164,92,.25);background:rgba(0,0,0,.16);color:inherit;padding:.35rem .5rem;font-size:.75rem;outline:none}
 </style>
 
 <style scoped>
@@ -1122,4 +1156,5 @@ const redeem = (item: (typeof TREASURY)[number]) => {
 .sect-dungeon-btn:disabled {
   opacity: 0.48;
 }
+.governance-name{min-width:140px;flex:1;border:1px solid rgba(200,164,92,.25);background:rgba(0,0,0,.16);color:inherit;padding:.35rem .5rem;font-size:.75rem;outline:none}
 </style>

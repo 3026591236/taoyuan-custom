@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+const backend=fs.readFileSync('backend/index.mjs','utf8');
+const farm=fs.readFileSync('src/views/game/FarmView.vue','utf8');
+const sect=fs.readFileSync('src/views/game/SectView.vue','utf8');
+const territory=fs.readFileSync('src/stores/useTerritoryStore.ts','utf8');
+const longTerm=fs.readFileSync('src/stores/useLongTermStore.ts','utf8');
+const req=(ok,msg)=>{if(!ok)throw new Error(msg)};
+req(!backend.includes('INSERT IGNORE INTO user_mails (id, user_id, legacy_mail_id'), 'boot legacy replay still present');
+req(backend.includes('mail_claim_tombstones') && backend.includes('COALESCE(um.legacy_mail_id, um.id)'), 'tombstone absent');
+req(backend.includes('const stableMailSourceId = String(mail.legacy_mail_id || mail.id)'),'stable source absent');
+req((backend.match(/selectedSave\.slot, stableMailSourceId/g)||[]).length>=1,'grant not stable');
+req(farm.includes('剩余 {{ MAX_FRUIT_TREES - farmStore.fruitTrees.length }} 个空位')&&farm.includes('暂无树苗')&&farm.includes("name: 'shop'"),'orchard empty state absent');
+req(territory.includes('consumeGovernanceCost')&&territory.includes('canAffordGovernance'),'atomic territory cost absent');
+req(longTerm.includes('lastSettlementWeek')&&longTerm.includes('recordSectSettlement')&&longTerm.includes('normalizeBranchName'),'governance persistence absent');
+req(sect.includes('governanceSettledThisWeek')&&sect.includes('territoryStore.territoryProgress>=75')&&sect.includes('原宗门身份不变'),'governance UI absent');
+console.log('V3.3.24 static scenarios: OK');
