@@ -169,7 +169,11 @@
         :disabled="!cultivation.canBreakthrough"
         @click="handleBreakthrough"
         ><span>{{
-          cultivation.isMajorBreakthrough ? "渡劫突破" : "尝试突破"
+          cultivation.isMaxRealm
+            ? "凡界境界已圆满"
+            : cultivation.isMajorBreakthrough
+              ? "渡劫突破"
+              : "尝试突破"
         }}</span
         ><span class="text-muted text-xs">{{
           cultivation.canBreakthrough

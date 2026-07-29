@@ -1537,7 +1537,9 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const breakthroughAuraMissing = computed(() =>
     Math.max(0, breakthroughAuraCost.value - aura.value),
   );
+  const isMaxRealm = computed(() => realmIndex.value >= REALMS.length - 1);
   const breakthroughRequirementText = computed(() => {
+    if (isMaxRealm.value) return "凡界境界已圆满，请前往修仙之途飞升";
     const parts: string[] = [];
     if (breakthroughCultivationMissing.value > 0)
       parts.push(`修为还差${Math.ceil(breakthroughCultivationMissing.value)}`);
@@ -1602,6 +1604,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
   );
   const canBreakthrough = computed(
     () =>
+      !isMaxRealm.value &&
       cultivation.value >= maxCultivation.value &&
       aura.value >= breakthroughAuraCost.value,
   );
@@ -2117,6 +2120,10 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const breakthrough = () => {
     lastTribulationResult.value = "none";
     if (!unlocked.value) return unlock();
+    if (isMaxRealm.value) {
+      showFloat("凡界境界已圆满，请前往修仙之途飞升。", "accent");
+      return false;
+    }
     if (!canBreakthrough.value) {
       showFloat(`尚不能突破：${breakthroughRequirementText.value}。`, "danger");
       return false;
@@ -4342,6 +4349,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     breakthroughCultivationMissing,
     breakthroughAuraMissing,
     breakthroughRequirementText,
+    isMaxRealm,
     nextRealm,
     isMajorBreakthrough,
     tribulationSuccessRate,

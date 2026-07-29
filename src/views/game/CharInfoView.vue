@@ -259,7 +259,9 @@
               cultivationStore.canBreakthrough ? 'text-accent' : 'text-muted'
             "
             >{{
-              cultivationStore.canBreakthrough
+              cultivationStore.isMaxRealm
+                ? "已圆满"
+                : cultivationStore.canBreakthrough
                 ? "可突破"
                 : Math.round(breakthroughPercent) + "%"
             }}</span
