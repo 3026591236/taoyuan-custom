@@ -33,9 +33,23 @@
             >
           </div>
           <div class="stat-card">
-            <span>长期战力</span
-            ><b>+{{ cultivation.destinedArtifactLevel * 360 }}</b>
+            <span>长期战力</span><b>+{{ cultivation.destinedArtifactPower }}</b>
           </div>
+        </div>
+        <div
+          class="text-[10px] rounded-xs border p-2 leading-relaxed"
+          :class="
+            cultivation.destinedArtifactResonanceUnlocked
+              ? 'border-purple-400/30 bg-purple-950/20 text-purple-200'
+              : 'border-accent/10 text-muted'
+          "
+        >
+          <span v-if="cultivation.destinedArtifactResonanceUnlocked">
+            ✨ 三转轮回共鸣已生效：长期战力与主动威能效果+30%，每日威能次数+1。
+          </span>
+          <span v-else>
+            🔒 达到3转后解锁轮回共鸣：长期战力与主动威能效果+30%，每日威能次数+1。
+          </span>
         </div>
         <Button
           class="w-full justify-between"

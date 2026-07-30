@@ -649,7 +649,7 @@
             :class="
               cultivation.rebirthCount >= 3 ? 'text-success' : 'text-muted/50'
             "
-            >✅ 3转·本命法宝</span
+            >✨ 3转·法宝轮回共鸣</span
           >
           <span
             :class="

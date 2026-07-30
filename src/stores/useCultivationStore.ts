@@ -1341,6 +1341,19 @@ export const useCultivationStore = defineStore("cultivation", () => {
     if (rebirthCount.value === 0) return realmName.value;
     return rebirthCount.value + "转" + realmName.value;
   });
+  const destinedArtifactResonanceUnlocked = computed(
+    () => rebirthCount.value >= 3,
+  );
+  const destinedArtifactResonanceMultiplier = computed(() =>
+    destinedArtifactResonanceUnlocked.value ? 1.3 : 1,
+  );
+  const destinedArtifactPower = computed(() =>
+    Math.floor(
+      destinedArtifactLevel.value *
+        360 *
+        destinedArtifactResonanceMultiplier.value,
+    ),
+  );
 
   const sect = ref<"sword" | "alchemy" | "talisman" | null>(null);
   const sectSkills = ref([0, 0, 0]);
@@ -1495,7 +1508,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
       fieldTier.value * 120 +
       caveTier.value * 180 +
       yuanShenLevel.value * 260 +
-      destinedArtifactLevel.value * 360 +
+      destinedArtifactPower.value +
       daoGearPower.value +
       talismanPower.value +
       beastBond.value * 12 +
@@ -3804,9 +3817,12 @@ export const useCultivationStore = defineStore("cultivation", () => {
     }
     mana.value -= manaCost;
     destinedArtifactDailyCount.value++;
+    const resonance = destinedArtifactResonanceMultiplier.value;
     if (destinedArtifact.value === "qixing_sword") {
-      const cultivationGain = 260 + level * 90 + realmIndex.value * 18;
-      const auraGain = 120 + level * 45;
+      const cultivationGain = Math.floor(
+        (260 + level * 90 + realmIndex.value * 18) * resonance,
+      );
+      const auraGain = Math.floor((120 + level * 45) * resonance);
       cultivation.value = Math.min(
         maxCultivation.value,
         cultivation.value + cultivationGain,
@@ -3823,8 +3839,10 @@ export const useCultivationStore = defineStore("cultivation", () => {
       return true;
     }
     if (destinedArtifact.value === "taiji_mirror") {
-      const manaRecover = 18 + level * 4;
-      const stabilityGain = 4 + Math.floor(level / 2);
+      const manaRecover = Math.floor((18 + level * 4) * resonance);
+      const stabilityGain = Math.floor(
+        (4 + Math.floor(level / 2)) * resonance,
+      );
       mana.value = Math.min(maxMana.value, mana.value + manaRecover);
       caveStability.value = Math.min(100, caveStability.value + stabilityGain);
       yuanShenInjury.value = Math.max(
@@ -3837,8 +3855,8 @@ export const useCultivationStore = defineStore("cultivation", () => {
       showFloat("太极护心", "success");
       return true;
     }
-    const insightGain = 2 + Math.floor(level / 2);
-    const lotusAura = 220 + level * 70;
+    const insightGain = Math.floor((2 + Math.floor(level / 2)) * resonance);
+    const lotusAura = Math.floor((220 + level * 70) * resonance);
     insight.value += insightGain;
     aura.value += lotusAura;
     heartDemon.value = Math.max(0, heartDemon.value - (6 + level));
@@ -3850,7 +3868,10 @@ export const useCultivationStore = defineStore("cultivation", () => {
   };
 
   const destinedArtifactActiveLimit = computed(
-    () => 2 + Math.min(3, Math.floor(destinedArtifactLevel.value / 3)),
+    () =>
+      2 +
+      Math.min(3, Math.floor(destinedArtifactLevel.value / 3)) +
+      (destinedArtifactResonanceUnlocked.value ? 1 : 0),
   );
   const destinedArtifactActiveRemaining = computed(() => {
     if (destinedArtifactDailyKey.value !== todayKey())
@@ -4300,6 +4321,9 @@ export const useCultivationStore = defineStore("cultivation", () => {
     lastTribulationResult,
     destinedArtifact,
     destinedArtifactLevel,
+    destinedArtifactPower,
+    destinedArtifactResonanceUnlocked,
+    destinedArtifactResonanceMultiplier,
     destinedArtifactDailyKey,
     destinedArtifactDailyCount,
     destinedArtifactActiveLimit,

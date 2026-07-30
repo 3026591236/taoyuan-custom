@@ -710,7 +710,11 @@ export const useCombatStore = defineStore("combat", () => {
       c.beast === "crane"
         ? Math.floor(base * (0.12 + Math.min(0.18, (c.beastBond || 0) / 3000)))
         : 0;
-    const artifactBonus = (c.destinedArtifactLevel || 0) * 8;
+    const artifactBonus = Math.floor(
+      (c.destinedArtifactLevel || 0) *
+        8 *
+        (c.destinedArtifactResonanceMultiplier || 1),
+    );
     const tacticRate =
       battleTactic.value === "burst"
         ? 1.18

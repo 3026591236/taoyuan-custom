@@ -816,6 +816,11 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.3.32 三转法宝轮回共鸣",
+      date: "2026-07-30",
+      content: "处理反馈#69：转生页原标注‘3转·本命法宝’，但本命法宝在转生前即可炼制，达到3转也没有任何新效果。现将3转节点实装为‘法宝轮回共鸣’：本命法宝长期战力与主动威能效果提高30%，每日主动威能次数增加1；角色战力、排行榜和战斗攻击统一按共鸣计算。已有法宝与旧存档自动生效，无需重新炼制或迁移。",
+    },
+    {
       title: "V3.3.31 凡界圆满突破保护",
       date: "2026-07-29",
       content: "修复角色达到大乘后期后，修为与灵气满足条件时仍可点击突破，导致灵气、突破药力、修为等被消耗但境界不再提升的问题。大乘后期现在明确显示凡界境界已圆满，所有突破入口统一禁用，底层结算再次校验最高境界且不扣除任何资源，并引导前往修仙之途完成飞升。旧存档无需迁移。",
@@ -3760,7 +3765,11 @@ function calcCombatPowerFromSave(p = {}, cu = {}, inv = {}, sk = {}, asc = {}) {
     num(cu.fieldTier) * 120 +
     num(cu.caveTier) * 180 +
     num(cu.yuanShenLevel) * 260 +
-    num(cu.destinedArtifactLevel) * 360 +
+    Math.floor(
+      num(cu.destinedArtifactLevel) *
+        360 *
+        (num(cu.rebirthCount) >= 3 ? 1.3 : 1),
+    ) +
     daoGearPower +
     talismanPower +
     num(cu.beastBond) * 12 +
