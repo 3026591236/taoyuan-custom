@@ -312,10 +312,10 @@ const STREAK_GIFTS: StreakGift[] = [
 const WEEKLY_TASKS: WeeklyTask[] = [
   {
     id: "weekly_daily_20",
-    title: "周令·勤修二十课",
-    desc: "本周完成20个乡里或特殊委托，只计实际提交完成的委托。",
+    title: "周令·勤修十二课",
+    desc: "本周完成12个乡里或特殊委托，只计实际提交完成的委托。",
     metric: "completedCommissions",
-    target: 20,
+    target: 12,
     reward: {
       money: 2600,
       aura: 360,
@@ -717,7 +717,7 @@ export const useRetentionStore = defineStore("retention", () => {
       case "museumDonations":
         return achievementStore.stats.totalMuseumItemsObtained;
       case "guildContribution":
-        return guildStore.contributionPoints;
+        return guildStore.totalContributionEarned;
       case "hanhaiTradePoints":
         return hanhaiStore.tradePoints;
       case "breedingsDone":
@@ -743,12 +743,15 @@ export const useRetentionStore = defineStore("retention", () => {
   const weeklyTasks = computed(() => {
     ensureWeeklyState();
     return WEEKLY_TASKS.map((task) => {
-      const baseline =
-        weeklyBaselines.value[task.metric] ?? getWeeklyRawProgress(task.metric);
-      const progress = Math.max(
-        0,
-        getWeeklyRawProgress(task.metric) - baseline,
-      );
+      const raw = getWeeklyRawProgress(task.metric);
+      let baseline = weeklyBaselines.value[task.metric] ?? raw;
+      // V3.3.34 前仙盟周令使用可消费余额作基线；旧基线可能高于迁移后的累计值。
+      // 向下校准只会让本周新获得的贡献立即计数，不会凭空补发历史进度。
+      if (task.metric === "guildContribution" && baseline > raw) {
+        baseline = raw;
+        weeklyBaselines.value[task.metric] = raw;
+      }
+      const progress = Math.max(0, raw - baseline);
       const claimed = weeklyClaimed.value.includes(task.id);
       return { ...task, progress, done: progress >= task.target, claimed };
     });

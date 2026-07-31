@@ -457,7 +457,7 @@ const CAVE_TIERS = [
   { name: "石洞", cost: 800, slots: 1, auraRegen: 3 },
   { name: "灵穴", cost: 2500, slots: 2, auraRegen: 6 },
   { name: "洞府", cost: 6000, slots: 3, auraRegen: 12 },
-  { name: "仙府", cost: 15000, slots: 3, auraRegen: 20 },
+  { name: "仙府", cost: 15000, slots: 5, auraRegen: 20 },
 ];
 const ALCHEMY_RECIPES = {
   mana_recovery_pill: {

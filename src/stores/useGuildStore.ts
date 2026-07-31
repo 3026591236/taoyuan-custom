@@ -25,6 +25,16 @@ export const useGuildStore = defineStore("guild", () => {
   /** 贡献点（可消费货币） */
   const contributionPoints = ref(0);
 
+  /** 历史累计获得的贡献点（单调增长，用于周令；消费不会令进度倒退） */
+  const totalContributionEarned = ref(0);
+
+  const earnContribution = (points: number): number => {
+    const safe = Math.max(0, Math.floor(Number(points) || 0));
+    contributionPoints.value += safe;
+    totalContributionEarned.value += safe;
+    return safe;
+  };
+
   /** 仙盟经验（隐性） */
   const guildExp = ref(0);
 
@@ -227,7 +237,7 @@ export const useGuildStore = defineStore("guild", () => {
     // 讨伐奖励只给贡献点，不增加仙盟经验（只有捐献增加经验）
     const bonusPoints =
       Math.floor((goal.reward.money ?? 0) / 20) + goal.killTarget;
-    contributionPoints.value += bonusPoints;
+    earnContribution(bonusPoints);
     claimedGoals.value.push(monsterId);
     addLog(`领取讨伐奖励，额外获得 ${bonusPoints} 贡献点。`);
     return true;
@@ -291,7 +301,7 @@ export const useGuildStore = defineStore("guild", () => {
     if (actual <= 0) return { success: false, pointsGained: 0 };
     inventoryStore.removeItem(itemId, actual);
     const points = donation.points * actual;
-    contributionPoints.value += points;
+    earnContribution(points);
     guildExp.value += points;
     checkLevelUp();
     return { success: true, pointsGained: points };
@@ -365,7 +375,7 @@ export const useGuildStore = defineStore("guild", () => {
     inv.removeItem(office.itemId, office.quantity);
     sectOffices.value[id] = (sectOffices.value[id] ?? 0) + 1;
     guildExp.value += office.cost / 40;
-    contributionPoints.value += 20 + (sectOffices.value[id] ?? 0) * 3;
+    earnContribution(20 + (sectOffices.value[id] ?? 0) * 3);
     return {
       success: true,
       message: `${office.name}提升到${sectOffices.value[id]}级，宗门经营加深。`,
@@ -386,7 +396,7 @@ export const useGuildStore = defineStore("guild", () => {
       };
     inv.removeItem(project.itemId, project.quantity);
     guildProjects.value[id] = (guildProjects.value[id] ?? 0) + 1;
-    contributionPoints.value += Math.floor(project.exp * 0.7);
+    earnContribution(Math.floor(project.exp * 0.7));
     guildExp.value += project.exp;
     checkLevelUp();
     addLog(`参与${project.name}，仙盟经验+${project.exp}。`);
@@ -430,7 +440,7 @@ export const useGuildStore = defineStore("guild", () => {
     const inventory = useInventoryStore();
     const projectBonus = 1 + (guildProjects.value.sect_drill || 0) * 0.02;
     const points = Math.floor(task.rewardPoints * projectBonus);
-    contributionPoints.value += points;
+    earnContribution(points);
     guildExp.value += Math.floor(points * 0.8);
     inventory.addItem(
       "spirit_stone",
@@ -551,6 +561,7 @@ export const useGuildStore = defineStore("guild", () => {
     claimedGoals: [...claimedGoals.value],
     encounteredMonsters: [...encounteredMonsters.value],
     contributionPoints: contributionPoints.value,
+    totalContributionEarned: totalContributionEarned.value,
     guildExp: guildExp.value,
     guildLevel: guildLevel.value,
     dailyPurchases: { ...dailyPurchases.value },
@@ -615,11 +626,17 @@ export const useGuildStore = defineStore("guild", () => {
         }
       }
       contributionPoints.value = migratedPoints;
+      totalContributionEarned.value = migratedPoints;
       guildExp.value = 0;
       guildLevel.value = 0;
     } else {
       contributionPoints.value =
         ((data as Record<string, unknown>).contributionPoints as number) ?? 0;
+      totalContributionEarned.value = Math.max(
+        contributionPoints.value,
+        ((data as Record<string, unknown>).totalContributionEarned as number) ??
+          contributionPoints.value,
+      );
       guildExp.value =
         ((data as Record<string, unknown>).guildExp as number) ?? 0;
       guildLevel.value =
@@ -632,6 +649,7 @@ export const useGuildStore = defineStore("guild", () => {
     claimedGoals,
     encounteredMonsters,
     contributionPoints,
+    totalContributionEarned,
     guildExp,
     guildLevel,
     guildProjects,

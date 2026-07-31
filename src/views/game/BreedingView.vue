@@ -136,6 +136,14 @@
               breedingStore.maxSeedBox
             }}</span
           >
+          <div class="flex items-center gap-1">
+            <button
+              v-if="breedingStore.boxCount > 1"
+              class="text-[10px] px-2 py-0.5 border border-accent/30 text-accent rounded-xs hover:bg-accent/5"
+              @click="sortSeedBox"
+            >
+              <ArrowDownAZ :size="10" class="inline mr-0.5" />一键整理
+            </button>
           <button
             v-if="nextSeedBoxUpgrade || breedingStore.seedBoxLevel > 0"
             class="text-[10px] px-2 py-0.5 border rounded-xs"
@@ -149,6 +157,7 @@
             <ArrowUpCircle :size="10" class="inline mr-0.5" />
             Lv.{{ breedingStore.seedBoxLevel }}
           </button>
+          </div>
         </div>
         <!-- 空状态 -->
         <div
@@ -833,6 +842,7 @@ import {
   Star,
   Lock,
   ArrowUpCircle,
+  ArrowDownAZ,
 } from "lucide-vue-next";
 import Button from "@/components/game/Button.vue";
 import { useBreedingStore } from "@/stores/useBreedingStore";
@@ -860,6 +870,9 @@ import { handleEndDay } from "@/composables/useEndDay";
 import type { BreedingSeed, HybridDef } from "@/types/breeding";
 
 const breedingStore = useBreedingStore();
+const sortSeedBox = () => {
+  breedingStore.sortBreedingBox();
+};
 const playerStore = usePlayerStore();
 const gameStore = useGameStore();
 

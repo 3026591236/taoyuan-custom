@@ -266,6 +266,8 @@ const ADVENTURES: Adventure[] = [
     },
   },
 ];
+export const SECT_PROJECT_MAX_LEVEL = 10;
+
 const SECT_PROJECTS: {
   id: SectProjectId;
   name: string;
@@ -278,21 +280,21 @@ const SECT_PROJECTS: {
     name: "聚灵阵",
     emoji: "🌀",
     desc: "宗门合力修筑聚灵阵，稳定提升修行与灵气循环。",
-    effect: "每升1级：本店领奖修为/灵气+2%（最高20%）",
+    effect: "每级：本店领奖修为/灵气+2%（Lv.10最高20%）",
   },
   {
     id: "craft_hall",
     name: "百工堂",
     emoji: "🏗️",
     desc: "扩建百工堂，支援炼器、洗练与农具维护。",
-    effect: "每升1级：词条洗练灵石消耗-2%（最高20%）",
+    effect: "每级：词条洗练灵石消耗-2%（Lv.10最高20%）",
   },
   {
     id: "sword_platform",
     name: "试剑台",
     emoji: "⚔️",
     desc: "搭建试剑台，宗门弟子共同演武镇魔。",
-    effect: "每升1级：宗门副本功勋/灵气+3%（最高25%）",
+    effect: "每级：宗门副本功勋/灵气+3%（Lv.9起按最高25%）",
   },
 ];
 
@@ -632,14 +634,16 @@ export const useLongTermStore = defineStore("longTerm", () => {
     () =>
       `宗门建设Lv.${sectBuildLevel.value}：长老试炼功勋+${sectBuildLevel.value * 3}、灵气+${sectBuildLevel.value * 80}`,
   );
+  const cappedSectProjectLevel = (id: SectProjectId) =>
+    Math.min(SECT_PROJECT_MAX_LEVEL, Math.max(1, Number(sectProjects.value[id]) || 1));
   const sectSpiritArrayBonusRate = computed(() =>
-    Math.min(0.2, Math.max(0, (sectProjects.value.spirit_array || 1) - 1) * 0.02),
+    Math.min(0.2, cappedSectProjectLevel("spirit_array") * 0.02),
   );
   const sectCraftHallDiscountRate = computed(() =>
-    Math.min(0.2, Math.max(0, (sectProjects.value.craft_hall || 1) - 1) * 0.02),
+    Math.min(0.2, cappedSectProjectLevel("craft_hall") * 0.02),
   );
   const sectSwordPlatformBonusRate = computed(() =>
-    Math.min(0.25, Math.max(0, (sectProjects.value.sword_platform || 1) - 1) * 0.03),
+    Math.min(0.25, cappedSectProjectLevel("sword_platform") * 0.03),
   );
   const affixPowerBonus = computed(() =>
     Object.values(gearAffixes.value)
@@ -678,15 +682,20 @@ export const useLongTermStore = defineStore("longTerm", () => {
     current: currentAdventure.value,
   }));
   const sectProjectCards = computed(() =>
-    SECT_PROJECTS.map((p) => ({
-      ...p,
-      level: sectProjects.value[p.id] || 1,
-      need: 90 + (sectProjects.value[p.id] || 1) * 60,
-    })),
+    SECT_PROJECTS.map((p) => {
+      const level = cappedSectProjectLevel(p.id);
+      return {
+        ...p,
+        level,
+        maxLevel: SECT_PROJECT_MAX_LEVEL,
+        maxed: level >= SECT_PROJECT_MAX_LEVEL,
+        need: 90 + level * 60,
+      };
+    }),
   );
   const sectProjectBonusText = computed(
     () =>
-      `聚灵阵Lv.${sectProjects.value.spirit_array || 1} / 百工堂Lv.${sectProjects.value.craft_hall || 1} / 试剑台Lv.${sectProjects.value.sword_platform || 1}`,
+      `聚灵阵Lv.${cappedSectProjectLevel("spirit_array")} / 百工堂Lv.${cappedSectProjectLevel("craft_hall")} / 试剑台Lv.${cappedSectProjectLevel("sword_platform")}`,
   );
 
   function resetMonthIfNeeded() {
@@ -779,6 +788,9 @@ export const useLongTermStore = defineStore("longTerm", () => {
   ) {
     const project = SECT_PROJECTS.find((p) => p.id === id);
     if (!project) return { success: false, message: "工程不存在" };
+    const current = cappedSectProjectLevel(id);
+    if (current >= SECT_PROJECT_MAX_LEVEL)
+      return { success: false, message: `${project.name}已达Lv.${SECT_PROJECT_MAX_LEVEL}满级` };
     let gain = 0;
     if (kind === "money") {
       if (player().money < 1600) return { success: false, message: "铜钱不足" };
@@ -799,12 +811,11 @@ export const useLongTermStore = defineStore("longTerm", () => {
     }
     sectBuildContributed.value += gain;
     addMonthlyProgress("sect_160", gain);
-    const current = sectProjects.value[id] || 1;
     const need = 90 + current * 60;
     sectBuildExp.value += Math.floor(gain / 2);
     if (gain >= need || sectBuildExp.value >= need) {
       if (sectBuildExp.value >= need) sectBuildExp.value -= need;
-      sectProjects.value[id] = current + 1;
+      sectProjects.value[id] = Math.min(SECT_PROJECT_MAX_LEVEL, current + 1);
       return {
         success: true,
         message: `${project.name}升至Lv.${sectProjects.value[id]}，${project.effect}增强`,

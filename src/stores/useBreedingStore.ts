@@ -78,6 +78,24 @@ export const useBreedingStore = defineStore("breeding", () => {
     return true;
   };
 
+
+  /** 按作物、星级、总属性、代数稳定整理灵种箱；只重排，不修改基因。 */
+  const sortBreedingBox = (): void => {
+    breedingBox.value = [...breedingBox.value].sort((left, right) => {
+      const a = left.genetics;
+      const b = right.genetics;
+      const cropOrder = String(a.cropId).localeCompare(String(b.cropId));
+      if (cropOrder !== 0) return cropOrder;
+      const starOrder = getStarRating(b) - getStarRating(a);
+      if (starOrder !== 0) return starOrder;
+      const totalA = a.sweetness + a.yield + a.resistance + a.stability;
+      const totalB = b.sweetness + b.yield + b.resistance + b.stability;
+      if (totalA !== totalB) return totalB - totalA;
+      if (a.generation !== b.generation) return b.generation - a.generation;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  };
+
   const removeFromBox = (geneticsId: string): BreedingSeed | null => {
     const idx = breedingBox.value.findIndex(
       (s) => s.genetics.id === geneticsId,
@@ -579,6 +597,7 @@ export const useBreedingStore = defineStore("breeding", () => {
     // 方法
     addToBox,
     removeFromBox,
+    sortBreedingBox,
     trySeedMakerGeneticSeed,
     craftStation,
     canCraftStation,

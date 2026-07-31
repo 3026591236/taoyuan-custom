@@ -192,9 +192,8 @@
           >
             <div class="flex items-center justify-between">
               <span class="text-xs text-accent"
-                >{{ project.emoji }} {{ project.name }} Lv.{{
-                  project.level
-                }}</span
+                >{{ project.emoji }} {{ project.name }} Lv.{{ project.level
+                }}/{{ project.maxLevel }}<template v-if="project.maxed"> · 满级</template></span
               ><span class="text-[10px] text-muted">{{ project.effect }}</span>
             </div>
             <p class="text-[10px] text-muted leading-relaxed">
@@ -203,18 +202,21 @@
             <div class="grid grid-cols-3 gap-1">
               <button
                 class="mini-build-btn"
+                :disabled="project.maxed"
                 @click="contributeProject(project.id, 'money')"
               >
                 铜钱
               </button>
               <button
                 class="mini-build-btn"
+                :disabled="project.maxed"
                 @click="contributeProject(project.id, 'spirit')"
               >
                 灵石
               </button>
               <button
                 class="mini-build-btn"
+                :disabled="project.maxed"
                 @click="contributeProject(project.id, 'material')"
               >
                 灵墨
@@ -479,6 +481,31 @@
               class="btn w-full justify-center text-xs"
               :disabled="(cultivationStore.sectContribution || 0) < item.cost"
               @click="redeem(item)"
+            >
+              兑换
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="border border-accent/20 rounded-xs p-3 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs text-accent">功勋宝库</p>
+          <span class="text-[10px] text-muted">功勋也用于职位晋升与长老试炼，请按需兑换</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div
+            v-for="item in MERIT_TREASURY"
+            :key="item.id"
+            class="border border-accent/10 rounded-xs p-2 space-y-1"
+          >
+            <p class="text-xs">{{ item.name }}</p>
+            <p class="text-[10px] text-muted">{{ item.desc }}</p>
+            <p class="text-[10px] text-accent">消耗功勋 {{ item.cost }}</p>
+            <button
+              class="btn w-full justify-center text-xs"
+              :disabled="(cultivationStore.sectMerit || 0) < item.cost"
+              @click="redeemMerit(item)"
             >
               兑换
             </button>
@@ -757,6 +784,33 @@ const TREASURY = [
   },
 ];
 
+const MERIT_TREASURY = [
+  {
+    id: "merit_spirit_stones",
+    name: "功勋灵石匣",
+    desc: "灵石×10，补充修炼、炼器与市集消耗。",
+    cost: 240,
+    reward: () => inventoryStore.addItem("spirit_stone", 10),
+  },
+  {
+    id: "merit_jade_slips",
+    name: "功勋玉简匣",
+    desc: "玉简×2，用于高阶修行与宗门养成。",
+    cost: 600,
+    reward: () => inventoryStore.addItem("jade_slip", 2),
+  },
+  {
+    id: "merit_artifact_materials",
+    name: "功勋法宝匣",
+    desc: "法宝碎片×1、魂晶×1。",
+    cost: 1200,
+    reward: () => {
+      inventoryStore.addItem("artifact_shard", 1);
+      inventoryStore.addItem("soul_crystal", 1);
+    },
+  },
+];
+
 const SECT_DUNGEONS = [
   {
     id: "sword_tomb",
@@ -864,7 +918,7 @@ const canPromote = computed(() => {
 const absoluteGameDay = computed(() => Math.max(0, (gameStore.year - 1) * 112 + ["spring", "summer", "autumn", "winter"].indexOf(gameStore.season) * 28 + (gameStore.day - 1)));
 const governanceWeek = computed(() => Math.floor(absoluteGameDay.value / 7));
 const governanceSettledThisWeek = computed(() => longTerm.sectGovernance.lastSettlementWeek === governanceWeek.value);
-const governancePreview = computed(() => { const m=territoryStore.governanceMetrics; const build=Math.max(1,longTerm.sectBuildLevel||1); const projects=Object.values(longTerm.sectProjects).reduce((sum,level)=>sum+Number(level||0),0); const base=Math.min(260,24+m.owned*5+m.levelSum*2+m.watchLevels*3+m.spiritLevels*3+build*4+projects*2); const bonus=longTerm.sectGovernance.founded?1.1:1; return { contribution:Math.min(320,Math.floor(base*bonus)), merit:Math.min(180,Math.floor(base*.55*bonus)), spiritStones:Math.min(48,5+Math.floor(m.owned/2)+m.spiritLevels), aura:Math.min(1200,80+m.spiritLevels*35+build*20), prestige:Math.min(120,8+m.owned*2+build+projects) }; });
+const governancePreview = computed(() => { const m=territoryStore.governanceMetrics; const build=Math.max(1,longTerm.sectBuildLevel||1); const projects=Object.values(longTerm.sectProjects).reduce((sum,level)=>sum+Math.min(10,Math.max(1,Number(level)||1)),0); const base=Math.min(260,24+m.owned*5+m.levelSum*2+m.watchLevels*3+m.spiritLevels*3+build*4+projects*2); const bonus=longTerm.sectGovernance.founded?1.1:1; return { contribution:Math.min(320,Math.floor(base*bonus)), merit:Math.min(180,Math.floor(base*.55*bonus)), spiritStones:Math.min(48,5+Math.floor(m.owned/2)+m.spiritLevels), aura:Math.min(1200,80+m.spiritLevels*35+build*20), prestige:Math.min(120,8+m.owned*2+build+projects) }; });
 const canSettleGovernance = computed(() => !!cultivationStore.sect && !governanceSettledThisWeek.value && territoryStore.governanceMetrics.owned>0 && territoryStore.canAffordGovernance);
 const canFoundBranch = computed(() => !!cultivationStore.sect && (cultivationStore.sectRank||0)>=2 && territoryStore.territoryProgress>=75 && longTerm.sectGovernance.settlementCount>=1 && Array.from(longTerm.normalizeBranchName(branchNameInput.value)).length>=2);
 const settleGovernance=()=>{ if(!canSettleGovernance.value||!territoryStore.consumeGovernanceCost()){showFloat(governanceSettledThisWeek.value?"本周巡境已结算":"领地维护资源不足","danger");return;} const reward=governancePreview.value; cultivationStore.sectContribution=Math.min(999999999,(cultivationStore.sectContribution||0)+reward.contribution); cultivationStore.sectMerit=Math.min(999999999,(cultivationStore.sectMerit||0)+reward.merit); inventoryStore.addItem("spirit_stone",reward.spiritStones); cultivationStore.aura=Math.min(999999999,(cultivationStore.aura||0)+reward.aura); const summary=`第${governanceWeek.value+1}周巡境：贡献+${reward.contribution}、功勋+${reward.merit}、灵石+${reward.spiritStones}、灵气+${reward.aura}`; if(!longTerm.recordSectSettlement(governanceWeek.value,summary,reward.prestige))return; addLog(summary);showFloat("七日巡境结算完成","success"); };
@@ -1104,6 +1158,14 @@ const redeem = (item: (typeof TREASURY)[number]) => {
   addLog(`在宗门宝库兑换了「${item.name}」。`);
   showFloat("宝库兑换成功", "success");
 };
+
+const redeemMerit = (item: (typeof MERIT_TREASURY)[number]) => {
+  if ((cultivationStore.sectMerit || 0) < item.cost) return;
+  cultivationStore.sectMerit -= item.cost;
+  item.reward();
+  addLog(`在功勋宝库兑换了「${item.name}」。`);
+  showFloat("功勋兑换成功", "success");
+};
 </script>
 
 <style scoped>
@@ -1125,8 +1187,12 @@ const redeem = (item: (typeof TREASURY)[number]) => {
   padding: 3px 4px;
   border-radius: 2px;
 }
-.mini-build-btn:hover {
+.mini-build-btn:hover:not(:disabled) {
   background: rgba(200, 164, 92, 0.12);
+}
+.mini-build-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .governance-name{min-width:140px;flex:1;border:1px solid rgba(200,164,92,.25);background:rgba(0,0,0,.16);color:inherit;padding:.35rem .5rem;font-size:.75rem;outline:none}
 </style>
