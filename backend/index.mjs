@@ -605,23 +605,23 @@ function publicUser(u) {
     disabledAt: u.disabled_at || null,
   };
 }
-async function auth(req) {
+async function auth(req, db = pool) {
   const h = req.headers.authorization || "";
   const t = h.startsWith("Bearer ") ? h.slice(7) : "";
   if (!t) return null;
-  const [rows] = await pool.execute(
+  const [rows] = await db.execute(
     "SELECT user_id FROM sessions WHERE token = ?",
     [t],
   );
   if (!rows.length) return null;
-  const [users] = await pool.execute(
+  const [users] = await db.execute(
     "SELECT * FROM users WHERE id = ? AND disabled = 0",
     [rows[0].user_id],
   );
   return users.length ? users[0] : null;
 }
-async function requireAdmin(req, res) {
-  const u = await auth(req);
+async function requireAdmin(req, res, db = pool) {
+  const u = await auth(req, db);
   if (!u || u.role !== "admin") {
     send(res, 403, { error: "需要管理员权限" });
     return null;
@@ -815,6 +815,11 @@ const defaultConfig = {
     ],
   },
   updateLogs: [
+    {
+      title: "V3.3.33 后端连接池与事务稳定性修复",
+      date: "2026-07-31",
+      content: "修复高并发保存、签到、邮件、福利等事务接口先占用数据库连接、再通过同一连接池鉴权造成连接池自锁，最终令全部API超时但PM2仍显示在线的问题；事务接口现复用当前连接完成鉴权，并统一按账号、角色、存档、奖励账本顺序加锁，降低并发保存与奖励结算产生数据库死锁的概率。存档结构、奖励规则与玩家数据均不变。",
+    },
     {
       title: "V3.3.32 三转法宝轮回共鸣",
       date: "2026-07-30",
@@ -2213,13 +2218,14 @@ app.patch("/api/characters/:id/avatar", async (req, res) => {
 app.post("/api/characters/:id/rename", async (req, res) => {
   const conn = await pool.getConnection();
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     const checked = validateCharacterName(req.body?.name);
     if (!checked.ok) return send(res, 400, { error: checked.message, code: checked.code });
     const requestId = String(req.body?.requestId || "").trim().slice(0, 80);
     if (!/^[a-zA-Z0-9_-]{12,80}$/.test(requestId)) return send(res, 400, { error: "缺少有效的请求编号" });
     await conn.beginTransaction();
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
     const [receipts] = await conn.execute("SELECT character_id, new_name FROM character_rename_receipts WHERE user_id = ? AND request_id = ? LIMIT 1 FOR UPDATE", [user.id, requestId]);
     if (receipts.length) {
       const receipt = receipts[0];
@@ -2284,7 +2290,7 @@ app.get("/api/check-char-name", async (req, res) => {
 app.post("/api/characters", async (req, res) => {
   const conn = await pool.getConnection();
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     const name = normalizePlayerName(req.body.name);
     const gender = String(req.body.gender || "male").slice(0, 20);
@@ -2350,6 +2356,7 @@ app.post("/api/characters", async (req, res) => {
       });
     }
     await conn.beginTransaction();
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
     await conn.execute(
       "INSERT INTO characters (id, user_id, slot, name, gender) VALUES (?, ?, ?, ?, ?)",
       [id, user.id, slot, name, gender],
@@ -2487,7 +2494,7 @@ app.post("/api/saves/:slot/consume-protected", async (req, res) => {
   const conn = await pool.getConnection();
   let transactionStarted = false;
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     const slot = Number(req.params.slot);
     const itemId = String(req.body?.itemId || "");
@@ -2681,7 +2688,7 @@ app.put("/api/saves/:slot", async (req, res) => {
   const conn = await pool.getConnection();
   let transactionStarted = false;
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     const slot = Number(req.params.slot);
     if (!Number.isInteger(slot) || slot < 0 || slot > 2)
@@ -2710,6 +2717,7 @@ app.put("/api/saves/:slot", async (req, res) => {
 
     await conn.beginTransaction();
     transactionStarted = true;
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
     const [chars] = await conn.execute(
       "SELECT id, name FROM characters WHERE user_id = ? AND slot = ? LIMIT 1 FOR UPDATE",
       [user.id, slot],
@@ -2965,7 +2973,7 @@ app.put("/api/saves/:slot", async (req, res) => {
 app.delete("/api/saves/:slot", async (req, res) => {
   const conn = await pool.getConnection();
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     const slot = Number(req.params.slot);
     if (!Number.isInteger(slot) || slot < 0 || slot > 2)
@@ -3106,7 +3114,7 @@ app.post("/api/checkin", async (req, res) => {
   const conn = await pool.getConnection();
   let transactionStarted = false;
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     const today = localDateKey(8);
     await conn.beginTransaction();
@@ -3387,10 +3395,11 @@ app.post("/api/mails/:id/claim", async (req, res) => {
   const conn = await pool.getConnection();
   let transactionStarted = false;
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     await conn.beginTransaction();
     transactionStarted = true;
+    await conn.execute("SELECT id FROM users WHERE id = ? FOR UPDATE", [user.id]);
     const [mailRows] = await conn.execute(
       "SELECT * FROM user_mails WHERE id = ? AND user_id = ? FOR UPDATE",
       [req.params.id, user.id],
@@ -4540,7 +4549,7 @@ app.post("/api/events/world-boss/claim-tier", async (req, res) => {
 app.post("/api/events/world-boss/claim-cycle", async (req, res) => {
   const conn = await pool.getConnection();
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     // Legacy cycle settlement still derives from client-save fields and therefore
     // cannot mint assets in the authoritative contribution rollout.
@@ -5099,7 +5108,7 @@ app.get("/api/floating-welfare", async (req, res) => {
   const conn = await pool.getConnection();
   let transactionStarted = false;
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     await conn.beginTransaction();
     transactionStarted = true;
@@ -5167,7 +5176,7 @@ app.post("/api/floating-welfare/claim", async (req, res) => {
   const conn = await pool.getConnection();
   let transactionStarted = false;
   try {
-    const user = await auth(req);
+    const user = await auth(req, conn);
     if (!user) return send(res, 401, { error: "请先登录" });
     const giftId = String(req.body?.giftId || "").slice(0, 40);
     if (!giftId) return send(res, 400, { error: "福利礼包无效", code: "WELFARE_INVALID_GIFT" });
@@ -5509,7 +5518,7 @@ app.get("/api/admin/economy-events", async (req, res) => {
 app.post("/api/admin/mails", async (req, res) => {
   const conn = await pool.getConnection();
   try {
-    const admin = await requireAdmin(req, res);
+    const admin = await requireAdmin(req, res, conn);
     if (!admin) return;
     const { title, content, rewards } = req.body;
     const target = req.body.target ?? req.body.to;
