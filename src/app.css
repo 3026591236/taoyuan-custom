@@ -24,7 +24,7 @@
   --color-quality-supreme: #ffd700;
 
   /* 字体 */
-  --font-game: 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
+  --font-game: 'Noto Sans SC', 'Noto Sans CJK SC', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
 
   /* 间距基准 4px */
   --spacing-1: 4px;

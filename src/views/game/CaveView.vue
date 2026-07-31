@@ -250,13 +250,34 @@
           <p class="text-[10px] text-muted leading-relaxed">
             {{ recipe.desc }}
           </p>
+          <div class="flex items-center gap-2">
+            <label class="flex items-center gap-1 min-w-0 flex-1">
+              <span class="text-[10px] text-muted whitespace-nowrap">兑换份数</span>
+              <input
+                v-model.number="exchangeBatches[recipe.id]"
+                class="w-full min-w-0 border border-accent/25 bg-bg rounded-xs px-2 py-1 text-xs"
+                type="number"
+                inputmode="numeric"
+                min="1"
+                :max="maxExchangeBatches(recipe.itemId, recipe.quantity)"
+                @change="normalizeExchangeBatches(recipe.id, recipe.itemId, recipe.quantity)"
+              />
+            </label>
+            <button
+              class="btn px-2 py-1 text-[10px] whitespace-nowrap"
+              :disabled="maxExchangeBatches(recipe.itemId, recipe.quantity) <= 0"
+              @click="exchangeBatches[recipe.id] = maxExchangeBatches(recipe.itemId, recipe.quantity)"
+            >
+              全部
+            </button>
+          </div>
           <Button
             class="w-full justify-between"
-            :disabled="itemCount(recipe.itemId) < recipe.quantity"
-            @click="cultivation.exchangeForSpiritStones(recipe.id)"
+            :disabled="maxExchangeBatches(recipe.itemId, recipe.quantity) <= 0"
+            @click="exchangeRecipe(recipe.id, recipe.itemId, recipe.quantity)"
           >
-            <span>{{ recipe.itemName }}×{{ recipe.quantity }}</span>
-            <span>→ 灵石×{{ recipe.spiritStones }}</span>
+            <span>{{ recipe.itemName }}×{{ recipe.quantity * selectedExchangeBatches(recipe.id, recipe.itemId, recipe.quantity) }}</span>
+            <span>→ 灵石×{{ recipe.spiritStones * selectedExchangeBatches(recipe.id, recipe.itemId, recipe.quantity) }}</span>
           </Button>
         </div>
       </div>
@@ -265,7 +286,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, reactive } from "vue";
 import Divider from "@/components/game/Divider.vue";
 import Button from "@/components/game/Button.vue";
 import {
@@ -280,6 +301,41 @@ import type { CaveSlotType } from "@/stores/useCultivationStore";
 const cultivation = useCultivationStore();
 const inventory = useInventoryStore();
 const itemCount = (id: string) => inventory.getItemCount(id);
+const exchangeBatches = reactive<Record<string, number>>({});
+const maxExchangeBatches = (itemId: string, quantity: number) =>
+  Math.floor(itemCount(itemId) / Math.max(1, quantity));
+const selectedExchangeBatches = (
+  recipeId: string,
+  itemId: string,
+  quantity: number,
+) =>
+  Math.max(
+    1,
+    Math.min(
+      maxExchangeBatches(itemId, quantity) || 1,
+      Math.floor(Number(exchangeBatches[recipeId]) || 1),
+    ),
+  );
+const normalizeExchangeBatches = (
+  recipeId: string,
+  itemId: string,
+  quantity: number,
+) => {
+  exchangeBatches[recipeId] = selectedExchangeBatches(
+    recipeId,
+    itemId,
+    quantity,
+  );
+};
+const exchangeRecipe = (recipeId: string, itemId: string, quantity: number) => {
+  const batches = selectedExchangeBatches(recipeId, itemId, quantity);
+  if (cultivation.exchangeForSpiritStones(recipeId, batches)) {
+    exchangeBatches[recipeId] = Math.min(
+      batches,
+      Math.max(1, maxExchangeBatches(itemId, quantity)),
+    );
+  }
+};
 
 const caveSlotOptions: Array<{
   type: CaveSlotType;

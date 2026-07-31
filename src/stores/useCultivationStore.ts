@@ -3715,23 +3715,30 @@ export const useCultivationStore = defineStore("cultivation", () => {
     return true;
   };
 
-  const exchangeForSpiritStones = (id: string) => {
+  const exchangeForSpiritStones = (id: string, batches = 1) => {
     const recipe = SPIRIT_STONE_EXCHANGES.find((r) => r.id === id);
     if (!recipe) {
       showFloat("未知折灵配方。", "danger");
       return false;
     }
     const inventory = useInventoryStore();
-    if (inventory.getItemCount(recipe.itemId) < recipe.quantity) {
+    const safeBatches = Math.max(1, Math.floor(Number(batches) || 1));
+    const maxBatches = Math.floor(
+      inventory.getItemCount(recipe.itemId) / recipe.quantity,
+    );
+    if (maxBatches <= 0) {
       showFloat(`${recipe.itemName}不足，需要${recipe.quantity}个。`, "danger");
       return false;
     }
-    if (!inventory.removeItem(recipe.itemId, recipe.quantity)) return false;
-    inventory.addItem("spirit_stone", recipe.spiritStones);
+    const actualBatches = Math.min(safeBatches, maxBatches);
+    const itemQuantity = recipe.quantity * actualBatches;
+    const stoneQuantity = recipe.spiritStones * actualBatches;
+    if (!inventory.removeItem(recipe.itemId, itemQuantity)) return false;
+    inventory.addItem("spirit_stone", stoneQuantity);
     addLog(
-      `灵石坊折换：${recipe.itemName}×${recipe.quantity} → 灵石×${recipe.spiritStones}。`,
+      `灵石坊批量折换${actualBatches}份：${recipe.itemName}×${itemQuantity} → 灵石×${stoneQuantity}。`,
     );
-    showFloat(`灵石+${recipe.spiritStones}`, "success");
+    showFloat(`灵石+${stoneQuantity}`, "success");
     return true;
   };
 
