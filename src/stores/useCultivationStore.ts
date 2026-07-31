@@ -3602,7 +3602,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
   const herbClaimDays = computed(() =>
     hasCaveSlot("herbgarden") ? realDailyPendingDays(herbLastDaily.value) : 0,
   );
-  const herbDailyYield = computed(() => 12 + herbGardenLevel.value * 3);
+  const herbDailyYield = computed(() => 18 + herbGardenLevel.value * 4);
   const spiritArrayClaimDays = computed(() =>
     hasCaveSlot("spiritArray")
       ? realDailyPendingDays(spiritArrayLastDaily.value)
@@ -3632,17 +3632,22 @@ export const useCultivationStore = defineStore("cultivation", () => {
     const inventory = useInventoryStore();
     const qty = herbDailyYield.value * days;
     const ids = Object.keys(HERB_DATA);
-    const guaranteedZiwan = Math.max(1, days);
+    const guaranteed: string[] = [];
+    const basicHerbs = ["chuanxiong", "yuzhu", "baizhi"];
+    const midHerbs = ["chishao", "chenxiang", "chonglou", "peilan"];
+    for (let day = 0; day < days; day++) {
+      guaranteed.push("ziwan");
+      const basic = basicHerbs[Math.floor(Math.random() * basicHerbs.length)]!;
+      guaranteed.push(basic, basic);
+      guaranteed.push(midHerbs[Math.floor(Math.random() * midHerbs.length)]!);
+    }
     for (let i = 0; i < qty; i++) {
-      const id =
-        i < guaranteedZiwan
-          ? "ziwan"
-          : ids[Math.floor(Math.random() * ids.length)]!;
+      const id = guaranteed[i] ?? ids[Math.floor(Math.random() * ids.length)]!;
       herbs.value[id] = (herbs.value[id] ?? 0) + 1;
       inventory.addItem(id, 1);
     }
     herbLastDaily.value = todayKey();
-    addLog(`百草园按现实日期收获${days}天药材，共${qty}株。`);
+    addLog(`百草园按现实日期收获${days}天药材，共${qty}株；每日含紫菀、基础药材×2及中阶药材保底。`);
     showFloat(`药材+${qty}`, "success");
     return true;
   };

@@ -816,6 +816,11 @@ const defaultConfig = {
   },
   updateLogs: [
     {
+      title: "V3.3.35 宗门榜与新手药材反馈优化",
+      date: "2026-07-31",
+      content: "处理游戏内反馈#76—#79：素素好感上限统一为3500并与织梦归女仙缘条件一致，其他村民仍保持2500；百草园现实日产量提高，每日新增紫菀、基础药材与中阶药材保底；新角色获得2000文、三类基础灵种、草药、木材和肥料，首段与第三段主线追加分阶段补给；宗门页新增基于最新云存档的本宗排名，按职位、功勋与贡献授予首席真传、宗门俊彦、三席英才、宗门菁英等展示性荣誉，不覆盖原职位、晋升和战斗数值。旧存档无需迁移。",
+    },
+    {
       title: "V3.3.33 后端连接池与事务稳定性修复",
       date: "2026-07-31",
       content: "修复高并发保存、签到、邮件、福利等事务接口先占用数据库连接、再通过同一连接池鉴权造成连接池自锁，最终令全部API超时但PM2仍显示在线的问题；事务接口现复用当前连接完成鉴权，并统一按账号、角色、存档、奖励账本顺序加锁，降低并发保存与奖励结算产生数据库死锁的概率。存档结构、奖励规则与玩家数据均不变。",
@@ -4035,7 +4040,7 @@ const leaderboardPublicProfile = (player = {}, cultivation = {}, ascension = {})
 app.get("/api/leaderboard", async (req, res) => {
   try {
     const requestedBy = String(req.query.by || "cultivation");
-    const by = ["cultivation", "power", "money", "aura"].includes(requestedBy)
+    const by = ["cultivation", "power", "money", "aura", "sect"].includes(requestedBy)
       ? requestedBy
       : "cultivation";
     const [rows] = await pool.execute(
@@ -4080,6 +4085,13 @@ app.get("/api/leaderboard", async (req, res) => {
             (d.stores && d.stores.ascension))) ||
         {};
       const realmIdx = realmSortIndexFromSave(cu, asc);
+      const sect = ["sword", "alchemy", "talisman"].includes(String(cu.sect || ""))
+        ? String(cu.sect)
+        : "";
+      const sectRank = leaderboardSafeInt(cu.sectRank, 0, 4);
+      const sectContribution = leaderboardSafeInt(cu.sectContribution, 0, 999_999_999);
+      const sectMerit = leaderboardSafeInt(cu.sectMerit, 0, 999_999_999);
+      const sectScore = sect ? sectRank * 500 + sectMerit + Math.floor(sectContribution * 0.5) : 0;
       entries.push({
         userId: r.user_id,
         username: r.username,
@@ -4091,6 +4103,11 @@ app.get("/api/leaderboard", async (req, res) => {
         realmName: realmNameFromSave(cu, asc) || r.cached_realm_name || "凡人",
         realmIndex: realmIdx,
         rebirthCount: Number(cu.rebirthCount || 0) || 0,
+        sect,
+        sectRank,
+        sectContribution,
+        sectMerit,
+        sectScore,
         cultivation: Number(cu.cultivation ?? r.cached_cultivation ?? 0) || 0,
         combatPower: calcCombatPowerFromSave(
           p,
@@ -4113,7 +4130,10 @@ app.get("/api/leaderboard", async (req, res) => {
         dataOk: !!d,
       });
     }
+    if (by === "sect") entries.splice(0, entries.length, ...entries.filter((entry) => entry.sect));
     entries.sort((a, b) => {
+      if (by === "sect")
+        return (b.sectScore || 0) - (a.sectScore || 0) || (b.combatPower || 0) - (a.combatPower || 0) || new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
       if (by === "money") return (b.money || 0) - (a.money || 0);
       if (by === "aura") return (b.aura || 0) - (a.aura || 0);
       if (by === "power") return (b.combatPower || 0) - (a.combatPower || 0);
@@ -4151,6 +4171,11 @@ app.get("/api/leaderboard", async (req, res) => {
       realmName: entry.realmName,
       realmIndex: entry.realmIndex,
       rebirthCount: entry.rebirthCount,
+      sect: entry.sect,
+      sectRank: entry.sectRank,
+      sectContribution: entry.sectContribution,
+      sectMerit: entry.sectMerit,
+      sectScore: entry.sectScore,
       cultivation: entry.cultivation,
       combatPower: entry.combatPower,
       aura: entry.aura,
@@ -4211,6 +4236,13 @@ app.get("/api/tower-leaderboard", async (req, res) => {
             (d.stores && d.stores.ascension))) ||
         {};
       const realmIdx = realmSortIndexFromSave(cu, asc);
+      const sect = ["sword", "alchemy", "talisman"].includes(String(cu.sect || ""))
+        ? String(cu.sect)
+        : "";
+      const sectRank = leaderboardSafeInt(cu.sectRank, 0, 4);
+      const sectContribution = leaderboardSafeInt(cu.sectContribution, 0, 999_999_999);
+      const sectMerit = leaderboardSafeInt(cu.sectMerit, 0, 999_999_999);
+      const sectScore = sect ? sectRank * 500 + sectMerit + Math.floor(sectContribution * 0.5) : 0;
       entries.push({
         userId: r.user_id,
         username: r.username,

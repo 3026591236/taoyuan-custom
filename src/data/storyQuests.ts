@@ -23,7 +23,8 @@ export const STORY_QUESTS: MainQuestDef[] = [
       "陆镇岳将新地契交给你：万象集只认亲手经营出的根基。先完成5次灵植收获，让这片灵田重新进入公议簿。",
     npcId: "liu_cunzhang",
     objectives: [{ type: "harvestCrops", label: "累计收获5次灵植", target: 5 }],
-    moneyReward: 300,
+    moneyReward: 1800,
+    itemReward: [{ itemId: "spirit_stone", quantity: 5 }],
     friendshipReward: [{ npcId: "liu_cunzhang", amount: 20 }],
   },
   {
@@ -52,8 +53,13 @@ export const STORY_QUESTS: MainQuestDef[] = [
     description: "沈听澜邀请你参加星澜河基础巡汛：先学会辨认水段与鱼情，再累计钓到5条合规渔获。",
     npcId: "qiu_yue",
     objectives: [{ type: "catchFish", label: "累计钓到5条鱼", target: 5 }],
-    moneyReward: 300,
-    itemReward: [{ itemId: "standard_bait", quantity: 10 }],
+    moneyReward: 2800,
+    itemReward: [
+      { itemId: "standard_bait", quantity: 10 },
+      { itemId: "seed_cabbage", quantity: 5 },
+      { itemId: "seed_radish", quantity: 5 },
+      { itemId: "seed_winter_wheat", quantity: 5 },
+    ],
     friendshipReward: [{ npcId: "qiu_yue", amount: 20 }],
   },
   {

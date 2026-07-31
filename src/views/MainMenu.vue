@@ -1302,8 +1302,14 @@ const handleNewGame = async () => {
   gameStore.startNewGame(selectedMap.value);
   // 标准灵田初始6×6，其余4×4
   farmStore.resetFarm(selectedMap.value === "standard" ? 6 : 4);
-  // 新手赠送：10个青菜种子
+  // 新手起步补给：不跳过经营过程，但避免前几日资源断档。
+  playerStore.earnMoney(1500);
   inventoryStore.addItem("seed_cabbage", 10);
+  inventoryStore.addItem("seed_radish", 5);
+  inventoryStore.addItem("seed_winter_wheat", 5);
+  inventoryStore.addItem("herb", 5);
+  inventoryStore.addItem("wood", 10);
+  inventoryStore.addItem("basic_fertilizer", 3);
   // 草地灵田：免费鸡舍 + 2只鸡
   if (selectedMap.value === "meadowlands") {
     const coop = animalStore.buildings.find((b) => b.type === "coop");
@@ -1380,7 +1386,7 @@ const handleNewGame = async () => {
   const tutorialStore = useTutorialStore();
   if (tutorialStore.enabled) {
     addLog(
-      "陆镇岳说：「欢迎来到万象仙乡！背包里有白菜种子，去灵田开垦土地、播种吧。」",
+      "陆镇岳说：「欢迎来到万象仙乡！已为你备好2000文、三类基础灵种和少量农资，先去灵田开垦土地、播种吧。」",
     );
     tutorialStore.markTipShown("tip_welcome");
   }

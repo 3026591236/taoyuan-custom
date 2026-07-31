@@ -131,6 +131,30 @@
         </p>
       </div>
 
+      <div class="border border-accent/20 rounded-xs p-3 space-y-2 sect-card">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs text-accent">宗门榜 · 荣誉席位</p>
+          <button class="btn text-[10px]" :disabled="sectBoardLoading" @click="loadSectBoard">
+            {{ sectBoardLoading ? "同步中" : "刷新" }}
+          </button>
+        </div>
+        <p class="text-[10px] text-muted leading-relaxed">
+          按职位、功勋与当前贡献综合排序；荣誉席位只展示宗门声望，不会覆盖现有职位、晋升或数值加成。
+        </p>
+        <p v-if="mySectBoardRank" class="text-[10px] text-success">
+          你当前位列本宗第 {{ mySectBoardRank }} 名 · {{ sectHonor(mySectBoardRank) }}
+        </p>
+        <p v-if="sectBoardError" class="text-[10px] text-danger">{{ sectBoardError }}</p>
+        <div v-if="sectBoard.length" class="space-y-1">
+          <div v-for="(member, index) in sectBoard.slice(0, 10)" :key="`${member.playerName}-${index}`" class="grid grid-cols-[2.5rem_1fr_auto] gap-2 text-[10px] border border-accent/10 rounded-xs px-2 py-1">
+            <span class="text-accent">#{{ index + 1 }}</span>
+            <span class="truncate">{{ member.playerName }} · {{ sectHonor(index + 1) }}</span>
+            <span class="text-muted">{{ rankName(member.sectRank) }} / {{ member.sectScore }}</span>
+          </div>
+        </div>
+        <p v-else-if="!sectBoardLoading" class="text-[10px] text-muted">暂无本宗云存档榜单，点击刷新同步。</p>
+      </div>
+
       <div class="border border-accent/20 rounded-xs p-3 space-y-2 governance-card">
         <div class="flex items-center justify-between gap-2">
           <p class="text-xs text-accent">仙乡共治 · 七日巡境</p>
@@ -536,7 +560,42 @@ const gameStore = useGameStore();
 const longTerm = useLongTermStore();
 const territoryStore = useTerritoryStore();
 const playerStore = usePlayerStore();
+type SectId = "sword" | "alchemy" | "talisman";
 const daoTitleInput = ref(playerStore.daoTitle);
+type SectBoardMember = {
+  playerName: string;
+  sect: SectId;
+  sectRank: number;
+  sectContribution: number;
+  sectMerit: number;
+  sectScore: number;
+};
+const sectBoard = ref<SectBoardMember[]>([]);
+const sectBoardLoading = ref(false);
+const sectBoardError = ref("");
+const sectHonor = (rank: number) =>
+  rank === 1 ? "首席真传" : rank === 2 ? "宗门俊彦" : rank === 3 ? "三席英才" : rank <= 10 ? "宗门菁英" : "同门修士";
+const mySectBoardRank = computed(() => {
+  const playerName = playerStore.playerName;
+  const index = sectBoard.value.findIndex((member) => member.playerName === playerName);
+  return index >= 0 ? index + 1 : 0;
+});
+const loadSectBoard = async () => {
+  if (!cultivationStore.sect || sectBoardLoading.value) return;
+  sectBoardLoading.value = true;
+  sectBoardError.value = "";
+  try {
+    const response = await fetch("/api/leaderboard?by=sect");
+    if (!response.ok) throw new Error("宗门榜同步失败");
+    const data = await response.json();
+    sectBoard.value = (Array.isArray(data.leaderboard) ? data.leaderboard : [])
+      .filter((member: SectBoardMember) => member.sect === cultivationStore.sect);
+  } catch (error) {
+    sectBoardError.value = error instanceof Error ? error.message : "宗门榜同步失败";
+  } finally {
+    sectBoardLoading.value = false;
+  }
+};
 const branchNameInput = ref("");
 const canManageDaoTitle = computed(
   () => !!cultivationStore.sect && (cultivationStore.sectRank || 0) >= 2,
@@ -576,8 +635,6 @@ const clearDaoTitle = () => {
   daoTitleInput.value = "";
   saveDaoTitle();
 };
-
-type SectId = "sword" | "alchemy" | "talisman";
 
 const SECTS = [
   {

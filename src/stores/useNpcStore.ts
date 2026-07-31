@@ -673,11 +673,15 @@ export const useNpcStore = defineStore("npc", () => {
     }
   };
 
-  /** 调整好感度（心事件选择结果） */
+  /** 普通村民维持10心上限；素素因织梦归女仙缘拥有额外4心成长。 */
+  const friendshipCap = (npcId: string) => (npcId === "su_su" ? 3500 : 2500);
   const adjustFriendship = (npcId: string, amount: number) => {
     const state = getNpcState(npcId);
     if (state) {
-      state.friendship = Math.max(0, state.friendship + amount);
+      state.friendship = Math.max(
+        0,
+        Math.min(friendshipCap(npcId), state.friendship + amount),
+      );
     }
   };
 
@@ -698,7 +702,7 @@ export const useNpcStore = defineStore("npc", () => {
     if (state.talkedToday) return null;
 
     state.talkedToday = true;
-    state.friendship += 20;
+    adjustFriendship(npcId, 20);
 
     const npcDef = getNpcById(npcId);
     if (!npcDef) return null;
@@ -842,7 +846,7 @@ export const useNpcStore = defineStore("npc", () => {
         birthdayMultiplier *
         giftBonusMultiplier,
     );
-    state.friendship = Math.max(0, state.friendship + gain);
+    adjustFriendship(npcId, gain);
 
     return { gain, reaction };
   };
@@ -876,7 +880,7 @@ export const useNpcStore = defineStore("npc", () => {
     }
 
     state.dating = true;
-    state.friendship += 160;
+    adjustFriendship(npcId, 160);
     return {
       success: true,
       message: `${npcDef.name}羞红了脸，接过了你的丝帕……你们开始约会了！`,
@@ -920,7 +924,7 @@ export const useNpcStore = defineStore("npc", () => {
     // 设置婚礼倒计时而非立即结婚
     weddingCountdown.value = 3;
     weddingNpcId.value = npcId;
-    state.friendship += 400;
+    adjustFriendship(npcId, 400);
     return {
       success: true,
       message: `${npcDef.name}含泪接受了你的翡翠戒指……婚礼将在3天后举行！`,
@@ -967,7 +971,7 @@ export const useNpcStore = defineStore("npc", () => {
     }
 
     state.zhiji = true;
-    state.friendship += 160;
+    adjustFriendship(npcId, 160);
     const label = playerStore.gender === "male" ? "蓝颜知己" : "红颜知己";
     return {
       success: true,
@@ -1130,7 +1134,7 @@ export const useNpcStore = defineStore("npc", () => {
           companionToday: false,
           medicalPlan: null,
         };
-        if (spouse) spouse.friendship += 100;
+        if (spouse) adjustFriendship(spouse.npcId, 100);
         childProposalDeclinedCount.value = 0;
         daysSinceProposalDecline.value = 0;
         return { message: "你们决定迎接新的家庭成员。", friendshipChange: 100 };
@@ -1541,12 +1545,12 @@ export const useNpcStore = defineStore("npc", () => {
     if (id === "village_reputation") {
       player.earnMoney(1600);
       for (const state of npcStates.value)
-        state.friendship = Math.min(2500, state.friendship + 8);
+        adjustFriendship(state.npcId, 8);
       addFamilyLegacyExp(18);
     } else if (id === "spouse_hearth") {
       player.earnMoney(1800);
       const spouse = getSpouse();
-      if (spouse) spouse.friendship = Math.min(2500, spouse.friendship + 28);
+      if (spouse) adjustFriendship(spouse.npcId, 28);
       addFamilyLegacyExp(45);
     } else if (id === "children_growth") {
       player.earnMoney(2200);
@@ -1560,7 +1564,7 @@ export const useNpcStore = defineStore("npc", () => {
     } else if (id === "sect_public_praise") {
       player.earnMoney(2600);
       for (const state of npcStates.value)
-        state.friendship = Math.min(2500, state.friendship + 10);
+        adjustFriendship(state.npcId, 10);
       addFamilyLegacyExp(35);
     }
     familyCommissionClaimed.value.push(key);
@@ -1639,7 +1643,7 @@ export const useNpcStore = defineStore("npc", () => {
       };
     inv.removeItem(req.itemId, req.quantity);
     usePlayerStore().earnMoney(req.money);
-    for (const state of npcStates.value) state.friendship += req.friendship;
+    for (const state of npcStates.value) adjustFriendship(state.npcId, req.friendship);
     familyCommissionClaimed.value.push(key);
     addLog(`完成${req.title}，全村好感+${req.friendship}。`);
     return { success: true, message: `${req.title}完成：${req.npcHint}` };
@@ -1909,6 +1913,7 @@ export const useNpcStore = defineStore("npc", () => {
     getTodayBirthdayNpc,
     checkHeartEvent,
     markHeartEventTriggered,
+    friendshipCap,
     adjustFriendship,
     talkTo,
     giveGift,

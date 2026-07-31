@@ -217,7 +217,7 @@
             <div class="flex items-center justify-between mt-0.5">
               <div class="flex items-center space-x-px">
                 <Heart
-                  v-for="h in 10"
+                  v-for="h in selectedHeartCap"
                   :key="h"
                   :size="10"
                   class="flex-shrink-0"
@@ -1200,8 +1200,11 @@ const handleSelectNpc = (npcId: string) => {
 
 const heartCount = (npcId: string): number => {
   const friendship = npcStore.getNpcState(npcId)?.friendship ?? 0;
-  return Math.min(10, Math.floor(friendship / 250));
+  return Math.min(npcStore.friendshipCap(npcId) / 250, Math.floor(friendship / 250));
 };
+const selectedHeartCap = computed(() =>
+  selectedNpc.value ? npcStore.friendshipCap(selectedNpc.value) / 250 : 10,
+);
 
 const npcGiftClass = (npcId: string): string => {
   const state = npcStore.getNpcState(npcId);
@@ -1213,8 +1216,9 @@ const npcGiftClass = (npcId: string): string => {
 /** 弹窗中下一颗心的阈值 */
 const nextHeartThreshold = computed(() => {
   const f = selectedNpcState.value?.friendship ?? 0;
-  const hearts = Math.min(10, Math.floor(f / 250));
-  return hearts >= 10 ? 2500 : (hearts + 1) * 250;
+  const cap = selectedNpc.value ? npcStore.friendshipCap(selectedNpc.value) : 2500;
+  const hearts = Math.min(cap / 250, Math.floor(f / 250));
+  return hearts * 250 >= cap ? cap : (hearts + 1) * 250;
 });
 
 /** 弹窗中送礼标签样式 */
