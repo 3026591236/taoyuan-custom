@@ -9,10 +9,11 @@ import type {
 } from "@/types";
 import { getItemById, CHEST_DEFS } from "@/data/items";
 import { useInventoryStore } from "./useInventoryStore";
+import { MAX_ITEM_STACK } from "@/constants/inventory";
 
 const INITIAL_MAX_CHESTS = 3;
 const MAX_CHESTS_CAP = 10;
-const MAX_STACK = 999;
+const MAX_STACK = MAX_ITEM_STACK;
 const UNLOCK_COST = 50000;
 
 export const useWarehouseStore = defineStore("warehouse", () => {

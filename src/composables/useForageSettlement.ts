@@ -4,6 +4,7 @@ import { useAchievementStore } from "@/stores/useAchievementStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
 import { useQuestStore } from "@/stores/useQuestStore";
 import { useSkillStore } from "@/stores/useSkillStore";
+import { MAX_ITEM_STACK } from "@/constants/inventory";
 
 export interface ForageSettlementRequest {
   itemId: string;
@@ -27,7 +28,7 @@ export interface ForageBatchSettlementResult {
   newLevel: number;
 }
 
-const MAX_STACK = 999;
+const MAX_STACK = MAX_ITEM_STACK;
 const TEMP_CAPACITY = 10;
 
 /** Records progression only after the complete reward has entered inventory. */

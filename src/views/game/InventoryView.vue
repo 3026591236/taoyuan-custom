@@ -47,7 +47,7 @@
     <!-- 物品页 -->
     <template v-if="tab === 'items'">
       <div
-        v-if="inventoryStore.items.length > 1"
+        v-if="inventoryStore.items.length > 0"
         class="flex justify-end mb-1.5 space-x-1"
       >
         <Button
@@ -64,7 +64,7 @@
           :icon="ArrowDown01"
           :icon-size="12"
           @click="inventoryStore.sortItems()"
-          >整理</Button
+          >一键整理</Button
         >
       </div>
       <div
@@ -185,7 +185,7 @@
           :icon="ArrowDown01"
           :icon-size="12"
           @click="inventoryStore.sortEquipment()"
-          >整理</Button
+          >一键整理</Button
         >
         <Button
           class="py-0 px-1.5"

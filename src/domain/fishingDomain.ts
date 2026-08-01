@@ -1,4 +1,5 @@
 import type { FishingLocation, Quality } from "@/types";
+import { MAX_ITEM_STACK } from "@/constants/inventory";
 
 export type RandomSource = () => number;
 
@@ -188,7 +189,7 @@ export const simulateInventoryBatch = (
   snapshot: InventoryCapacitySnapshot,
   batch: readonly InventoryBatchItem[],
 ): InventoryBatchSimulation => {
-  const maxStack = snapshot.maxStack ?? 999;
+  const maxStack = snapshot.maxStack ?? MAX_ITEM_STACK;
   const main = snapshot.main.map((slot) => ({ ...slot }));
   const temporary = snapshot.temporary.map((slot) => ({ ...slot }));
 

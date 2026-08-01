@@ -17,6 +17,7 @@ import type { MarketCategory } from "@/data/market";
 import type { TravelingMerchantStock } from "@/data/travelingMerchant";
 import type { Quality } from "@/types";
 import { useHiddenNpcStore } from "./useHiddenNpcStore";
+import { MAX_ITEM_STACK } from "@/constants/inventory";
 
 export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
   {
@@ -287,7 +288,7 @@ export const useShopStore = defineStore("shop", () => {
     if (
       inventoryStore.isAllFull &&
       !inventoryStore.items.some(
-        (s) => s.itemId === seedId && s.quantity + quantity <= 999,
+        (s) => s.itemId === seedId && s.quantity + quantity <= MAX_ITEM_STACK,
       )
     )
       return false;
@@ -514,7 +515,7 @@ export const useShopStore = defineStore("shop", () => {
     if (
       inventoryStore.isAllFull &&
       !inventoryStore.items.some(
-        (s) => s.itemId === itemId && s.quantity + quantity <= 999,
+        (s) => s.itemId === itemId && s.quantity + quantity <= MAX_ITEM_STACK,
       )
     )
       return false;
@@ -688,7 +689,9 @@ export const useShopStore = defineStore("shop", () => {
     if (!item || item.quantity <= 0) return false;
     if (
       inventoryStore.isAllFull &&
-      !inventoryStore.items.some((s) => s.itemId === itemId && s.quantity < 999)
+      !inventoryStore.items.some(
+        (s) => s.itemId === itemId && s.quantity < MAX_ITEM_STACK,
+      )
     )
       return false;
     const finalPrice = applyDiscount(item.price);
@@ -739,7 +742,7 @@ export const useShopStore = defineStore("shop", () => {
     const entry = shippingBox.value[idx]!;
     if (entry.quantity < quantity) return false;
     // 先计算纳戒可用空间，避免 addItem 部分添加的副作用
-    const MAX_STACK = 999;
+    const MAX_STACK = MAX_ITEM_STACK;
     let space = 0;
     for (const s of inventoryStore.items) {
       if (

@@ -38,10 +38,11 @@ import { getShoeById } from "@/data/shoes";
 import { EQUIPMENT_SETS } from "@/data/equipmentSets";
 import { usePlayerStore } from "./usePlayerStore";
 import { useAchievementStore } from "./useAchievementStore";
+import { MAX_ITEM_STACK } from "@/constants/inventory";
 
 const INITIAL_CAPACITY = 24;
 const MAX_CAPACITY = 60;
-const MAX_STACK = 999;
+const MAX_STACK = MAX_ITEM_STACK;
 const TEMP_CAPACITY = 10;
 
 /** 已保存装备方案上限；旧档方案原样保留，不因版本升级删除。 */

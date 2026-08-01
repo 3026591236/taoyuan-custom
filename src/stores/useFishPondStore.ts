@@ -37,6 +37,7 @@ import {
 } from "@/data/pondBreeds";
 import { usePlayerStore } from "./usePlayerStore";
 import { useInventoryStore } from "./useInventoryStore";
+import { MAX_ITEM_STACK } from "@/constants/inventory";
 import {
   getCombinedItemCount,
   removeCombinedItem,
@@ -168,7 +169,7 @@ export const useFishPondStore = defineStore("fishPond", () => {
     if (
       inventoryStore.isAllFull &&
       !inventoryStore.items.some(
-        (s) => s.itemId === fish.fishId && s.quantity < 999,
+        (s) => s.itemId === fish.fishId && s.quantity < MAX_ITEM_STACK,
       )
     )
       return false;

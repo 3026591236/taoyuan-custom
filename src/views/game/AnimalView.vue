@@ -999,6 +999,7 @@ import Button from "@/components/game/Button.vue";
 import { useAnimalStore } from "@/stores/useAnimalStore";
 import { useGameStore } from "@/stores/useGameStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
+import { MAX_ITEM_STACK } from "@/constants/inventory";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import {
   ANIMAL_BUILDINGS,
@@ -1477,7 +1478,10 @@ const handleBuyFeed = () => {
   if (!feed) return;
   // 检查纳戒主区是否有空间（已有同类栈或有空位），防止溢出到临时纳戒导致无法使用
   const hasStack = inventoryStore.items.some(
-    (s) => s.itemId === feed.id && s.quality === "normal" && s.quantity < 999,
+    (s) =>
+      s.itemId === feed.id &&
+      s.quality === "normal" &&
+      s.quantity < MAX_ITEM_STACK,
   );
   if (!hasStack && inventoryStore.isFull) {
     addLog("纳戒已满，无法购买。");
