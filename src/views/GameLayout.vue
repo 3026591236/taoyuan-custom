@@ -1450,6 +1450,7 @@ let accountAutoSaveInFlight = false;
 let realtimeSaveApplyingServerState = false;
 let realtimeSaveCapturing = false;
 let lastRealtimeSaveSucceeded = true;
+let lastRealtimeSaveRetryable = false;
 let pendingRealtimeSave: {
   characterId: string;
   baseServerUpdatedAt: string;
@@ -1788,6 +1789,7 @@ const autoSaveCurrent = async (): Promise<boolean> => {
       }
     }
     lastRealtimeSaveSucceeded = true;
+    lastRealtimeSaveRetryable = false;
     return true;
   } catch (e: any) {
     const rollback =
@@ -1808,6 +1810,7 @@ const autoSaveCurrent = async (): Promise<boolean> => {
         "云端检测到异常大数值增长，已自动恢复并载入服务器可信存档，同时暂停实时保存。请确认当前进度后再继续。",
       );
       lastRealtimeSaveSucceeded = false;
+      lastRealtimeSaveRetryable = false;
       return false;
     }
     if (e?.status === 409 && e?.data?.code === "SAVE_CONFLICT") {
@@ -1824,6 +1827,7 @@ const autoSaveCurrent = async (): Promise<boolean> => {
         latestPending.baseServerUpdatedAt = serverUpdatedAt;
         realtimeSavePending = true;
         lastRealtimeSaveSucceeded = false;
+        lastRealtimeSaveRetryable = true;
         return false;
       }
       if (serverUpdatedAt && samePage && localSequence <= serverSequence) {
@@ -1847,10 +1851,12 @@ const autoSaveCurrent = async (): Promise<boolean> => {
             authoritative.serverSequence || serverSequence,
           );
           lastRealtimeSaveSucceeded = true;
+          lastRealtimeSaveRetryable = false;
           return true;
         } catch (reloadError) {
           console.warn("same-page save conflict reload failed", reloadError);
           lastRealtimeSaveSucceeded = false;
+          lastRealtimeSaveRetryable = true;
           return false;
         } finally {
           realtimeSaveApplyingServerState = false;
@@ -1861,16 +1867,19 @@ const autoSaveCurrent = async (): Promise<boolean> => {
         "检测到云档确有其他页面或设备更新，已暂停本页实时保存。请刷新或从角色列表重新进入，避免覆盖进度。",
       );
       lastRealtimeSaveSucceeded = false;
+      lastRealtimeSaveRetryable = false;
       return false;
     }
     if (e?.status === 409) {
       // 409 也可能是奖励授权、角色归属或库存等业务冲突，不能误报为多设备。
       addLog(e?.data?.error || "本次实时保存未完成，稍后会随下一次变化重试。");
       lastRealtimeSaveSucceeded = false;
+      lastRealtimeSaveRetryable = false;
       return false;
     }
     // 自动保存失败不打断游戏，也不刷屏。
     lastRealtimeSaveSucceeded = false;
+    lastRealtimeSaveRetryable = !e?.status || e.status >= 500;
     console.warn("account autosave failed", e);
     return false;
   } finally {
@@ -1936,8 +1945,10 @@ const flushRealtimeSaveCurrent = async (timeoutMs = 15000) => {
     // needed. Explicit grant/sleep flushes must wait for the latest state,
     // rather than returning the result of an older in-flight request.
     await Promise.resolve();
-    if (!(await waitForRealtimeSaveIdle(Math.max(0, deadline - Date.now()))))
+    if (!(await waitForRealtimeSaveIdle(Math.max(0, deadline - Date.now())))) {
+      lastRealtimeSaveRetryable = true;
       return false;
+    }
     if (realtimeSaveScheduled) continue;
     // Force exactly one fresh snapshot for this flush. After it succeeds, only
     // capture again when a real player-state mutation arrived during the PUT;
@@ -1952,6 +1963,20 @@ const flushRealtimeSaveCurrent = async (timeoutMs = 15000) => {
       continue;
     }
     return lastRealtimeSaveSucceeded;
+  }
+  lastRealtimeSaveRetryable = true;
+  return false;
+};
+const flushSleepSaveWithRetry = async () => {
+  const retryDelays = [0, 500, 1000];
+  for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
+    const delay = retryDelays[attempt] ?? 0;
+    if (delay > 0) {
+      addLog(`云端写入暂未完成，正在进行第${attempt + 1}次尝试。`);
+      await new Promise((resolve) => window.setTimeout(resolve, delay));
+    }
+    if (await flushRealtimeSaveCurrent(4000)) return true;
+    if (!lastRealtimeSaveRetryable) return false;
   }
   return false;
 };
@@ -2665,8 +2690,8 @@ const confirmSleep = async () => {
   // Let Vue paint the settlement overlay before synchronous daily systems run.
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
   try {
-    if (!(await flushRealtimeSaveCurrent())) {
-      addLog("当前进度尚未写入服务器，本次休息已取消，请稍后重试。");
+    if (!(await flushSleepSaveWithRetry())) {
+      addLog("多次尝试后当前进度仍未写入服务器，本次休息已取消，请检查网络后重试。");
       return;
     }
     handleEndDay();
