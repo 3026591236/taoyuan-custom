@@ -374,6 +374,51 @@ export const useInventoryStore = defineStore("inventory", () => {
     return remaining <= 0;
   };
 
+  const canAcceptItems = (
+    grants: { itemId: string; quantity: number; quality?: Quality }[],
+  ): boolean => {
+    const main = items.value.map((item) => ({ ...item }));
+    const temp = tempItems.value.map((item) => ({ ...item }));
+    for (const grant of grants) {
+      if (!getItemById(grant.itemId)) return false;
+      const quality = grant.quality ?? "normal";
+      let remaining = Math.max(0, Math.floor(grant.quantity));
+      for (const slot of main) {
+        if (slot.itemId !== grant.itemId || slot.quality !== quality) continue;
+        const added = Math.min(remaining, MAX_STACK - slot.quantity);
+        slot.quantity += added;
+        remaining -= added;
+      }
+      while (remaining > 0 && main.length < capacity.value) {
+        const quantity = Math.min(remaining, MAX_STACK);
+        main.push({ itemId: grant.itemId, quality, quantity });
+        remaining -= quantity;
+      }
+      for (const slot of temp) {
+        if (slot.itemId !== grant.itemId || slot.quality !== quality) continue;
+        const added = Math.min(remaining, MAX_STACK - slot.quantity);
+        slot.quantity += added;
+        remaining -= added;
+      }
+      while (remaining > 0 && temp.length < TEMP_CAPACITY) {
+        const quantity = Math.min(remaining, MAX_STACK);
+        temp.push({ itemId: grant.itemId, quality, quantity });
+        remaining -= quantity;
+      }
+      if (remaining > 0) return false;
+    }
+    return true;
+  };
+
+  const addItemsAtomic = (
+    grants: { itemId: string; quantity: number; quality?: Quality }[],
+  ): boolean => {
+    if (!canAcceptItems(grants)) return false;
+    return grants.every((grant) =>
+      addItem(grant.itemId, grant.quantity, grant.quality ?? "normal"),
+    );
+  };
+
   /** 移除物品（支持跨栈删除）。quality 不传时优先消耗低品质 */
   const removeItem = (
     itemId: string,
@@ -1487,6 +1532,8 @@ export const useInventoryStore = defineStore("inventory", () => {
     isAllFull,
     canAcceptItem,
     addItem,
+    canAcceptItems,
+    addItemsAtomic,
     removeItem,
     getItemCount,
     hasItem,

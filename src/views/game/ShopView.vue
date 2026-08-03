@@ -521,6 +521,37 @@
                 >{{ discounted(RAIN_TOTEM_PRICE) }}文</span
               >
             </div>
+
+            <!-- 晴天娃娃 -->
+            <div
+              class="flex items-center justify-between border border-accent/20 rounded-xs px-3 py-2 cursor-pointer hover:bg-accent/5"
+              @click="
+                openBatchBuyModal(
+                  '晴天娃娃',
+                  '使用后可以让明天放晴',
+                  discounted(SUNNY_DOLL_PRICE),
+                  () => handleBuyItem('sunny_doll', SUNNY_DOLL_PRICE, '晴天娃娃'),
+                  () => playerStore.money >= discounted(SUNNY_DOLL_PRICE),
+                  (count) =>
+                    handleBatchBuyItem(
+                      'sunny_doll',
+                      SUNNY_DOLL_PRICE,
+                      '晴天娃娃',
+                      count,
+                    ),
+                  () => getMaxBuyable(discounted(SUNNY_DOLL_PRICE)),
+                  'sunny_doll',
+                )
+              "
+            >
+              <div>
+                <p class="text-sm">晴天娃娃</p>
+                <p class="text-muted text-xs">使用后可以让明天放晴</p>
+              </div>
+              <span class="text-xs text-accent whitespace-nowrap"
+                >{{ discounted(SUNNY_DOLL_PRICE) }}文</span
+              >
+            </div>
           </div>
         </template>
 
@@ -1585,6 +1616,7 @@ import { useTutorialStore } from "@/stores/useTutorialStore";
 import { useAchievementStore } from "@/stores/useAchievementStore";
 
 const RAIN_TOTEM_PRICE = 300;
+const SUNNY_DOLL_PRICE = 300;
 const WOOD_PRICE = 50;
 
 const shopStore = useShopStore();
@@ -2208,6 +2240,10 @@ const getMaxBuyableMarket = (item: ShopItemEntry): number => {
 const handleBuyMarketItem = (item: ShopItemEntry) =>
   handleBatchBuyMarketItem(item, 1);
 const handleBatchBuyMarketItem = (item: ShopItemEntry, count: number) => {
+  if (item.itemId === "rename_card" && count !== 1) {
+    addLog("改名卡每个游戏年最多购买1张，不可批量购买。");
+    return;
+  }
   const currency = item.currency ?? "money";
   const unit =
     currency === "spirit_stone" ? item.price : discounted(item.price);
@@ -2222,9 +2258,11 @@ const handleBatchBuyMarketItem = (item: ShopItemEntry, count: number) => {
     );
   } else {
     addLog(
-      currency === "spirit_stone"
-        ? "灵石不足或纳戒已满。"
-        : "铜钱不足或纳戒已满。",
+      item.itemId === "rename_card"
+        ? "本游戏年已购买过改名卡，下一游戏年可再次购买。"
+        : currency === "spirit_stone"
+          ? "灵石不足或纳戒已满。"
+          : "铜钱不足或纳戒已满。",
     );
   }
 };

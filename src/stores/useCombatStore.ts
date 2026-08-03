@@ -525,6 +525,10 @@ export const useCombatStore = defineStore("combat", () => {
   const isFighting = ref(false);
   const combatResult = ref<"win" | "lose" | null>(null);
   const drops = ref<{ itemId: string; name: string; qty: number }[]>([]);
+  const continuousTrial = ref(false);
+  const continuousTrialRuns = ref(0);
+  const CONTINUOUS_TRIAL_MAX_RUNS = 100;
+  let continuousTrialTimer: ReturnType<typeof setTimeout> | null = null;
   const showFlash = ref(false);
   const damageNumbers = ref<
     {
@@ -1045,6 +1049,45 @@ export const useCombatStore = defineStore("combat", () => {
     }
   };
 
+  const stopContinuousTrial = (message?: string) => {
+    continuousTrial.value = false;
+    if (continuousTrialTimer) clearTimeout(continuousTrialTimer);
+    continuousTrialTimer = null;
+    if (message) addLog(message);
+  };
+
+  const scheduleNextContinuousTrial = () => {
+    const zone = activeZone.value;
+    if (!continuousTrial.value || zone?.kind !== "trial") return;
+    continuousTrialRuns.value += 1;
+    if (continuousTrialRuns.value >= CONTINUOUS_TRIAL_MAX_RUNS) {
+      stopContinuousTrial(`已完成连续历练安全上限${CONTINUOUS_TRIAL_MAX_RUNS}轮。`);
+      return;
+    }
+    if (continuousTrialTimer) clearTimeout(continuousTrialTimer);
+    continuousTrialTimer = setTimeout(() => {
+      continuousTrialTimer = null;
+      if (!continuousTrial.value || combatResult.value !== "win") return;
+      const inv = useInventoryStore();
+      const grants = drops.value.map((drop) => ({
+        itemId: drop.itemId,
+        quantity: drop.qty,
+      }));
+      if (grants.length && !inv.addItemsAtomic(grants)) {
+        stopContinuousTrial("纳戒空间不足，连续历练已停止；未拾取掉落仍保留在结算页。");
+        return;
+      }
+      drops.value = [];
+      const c = useCultivationStore();
+      const p = usePlayerStore();
+      if ((c.mana || 0) < zone.cost || p.stamina < zone.staminaCost) {
+        stopContinuousTrial("灵力或体力不足，连续历练已停止。");
+        return;
+      }
+      enterZone(zone.id);
+    }, 900);
+  };
+
   const onWin = () => {
     isFighting.value = false;
     combatResult.value = "win";
@@ -1147,6 +1190,7 @@ export const useCombatStore = defineStore("combat", () => {
       if (eventName) addLog(`✨ 秘境奇遇：${eventName}`);
       maybeTriggerRealmChoice();
     }
+    scheduleNextContinuousTrial();
   };
 
   const maybeTriggerRealmChoice = () => {
@@ -1291,9 +1335,32 @@ export const useCombatStore = defineStore("combat", () => {
   const onLose = () => {
     isFighting.value = false;
     combatResult.value = "lose";
+    stopContinuousTrial("战斗败北，连续历练已停止。");
     addLog(
       `被 ${currentMonster.value?.emoji}${currentMonster.value?.name} 击败...`,
     );
+  };
+
+  const startContinuousTrial = (zoneId?: string) => {
+    const zone = zoneId
+      ? REALM_ZONES.find((candidate) => candidate.id === zoneId)
+      : activeZone.value;
+    if (!zone || zone.kind !== "trial") {
+      addLog("只有红尘历练可以连续出发。");
+      return;
+    }
+    const reason = lockReason(zone);
+    const c = useCultivationStore();
+    const p = usePlayerStore();
+    if (reason || (c.mana || 0) < zone.cost || p.stamina < zone.staminaCost) {
+      addLog(reason || "灵力或体力不足，无法开启连续历练。");
+      return;
+    }
+    continuousTrial.value = true;
+    continuousTrialRuns.value = 0;
+    addLog(`已开启${zone.name}连续历练；可随时停止，最多连续100轮，资源不足、战败或纳戒放不下掉落时会自动停止。`);
+    if (!isFighting.value && combatResult.value !== "win") enterZone(zone.id);
+    else if (combatResult.value === "win") scheduleNextContinuousTrial();
   };
 
   const continueTrial = () => {
@@ -1310,6 +1377,7 @@ export const useCombatStore = defineStore("combat", () => {
   };
 
   const leaveCombat = () => {
+    stopContinuousTrial();
     isFighting.value = false;
     currentZone.value = null;
     currentMonster.value = null;
@@ -1396,14 +1464,21 @@ export const useCombatStore = defineStore("combat", () => {
 
   const collectDrops = () => {
     const inv = useInventoryStore();
-    let okCount = 0;
-    for (const d of drops.value) {
-      if (inv.addItem(d.itemId, d.qty)) okCount++;
+    if (!drops.value.length) {
+      addLog("当前没有可拾取的掉落物");
+      return true;
+    }
+    const grants = drops.value.map((drop) => ({
+      itemId: drop.itemId,
+      quantity: drop.qty,
+    }));
+    if (!inv.addItemsAtomic(grants)) {
+      addLog("纳戒空间不足，掉落物仍保留在结算页。");
+      return false;
     }
     drops.value = [];
-    addLog(
-      okCount ? "拾取了所有掉落物" : "纳戒已满或物品未登记，部分掉落未能拾取",
-    );
+    addLog("拾取了所有掉落物");
+    return true;
   };
 
   const serialize = () => ({
@@ -1460,6 +1535,8 @@ export const useCombatStore = defineStore("combat", () => {
     isFighting,
     combatResult,
     drops,
+    continuousTrial,
+    continuousTrialRuns,
     pendingRealmChoice,
     battleTactic,
     battleBuild,
@@ -1495,6 +1572,8 @@ export const useCombatStore = defineStore("combat", () => {
     isZoneUnlocked,
     lockReason,
     enterZone,
+    startContinuousTrial,
+    stopContinuousTrial,
     continueTrial,
     challengeTower,
     startFight,

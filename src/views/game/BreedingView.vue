@@ -302,17 +302,23 @@
       <div
         class="grid grid-cols-3 md:grid-cols-5 gap-1 max-h-72 overflow-y-auto"
       >
-        <div
+        <button
           v-for="hybrid in filteredHybrids"
           :key="hybrid.id"
-          class="border rounded-xs p-1.5 text-xs text-center transition-colors truncate mr-1"
+          type="button"
+          class="border rounded-xs p-1.5 text-xs text-center transition-colors truncate mr-1 focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent"
           :class="
             isDiscovered(hybrid.id)
               ? 'border-accent/20 cursor-pointer hover:bg-accent/5 ' +
                 tierColor(hybrid.id)
-              : 'border-accent/10 text-muted/30'
+              : 'border-accent/10 text-muted/50 bg-muted/5 cursor-pointer hover:border-accent/30'
           "
-          @click="isDiscovered(hybrid.id) && (activeHybrid = hybrid)"
+          :aria-label="
+            isDiscovered(hybrid.id)
+              ? `${hybrid.name}，已发现`
+              : `未育种品种，亲本${getCropName(hybrid.parentCropA)}和${getCropName(hybrid.parentCropB)}`
+          "
+          @click="activeHybrid = hybrid"
         >
           <template v-if="isDiscovered(hybrid.id)">
             <div class="truncate">{{ hybrid.name }}</div>
@@ -320,8 +326,13 @@
               {{ hybridBestScore(hybrid.id) }}分
             </div>
           </template>
-          <Lock v-else :size="12" class="mx-auto text-muted/30" />
-        </div>
+          <template v-else>
+            <div class="truncate">未育种</div>
+            <div class="text-[10px] text-muted mt-0.5 truncate">
+              {{ getCropName(hybrid.parentCropA) }} + {{ getCropName(hybrid.parentCropB) }}
+            </div>
+          </template>
+        </button>
       </div>
 
       <!-- 图鉴完成度 -->
@@ -505,11 +516,17 @@
           </button>
 
           <p class="text-sm mb-2" :class="tierColor(activeHybrid.id)">
-            {{ activeHybrid.name }}
+            {{ isDiscovered(activeHybrid.id) ? activeHybrid.name : "未育种品种" }}
           </p>
 
-          <div class="border border-accent/10 rounded-xs p-2 mb-2">
+          <div
+            v-if="isDiscovered(activeHybrid.id)"
+            class="border border-accent/10 rounded-xs p-2 mb-2"
+          >
             <p class="text-xs text-muted">{{ activeHybrid.discoveryText }}</p>
+          </div>
+          <div v-else class="border border-accent/10 rounded-xs p-2 mb-2">
+            <p class="text-xs text-muted">按下列亲本和属性门槛完成育种后，即可解锁品种名称、描述与完整属性。</p>
           </div>
 
           <div class="border border-accent/10 rounded-xs p-2 mb-2">
@@ -547,7 +564,10 @@
             </div>
           </div>
 
-          <div class="border border-accent/10 rounded-xs p-2">
+          <div
+            v-if="isDiscovered(activeHybrid.id)"
+            class="border border-accent/10 rounded-xs p-2"
+          >
             <p class="text-xs text-muted mb-1">基础属性</p>
             <div class="flex items-center justify-between mt-0.5">
               <span class="text-xs text-muted">甜度</span>
@@ -840,7 +860,6 @@ import {
   Sprout,
   PackageOpen,
   Star,
-  Lock,
   ArrowUpCircle,
   ArrowDownAZ,
 } from "lucide-vue-next";
@@ -942,7 +961,12 @@ const filteredDiscoveredCount = computed(() => {
 });
 
 const totalDiscovered = computed(() => {
-  return breedingStore.compendium.length;
+  const knownIds = new Set(HYBRID_DEFS.map((hybrid) => hybrid.id));
+  return new Set(
+    breedingStore.compendium
+      .map((entry) => entry.hybridId)
+      .filter((id) => knownIds.has(id)),
+  ).size;
 });
 
 const completionPercent = computed(() => {

@@ -509,7 +509,14 @@
           继续挑战第{{ combatStore.towerNextFloor }}层
         </button>
         <button
-          v-if="combatStore.activeZone?.kind === 'trial'"
+          v-if="combatStore.activeZone?.kind === 'trial' && combatStore.continuousTrial"
+          class="btn w-full justify-center text-danger"
+          @click="combatStore.stopContinuousTrial('已手动停止连续历练。')"
+        >
+          停止连续历练
+        </button>
+        <button
+          v-if="combatStore.activeZone?.kind === 'trial' && !combatStore.continuousTrial"
           class="btn w-full justify-center"
           :disabled="combatStore.drops.length > 0"
           @click="combatStore.continueTrial"
@@ -690,15 +697,28 @@ const ZoneCard = defineComponent({
               h("span", { class: "text-accent font-bold" }, zone.name),
               h("span", { class: "text-[10px] text-muted ml-2" }, zone.desc),
             ]),
-            h(
-              "button",
-              {
-                class: "btn text-xs shrink-0",
-                disabled: locked,
-                onClick: () => combatStore.enterZone(zone.id),
-              },
-              `进入 (${zone.cost}灵力/${zone.staminaCost}体力)`,
-            ),
+            h("div", { class: "flex flex-col gap-1 shrink-0" }, [
+              h(
+                "button",
+                {
+                  class: "btn text-xs",
+                  disabled: locked,
+                  onClick: () => combatStore.enterZone(zone.id),
+                },
+                `进入 (${zone.cost}灵力/${zone.staminaCost}体力)`,
+              ),
+              zone.kind === "trial"
+                ? h(
+                    "button",
+                    {
+                      class: "btn text-xs",
+                      disabled: locked,
+                      onClick: () => combatStore.startContinuousTrial(zone.id),
+                    },
+                    "连续历练",
+                  )
+                : null,
+            ]),
           ]),
           h(
             "div",

@@ -118,7 +118,7 @@
           </button>
           <p class="text-sm text-accent mb-2">快捷使用</p>
           <p class="text-[10px] text-muted mb-2">
-            可在背包中加入最多5个快捷物品。
+            可在背包中加入最多5个快捷物品；打开后按数字键1-5使用。
           </p>
           <div v-if="inventoryStore.equipmentPresets.length" class="mb-3">
             <p class="text-[10px] text-muted mb-1">
@@ -146,9 +146,12 @@
               :key="slot.index"
               class="quick-use-slot"
               :class="slot.item ? 'filled' : ''"
+              :disabled="quickUseBusy"
+              :aria-label="slot.item ? `快捷栏${slot.index + 1}：${slot.name}，剩余${slot.quantity}` : `快捷栏${slot.index + 1}：空`"
               @click="handleQuickSlotClick(slot)"
             >
               <template v-if="slot.item">
+                <b>{{ slot.index + 1 }}</b>
                 <span class="truncate">{{ slot.name }}</span>
                 <em>×{{ slot.quantity }}</em>
               </template>
@@ -1677,8 +1680,8 @@ const claimMail = async (mail: any) => {
   }
 };
 const showQuickUsePicker = ref(false);
+const quickUseBusy = ref(false);
 const quickUseSlots = computed(() => {
-  inventoryStore.compactQuickUseItems();
   return Array.from({ length: 5 }, (_, index) => {
     const quick = inventoryStore.quickUseItems[index];
     const item = quick
@@ -1721,23 +1724,52 @@ const handleQuickSlotClick = (slot: {
 };
 
 const useQuickSlot = async (item: { itemId: string; quality: any }) => {
-  const def = getItemById(item.itemId);
-  const ok = isQuickUsableItem(item.itemId)
-    ? await itemUsage.useItem(item.itemId, item.quality)
-    : itemUsage.eatItem(item.itemId, item.quality);
-  if (ok) {
-    if (
-      !inventoryStore.items.some(
-        (i) => i.itemId === item.itemId && i.quality === item.quality,
+  if (quickUseBusy.value) return;
+  quickUseBusy.value = true;
+  try {
+    const def = getItemById(item.itemId);
+    const ok = isQuickUsableItem(item.itemId)
+      ? await itemUsage.useItem(item.itemId, item.quality)
+      : itemUsage.eatItem(item.itemId, item.quality);
+    if (ok) {
+      if (
+        !inventoryStore.items.some(
+          (i) => i.itemId === item.itemId && i.quality === item.quality,
+        )
       )
-    )
-      inventoryStore.clearQuickUseItem(item.itemId, item.quality);
-    inventoryStore.compactQuickUseItems();
-    showQuickUsePicker.value = false;
-    await autoSaveCurrent();
-  } else {
-    addLog(`${def?.name || "快捷物品"}当前无法使用。`);
+        inventoryStore.clearQuickUseItem(item.itemId, item.quality);
+      inventoryStore.compactQuickUseItems();
+      await autoSaveCurrent();
+    } else {
+      addLog(`${def?.name || "快捷物品"}当前无法使用。`);
+    }
+  } finally {
+    quickUseBusy.value = false;
   }
+};
+
+const handleQuickUseKeydown = (event: KeyboardEvent) => {
+  if (!showQuickUsePicker.value || quickUseBusy.value || event.repeat || event.isComposing)
+    return;
+  if (event.ctrlKey || event.altKey || event.metaKey) return;
+  const target = event.target as HTMLElement | null;
+  if (
+    target?.isContentEditable ||
+    target?.tagName === "INPUT" ||
+    target?.tagName === "TEXTAREA" ||
+    target?.tagName === "SELECT"
+  )
+    return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    showQuickUsePicker.value = false;
+    return;
+  }
+  const index = /^[1-5]$/.test(event.key) ? Number(event.key) - 1 : -1;
+  const slot = index >= 0 ? quickUseSlots.value[index] : null;
+  if (!slot?.item) return;
+  event.preventDefault();
+  void useQuickSlot(slot.item);
 };
 
 const autoSaveCurrent = async (): Promise<boolean> => {
@@ -2235,6 +2267,7 @@ const groupedLogs = computed(() => {
 
 // 实时时钟生命周期
 onMounted(() => {
+  window.addEventListener("keydown", handleQuickUseKeydown);
   startClock();
   if (!ascensionStore.adminPreviewMode) startRealtimeSave();
   startOnlineStaminaRegen();
@@ -2252,6 +2285,7 @@ onMounted(() => {
   }
 });
 onUnmounted(() => {
+  window.removeEventListener("keydown", handleQuickUseKeydown);
   stopClock();
   stopRealtimeSave();
   stopOnlineStaminaRegen();

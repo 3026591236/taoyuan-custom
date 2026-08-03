@@ -188,7 +188,7 @@ export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
     description: "灵石兑换，雷法功法，提升战力与渡劫成功率",
     currency: "spirit_stone",
   },
-  { itemId: "rename_card", name: "改名卡", price: 200, description: "仙市高价限购：每个游戏年仅可购买1张", currency: "spirit_stone" },
+  { itemId: "rename_card", name: "改名卡", price: 200, description: "仙市高价限购：每个游戏年最多购买1张，不可批量购买", currency: "spirit_stone" },
   {
     itemId: "void_scripture",
     name: "太虚归元功",
@@ -511,6 +511,7 @@ export const useShopStore = defineStore("shop", () => {
     quantity: number = 1,
     currency: "money" | "spirit_stone" = "money",
   ): boolean => {
+    if (itemId === "rename_card" && quantity !== 1) return false;
     if (itemId === "rename_card" && annualLimitedPurchases.value[itemId] === gameStore.year) return false;
     if (
       inventoryStore.isAllFull &&

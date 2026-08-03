@@ -43,6 +43,7 @@ export const CULTIVATION_PILL_IDS = new Set([
 
 export const SPECIAL_USABLE_ITEM_IDS = new Set([
   "rain_totem",
+  "sunny_doll",
   "stamina_fruit",
   "storage_talisman",
   "cosmos_bag",
@@ -185,6 +186,12 @@ export const useItemUsage = () => {
       if (!inventoryStore.removeItem(itemId, 1, quality)) return false;
       gameStore.setTomorrowWeather("rainy");
       addLog("你使用了雨图腾，明天将会下雨。");
+      return true;
+    }
+    if (itemId === "sunny_doll") {
+      if (!inventoryStore.removeItem(itemId, 1, quality)) return false;
+      gameStore.setTomorrowWeather("sunny");
+      addLog("你挂起了晴天娃娃，明天将会放晴。");
       return true;
     }
     if (itemId === "stamina_fruit") {

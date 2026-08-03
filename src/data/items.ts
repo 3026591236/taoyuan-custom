@@ -960,6 +960,14 @@ const MISC_ITEMS: ItemDef[] = [
     edible: false,
   },
   {
+    id: "sunny_doll",
+    name: "晴天娃娃",
+    category: "misc",
+    description: "使用后可以让明天放晴。",
+    sellPrice: 30,
+    edible: false,
+  },
+  {
     id: "fish_feed",
     name: "鱼饲料",
     category: "material",
