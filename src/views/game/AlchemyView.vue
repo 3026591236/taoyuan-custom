@@ -365,7 +365,7 @@ const pillRecipes: Array<{
   {
     id: "dragon_face_pill",
     name: "龙颜丹",
-    desc: "体/精+20%",
+    desc: "永久体力上限+20；上品/极品另加体魄与悟性经验",
     materialText: "龙葵×3、锁阳×20、沉香×20",
     aura: 700,
     mana: 90,

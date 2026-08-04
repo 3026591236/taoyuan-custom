@@ -595,12 +595,28 @@
         >
           · {{ mat.name }} {{ rebirthMatCount(mat.itemId) }}/{{ mat.quantity }}
         </p>
-        <p>
+        <p
+          :class="
+            cultivation.aura >= cultivation.rebirthCost.aura
+              ? 'text-success'
+              : 'text-caution'
+          "
+        >
           · 灵气 {{ cultivation.aura.toLocaleString() }}/{{
             cultivation.rebirthCost.aura.toLocaleString()
           }}
         </p>
-        <p>· 铜钱 {{ cultivation.rebirthCost.money.toLocaleString() }}文</p>
+        <p
+          :class="
+            player.money >= cultivation.rebirthCost.money
+              ? 'text-success'
+              : 'text-caution'
+          "
+        >
+          · 铜钱 {{ player.money.toLocaleString() }}/{{
+            cultivation.rebirthCost.money.toLocaleString()
+          }}文
+        </p>
         <p
           v-if="rebirthMatCount('reincarnation_dust') < (cultivation.rebirthMaterials.find((mat) => mat.itemId === 'reincarnation_dust')?.quantity || 0)"
           class="text-caution pt-1"
@@ -825,6 +841,7 @@ import { addLog } from "@/composables/useGameLog";
 import Divider from "@/components/game/Divider.vue";
 import Button from "@/components/game/Button.vue";
 import { useInventoryStore } from "@/stores/useInventoryStore";
+import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useAscensionStore } from "@/stores/useAscensionStore";
 import { useRouter } from "vue-router";
 import {
@@ -844,6 +861,7 @@ const cultivation = useCultivationStore();
 const ascensionStore = useAscensionStore();
 const router = useRouter();
 const inventory = useInventoryStore();
+const player = usePlayerStore();
 // === 挂机收益估算 ===
 const idleAuraPerMin = computed(() => {
   if (!cultivation.unlocked) return 0;

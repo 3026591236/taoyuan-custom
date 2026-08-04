@@ -397,7 +397,8 @@ const MISC_ITEMS: ItemDef[] = [
     id: "dragon_face_pill",
     name: "龙颜丹",
     category: "food",
-    description: "龙葵炼成的驻颜强身丹，服用后提升体力上限。",
+    description:
+      "龙葵炼成的驻颜强身丹，服用后永久提升体力上限20点；炼制为上品或极品时，另加体魄与悟性经验。",
     sellPrice: 3000,
     edible: false,
   },
