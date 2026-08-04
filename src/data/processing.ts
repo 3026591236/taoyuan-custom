@@ -1764,13 +1764,14 @@ export const PROCESSING_RECIPES: ProcessingRecipeDef[] = [
   {
     id: "crystal_turquoise",
     machineType: "crystal_duplicator",
-    name: "绿松石饰品",
+    name: "打磨绿松石饰品",
     inputItemId: "hanhai_turquoise",
     inputQuantity: 2,
     outputItemId: "turquoise_accessory",
     outputQuantity: 1,
     processingDays: 3,
-    description: "将绿松石打磨成精致的首饰。",
+    description:
+      "投入绿松石×2，休息推进3个游戏日后产出绿松石饰品×1；完成后需手动收取。",
   },
   {
     id: "weave_brocade",

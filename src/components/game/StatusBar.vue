@@ -7,6 +7,15 @@
         <span class="text-muted text-xs max-w-16 truncate">{{
           playerStore.playerName
         }}</span>
+        <button
+          v-if="cultivationStore.unlocked"
+          class="combat-power-link"
+          title="与战力排行榜使用同一总战力口径；点击查看角色战力构成"
+          @click="router.push('/game/charinfo')"
+        >
+          <Swords :size="12" class="inline" />
+          战力 {{ cultivationStore.combatPower.toLocaleString() }}
+        </button>
         <span class="hidden md:inline">第{{ gameStore.year }}年</span>
         <span
           >{{ SEASON_NAMES[gameStore.season] }} 第{{ gameStore.day }}天</span
@@ -104,6 +113,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 import {
   useGameStore,
   SEASON_NAMES,
@@ -111,13 +121,16 @@ import {
 } from "@/stores/useGameStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useInventoryStore } from "@/stores/useInventoryStore";
+import { useCultivationStore } from "@/stores/useCultivationStore";
 import { useGameClock } from "@/composables/useGameClock";
 import { DAY_START_HOUR, DAY_END_HOUR } from "@/data/timeConstants";
-import { Zap, Heart, Clock, Coins, Sparkles } from "lucide-vue-next";
+import { Zap, Heart, Clock, Coins, Sparkles, Swords } from "lucide-vue-next";
 
+const router = useRouter();
 const gameStore = useGameStore();
 const playerStore = usePlayerStore();
 const inventoryStore = useInventoryStore();
+const cultivationStore = useCultivationStore();
 const spiritStoneCount = computed(() =>
   inventoryStore.getItemCount("spirit_stone"),
 );
@@ -162,6 +175,19 @@ const timeBarColor = computed(() => {
 </script>
 
 <style scoped>
+.combat-power-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-accent, #d4a017);
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.combat-power-link:hover {
+  opacity: 0.75;
+}
+
 /* 体力条闪烁 */
 @keyframes staminaPulse {
   0%,

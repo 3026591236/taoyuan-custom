@@ -368,78 +368,61 @@ export const useProcessingStore = defineStore("processing", () => {
     return selected;
   };
 
-  /** 拆除机器（退回加工原料 + 已完成产物 + 机器制作材料） */
+  /** 拆除机器（原子退回加工物与机器材料，空间不足时保持原状态） */
   const removeMachine = (slotIndex: number): boolean => {
     const slot = machines.value[slotIndex];
     if (!slot) return false;
 
-    // 如果已完成：先收取产物
-    if (slot.recipeId && slot.ready) {
-      const recipe = getProcessingRecipeById(slot.recipeId);
-      if (recipe) {
-        const warehouseStore = useWarehouseStore();
-        const voidOutput = warehouseStore.getVoidOutputChest();
-        const outputQuality = slot.inputQuality ?? "normal";
-        if (
-          !voidOutput ||
-          !warehouseStore.addItemToChest(
-            voidOutput.id,
-            recipe.outputItemId,
-            recipe.outputQuantity,
-            outputQuality,
-          )
-        ) {
-          inventoryStore.addItem(
-            recipe.outputItemId,
-            recipe.outputQuantity,
-            outputQuality,
-          );
-        }
-      }
-    }
-    // 如果正在加工：退回原料
-    else if (slot.recipeId && !slot.ready && slot.inputItemId) {
-      const recipe = getProcessingRecipeById(slot.recipeId);
-      if (recipe && recipe.inputItemId) {
-        inventoryStore.addItem(
-          recipe.inputItemId,
-          recipe.inputQuantity,
-          slot.inputQuality ?? "normal",
-        );
-      }
-    }
-
-    // 退还机器制作材料
     const machineDef = PROCESSING_MACHINES.find(
       (m) => m.id === slot.machineType,
     );
-    if (machineDef) {
-      for (const mat of machineDef.craftCost) {
-        inventoryStore.addItem(mat.itemId, mat.quantity);
-      }
-      playerStore.earnMoney(machineDef.craftMoney);
+    const recipe = slot.recipeId
+      ? getProcessingRecipeById(slot.recipeId)
+      : null;
+    const refunds: { itemId: string; quantity: number; quality?: Quality }[] =
+      machineDef?.craftCost.map((mat) => ({ ...mat })) ?? [];
+    if (recipe && slot.ready) {
+      refunds.push({
+        itemId: recipe.outputItemId,
+        quantity: recipe.outputQuantity,
+        quality: slot.inputQuality ?? "normal",
+      });
+    } else if (recipe?.inputItemId && slot.inputItemId) {
+      refunds.push({
+        itemId: recipe.inputItemId,
+        quantity: recipe.inputQuantity,
+        quality: slot.inputQuality ?? "normal",
+      });
     }
+    if (!inventoryStore.addItemsAtomic(refunds)) {
+      addLog("拆除失败：纳戒无法完整接收机器材料与加工物，请先整理空间。");
+      return false;
+    }
+    if (machineDef) playerStore.earnMoney(machineDef.craftMoney);
 
     machines.value.splice(slotIndex, 1);
     return true;
   };
 
-  /** 取消加工（退回原料，机器回到空闲状态） */
+  /** 取消加工（原子退回原料，空间不足时保持机器原状态） */
   const cancelProcessing = (slotIndex: number): boolean => {
     const slot = machines.value[slotIndex];
     if (!slot || !slot.recipeId) return false;
-    // 如果正在加工且有原料投入，退回原料
-    if (!slot.ready && slot.inputItemId) {
-      const recipe = getProcessingRecipeById(slot.recipeId);
-      if (recipe && recipe.inputItemId) {
-        inventoryStore.addItem(
-          recipe.inputItemId,
-          recipe.inputQuantity,
-          slot.inputQuality ?? "normal",
-        );
+    const recipe = getProcessingRecipeById(slot.recipeId);
+    if (!slot.ready && slot.inputItemId && recipe?.inputItemId) {
+      if (
+        !inventoryStore.addItemsAtomic([
+          {
+            itemId: recipe.inputItemId,
+            quantity: recipe.inputQuantity,
+            quality: slot.inputQuality ?? "normal",
+          },
+        ])
+      ) {
+        addLog("取消失败：纳戒无法完整接收退回原料，请先整理空间。");
+        return false;
       }
     }
-    // 重置为空闲
     slot.recipeId = null;
     slot.inputItemId = null;
     slot.inputQuality = undefined;

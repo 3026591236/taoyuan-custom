@@ -553,7 +553,8 @@ const MISC_ITEMS: ItemDef[] = [
     id: "longkui",
     name: "龙葵",
     category: "material",
-    description: "百草园珍稀药材，蕴含龙气，是延寿、洗髓、轮回丹关键材料。",
+    description:
+      "百草园珍稀药材，蕴含龙气，是延寿、洗髓、轮回丹关键材料；修仙市集可高价补缺。",
     sellPrice: 360,
     edible: false,
   },
@@ -1828,7 +1829,8 @@ const CRAB_POT_ITEMS: ItemDef[] = [
     id: "paper",
     name: "纸",
     category: "material",
-    description: "可用于书写札记、族谱修订和部分生活委托。",
+    description:
+      "万象行药庐常备的生活材料，可用于书写札记、族谱修订和部分生活委托。",
     sellPrice: 3,
     edible: false,
   },
@@ -3194,6 +3196,8 @@ const ITEM_SOURCE_OVERRIDES: Record<string, string> = {
   driftwood: "蟹笼捕获",
   broken_cd: "蟹笼捕获",
   soggy_newspaper: "蟹笼捕获",
+  paper: "万象行·药庐供应；用于族谱修订",
+  longkui: "洞府百草园现实日领取；修仙市集高价补给",
   // 蜂蜜
   chrysanthemum_honey: "蜂箱产出",
   osmanthus_honey: "蜂箱产出",

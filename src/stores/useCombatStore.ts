@@ -1,7 +1,7 @@
 // 万象仙乡 V0.5 - 红尘历练 / 挑战凶兽 / 秘境探索
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
-import { addLog } from "@/composables/useGameLog";
+import { addLog, showFloat } from "@/composables/useGameLog";
 import { useCultivationStore } from "./useCultivationStore";
 import { usePlayerStore } from "./usePlayerStore";
 import { useInventoryStore } from "./useInventoryStore";
@@ -294,6 +294,100 @@ export const REALM_ZONES: RealmZone[] = [
           { itemId: "artifact_shard", name: "法宝碎片", qty: 2, chance: 0.18 },
           { itemId: "phoenix_plume", name: "凤羽", qty: 1, chance: 0.12 },
           { itemId: "cloud_silk", name: "云纹丝", qty: 1, chance: 0.16 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "primordial_spirit_realm",
+    kind: "realm",
+    name: "元神秘境",
+    emoji: "🧿",
+    desc: "八转后显化的识海裂境，胜利可直接温养元神。",
+    minRealm: 18,
+    minRebirth: 8,
+    cost: 62,
+    staminaCost: 10,
+    dailyLimit: 3,
+    rewardHint: "元神经验、魂晶、太虚尘、养魂丹",
+    monsters: [
+      {
+        id: "mind_mirror",
+        name: "照心镜灵",
+        emoji: "🪞",
+        sprite: "wisp",
+        hp: 680,
+        atk: 78,
+        def: 28,
+        exp: 230,
+        aura: 88,
+        drops: [
+          { itemId: "soul_crystal", name: "魂晶", qty: 2, chance: 0.7 },
+          { itemId: "void_dust", name: "太虚尘", qty: 1, chance: 0.28 },
+          { itemId: "soul_mending_pill", name: "养魂丹", qty: 1, chance: 0.12 },
+        ],
+      },
+      {
+        id: "primordial_shadow",
+        name: "元神魔影",
+        emoji: "👁️",
+        sprite: "tower_mind_demon",
+        hp: 740,
+        atk: 84,
+        def: 25,
+        exp: 250,
+        aura: 96,
+        drops: [
+          { itemId: "soul_crystal", name: "魂晶", qty: 2, chance: 0.76 },
+          { itemId: "void_dust", name: "太虚尘", qty: 1, chance: 0.34 },
+          { itemId: "spirit_ink", name: "灵墨", qty: 2, chance: 0.22 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "primordial_spirit_depths",
+    kind: "realm",
+    name: "元神秘境·深层",
+    emoji: "🌌",
+    desc: "十转后开启的识海深层，元神收益与高阶魂材进一步提升。",
+    minRealm: 18,
+    minRebirth: 10,
+    cost: 78,
+    staminaCost: 12,
+    dailyLimit: 2,
+    rewardHint: "大量元神经验、魂晶、太虚尘、涅魂丹",
+    monsters: [
+      {
+        id: "void_thought",
+        name: "太虚妄念",
+        emoji: "🌀",
+        sprite: "tower_shadow",
+        hp: 920,
+        atk: 102,
+        def: 34,
+        exp: 310,
+        aura: 120,
+        drops: [
+          { itemId: "soul_crystal", name: "魂晶", qty: 3, chance: 0.82 },
+          { itemId: "void_dust", name: "太虚尘", qty: 2, chance: 0.42 },
+          { itemId: "nirvana_soul_pill", name: "涅魂丹", qty: 1, chance: 0.08 },
+        ],
+      },
+      {
+        id: "heart_demon_avatar",
+        name: "心魔化身",
+        emoji: "🔥",
+        sprite: "tower_mind_demon",
+        hp: 1040,
+        atk: 110,
+        def: 38,
+        exp: 340,
+        aura: 132,
+        drops: [
+          { itemId: "soul_crystal", name: "魂晶", qty: 3, chance: 0.86 },
+          { itemId: "void_dust", name: "太虚尘", qty: 2, chance: 0.48 },
+          { itemId: "soul_mending_pill", name: "养魂丹", qty: 1, chance: 0.2 },
         ],
       },
     ],
@@ -1077,6 +1171,13 @@ export const useCombatStore = defineStore("combat", () => {
         stopContinuousTrial("纳戒空间不足，连续历练已停止；未拾取掉落仍保留在结算页。");
         return;
       }
+      if (grants.length) {
+        const summary = drops.value
+          .map((drop) => `${drop.name}×${drop.qty}`)
+          .join("、");
+        addLog(`连续历练已自动拾取：${summary}`);
+        showFloat(`自动拾取 ${summary}`, "success");
+      }
       drops.value = [];
       const c = useCultivationStore();
       const p = usePlayerStore();
@@ -1177,6 +1278,17 @@ export const useCombatStore = defineStore("combat", () => {
     if (zone?.kind === "beast") {
       c.lingYun = (c.lingYun || 0) + 1;
       addLog("镇压凶兽，灵蕴+1");
+    }
+    if (
+      zone?.id === "primordial_spirit_realm" ||
+      zone?.id === "primordial_spirit_depths"
+    ) {
+      const yuanShenGain =
+        zone.id === "primordial_spirit_depths" ? 320 : 180;
+      const leveled = c.gainYuanShenExp(yuanShenGain);
+      addLog(
+        `识海淬炼完成，元神经验+${yuanShenGain}${leveled ? `，元神提升${leveled}级` : ""}。`,
+      );
     }
     for (const d of m.drops) {
       if (Math.random() < d.chance) {

@@ -236,6 +236,11 @@
                     }"
                   />
                 </div>
+                <p class="text-[10px] text-muted mb-1.5">
+                  预计产物：{{ getRecipeOutputName(slot.recipeId) }}×{{
+                    getRecipeOutputQuantity(slot.recipeId)
+                  }}；休息推进游戏日后完成
+                </p>
                 <Button
                   class="w-full justify-center"
                   :icon="X"
@@ -248,6 +253,9 @@
 
               <!-- 完成 -->
               <div v-else>
+                <p class="text-[10px] text-success mb-1.5 text-center">
+                  成品仍在机器内，点击下方按钮收取
+                </p>
                 <Button
                   class="w-full justify-center !bg-accent !text-bg"
                   :icon="Package"
@@ -1224,6 +1232,9 @@ const getRecipeOutputName = (recipeId: string): string => {
   return getItemById(recipe.outputItemId)?.name ?? recipe.name;
 };
 
+const getRecipeOutputQuantity = (recipeId: string): number =>
+  getProcessingRecipeById(recipeId)?.outputQuantity ?? 1;
+
 // === 制造处理 ===
 
 const handleCraftMachine = (machineType: MachineType) => {
@@ -1510,7 +1521,9 @@ const handleStartProcessing = (
     const qualityLabel =
       quality && quality !== "normal" ? `(${QUALITY_NAMES[quality]})` : "";
     addLog(
-      `开始加工${recipe?.name ?? recipeId}${qualityLabel}，需要${recipe?.processingDays ?? "?"}天。`,
+      recipe
+        ? `已投入${recipe.inputItemId ? `${getItemName(recipe.inputItemId)}×${recipe.inputQuantity}` : "原料"}，开始加工${recipe.name}${qualityLabel}；需休息推进${recipe.processingDays}个游戏日，完成后在${getMachineName(recipe.machineType)}手动收取${getItemName(recipe.outputItemId)}×${recipe.outputQuantity}。`
+        : `开始加工${recipeId}${qualityLabel}。`,
     );
   } else {
     addLog("原料不足或机器正在使用。");

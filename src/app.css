@@ -93,7 +93,7 @@ button {
 }
 
 .btn {
-  @apply space-x-1.5
+  @apply space-x-1.5;
 }
 
 

@@ -657,18 +657,28 @@
             "
             >✅ 5转·灵兽</span
           >
-          <span
+          <button
+            class="text-left"
             :class="
               cultivation.rebirthCount >= 8 ? 'text-success' : 'text-muted/50'
             "
-            >🔒 8转·元神秘境</span
+            :disabled="cultivation.rebirthCount < 8"
+            @click="router.push('/game/combat')"
           >
-          <span
+            {{ cultivation.rebirthCount >= 8 ? '🧿' : '🔒' }}
+            8转·元神秘境{{ cultivation.rebirthCount >= 8 ? '（前往）' : '' }}
+          </button>
+          <button
+            class="text-left"
             :class="
               cultivation.rebirthCount >= 10 ? 'text-success' : 'text-muted/50'
             "
-            >🔒 10转·秘境二层</span
+            :disabled="cultivation.rebirthCount < 10"
+            @click="router.push('/game/combat')"
           >
+            {{ cultivation.rebirthCount >= 10 ? '🌌' : '🔒' }}
+            10转·元神秘境深层{{ cultivation.rebirthCount >= 10 ? '（前往）' : '' }}
+          </button>
           <span
             :class="
               cultivation.rebirthCount >= 15 ? 'text-success' : 'text-muted/50'

@@ -2955,6 +2955,9 @@ export const useCultivationStore = defineStore("cultivation", () => {
     return leveled;
   };
 
+  const gainYuanShenExp = (amount: number) =>
+    addYuanShenExp(Math.max(0, Math.floor(Number(amount) || 0)));
+
   const usePill = (pillId: UsablePillId) => {
     if (["marrow_wash_pill", "ganoderma_pill"].includes(pillId)) {
       addLog("该丹药必须通过服务器权威接口使用。");
@@ -4470,6 +4473,7 @@ export const useCultivationStore = defineStore("cultivation", () => {
     useTalisman,
     cultivateYuanShen,
     trainYuanShen,
+    gainYuanShenExp,
     canRebirth,
     rebirthCost,
     rebirthMaterials,

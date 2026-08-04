@@ -129,6 +129,12 @@ export const CULTIVATION_MARKET_ITEMS: ShopItemEntry[] = [
     description: "百草园稀有药材；修仙市集提供稳定补给",
   },
   {
+    itemId: "longkui",
+    name: "龙葵",
+    price: 2200,
+    description: "百草园珍稀药材；修仙市集提供高价应急补给",
+  },
+  {
     itemId: "mana_recovery_pill",
     name: "回灵丹",
     price: 520,
@@ -361,6 +367,12 @@ export const useShopStore = defineStore("shop", () => {
 
   const apothecaryItems = computed<ShopItemEntry[]>(() => [
     { itemId: "herb", name: "草药", price: 50, description: "山间野生的草药" },
+    {
+      itemId: "paper",
+      name: "纸",
+      price: 30,
+      description: "书写札记与族谱修订用纸，可批量购买",
+    },
     {
       itemId: "ginseng",
       name: "人参",
