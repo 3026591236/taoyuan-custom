@@ -1,19 +1,50 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
+import { useCultivationStore } from "./useCultivationStore";
+import { useLongTermStore } from "./useLongTermStore";
 
 export type TerritoryStatus = "neutral" | "owned" | "contested";
 export type TerritoryKind = "capital" | "farm" | "mine" | "spirit" | "watch" | "ruins";
 export type ArmyStance = "assault" | "guard" | "flank";
+export type UnitType = "sword" | "body" | "talisman" | "beast" | "puppet";
+export type FormationStatus = "idle" | "marching" | "returning" | "garrison" | "healing";
+export type BuildingType = "production" | "defense" | "march";
 export type TerritoryResources = { wood: number; stone: number; spirit: number };
 export type BattleReport = { id: string; at: number; title: string; result: "victory" | "defeat" | "info"; detail: string };
+export type TerritoryBuilding = { type: BuildingType; level: number };
 export type TerritoryNode = {
   id: string; name: string; kind: TerritoryKind; x: number; y: number;
   income: TerritoryResources; power: number; status: TerritoryStatus; level: number;
   garrison: number; lastCollectedAt: number; dispatchedAt: number; enemyAt: number; links: string[];
+  buildings: [TerritoryBuilding | null, TerritoryBuilding | null];
+};
+export type Formation = {
+  id: string; name: string; unitType: UnitType; troops: number; maxTroops: number;
+  morale: number; stance: ArmyStance; status: FormationStatus; targetId: string;
+  departedAt: number; arrivalAt: number; originId: string;
+};
+export type TerritoryTechnology = {
+  id: string; name: string; description: string; cost: TerritoryResources;
+  prerequisite?: string; effect: "attack" | "defense" | "march" | "income" | "infirmary" | "capacity"; value: number;
+};
+export type TerritoryChapter = {
+  id: number; name: string; description: string; reward: TerritoryResources;
+  requirement: { owned?: number; levelSum?: number; technologies?: number; buildings?: number };
 };
 
+const HOUR = 3_600_000;
+const MINUTE = 60_000;
+const MAX_RESOURCE = 1_000_000_000;
+const MAX_OFFLINE_HOURS = 12;
+const RAID_INTERVAL = 6 * HOUR;
 const now = () => Date.now();
-const INITIAL_NODES: TerritoryNode[] = [
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const finite = (value: unknown, fallback: number, min: number, max: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? clamp(parsed, min, max) : fallback;
+};
+
+const INITIAL_NODES: Omit<TerritoryNode, "buildings">[] = [
   { id:"capital",name:"万象城",kind:"capital",x:50,y:51,income:{wood:3,stone:3,spirit:4},power:1,status:"owned",level:1,garrison:120,lastCollectedAt:now(),dispatchedAt:0,enemyAt:0,links:["cloud-farm","east-farm","black-mine","red-mine"] },
   { id:"cloud-farm",name:"云禾原",kind:"farm",x:30,y:32,income:{wood:7,stone:1,spirit:2},power:42,status:"neutral",level:1,garrison:42,lastCollectedAt:0,dispatchedAt:0,enemyAt:0,links:["capital","star-lake","jade-ruins","bamboo-ward"] },
   { id:"east-farm",name:"东篱田契",kind:"farm",x:73,y:31,income:{wood:6,stone:2,spirit:2},power:48,status:"neutral",level:1,garrison:48,lastCollectedAt:0,dispatchedAt:0,enemyAt:0,links:["capital","star-lake","sea-gate","wind-terrace"] },
@@ -31,129 +62,77 @@ const INITIAL_NODES: TerritoryNode[] = [
   { id:"stone-gate",name:"叠石隘",kind:"watch",x:31,y:72,income:{wood:2,stone:6,spirit:3},power:92,status:"neutral",level:1,garrison:92,lastCollectedAt:0,dispatchedAt:0,enemyAt:0,links:["black-mine","mist-valley","bamboo-ward","south-gate"] },
   { id:"south-gate",name:"云渡旧关",kind:"ruins",x:72,y:88,income:{wood:4,stone:4,spirit:8},power:116,status:"neutral",level:1,garrison:116,lastCollectedAt:0,dispatchedAt:0,enemyAt:0,links:["moon-spring","south-watch","stone-gate"] },
 ];
-const cloneNodes = () => INITIAL_NODES.map(n => ({ ...n, income:{...n.income}, links:[...n.links] }));
-const clamp = (n:number,min:number,max:number) => Math.min(max,Math.max(min,n));
-const stanceBonus: Record<ArmyStance, Record<ArmyStance, number>> = {
-  assault:{ assault:1, guard:.82, flank:1.2 }, guard:{ assault:1.2, guard:1, flank:.82 }, flank:{ assault:.82, guard:1.2, flank:1 },
-};
-const enemyStanceFor = (node: TerritoryNode): ArmyStance => node.kind === "watch" ? "guard" : node.kind === "ruins" ? "flank" : "assault";
+
+const cloneNodes = (): TerritoryNode[] => INITIAL_NODES.map((node) => ({ ...node, income:{...node.income}, links:[...node.links], buildings:[null,null] }));
+const createFormations = (): Formation[] => [
+  {id:"formation-sword",name:"青锋军阵",unitType:"sword",troops:180,maxTroops:220,morale:100,stance:"assault",status:"idle",targetId:"",departedAt:0,arrivalAt:0,originId:"capital"},
+  {id:"formation-body",name:"玄甲军阵",unitType:"body",troops:80,maxTroops:140,morale:100,stance:"guard",status:"idle",targetId:"",departedAt:0,arrivalAt:0,originId:"capital"},
+  {id:"formation-talisman",name:"天符军阵",unitType:"talisman",troops:60,maxTroops:120,morale:100,stance:"flank",status:"idle",targetId:"",departedAt:0,arrivalAt:0,originId:"capital"},
+];
+
+export const TERRITORY_TECHNOLOGIES: TerritoryTechnology[] = [
+  {id:"drill",name:"军阵操典",description:"全军攻击提高10%",cost:{wood:90,stone:60,spirit:35},effect:"attack",value:.1},
+  {id:"walls",name:"灵纹城防",description:"据点防御提高12%",cost:{wood:70,stone:110,spirit:40},effect:"defense",value:.12},
+  {id:"roads",name:"驭风驰道",description:"行军速度提高15%",cost:{wood:120,stone:80,spirit:55},prerequisite:"drill",effect:"march",value:.15},
+  {id:"granary",name:"洞天仓廪",description:"领地产出提高12%",cost:{wood:140,stone:90,spirit:60},prerequisite:"walls",effect:"income",value:.12},
+  {id:"healing",name:"回春医阵",description:"伤兵容量增加120",cost:{wood:100,stone:100,spirit:90},prerequisite:"drill",effect:"infirmary",value:120},
+  {id:"command",name:"三军统御",description:"每支军阵上限增加40",cost:{wood:180,stone:150,spirit:120},prerequisite:"roads",effect:"capacity",value:40},
+];
+export const TERRITORY_CHAPTERS: TerritoryChapter[] = [
+  {id:1,name:"立足山河",description:"占领3处据点",reward:{wood:120,stone:100,spirit:60},requirement:{owned:3}},
+  {id:2,name:"边关初定",description:"占领6处据点且据点等级总和达到8",reward:{wood:220,stone:180,spirit:100},requirement:{owned:6,levelSum:8}},
+  {id:3,name:"百业俱兴",description:"建造4座领地建筑并研究2项科技",reward:{wood:300,stone:260,spirit:180},requirement:{buildings:4,technologies:2}},
+  {id:4,name:"一统仙乡",description:"占领全部16处据点并研究4项科技",reward:{wood:600,stone:500,spirit:360},requirement:{owned:16,technologies:4}},
+];
+const stanceBonus: Record<ArmyStance,Record<ArmyStance,number>> = {assault:{assault:1,guard:.82,flank:1.2},guard:{assault:1.2,guard:1,flank:.82},flank:{assault:.82,guard:1.2,flank:1}};
+const unitBonus: Record<UnitType,Partial<Record<UnitType,number>>> = {sword:{body:1.2,puppet:.88},body:{talisman:1.2,sword:.88},talisman:{sword:1.2,body:.88},beast:{puppet:1.2,talisman:.88},puppet:{beast:1.2,sword:.88}};
+const enemyStanceFor=(node:TerritoryNode):ArmyStance=>node.kind==="watch"?"guard":node.kind==="ruins"?"flank":"assault";
+const enemyUnitFor=(node:TerritoryNode):UnitType=>({capital:"body",farm:"body",mine:"puppet",spirit:"talisman",watch:"sword",ruins:"beast"})[node.kind] as UnitType;
+const technologyEffect=(researched:string[],effect:TerritoryTechnology["effect"])=>TERRITORY_TECHNOLOGIES.filter((tech)=>researched.includes(tech.id)&&tech.effect===effect).reduce((sum,tech)=>sum+tech.value,0);
 
 export const useTerritoryStore = defineStore("territory", () => {
-  const nodes = ref<TerritoryNode[]>(cloneNodes());
-  const resources = ref<TerritoryResources>({ wood:160, stone:130, spirit:80 });
-  const actionPoints = ref(8); const maxActionPoints = ref(12); const lastActionAt = ref(now());
-  const incomeRemainder = ref<TerritoryResources>({ wood:0, stone:0, spirit:0 });
-  const lastRaidAt = ref(0);
-  const army = ref({ troops:180, maxTroops:220, morale:100, stance:"assault" as ArmyStance });
-  const selectedId = ref("capital"); const lastAction = ref("万象军府已经开营。选择相邻据点，配置阵型后出征。");
-  const reports = ref<BattleReport[]>([]);
-
-  const ownedNodes = computed(() => nodes.value.filter(n => n.status === "owned"));
-  const selectedNode = computed(() => nodes.value.find(n => n.id === selectedId.value) || nodes.value[0]);
-  const isReachable = (node: TerritoryNode) => node.id === "capital" || node.links.some(id => nodes.value.find(n => n.id === id)?.status === "owned");
-  const reachableNodes = computed(() => nodes.value.filter(n => n.status === "neutral" && isReachable(n)));
-  const incomePerHour = computed(() => ownedNodes.value.reduce((t,n) => ({ wood:t.wood+n.income.wood*n.level, stone:t.stone+n.income.stone*n.level, spirit:t.spirit+n.income.spirit*n.level }), {wood:0,stone:0,spirit:0}));
-  const watchBonus = computed(() => ownedNodes.value.filter(n => n.kind === "watch").reduce((s,n) => s+n.level*5,0));
-  const totalPower = computed(() => Math.floor(army.value.troops*(.75+army.value.morale/200)+ownedNodes.value.reduce((s,n)=>s+n.garrison*.18+n.level*5,0)+watchBonus.value));
-  const territoryProgress = computed(() => Math.round(ownedNodes.value.length/nodes.value.length*100));
-  const raidCooldownSeconds = computed(() => Math.max(0, Math.ceil((lastRaidAt.value + 600000 - now()) / 1000)));
-  const governanceMetrics = computed(() => ({
-    owned: ownedNodes.value.length,
-    total: nodes.value.length,
-    progress: territoryProgress.value,
-    levelSum: ownedNodes.value.reduce((sum, node) => sum + node.level, 0),
-    watchLevels: ownedNodes.value.filter(node => node.kind === "watch").reduce((sum, node) => sum + node.level, 0),
-    spiritLevels: ownedNodes.value.filter(node => node.kind === "spirit").reduce((sum, node) => sum + node.level, 0),
-  }));
-  const governanceCost = computed<TerritoryResources>(() => ({
-    wood: Math.min(480, 30 + governanceMetrics.value.owned * 8 + governanceMetrics.value.levelSum * 2),
-    stone: Math.min(420, 24 + governanceMetrics.value.owned * 7 + governanceMetrics.value.watchLevels * 5),
-    spirit: Math.min(300, 16 + governanceMetrics.value.owned * 4 + governanceMetrics.value.spiritLevels * 6),
-  }));
-  const canAffordGovernance = computed(() => resources.value.wood >= governanceCost.value.wood && resources.value.stone >= governanceCost.value.stone && resources.value.spirit >= governanceCost.value.spirit);
-  const consumeGovernanceCost = () => {
-    tick();
-    const cost = governanceCost.value;
-    if (resources.value.wood < cost.wood || resources.value.stone < cost.stone || resources.value.spirit < cost.spirit) return false;
-    resources.value = { wood: resources.value.wood - cost.wood, stone: resources.value.stone - cost.stone, spirit: resources.value.spirit - cost.spirit };
-    lastAction.value = `完成本周巡境：维护消耗木${cost.wood}、石${cost.stone}、灵${cost.spirit}。`;
-    return true;
-  };
-
-  const addReport = (title:string,result:BattleReport["result"],detail:string) => { reports.value.unshift({id:`${now()}-${Math.random()}`,at:now(),title,result,detail}); reports.value=reports.value.slice(0,12); };
-  const select = (id:string) => { if(nodes.value.some(n=>n.id===id)) selectedId.value=id; };
-  const setStance = (stance:ArmyStance) => { army.value.stance=stance; lastAction.value=`军阵已切换为${stance === "assault" ? "破阵" : stance === "guard" ? "镇守" : "奇袭"}。`; };
-  const tick = () => {
-    const current=now(); let changed=false;
-    if(actionPoints.value>=maxActionPoints.value) lastActionAt.value=current;
-    else {
-      const recovered=Math.floor(Math.max(0,current-lastActionAt.value)/900000);
-      if(recovered>0){ actionPoints.value=clamp(actionPoints.value+recovered,0,maxActionPoints.value); lastActionAt.value=actionPoints.value>=maxActionPoints.value?current:lastActionAt.value+recovered*900000; changed=true; }
-    }
-    const gained:TerritoryResources={wood:0,stone:0,spirit:0};
-    for(const node of nodes.value){
-      if(node.status!=="owned" || !node.lastCollectedAt) continue;
-      const hours=Math.min(12,Math.max(0,(current-node.lastCollectedAt)/3600000));
-      if(hours>=1/12){ gained.wood+=node.income.wood*node.level*hours; gained.stone+=node.income.stone*node.level*hours; gained.spirit+=node.income.spirit*node.level*hours; node.lastCollectedAt=current; changed=true; }
-    }
-    for(const key of ["wood","stone","spirit"] as const){
-      const total=incomeRemainder.value[key]+gained[key]; const whole=Math.floor(total+1e-9);
-      resources.value[key]+=whole; incomeRemainder.value[key]=Math.max(0,total-whole);
-    }
-    return changed;
-  };
-  const march = (id:string) => {
-    tick(); const node=nodes.value.find(n=>n.id===id); if(!node || node.status!=="neutral") return false;
-    if(!isReachable(node)){ lastAction.value=`「${node.name}」供给线未接通。`; return false; }
-    if(actionPoints.value<2){ lastAction.value="行动力不足，每15分钟恢复1点。"; return false; }
-    if(army.value.troops<30){ lastAction.value="兵力不足30，先在万象城征募。"; return false; }
-    actionPoints.value-=2;
-    const enemyStance=enemyStanceFor(node); const modifier=stanceBonus[army.value.stance][enemyStance];
-    const attack=army.value.troops*(.72+army.value.morale/250)*modifier + watchBonus.value;
-    const defense=node.garrison*(.92+node.level*.08);
-    const victory=attack>=defense*.9;
-    const losses=clamp(Math.round(node.garrison*(victory ? .18 : .34)/modifier),8,victory ? 48 : 76);
-    army.value.troops=clamp(army.value.troops-losses,0,army.value.maxTroops);
-    army.value.morale=clamp(army.value.morale+(victory?6:-14),35,120);
-    if(victory){ node.status="owned"; node.garrison=Math.max(18,Math.round(army.value.troops*.18)); node.lastCollectedAt=now(); lastAction.value=`攻取「${node.name}」，损失${losses}兵力，供给线向前延伸。`; addReport(`攻取 ${node.name}`,"victory",`我方${Math.round(attack)} 对 敌方${Math.round(defense)}；阵型倍率${modifier.toFixed(2)}，损失${losses}。`); }
-    else { node.garrison=Math.max(12,Math.round(node.garrison-attack*.32)); lastAction.value=`进攻「${node.name}」失利，损失${losses}兵力，守军降至${node.garrison}。`; addReport(`进攻 ${node.name} 受挫`,"defeat",`我方${Math.round(attack)} 对 敌方${Math.round(defense)}；调整阵型或征募后再战。`); }
-    return true;
-  };
-  const recruit = () => {
-    tick(); const missing=army.value.maxTroops-army.value.troops; if(missing<=0){lastAction.value="军府兵力已满。";return false;}
-    const amount=Math.min(40,missing); const cost={wood:amount*2,stone:amount,spirit:Math.ceil(amount/4)};
-    if(resources.value.wood<cost.wood||resources.value.stone<cost.stone||resources.value.spirit<cost.spirit){lastAction.value=`征募${amount}兵需木${cost.wood}/石${cost.stone}/灵${cost.spirit}。`;return false;}
-    resources.value.wood-=cost.wood; resources.value.stone-=cost.stone; resources.value.spirit-=cost.spirit; army.value.troops+=amount; army.value.morale=clamp(army.value.morale+3,0,120); lastAction.value=`万象军府征募${amount}名乡勇。`; addReport("军府征募","info",`兵力恢复${amount}，当前${army.value.troops}/${army.value.maxTroops}。`); return true;
-  };
-  const fortify = (id:string) => {
-    tick(); const node=nodes.value.find(n=>n.id===id); if(!node||node.status!=="owned")return false;
-    const cost={wood:20*node.level,stone:26*node.level,spirit:8*node.level}; if(resources.value.wood<cost.wood||resources.value.stone<cost.stone||resources.value.spirit<cost.spirit){lastAction.value=`筑防需木${cost.wood}/石${cost.stone}/灵${cost.spirit}。`;return false;}
-    resources.value.wood-=cost.wood;resources.value.stone-=cost.stone;resources.value.spirit-=cost.spirit;node.garrison+=24+node.level*8;lastAction.value=`「${node.name}」守军增至${node.garrison}。`;return true;
-  };
-  const upgrade = (id:string) => {
-    const node=nodes.value.find(n=>n.id===id);if(!node||node.status!=="owned")return false;if(node.level>=5){lastAction.value="据点已达到Lv.5。";return false;}
-    const cost={wood:node.level*45,stone:node.level*38,spirit:node.level*18};if(resources.value.wood<cost.wood||resources.value.stone<cost.stone||resources.value.spirit<cost.spirit){lastAction.value=`升级需木${cost.wood}/石${cost.stone}/灵${cost.spirit}。`;return false;}
-    resources.value.wood-=cost.wood;resources.value.stone-=cost.stone;resources.value.spirit-=cost.spirit;node.level++;node.garrison+=20;army.value.maxTroops+=node.kind==="capital"?20:4;lastAction.value=`「${node.name}」升至Lv.${node.level}，产出与驻防提高。`;return true;
-  };
-  const triggerRaid = () => {
-    tick();
-    if(nodes.value.some(n=>n.status==="contested")){lastAction.value="已有据点告急，请先完成回援。";return false;}
-    const cooldown=Math.ceil((lastRaidAt.value+600000-now())/60000);if(cooldown>0){lastAction.value=`军情演练整备中，约${cooldown}分钟后可再次发起。`;return false;}
-    if(actionPoints.value<1){lastAction.value="行动力不足，无法进行敌袭演练。";return false;} const candidates=ownedNodes.value.filter(n=>n.id!=="capital"&&n.status==="owned");const node=candidates[Math.floor(Math.random()*candidates.length)];if(!node){lastAction.value="先占领一处外围领地。";return false;}actionPoints.value--;lastRaidAt.value=now();node.status="contested";node.enemyAt=now();node.garrison=Math.max(node.garrison,40+node.level*20);selectedId.value=node.id;lastAction.value=`警报：「${node.name}」遭到敌袭！`;addReport(`${node.name} 告急`,"info",`敌军压境，当前守军${node.garrison}。`);return true;
-  };
-  const resolveRaid = (id:string) => {
-    tick();const node=nodes.value.find(n=>n.id===id);if(!node||node.status!=="contested")return false;if(actionPoints.value<2){lastAction.value="回援需要2点行动力。";return false;}actionPoints.value-=2;
-    const defense=node.garrison+army.value.troops*.35+watchBonus.value;const enemy=node.power*(1+node.level*.16);const victory=defense>=enemy;const loss=Math.min(army.value.troops,Math.round(enemy*(victory?.12:.22)));army.value.troops-=loss;
-    if(victory){node.status="owned";node.enemyAt=0;army.value.morale=clamp(army.value.morale+4,0,120);lastAction.value=`守住「${node.name}」，援军损失${loss}。`;addReport(`守住 ${node.name}`,"victory",`防御${Math.round(defense)} 对 敌军${Math.round(enemy)}。`);}else{node.status="neutral";node.enemyAt=0;node.garrison=Math.round(enemy*.55);army.value.morale=clamp(army.value.morale-10,35,120);lastAction.value=`「${node.name}」失守，可沿供给线重新夺回。`;addReport(`${node.name} 失守`,"defeat",`防御${Math.round(defense)} 对 敌军${Math.round(enemy)}。`);}return true;
-  };
-  const finite=(value:any,fallback:number,min:number,max:number)=>{const parsed=Number(value);return Number.isFinite(parsed)?clamp(parsed,min,max):fallback;};
-  const serialize=()=>({version:3,nodes:nodes.value,resources:resources.value,incomeRemainder:incomeRemainder.value,actionPoints:actionPoints.value,maxActionPoints:maxActionPoints.value,lastActionAt:lastActionAt.value,lastRaidAt:lastRaidAt.value,army:army.value,lastAction:lastAction.value,selectedId:selectedId.value,reports:reports.value});
-  const deserialize=(data:any={})=>{
-    if(Array.isArray(data.nodes)){const saved=new Map<string,Partial<TerritoryNode>>(data.nodes.filter((n:any)=>n&&typeof n.id==="string").map((n:TerritoryNode)=>[n.id,n]));nodes.value=cloneNodes().map(base=>{const old=saved.get(base.id);if(!old)return base;const status:TerritoryStatus=["neutral","owned","contested"].includes(String(old.status))?old.status as TerritoryStatus:base.status;return{...base,status,level:Math.round(finite(old.level,base.level,1,5)),garrison:Math.round(finite(old.garrison??old.power,base.garrison,0,100000)),lastCollectedAt:finite(old.lastCollectedAt,status==="owned"?now():0,0,now()),dispatchedAt:finite(old.dispatchedAt,0,0,now()),enemyAt:status==="contested"?finite(old.enemyAt,now(),0,now()):0};});}
-    for(const key of ["wood","stone","spirit"] as const){resources.value[key]=Math.floor(finite(data.resources?.[key],resources.value[key],0,1000000000));incomeRemainder.value[key]=finite(data.incomeRemainder?.[key],0,0,.999999);}
-    maxActionPoints.value=Math.round(finite(data.maxActionPoints,12,8,20));actionPoints.value=Math.round(finite(data.actionPoints??Math.ceil(finite(data.commandPower,100,0,200)/10),8,0,maxActionPoints.value));lastActionAt.value=finite(data.lastActionAt,now(),0,now());lastRaidAt.value=finite(data.lastRaidAt,0,0,now());
-    const savedArmy=data.army||{};army.value={troops:Math.round(finite(savedArmy.troops,army.value.troops,0,100000)),maxTroops:Math.round(finite(savedArmy.maxTroops,army.value.maxTroops,100,100000)),morale:Math.round(finite(savedArmy.morale,army.value.morale,35,120)),stance:["assault","guard","flank"].includes(savedArmy.stance)?savedArmy.stance:"assault"};army.value.troops=Math.min(army.value.troops,army.value.maxTroops);
-    lastAction.value=typeof data.lastAction==="string"?data.lastAction.slice(0,300):lastAction.value;selectedId.value=nodes.value.some(n=>n.id===data.selectedId)?String(data.selectedId):"capital";reports.value=Array.isArray(data.reports)?data.reports.filter((r:any)=>r&&typeof r.title==="string"&&["victory","defeat","info"].includes(r.result)).slice(0,12).map((r:any)=>({...r,title:r.title.slice(0,80),detail:String(r.detail||"").slice(0,300),at:finite(r.at,now(),0,now())})):[];tick();
-  };
-  return {nodes,resources,actionPoints,maxActionPoints,army,lastAction,selectedId,reports,ownedNodes,selectedNode,reachableNodes,incomePerHour,totalPower,territoryProgress,governanceMetrics,governanceCost,canAffordGovernance,consumeGovernanceCost,raidCooldownSeconds,isReachable,select,setStance,tick,march,recruit,fortify,upgrade,triggerRaid,resolveRaid,serialize,deserialize};
+  const nodes=ref<TerritoryNode[]>(cloneNodes()); const resources=ref<TerritoryResources>({wood:160,stone:130,spirit:80}); const incomeRemainder=ref<TerritoryResources>({wood:0,stone:0,spirit:0});
+  const actionPoints=ref(8); const maxActionPoints=ref(12); const lastActionAt=ref(now()); const formations=ref<Formation[]>(createFormations());
+  const wounded=ref(0); const healingAmount=ref(0); const healingCompleteAt=ref(0); const healingFormationId=ref(""); const researchedTechnologies=ref<string[]>([]); const claimedChapters=ref<number[]>([]);
+  const selectedFormationId=ref("formation-sword"); const selectedId=ref("capital"); const reports=ref<BattleReport[]>([]); const lastRaidAt=ref(0); const nextRaidAt=ref(now()+RAID_INTERVAL); const raidSequence=ref(0); const lastAction=ref("万象军府已经开营。选择相邻据点，配置军阵后出征。");
+  const cultivation=useCultivationStore(); const longTerm=useLongTermStore();
+  const commanderAttackBonus=computed(()=>Math.min(.22,Math.log10(Math.max(1,cultivation.combatPower)+1)*.035));
+  const activeBeast=computed(()=>cultivation.beast&&!cultivation.beastExpedition?cultivation.beast:null);
+  const growthBonuses=computed(()=>({attack:commanderAttackBonus.value+longTerm.sectSwordPlatformBonusRate,march:activeBeast.value==="crane"?.12:0,income:longTerm.sectSpiritArrayBonusRate+(activeBeast.value==="fox"?.08:0),healing:activeBeast.value==="phoenix"?.2:0}));
+  const primaryFormation=computed(()=>formations.value[0]);
+  const army=computed(()=>({troops:formations.value.reduce((s,f)=>s+f.troops,0),maxTroops:formations.value.reduce((s,f)=>s+f.maxTroops,0),morale:Math.round(formations.value.reduce((s,f)=>s+f.morale,0)/formations.value.length),stance:primaryFormation.value?.stance??"assault" as ArmyStance}));
+  const ownedNodes=computed(()=>nodes.value.filter((n)=>n.status==="owned")); const selectedNode=computed(()=>nodes.value.find((n)=>n.id===selectedId.value)||nodes.value[0]); const selectedFormation=computed(()=>formations.value.find((f)=>f.id===selectedFormationId.value)||formations.value[0]);
+  const isReachable=(node:TerritoryNode)=>node.id==="capital"||node.links.some((id)=>nodes.value.find((n)=>n.id===id)?.status==="owned"); const reachableNodes=computed(()=>nodes.value.filter((n)=>n.status==="neutral"&&isReachable(n))); const buildingCount=computed(()=>ownedNodes.value.reduce((s,n)=>s+n.buildings.filter(Boolean).length,0));
+  const productionMultiplier=computed(()=>1+technologyEffect(researchedTechnologies.value,"income")+growthBonuses.value.income);
+  const incomePerHour=computed(()=>ownedNodes.value.reduce((total,node)=>{const levels=node.buildings.filter((b)=>b?.type==="production").reduce((s,b)=>s+(b?.level??0),0);const m=productionMultiplier.value*(1+levels*.12);return{wood:total.wood+Math.floor(node.income.wood*node.level*m),stone:total.stone+Math.floor(node.income.stone*node.level*m),spirit:total.spirit+Math.floor(node.income.spirit*node.level*m)};},{wood:0,stone:0,spirit:0}));
+  const watchBonus=computed(()=>ownedNodes.value.filter((n)=>n.kind==="watch").reduce((s,n)=>s+n.level*5,0)); const totalPower=computed(()=>Math.floor(formations.value.reduce((s,f)=>s+f.troops*(.75+f.morale/200),0)+ownedNodes.value.reduce((s,n)=>s+n.garrison*.18+n.level*5,0)+watchBonus.value)); const territoryProgress=computed(()=>Math.round(ownedNodes.value.length/nodes.value.length*100));
+  const infirmaryCapacity=computed(()=>180+technologyEffect(researchedTechnologies.value,"infirmary")+ownedNodes.value.reduce((s,n)=>s+n.buildings.filter((b)=>b?.type==="defense").reduce((x,b)=>x+(b?.level??0)*20,0),0)); const raidCooldownSeconds=computed(()=>Math.max(0,Math.ceil((lastRaidAt.value+10*MINUTE-now())/1000)));
+  const governanceMetrics=computed(()=>({owned:ownedNodes.value.length,total:nodes.value.length,progress:territoryProgress.value,levelSum:ownedNodes.value.reduce((s,n)=>s+n.level,0),watchLevels:ownedNodes.value.filter((n)=>n.kind==="watch").reduce((s,n)=>s+n.level,0),spiritLevels:ownedNodes.value.filter((n)=>n.kind==="spirit").reduce((s,n)=>s+n.level,0)}));
+  const governanceCost=computed<TerritoryResources>(()=>({wood:Math.min(480,30+governanceMetrics.value.owned*8+governanceMetrics.value.levelSum*2),stone:Math.min(420,24+governanceMetrics.value.owned*7+governanceMetrics.value.watchLevels*5),spirit:Math.min(300,16+governanceMetrics.value.owned*4+governanceMetrics.value.spiritLevels*6)}));
+  const canAfford=(cost:TerritoryResources)=>resources.value.wood>=cost.wood&&resources.value.stone>=cost.stone&&resources.value.spirit>=cost.spirit; const spend=(cost:TerritoryResources)=>{if(!canAfford(cost))return false;resources.value={wood:resources.value.wood-cost.wood,stone:resources.value.stone-cost.stone,spirit:resources.value.spirit-cost.spirit};return true;}; const canAffordGovernance=computed(()=>canAfford(governanceCost.value));
+  const addReport=(title:string,result:BattleReport["result"],detail:string,at=now())=>{reports.value.unshift({id:`${at}-${reports.value.length}`,at,title:title.slice(0,80),result,detail:detail.slice(0,300)});reports.value=reports.value.slice(0,30);}; const addWounded=(losses:number)=>{const admitted=Math.min(Math.max(0,infirmaryCapacity.value-wounded.value),Math.floor(losses*.65));wounded.value+=admitted;return admitted;};
+  const formationSpeed=(formation:Formation,target:TerritoryNode)=>{const buildings=ownedNodes.value.reduce((s,n)=>s+n.buildings.filter((b)=>b?.type==="march").reduce((x,b)=>x+(b?.level??0),0),0);const bonus=technologyEffect(researchedTechnologies.value,"march")+growthBonuses.value.march+Math.min(.3,buildings*.03);const distance=Math.hypot(target.x-50,target.y-51);return clamp(Math.round((60+distance*2.5)*MINUTE/(1+bonus)*(formation.unitType==="beast"?.85:1)),2*MINUTE,4*HOUR);};
+  const clearJourney=(formation:Formation,status:FormationStatus="idle")=>{formation.status=status;formation.targetId="";formation.departedAt=0;formation.arrivalAt=0;formation.originId="capital";};
+  const startReturn=(formation:Formation,node:TerritoryNode,current:number)=>{formation.status="returning";formation.departedAt=current;formation.arrivalAt=current+clamp(Math.round(formationSpeed(formation,node)*.75),MINUTE,3*HOUR);};
+  const settleBattle=(formation:Formation,node:TerritoryNode,current:number)=>{const stance=stanceBonus[formation.stance][enemyStanceFor(node)];const unit=unitBonus[formation.unitType][enemyUnitFor(node)]??1;const attack=formation.troops*(.72+formation.morale/250)*stance*unit*(1+technologyEffect(researchedTechnologies.value,"attack")+growthBonuses.value.attack)+watchBonus.value;const defenseLevels=node.buildings.filter((b)=>b?.type==="defense").reduce((s,b)=>s+(b?.level??0),0);const defense=node.garrison*(.92+node.level*.08)*(1+defenseLevels*.15);const victory=attack>=defense*.9;const losses=Math.min(formation.troops,clamp(Math.round(node.garrison*(victory?.18:.34)/Math.max(.65,stance*unit)),8,victory?60:100));formation.troops-=losses;const admitted=addWounded(losses);formation.morale=clamp(formation.morale+(victory?6:-14),35,120);if(victory){node.status="owned";node.garrison=Math.max(18,Math.round(formation.troops*.18));node.lastCollectedAt=current;lastAction.value=`攻取「${node.name}」，损失${losses}，${admitted}名伤兵入营。`;addReport(`攻取 ${node.name}`,"victory",`我方${Math.round(attack)}对敌方${Math.round(defense)}；兵种倍率${unit.toFixed(2)}，阵型倍率${stance.toFixed(2)}。`,current);}else{node.garrison=Math.max(12,Math.round(node.garrison-attack*.32));lastAction.value=`进攻「${node.name}」失利，损失${losses}，守军余${node.garrison}。`;addReport(`进攻 ${node.name} 受挫`,"defeat",`我方${Math.round(attack)}对敌方${Math.round(defense)}；${admitted}名伤兵入营。`,current);}startReturn(formation,node,current);};
+  const settleRaid=(formation:Formation,node:TerritoryNode,current:number)=>{const defense=(node.garrison+formation.troops*.35+watchBonus.value)*(1+technologyEffect(researchedTechnologies.value,"defense"));const enemy=node.power*(1+node.level*.16);const victory=defense>=enemy;const loss=Math.min(formation.troops,Math.round(enemy*(victory?.12:.22)));formation.troops-=loss;const admitted=addWounded(loss);if(victory){node.status="owned";node.enemyAt=0;node.lastCollectedAt=current;formation.morale=clamp(formation.morale+4,35,120);lastAction.value=`守住「${node.name}」，援军损失${loss}，${admitted}名伤兵入营。`;addReport(`守住 ${node.name}`,"victory",`防御${Math.round(defense)}对敌军${Math.round(enemy)}。`,current);}else{node.status="neutral";node.enemyAt=0;node.garrison=Math.round(enemy*.55);formation.morale=clamp(formation.morale-10,35,120);lastAction.value=`「${node.name}」失守。`;addReport(`${node.name} 失守`,"defeat",`防御${Math.round(defense)}对敌军${Math.round(enemy)}。`,current);}startReturn(formation,node,current);};
+  const triggerScheduledRaid=(current:number)=>{if(nodes.value.some((n)=>n.status==="contested"))return false;const candidates=ownedNodes.value.filter((n)=>n.id!=="capital").sort((a,b)=>a.id.localeCompare(b.id));if(!candidates.length)return false;const node=candidates[raidSequence.value%candidates.length];if(!node)return false;raidSequence.value++;node.status="contested";node.enemyAt=current;node.garrison=Math.max(node.garrison,40+node.level*20);selectedId.value=node.id;lastAction.value=`军情急报：「${node.name}」遭到敌袭！`;addReport(`${node.name} 告急`,"info",`敌军按既定路线压境，当前守军${node.garrison}。`,current);return true;};
+  const tick=(at=now())=>{const current=finite(at,now(),0,now()+MINUTE);let changed=false;if(actionPoints.value>=maxActionPoints.value)lastActionAt.value=current;else{const recovered=Math.floor(Math.max(0,current-lastActionAt.value)/(15*MINUTE));if(recovered>0){actionPoints.value=clamp(actionPoints.value+recovered,0,maxActionPoints.value);lastActionAt.value=actionPoints.value>=maxActionPoints.value?current:lastActionAt.value+recovered*15*MINUTE;changed=true;}}for(const node of nodes.value){if(node.status!=="owned"||!node.lastCollectedAt)continue;const hours=Math.min(MAX_OFFLINE_HOURS,Math.max(0,(current-node.lastCollectedAt)/HOUR));if(hours<1/12)continue;const levels=node.buildings.filter((b)=>b?.type==="production").reduce((s,b)=>s+(b?.level??0),0);const m=productionMultiplier.value*(1+levels*.12);for(const key of ["wood","stone","spirit"] as const){const total=incomeRemainder.value[key]+node.income[key]*node.level*hours*m;const whole=Math.floor(total+1e-9);resources.value[key]=clamp(resources.value[key]+whole,0,MAX_RESOURCE);incomeRemainder.value[key]=clamp(total-whole,0,.999999);}node.lastCollectedAt=current;changed=true;}if(healingAmount.value>0&&healingCompleteAt.value>0&&current>=healingCompleteAt.value){const formation=formations.value.find((f)=>f.id===healingFormationId.value);if(formation){const restored=Math.min(healingAmount.value,formation.maxTroops-formation.troops);formation.troops+=restored;formation.status="idle";lastAction.value=`${formation.name}伤兵归队${restored}人。`;addReport("伤兵归队","info",`${restored}名伤兵完成治疗。`,current);}healingAmount.value=0;healingCompleteAt.value=0;healingFormationId.value="";changed=true;}for(const formation of formations.value){if((formation.status!=="marching"&&formation.status!=="returning")||current<formation.arrivalAt)continue;if(formation.status==="marching"){const node=nodes.value.find((n)=>n.id===formation.targetId);if(node?.status==="neutral")settleBattle(formation,node,current);else if(node?.status==="contested")settleRaid(formation,node,current);else{formation.status="returning";formation.departedAt=current;formation.arrivalAt=current+MINUTE;lastAction.value="目标状态已变化，军阵开始返程。";}}else{clearJourney(formation);lastAction.value=`${formation.name}已经返回万象城。`;}changed=true;}if(current>=nextRaidAt.value){if(triggerScheduledRaid(current))changed=true;nextRaidAt.value=current+RAID_INTERVAL;changed=true;}return changed;};
+  const select=(id:string)=>{if(nodes.value.some((n)=>n.id===id))selectedId.value=id;}; const selectFormation=(id:string)=>{if(formations.value.some((f)=>f.id===id))selectedFormationId.value=id;}; const setStance=(stance:ArmyStance,formationId=selectedFormationId.value)=>{const formation=formations.value.find((f)=>f.id===formationId);if(!formation||!(["assault","guard","flank"] as string[]).includes(stance))return false;formation.stance=stance;lastAction.value=`${formation.name}切换为${stance==="assault"?"破阵":stance==="guard"?"镇守":"奇袭"}。`;return true;}; const setUnitType=(unitType:UnitType,formationId=selectedFormationId.value)=>{const formation=formations.value.find((f)=>f.id===formationId);if(!formation||formation.status!=="idle"||!(["sword","body","talisman","beast","puppet"] as string[]).includes(unitType))return false;formation.unitType=unitType;return true;};
+  const march=(id:string,formationId=selectedFormationId.value)=>{tick();const node=nodes.value.find((n)=>n.id===id);const formation=formations.value.find((f)=>f.id===formationId);if(!node||node.status!=="neutral"||!formation)return false;if(!isReachable(node)){lastAction.value=`「${node.name}」供给线未接通。`;return false;}if(formation.status!=="idle"){lastAction.value=`${formation.name}当前无法出征。`;return false;}if(actionPoints.value<2){lastAction.value="行动力不足，每15分钟恢复1点。";return false;}if(formation.troops<30){lastAction.value="该军阵兵力不足30。";return false;}actionPoints.value-=2;formation.status="marching";formation.targetId=id;formation.originId="capital";formation.departedAt=now();formation.arrivalAt=formation.departedAt+formationSpeed(formation,node);node.dispatchedAt=formation.departedAt;lastAction.value=`${formation.name}已向「${node.name}」进军。`;addReport("军阵出征","info",`${formation.name}预计${Math.ceil((formation.arrivalAt-formation.departedAt)/MINUTE)}分钟抵达${node.name}。`);return true;};
+  const recallFormation=(formationId:string)=>{const formation=formations.value.find((f)=>f.id===formationId);if(!formation||formation.status!=="marching")return false;const current=now();const elapsed=Math.max(0,current-formation.departedAt);formation.status="returning";formation.departedAt=current;formation.arrivalAt=current+clamp(Math.round(elapsed*.75),MINUTE,3*HOUR);lastAction.value=`${formation.name}已召回，正在返程。`;addReport("召回军阵","info",`${formation.name}取消当前出征。`);return true;};
+  const recruit=(formationId=selectedFormationId.value)=>{tick();const formation=formations.value.find((f)=>f.id===formationId);if(!formation||formation.status!=="idle")return false;const missing=formation.maxTroops-formation.troops;if(missing<=0){lastAction.value="该军阵兵力已满。";return false;}const amount=Math.min(40,missing);const cost={wood:amount*2,stone:amount,spirit:Math.ceil(amount/4)};if(!spend(cost)){lastAction.value=`征募${amount}兵需木${cost.wood}/石${cost.stone}/灵${cost.spirit}。`;return false;}formation.troops+=amount;formation.morale=clamp(formation.morale+3,35,120);lastAction.value=`${formation.name}征募${amount}人。`;addReport("军府征募","info",`${formation.name}兵力恢复${amount}。`);return true;};
+  const startHealing=(formationId=selectedFormationId.value,requested=wounded.value)=>{tick();if(healingAmount.value>0)return false;const formation=formations.value.find((f)=>f.id===formationId);if(!formation||formation.status!=="idle")return false;const amount=Math.min(Math.floor(finite(requested,0,0,5000)),wounded.value,formation.maxTroops-formation.troops,80);if(amount<=0)return false;const cost={wood:amount,stone:Math.ceil(amount*.5),spirit:Math.ceil(amount*.75)};if(!spend(cost)){lastAction.value=`治疗${amount}名伤兵需木${cost.wood}/石${cost.stone}/灵${cost.spirit}。`;return false;}wounded.value-=amount;healingAmount.value=amount;healingFormationId.value=formation.id;healingCompleteAt.value=now()+clamp(Math.round(amount*MINUTE*(1-growthBonuses.value.healing)),5*MINUTE,80*MINUTE);formation.status="healing";lastAction.value=`回春医阵开始治疗${amount}名伤兵。`;return true;};
+  const fortify=(id:string)=>{tick();const node=nodes.value.find((n)=>n.id===id);if(!node||node.status!=="owned")return false;const cost={wood:20*node.level,stone:26*node.level,spirit:8*node.level};if(!spend(cost)){lastAction.value=`筑防需木${cost.wood}/石${cost.stone}/灵${cost.spirit}。`;return false;}node.garrison+=24+node.level*8;lastAction.value=`「${node.name}」守军增至${node.garrison}。`;return true;};
+  const upgrade=(id:string)=>{const node=nodes.value.find((n)=>n.id===id);if(!node||node.status!=="owned")return false;if(node.level>=5){lastAction.value="据点已达到Lv.5。";return false;}const cost={wood:node.level*45,stone:node.level*38,spirit:node.level*18};if(!spend(cost)){lastAction.value=`升级需木${cost.wood}/石${cost.stone}/灵${cost.spirit}。`;return false;}node.level++;node.garrison+=20;for(const formation of formations.value)formation.maxTroops+=node.kind==="capital"?7:2;lastAction.value=`「${node.name}」升至Lv.${node.level}。`;return true;};
+  const upgradeBuilding=(nodeId:string,slot:number,type:BuildingType)=>{const node=nodes.value.find((n)=>n.id===nodeId);if(!node||node.status!=="owned"||slot<0||slot>1||!(["production","defense","march"] as string[]).includes(type))return false;const current=node.buildings[slot];if(current&&current.type!==type)return false;const level=current?.level??0;if(level>=3)return false;const cost={wood:50*(level+1),stone:45*(level+1),spirit:25*(level+1)};if(!spend(cost)){lastAction.value=`建设需木${cost.wood}/石${cost.stone}/灵${cost.spirit}。`;return false;}node.buildings[slot]={type,level:level+1};lastAction.value=`「${node.name}」建设完成。`;return true;};
+  const researchTechnology=(id:string)=>{if(researchedTechnologies.value.includes(id))return false;const tech=TERRITORY_TECHNOLOGIES.find((t)=>t.id===id);if(!tech||(tech.prerequisite&&!researchedTechnologies.value.includes(tech.prerequisite)))return false;if(!spend(tech.cost)){lastAction.value=`研究「${tech.name}」资源不足。`;return false;}researchedTechnologies.value.push(id);if(tech.effect==="capacity")for(const formation of formations.value)formation.maxTroops+=tech.value;lastAction.value=`科技「${tech.name}」研究完成。`;addReport("军府科技","info",tech.description);return true;};
+  const chapterAvailable=(chapter:TerritoryChapter)=>{const m=governanceMetrics.value;const r=chapter.requirement;return m.owned>=(r.owned??0)&&m.levelSum>=(r.levelSum??0)&&researchedTechnologies.value.length>=(r.technologies??0)&&buildingCount.value>=(r.buildings??0);};
+  const claimChapter=(id:number)=>{const chapter=TERRITORY_CHAPTERS.find((c)=>c.id===id);if(!chapter||claimedChapters.value.includes(id)||!chapterAvailable(chapter))return false;for(const key of ["wood","stone","spirit"] as const)resources.value[key]=clamp(resources.value[key]+chapter.reward[key],0,MAX_RESOURCE);claimedChapters.value.push(id);lastAction.value=`章节「${chapter.name}」完成，奖励已入库。`;addReport("山河章节","victory",`${chapter.name}奖励已领取。`);return true;};
+  const triggerRaid=()=>{tick();if(nodes.value.some((n)=>n.status==="contested")){lastAction.value="已有据点告急，请先完成回援。";return false;}const cooldown=Math.ceil((lastRaidAt.value+10*MINUTE-now())/MINUTE);if(cooldown>0){lastAction.value=`军情演练整备中，约${cooldown}分钟后可再次发起。`;return false;}if(actionPoints.value<1)return false;actionPoints.value--;lastRaidAt.value=now();return triggerScheduledRaid(now());};
+  const resolveRaid=(id:string,formationId=selectedFormationId.value)=>{tick();const node=nodes.value.find((n)=>n.id===id);const formation=formations.value.find((f)=>f.id===formationId);if(!node||node.status!=="contested"||!formation||formation.status!=="idle")return false;if(actionPoints.value<2){lastAction.value="回援需要2点行动力。";return false;}if(formation.troops<20){lastAction.value="该军阵兵力不足20，无法回援。";return false;}actionPoints.value-=2;formation.status="marching";formation.targetId=id;formation.originId="capital";formation.departedAt=now();formation.arrivalAt=formation.departedAt+formationSpeed(formation,node);lastAction.value=`${formation.name}已向「${node.name}」回援。`;addReport("军阵回援","info",`${formation.name}预计${Math.ceil((formation.arrivalAt-formation.departedAt)/MINUTE)}分钟抵达${node.name}。`);return true;};
+  const consumeGovernanceCost=()=>{tick();const cost={...governanceCost.value};if(!spend(cost))return false;lastAction.value=`完成本周巡境：维护消耗木${cost.wood}、石${cost.stone}、灵${cost.spirit}。`;return true;};
+  const serialize=()=>({version:4,nodes:nodes.value,resources:resources.value,incomeRemainder:incomeRemainder.value,actionPoints:actionPoints.value,maxActionPoints:maxActionPoints.value,lastActionAt:lastActionAt.value,formations:formations.value,wounded:wounded.value,healingAmount:healingAmount.value,healingCompleteAt:healingCompleteAt.value,healingFormationId:healingFormationId.value,researchedTechnologies:researchedTechnologies.value,claimedChapters:claimedChapters.value,selectedFormationId:selectedFormationId.value,lastAction:lastAction.value,selectedId:selectedId.value,reports:reports.value,lastRaidAt:lastRaidAt.value,nextRaidAt:nextRaidAt.value,raidSequence:raidSequence.value});
+  const deserialize=(data:Record<string,unknown>={})=>{const current=now();nodes.value=cloneNodes();resources.value={wood:160,stone:130,spirit:80};incomeRemainder.value={wood:0,stone:0,spirit:0};actionPoints.value=8;maxActionPoints.value=12;lastActionAt.value=current;formations.value=createFormations();wounded.value=0;healingAmount.value=0;healingCompleteAt.value=0;healingFormationId.value="";researchedTechnologies.value=[];claimedChapters.value=[];selectedFormationId.value="formation-sword";selectedId.value="capital";reports.value=[];lastRaidAt.value=0;nextRaidAt.value=current+RAID_INTERVAL;raidSequence.value=0;lastAction.value="万象军府已经开营。选择相邻据点，配置军阵后出征。";if(Array.isArray(data.nodes)){const saved=new Map<string,Record<string,unknown>>(data.nodes.filter((item):item is Record<string,unknown>=>!!item&&typeof item==="object"&&typeof (item as Record<string,unknown>).id==="string").map((item)=>[String(item.id),item]));nodes.value=cloneNodes().map((base)=>{const old=saved.get(base.id);if(!old)return base;const status=(['neutral','owned','contested'] as string[]).includes(String(old.status))?old.status as TerritoryStatus:base.status;const buildings:Array<TerritoryBuilding|null>=Array.isArray(old.buildings)?old.buildings.slice(0,2).map((item)=>{if(!item||typeof item!=="object")return null;const raw=item as Record<string,unknown>;return(['production','defense','march'] as string[]).includes(String(raw.type))?{type:raw.type as BuildingType,level:Math.round(finite(raw.level,1,1,3))}:null;}):[null,null];while(buildings.length<2)buildings.push(null);return{...base,status,level:Math.round(finite(old.level,base.level,1,5)),garrison:Math.round(finite(old.garrison??old.power,base.garrison,0,100000)),lastCollectedAt:finite(old.lastCollectedAt,status==="owned"?current:0,0,current),dispatchedAt:finite(old.dispatchedAt,0,0,current),enemyAt:status==="contested"?finite(old.enemyAt,current,0,current):0,buildings:buildings as [TerritoryBuilding|null,TerritoryBuilding|null]};});}for(const key of ["wood","stone","spirit"] as const){resources.value[key]=Math.floor(finite((data.resources as Partial<TerritoryResources>|undefined)?.[key],resources.value[key],0,MAX_RESOURCE));incomeRemainder.value[key]=finite((data.incomeRemainder as Partial<TerritoryResources>|undefined)?.[key],0,0,.999999);}maxActionPoints.value=Math.round(finite(data.maxActionPoints,12,8,20));actionPoints.value=Math.round(finite(data.actionPoints??Math.ceil(finite(data.commandPower,100,0,200)/10),8,0,maxActionPoints.value));lastActionAt.value=finite(data.lastActionAt,current,0,current);const defaults=createFormations();if(Array.isArray(data.formations)){const saved=new Map<string,Record<string,unknown>>(data.formations.filter((item):item is Record<string,unknown>=>!!item&&typeof item==="object"&&typeof (item as Record<string,unknown>).id==="string").map((item)=>[String(item.id),item]));formations.value=defaults.map((base)=>{const old=saved.get(base.id);if(!old)return base;const status=(['idle','marching','returning','garrison','healing'] as string[]).includes(String(old.status))?old.status as FormationStatus:"idle";const maxTroops=Math.round(finite(old.maxTroops,base.maxTroops,60,100000));return{...base,name:typeof old.name==="string"?old.name.slice(0,20):base.name,unitType:(['sword','body','talisman','beast','puppet'] as string[]).includes(String(old.unitType))?old.unitType as UnitType:base.unitType,maxTroops,troops:Math.round(finite(old.troops,base.troops,0,maxTroops)),morale:Math.round(finite(old.morale,base.morale,35,120)),stance:(['assault','guard','flank'] as string[]).includes(String(old.stance))?old.stance as ArmyStance:base.stance,status,targetId:nodes.value.some((n)=>n.id===old.targetId)?String(old.targetId):"",departedAt:finite(old.departedAt,0,0,current),arrivalAt:finite(old.arrivalAt,0,0,current+24*HOUR),originId:"capital"};});}else if(data.army&&typeof data.army==="object"){const legacy=data.army as Record<string,unknown>;const legacyMax=Math.round(finite(legacy.maxTroops,220,100,100000));const legacyTroops=Math.round(finite(legacy.troops,180,0,legacyMax));const [first,second,third]=defaults;if(!first||!second||!third)throw new Error("领地军阵初始化失败");formations.value=[{...first,troops:legacyTroops,maxTroops:legacyMax,morale:Math.round(finite(legacy.morale,100,35,120)),stance:(['assault','guard','flank'] as string[]).includes(String(legacy.stance))?legacy.stance as ArmyStance:"assault"},{...second,troops:0},{...third,troops:0}];}else formations.value=defaults;wounded.value=Math.round(finite(data.wounded,0,0,100000));healingAmount.value=Math.round(finite(data.healingAmount,0,0,5000));healingCompleteAt.value=finite(data.healingCompleteAt,0,0,current+24*HOUR);healingFormationId.value=formations.value.some((f)=>f.id===data.healingFormationId)?String(data.healingFormationId):"";researchedTechnologies.value=Array.isArray(data.researchedTechnologies)?Array.from(new Set(data.researchedTechnologies.filter((id):id is string=>typeof id==="string"&&TERRITORY_TECHNOLOGIES.some((tech)=>tech.id===id)))):[];claimedChapters.value=Array.isArray(data.claimedChapters)?Array.from(new Set(data.claimedChapters.map(Number).filter((id)=>Number.isInteger(id)&&TERRITORY_CHAPTERS.some((chapter)=>chapter.id===id)))):[];selectedFormationId.value=formations.value.some((f)=>f.id===data.selectedFormationId)?String(data.selectedFormationId):(formations.value[0]?.id??"formation-sword");selectedId.value=nodes.value.some((n)=>n.id===data.selectedId)?String(data.selectedId):"capital";lastAction.value=typeof data.lastAction==="string"?data.lastAction.slice(0,300):lastAction.value;reports.value=Array.isArray(data.reports)?data.reports.filter((item):item is BattleReport=>!!item&&typeof item==="object"&&typeof (item as BattleReport).title==="string"&&(['victory','defeat','info'] as string[]).includes((item as BattleReport).result)).slice(0,30).map((report)=>({...report,title:report.title.slice(0,80),detail:String(report.detail||"").slice(0,300),at:finite(report.at,current,0,current)})):[];lastRaidAt.value=finite(data.lastRaidAt,0,0,current);nextRaidAt.value=finite(data.nextRaidAt,current+RAID_INTERVAL,current-MINUTE,current+RAID_INTERVAL);raidSequence.value=Math.round(finite(data.raidSequence,0,0,1000000));wounded.value=Math.min(wounded.value,infirmaryCapacity.value);tick(current);};
+  return {nodes,resources,actionPoints,maxActionPoints,army,formations,wounded,healingAmount,healingCompleteAt,researchedTechnologies,claimedChapters,selectedFormationId,lastAction,selectedId,reports,ownedNodes,selectedNode,selectedFormation,reachableNodes,incomePerHour,totalPower,territoryProgress,infirmaryCapacity,growthBonuses,governanceMetrics,governanceCost,canAffordGovernance,raidCooldownSeconds,isReachable,select,selectFormation,setStance,setUnitType,tick,march,recallFormation,recruit,startHealing,fortify,upgrade,upgradeBuilding,researchTechnology,chapterAvailable,claimChapter,triggerRaid,resolveRaid,consumeGovernanceCost,serialize,deserialize};
 });

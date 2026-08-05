@@ -286,8 +286,7 @@ export const useSaveStore = defineStore("save", () => {
       if (data.longTerm) longTermStore.deserialize(data.longTerm);
       if ((data as any).floatingWelfare)
         floatingWelfareStore.deserialize((data as any).floatingWelfare);
-      if ((data as any).territory)
-        territoryStore.deserialize((data as any).territory);
+      territoryStore.deserialize((data as any).territory ?? {});
       if (data.hanhai) hanhaiStore.deserialize(data.hanhai);
       longTermStore.touchLoginDay();
       activeSlot.value = slot;
