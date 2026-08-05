@@ -509,11 +509,11 @@
           继续挑战第{{ combatStore.towerNextFloor }}层
         </button>
         <button
-          v-if="combatStore.activeZone?.kind === 'trial' && combatStore.continuousTrial"
+          v-if="combatStore.supportsContinuousChallenge(combatStore.activeZone) && combatStore.continuousTrial"
           class="btn w-full justify-center text-danger"
-          @click="combatStore.stopContinuousTrial('已手动停止连续历练。')"
+          @click="combatStore.stopContinuousTrial('已手动停止连续挑战。')"
         >
-          停止连续历练
+          停止连续挑战
         </button>
         <button
           v-if="combatStore.activeZone?.kind === 'trial' && !combatStore.continuousTrial"
@@ -707,7 +707,7 @@ const ZoneCard = defineComponent({
                 },
                 `进入 (${zone.cost}灵力/${zone.staminaCost}体力)`,
               ),
-              zone.kind === "trial"
+              combatStore.supportsContinuousChallenge(zone)
                 ? h(
                     "button",
                     {
@@ -715,7 +715,7 @@ const ZoneCard = defineComponent({
                       disabled: locked,
                       onClick: () => combatStore.startContinuousTrial(zone.id),
                     },
-                    "连续历练",
+                    zone.kind === "trial" ? "连续历练" : "连续挑战",
                   )
                 : null,
             ]),

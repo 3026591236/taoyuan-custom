@@ -902,6 +902,16 @@ export const useCombatStore = defineStore("combat", () => {
     return "";
   };
 
+  const supportsContinuousChallenge = (
+    zone?: RealmZone | null,
+  ): zone is RealmZone =>
+    Boolean(
+      zone &&
+        (zone.kind === "trial" ||
+          zone.id === "spirit_forest" ||
+          zone.id === "dark_cave"),
+    );
+
   const towerFloorMonster = (floor: number): Monster => {
     const tier = Math.max(1, floor);
     const boss = tier % 10 === 0;
@@ -1152,10 +1162,16 @@ export const useCombatStore = defineStore("combat", () => {
 
   const scheduleNextContinuousTrial = () => {
     const zone = activeZone.value;
-    if (!continuousTrial.value || zone?.kind !== "trial") return;
+    if (!continuousTrial.value || !supportsContinuousChallenge(zone)) return;
+    if (pendingRealmChoice.value) {
+      addLog("连续挑战已暂停，请完成本轮秘境抉择后继续。");
+      return;
+    }
     continuousTrialRuns.value += 1;
     if (continuousTrialRuns.value >= CONTINUOUS_TRIAL_MAX_RUNS) {
-      stopContinuousTrial(`已完成连续历练安全上限${CONTINUOUS_TRIAL_MAX_RUNS}轮。`);
+      stopContinuousTrial(
+        `已完成连续挑战安全上限${CONTINUOUS_TRIAL_MAX_RUNS}轮。`,
+      );
       return;
     }
     if (continuousTrialTimer) clearTimeout(continuousTrialTimer);
@@ -1168,21 +1184,23 @@ export const useCombatStore = defineStore("combat", () => {
         quantity: drop.qty,
       }));
       if (grants.length && !inv.addItemsAtomic(grants)) {
-        stopContinuousTrial("纳戒空间不足，连续历练已停止；未拾取掉落仍保留在结算页。");
+        stopContinuousTrial(
+          "纳戒空间不足，连续挑战已停止；未拾取掉落仍保留在结算页。",
+        );
         return;
       }
       if (grants.length) {
         const summary = drops.value
           .map((drop) => `${drop.name}×${drop.qty}`)
           .join("、");
-        addLog(`连续历练已自动拾取：${summary}`);
+        addLog(`连续挑战已自动拾取：${summary}`);
         showFloat(`自动拾取 ${summary}`, "success");
       }
       drops.value = [];
       const c = useCultivationStore();
       const p = usePlayerStore();
       if ((c.mana || 0) < zone.cost || p.stamina < zone.staminaCost) {
-        stopContinuousTrial("灵力或体力不足，连续历练已停止。");
+        stopContinuousTrial("灵力或体力不足，连续挑战已停止。");
         return;
       }
       enterZone(zone.id);
@@ -1441,13 +1459,15 @@ export const useCombatStore = defineStore("combat", () => {
     const message = option.effect();
     addLog(`秘境抉择·${event.title}：${message}`);
     pendingRealmChoice.value = null;
+    if (continuousTrial.value && combatResult.value === "win")
+      scheduleNextContinuousTrial();
     return { success: true, message };
   };
 
   const onLose = () => {
     isFighting.value = false;
     combatResult.value = "lose";
-    stopContinuousTrial("战斗败北，连续历练已停止。");
+    stopContinuousTrial("战斗败北，连续挑战已停止。");
     addLog(
       `被 ${currentMonster.value?.emoji}${currentMonster.value?.name} 击败...`,
     );
@@ -1457,20 +1477,22 @@ export const useCombatStore = defineStore("combat", () => {
     const zone = zoneId
       ? REALM_ZONES.find((candidate) => candidate.id === zoneId)
       : activeZone.value;
-    if (!zone || zone.kind !== "trial") {
-      addLog("只有红尘历练可以连续出发。");
+    if (!zone || !supportsContinuousChallenge(zone)) {
+      addLog("当前区域不支持连续挑战。");
       return;
     }
     const reason = lockReason(zone);
     const c = useCultivationStore();
     const p = usePlayerStore();
     if (reason || (c.mana || 0) < zone.cost || p.stamina < zone.staminaCost) {
-      addLog(reason || "灵力或体力不足，无法开启连续历练。");
+      addLog(reason || "灵力或体力不足，无法开启连续挑战。");
       return;
     }
     continuousTrial.value = true;
     continuousTrialRuns.value = 0;
-    addLog(`已开启${zone.name}连续历练；可随时停止，最多连续100轮，资源不足、战败或纳戒放不下掉落时会自动停止。`);
+    addLog(
+      `已开启${zone.name}连续挑战；可随时停止，最多连续100轮，秘境抉择时会暂停，资源不足、战败或纳戒放不下掉落时会自动停止。`,
+    );
     if (!isFighting.value && combatResult.value !== "win") enterZone(zone.id);
     else if (combatResult.value === "win") scheduleNextContinuousTrial();
   };
@@ -1683,6 +1705,7 @@ export const useCombatStore = defineStore("combat", () => {
     getDailyCount,
     isZoneUnlocked,
     lockReason,
+    supportsContinuousChallenge,
     enterZone,
     startContinuousTrial,
     stopContinuousTrial,
